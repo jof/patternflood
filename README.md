@@ -1,63 +1,61 @@
-# Patternflow — personal fork
+# Patternflow — personal fork, and what grew out of it
 
-A [Patternflow](https://github.com/engmung/patternflow) built from different
-parts: a Matrix Portal S3 instead of the custom PCB, I²C encoders instead of
-GPIO ones, an internal battery, and two sensors upstream doesn't have.
+Two projects with one shared inspiration: [Patternflow](https://github.com/engmung/patternflow),
+an open-source LED synthesizer you play with four knobs.
 
-Same 128 × 64 pixel grid as stock, so **every upstream pattern runs unmodified.**
+They started as one build. They're separate because they want opposite things.
+
+| | [**Desktop**](docs/desktop/) | [**Wall**](docs/wall/) |
+|---|---|---|
+| | Patternflow fork, four knobs | Room-interactive LED wall |
+| Display | 128 × 64 px, 256 × 128 mm | 192 × 192 px, 576 × 576 mm |
+| Input | four seesaw encoders | VL53L9CX lidar, contactless |
+| Compute | Matrix Portal S3 | Pi + RP2350 front-end |
+| Power | USB-C, ~10 W | mains, ~200 W peak |
+| Code | **tracks upstream** | new codebase |
+| Status | **ready to build** | concept — lidar on order |
+
+## Why two
+
+The single combined build had to compromise on every axis at once. Battery
+versus 200 W; instant-on versus a Linux boot; knobs versus a depth camera;
+tracking upstream versus diverging from it. The
+[power plan kept fighting the lidar plan](docs/wall/lidar-plan.md), which was
+the signal.
+
+The clean split: **the desktop build stays a Patternflow** and inherits
+everything upstream has — the `.pfm` pattern loader, the frozen ABI, the web
+console, 100+ community patterns. **The wall build is a new thing** that only
+borrows the idea.
 
 ## Layout
 
 ```
-upstream/    pristine clone of engmung/patternflow @ 87700bd (v3.9.5)
-             reference only — never edit
-docs/        this fork's plans
+docs/desktop/    Project B — the Patternflow fork
+docs/wall/       Project A — the room-interactive wall
+upstream/        pristine clone @ 87700bd (v3.9.5), gitignored, never edited
 ```
 
-## Plans
+## The findings that shaped both
 
-| Doc | Covers |
-|---|---|
-| [`docs/mechanical-plan.md`](docs/mechanical-plan.md) | Geometry, stackup, front panel, sensor apertures, fabrication |
-| [`docs/power-plan.md`](docs/power-plan.md) | USB-C in → sealed bank → PD trigger → buck → 5 V |
-| [`docs/lidar-plan.md`](docs/lidar-plan.md) | **The VL53L9CX — the one new feature.** Integration, bandwidth, risk |
-| [`docs/firmware-delta.md`](docs/firmware-delta.md) | Pinout diff, memory/partition port, I²C encoders, sensors |
-| [`docs/architecture-options.md`](docs/architecture-options.md) | Matrix Portal vs. Pi vs. Pi + Colorlight 5A-75B |
+Four things came out of reading the upstream tree that decided most of the rest:
 
-## Hardware
-
-| | Upstream v3.9 | This build |
-|---|---|---|
-| Controller | ESP32-S3 DevKit N16R8 + custom PCB | Adafruit Matrix Portal S3 (no PCB) |
-| Panel | 1× 128×64 P2.5, 320×160 mm | 2× Waveshare P2 64×64 GOB, 256×128 mm |
-| Resolution | 128 × 64 px | **128 × 64 px — identical** |
-| Encoders | 4× EC11 on GPIO | 4× Adafruit 4991 seesaw on I²C |
-| Power | USB power bank → screw terminal | USB-C → internal sealed bank |
-| Sensing | — | LD2450 radar + **VL53L9CX 3D lidar** |
-
-Two spare 64×64 panels and a spare knob set are held back; not every BOM line
-lands in v1.
-
-## Where it stands
-
-Planning. Nothing built, nothing flashed.
-
-The three things that unblock everything else:
-
-1. **Calipers on the parts** — EC11 bushing thread length, butted two-panel
-   width, panel depth, 4991 outline. See mechanical plan §4.
-2. **Buy the power bank** — its dimensions set the enclosure depth, and
-   pass-through charging is the one spec that must be verified before purchase.
-   See power plan §6.
-3. **First light** — four pin edits and `PANEL_CHAIN 2`, on USB power, one
-   panel, low brightness. See firmware delta §6.
-
-Running in parallel, and gating more than anything else: **bring the lidar up
-standalone.** It needs no enclosure, no panels and no power decision, and it is
-the highest-risk item in the build. See lidar plan §6.
+- **The HUB75 pinout is four `#define`s apart.** Upstream's `config.h` matches
+  the Matrix Portal S3 on 10 of 14 pins — they used it as their reference.
+  ([desktop/firmware-delta §1](docs/desktop/firmware-delta.md))
+- **The I²C encoders were forced, not chosen.** Nine of upstream's twelve
+  encoder GPIOs collide with fixed Matrix Portal functions.
+  ([desktop/firmware-delta §3](docs/desktop/firmware-delta.md))
+- **Upstream already has a hook for non-knob input.** `pf_params.h` has an
+  absolute-param tier, added for audio, which lets an outside source drive
+  pattern parameters with **no ABI change** — so sensor input works with every
+  existing community pattern. ([wall/lidar-plan §2](docs/wall/lidar-plan.md))
+- **I³C, not I²C, is what makes the lidar a camera.** 2268 zones at ~27 fps
+  instead of ~3. The ESP32-S3 has no I³C, which is what removed it from the
+  wall project. ([wall/README §2](docs/wall/README.md))
 
 ## Licensing
 
 Upstream is dual-licensed: MIT for code, CC BY-SA 4.0 for hardware. Enclosure
 work derived from `upstream/hardware/` inherits **CC BY-SA 4.0** and must be
-shared alike.
+shared alike. The wall project derives from none of it.

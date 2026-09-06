@@ -200,7 +200,7 @@ tolerates being an afterthought.
 
 > ⚠️ This is a **depth camera**, not a proximity sensor — 2268 zones, 5 cm–9 m,
 > 55°×42°, up to 100 Hz. It is the one genuinely new feature in the build and
-> it has its own document: **[`lidar-plan.md`](lidar-plan.md)**. What follows is
+> it has its own document: **[`lidar-plan.md`](../wall/lidar-plan.md)**. What follows is
 > the mechanical summary; §5 there is the full version.
 
 - Optical. Needs a genuinely **open aperture**. Cover-glass crosstalk — VCSEL

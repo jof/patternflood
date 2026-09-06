@@ -3,8 +3,8 @@
 The one genuinely new feature in this build. Everything else is a port; this is
 an addition upstream has no concept of.
 
-Companion to [`mechanical-plan.md`](mechanical-plan.md),
-[`power-plan.md`](power-plan.md), [`firmware-delta.md`](firmware-delta.md).
+Companion to [`mechanical-plan.md`](../desktop/mechanical-plan.md),
+[`power-plan.md`](../desktop/power-plan.md), [`firmware-delta.md`](../desktop/firmware-delta.md).
 
 ---
 
@@ -121,7 +121,7 @@ panel's own refresh.
 **The lidar wants 1 MHz. The seesaw encoders do not.** Adafruit's seesaw is
 reliable at 100–400 kHz and is not specified for 1 MHz. On this build they
 share the STEMMA QT bus, along with the four daisy-chained 100 mm cables from
-[`mechanical-plan.md`](mechanical-plan.md) §2.3.
+[`mechanical-plan.md`](../desktop/mechanical-plan.md) §2.3.
 
 Two ways out:
 
@@ -138,7 +138,7 @@ Two ways out:
 ST's ULD architecture uploads a **firmware blob to the sensor over the bus at
 every init** — ~84 KB on the VL53L5CX, and the L9CX is unlikely to be smaller.
 At 400 kHz that is **2–3 seconds of boot time**, plus ~84 KB out of the 3 MB app
-partition (which is already tight — see [`firmware-delta.md`](firmware-delta.md) §2).
+partition (which is already tight — see [`firmware-delta.md`](../desktop/firmware-delta.md) §2).
 
 Do the upload **before** HUB75 init, or on a separate task. A multi-second
 blocking I²C transfer while the I2S DMA is driving the panel is a good way to
@@ -179,7 +179,7 @@ zero-aperture net that decides *whether to wake*; the lidar is the precise,
 power-hungry, aperture-needing instrument that only matters once someone is
 close enough to play it.
 
-This also solves a power problem for free. [`power-plan.md`](power-plan.md) §3
+This also solves a power problem for free. [`power-plan.md`](../desktop/power-plan.md) §3
 flags that sealed banks auto-shut-off under low draw during sleep — but a device
 that wakes on radar doesn't need to sleep as deeply or as often, and the
 AMBIENT tier keeps a real load on the bank.
@@ -194,7 +194,7 @@ version notices you walk up.
 ## 5. Mechanical requirements
 
 These are stricter than the radar's and they constrain the front panel. From
-[`mechanical-plan.md`](mechanical-plan.md) §2.4, expanded:
+[`mechanical-plan.md`](../desktop/mechanical-plan.md) §2.4, expanded:
 
 **Use an open aperture. Not a window.**
 Cover-glass crosstalk is *the* classic failure mode for ST multizone ToF parts —

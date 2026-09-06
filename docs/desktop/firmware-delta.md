@@ -146,7 +146,7 @@ Both are additive; neither has any hook in upstream firmware.
   the most novel thing in the whole build and the furthest from upstream.
 - **VL53L9CX** (I²C, shares the encoder bus): a **2268-zone 3D dToF lidar**, not
   a proximity sensor. This is the largest piece of new work in the fork and it
-  has its own document — **[`lidar-plan.md`](lidar-plan.md)**. The headline:
+  has its own document — **[`lidar-plan.md`](../wall/lidar-plan.md)**. The headline:
   upstream's `paramAbsolute` tier already provides a way for a non-knob source
   to drive pattern parameters, so gesture control needs **no ABI change** and
   works with every existing community pattern. Bus speed, binning and the ULD

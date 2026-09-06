@@ -1,14 +1,71 @@
-# Power Plan
+# Power Plan — Desktop
 
 Companion to [`mechanical-plan.md`](mechanical-plan.md).
 
-Goal, as stated: **USB-C in, charge an internal bank, run from the bank, and
-pass through when plugged in and full.** Start with a sealed COTS bank rather
-than building a charger.
+Original goal: **USB-C in, charge an internal bank, run from the bank, and pass
+through when plugged in and full**, using a sealed COTS bank rather than
+building a charger.
 
-That instinct is right, and this plan backs it — with one hard constraint that
-has to shape the choice of bank, and four failure modes that bite people who
-do this naively.
+That instinct was right for the *combined* build. Since the lidar moved to the
+[wall project](../wall/), it's worth asking whether the battery is still wanted
+at all — §0 — before spending money on one.
+
+---
+
+## 0. Do you actually want a battery?
+
+You described this one as a **"USB-C desktop toy"**. If that's the frame, the
+battery may have left with the lidar.
+
+**What dropping it removes**, all at once: the pass-through-charging hunt, the
+auto-shutoff-during-sleep problem, cell heat inside a closed box, the inrush
+fault, ~30 mm of enclosure depth (bay [4] — the single largest contributor), the
+weight, and a lithium pack in a wooden box on your desk. That is most of §3
+below, deleted.
+
+**What it costs:** the thing is tethered.
+
+| | Mains only | With a bank |
+|---|---|---|
+| Supply | USB-C PD wall wart, 65 W | + bank, PD trigger stays the same |
+| Enclosure depth | **~35–45 mm** | ~60–75 mm |
+| Failure modes | none of §3 | all of §3 |
+| Cost | ~$25 | ~$25 + $60–120 |
+
+**Recommendation: build it mains-first.** The PD trigger + buck chain in §2 is
+*identical* either way — the bank just replaces the wall wart upstream of the
+trigger board. So starting tethered costs you nothing later: leave room in the
+back for a bank, and add one when you find you want the thing to be portable.
+That's a reversible decision made cheap by the architecture already chosen.
+
+### If you do want the bank now
+
+Buy on these four specs, in this order. The first two are the ones that make
+banks unsuitable, and neither is on the front of the box:
+
+1. **Pass-through charging** (charge and discharge simultaneously, sometimes
+   sold as "UPS mode"). Most banks cut output when a charger is connected.
+   **Must be explicitly documented** — treat silence as "no".
+2. **Low-current / "small device" mode.** Banks auto-shut-off under light load
+   so they don't drain in a bag, which is exactly what Patternflow's sleep mode
+   looks like. Without it, the device can't be woken remotely.
+3. **≥45 W USB-C PD output.** Not 5 V/3 A — see §2, that ceiling is the whole
+   problem. 45 W gives 12 V or 15 V at 3 A with margin. 65 W is better.
+4. **20 000 mAh (~74 Wh).** Comfortably under the 100 Wh airline limit, ~6 h
+   typical runtime. Bigger mostly buys depth in bay [4].
+
+**Where to look.** Specific SKUs churn faster than this document will, so buy on
+the criteria, not on a model number I name today. That said, the category that
+actually advertises specs 1 and 2 is **banks sold for always-on embedded and
+IoT use** — **Voltaic Systems** (V50, V88) is the clearest example, built
+explicitly for pass-through and no auto-shutoff, and priced accordingly.
+Consumer brands are hit-and-miss: **INIU** markets a low-current mode, and some
+**Anker** models charge while discharging, but both vary by SKU and neither
+guarantees it across a range. Check the current spec sheet for the exact model,
+and if pass-through isn't stated in writing, assume it isn't there.
+
+**Measure the bank before designing the back half of the case** — its dimensions
+set bay [4], per [`mechanical-plan.md`](mechanical-plan.md) §2.2.
 
 ---
 
@@ -18,17 +75,14 @@ do this naively.
 |---|---|---|
 | 2× Waveshare P2 64×64 | ~1.5–2 A | **6 A** (2 × 3 A spec, 30 W) |
 | Matrix Portal S3 | ~0.15 A | 0.25 A |
-| LD2450 radar | ~0.07 A | 0.1 A |
-| VL53L9CX lidar | ~0.15 A | 0.3 A ⚠ estimate |
+| LD2450 radar *(optional)* | ~0.07 A | 0.1 A |
 | 4× seesaw encoder + NeoPixel | ~0.05 A | 0.15 A |
-| **Total @ 5 V** | **~2.1 A (11 W)** | **~6.8 A (34 W)** |
+| **Total @ 5 V** | **~1.9 A (10 W)** | **~6.5 A (33 W)** |
 
-> ⚠️ The lidar figure is an **estimate**, not a datasheet value. The VL53L9CX
-> drives two VCSELs for 9 m flood illumination, so it draws materially more than
-> the milliamp-class ToF parts it's easy to mistake it for — and it draws in
-> pulses synchronised to ranging. Measure it during the standalone bring-up in
-> [`lidar-plan.md`](lidar-plan.md) §6, and give it local decoupling rather than
-> hanging it off the end of a 400 mm STEMMA QT chain.
+> The VL53L9CX is **not** in this budget — it moved to the
+> [wall project](../wall/). That removes ~0.15 A of average draw and, more
+> usefully, a pulsed two-VCSEL load that would have been fighting the panel
+> supply on the same 5 V rail.
 
 The worst case is not theoretical. Upstream measured **4.8 A at 5 V** on a
 full-white pattern at max brightness across the same 8192 pixels — enough that
