@@ -1,0 +1,5 @@
+# Pristine upstream clone — reference only, never edited.
+# Re-create with:
+#   git clone https://github.com/engmung/patternflow upstream
+#   git -C upstream checkout 87700bd
+upstream/
