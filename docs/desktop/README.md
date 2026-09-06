@@ -19,6 +19,7 @@ to keep tracking it.
 
 | Doc | Covers |
 |---|---|
+| [**`build-prep.md`**](build-prep.md) | **What to do and order, in sequence — start here** |
 | [`mechanical-plan.md`](mechanical-plan.md) | Geometry, stackup, front panel, fabrication |
 | [`power-plan.md`](power-plan.md) | USB-C, PD trigger, buck, optional bank |
 | [`firmware-delta.md`](firmware-delta.md) | Pinout diff, memory port, I²C encoders |
@@ -41,11 +42,11 @@ pattern parameters with no ABI change — see [`firmware-delta.md`](firmware-del
 
 ## Where it stands
 
-1. **Calipers on the parts** — EC11 bushing thread length, butted two-panel
-   width, panel depth, 4991 outline. [`mechanical-plan.md`](mechanical-plan.md) §4.
-2. **Decide: battery or not.** The split may have made it unnecessary — see
-   [`power-plan.md`](power-plan.md) §0.
-3. **First light** — four pin edits and `PANEL_CHAIN 2`, on USB power, one
-   panel, low brightness. [`firmware-delta.md`](firmware-delta.md) §6.
+**[`build-prep.md`](build-prep.md) is the ordered plan.** In short:
 
-Steps 1 and 3 need nothing that isn't already on the bench.
+1. **First light** — one panel, USB power only, four pin edits. Needs nothing
+   you don't already have, and proves the whole approach in an evening.
+2. **Caliper session** — four measurements that stop the enclosure being
+   provisional. [`mechanical-plan.md`](mechanical-plan.md) §4.
+3. **Order** — a 5 V 8–10 A PSU and mechanical hardware. Shorter than the
+   power plan originally implied; no PD trigger or buck unless a bank is added.

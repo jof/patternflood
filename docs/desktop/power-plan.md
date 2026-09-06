@@ -32,11 +32,19 @@ below, deleted.
 | Failure modes | none of §3 | all of §3 |
 | Cost | ~$25 | ~$25 + $60–120 |
 
-**Recommendation: build it mains-first.** The PD trigger + buck chain in §2 is
-*identical* either way — the bank just replaces the wall wart upstream of the
-trigger board. So starting tethered costs you nothing later: leave room in the
-back for a bank, and add one when you find you want the thing to be portable.
-That's a reversible decision made cheap by the architecture already chosen.
+**Recommendation: build it mains-first** — and note that mains-first is
+*simpler* than §2, not just cheaper. The PD trigger and buck exist to get past
+USB's 5 V/3 A ceiling **when the source is a bank**. From the wall, a **5 V
+8–10 A PSU straight into the screw terminals** does the same job with two fewer
+parts and no conversion losses.
+
+What carries over is the **device side** — screw terminals, bulk cap, wire
+gauge, fusing — which is identical either way. Adding a bank later means adding
+the trigger and buck *then*. So leave depth in the back for a bank, buy the
+PSU now, and defer §2 until you actually want the thing to be portable.
+
+*(An earlier draft of this said the chain was "identical either way". It isn't;
+only the device side is. Corrected in [`build-prep.md`](build-prep.md) §0.)*
 
 ### If you do want the bank now
 

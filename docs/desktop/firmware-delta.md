@@ -5,7 +5,8 @@ Not a work plan — a record of what the mechanical and power decisions imply, s
 nothing here is a surprise later.
 
 Referenced from [`mechanical-plan.md`](mechanical-plan.md) and
-[`power-plan.md`](power-plan.md).
+[`power-plan.md`](power-plan.md). For the order to do it in, and how to keep the
+delta against upstream tidy, see [`build-prep.md`](build-prep.md).
 
 ---
 
@@ -152,11 +153,18 @@ Both are additive; neither has any hook in upstream firmware.
   works with every existing community pattern. Bus speed, binning and the ULD
   port are covered there.
 
-Both should sit behind a feature flag. Upstream already has the mechanism —
-`config.h` includes `features/overrides.h` if present, and there's a
-`features/features_local.h` convention for exactly this — so a variant can add
-settings and features without forking the tree. **Use it.** It's the difference
-between a fork that can track upstream and one that diverges permanently.
+Both should sit behind a feature flag, via upstream's `features/` mechanism —
+`config.h` includes `features/overrides.h` if present, and `features_local.h`
+does the same for the feature list. That keeps *new* functionality out of the
+core files.
+
+> ⚠️ **But `overrides.h` cannot carry this port.** `config.h` claims every
+> tunable is `#ifndef`-guarded; only 12 symbols actually are (sleep, gamma,
+> white balance). The pins, `PANEL_RES_*`, `PANEL_CHAIN` and the encoder
+> defines are all **bare** — so §1 and §2 must patch `config.h` and
+> `platformio.ini` directly. Keep that delta as a patch series:
+> [`build-prep.md`](build-prep.md) §A2. Making the pin block guarded is a good
+> upstream contribution and would remove the need — §D there.
 
 ---
 
