@@ -159,3 +159,166 @@ export const bezel = defineFeature(function(context is Context, id is Id, defini
                 "operationType" : BooleanOperationType.SUBTRACTION
         });
     });
+
+// ────────────────────────────────────────────────────────────────────────
+// Finger joints
+// ────────────────────────────────────────────────────────────────────────
+// Two perpendicular plates meeting at an edge overlap in a rectangular
+// prism. Slice that prism along the joint and give alternating slices to
+// each plate: cut the even slices out of one and the odd slices out of the
+// other, and they interlock with no interference anywhere.
+//
+// KERF. A laser removes material either side of the cut line, so a slot
+// comes out `kerf` wider than modelled and a tab `kerf` narrower — 2 x kerf
+// of slop, which is why an uncompensated box rattles. Every removed slice
+// is therefore shrunk by kerf/2 at each end that is an INTERIOR cut. Ends
+// that coincide with the plate's own outer edge are not cuts and get no
+// compensation. After cutting, both tabs and slots land on nominal, giving
+// a zero-clearance press fit.
+//
+// Compensation is applied along the finger axis only — the dimension that
+// governs the fit. Notch DEPTH is left nominal, so a joint may sit up to
+// kerf/2 proud; in basswood that sands flush. Cut a test comb first.
+
+const ANY_LENGTH_BOUNDS = { (millimeter) : [-2000, 0, 2000] } as LengthBoundSpec;
+const KERF_BOUNDS       = { (millimeter) : [0, 0.2, 5] } as LengthBoundSpec;
+
+function fingerCount(extent is ValueWithUnits, target is ValueWithUnits) returns number
+{
+    var n = floor(extent / target);
+    if (n < 3)
+    {
+        n = 3;
+    }
+    if (n % 2 == 0)
+    {
+        n += 1;                 // odd, so each plate keeps a tab at both ends
+    }
+    return n;
+}
+
+function cutFingers(context is Context, id is Id, target is Query,
+                    ranges is array, axis is number, n is number,
+                    phase is number, kerf is ValueWithUnits)
+{
+    const lo = ranges[axis][0];
+    const hi = ranges[axis][1];
+    const step = (hi - lo) / n;
+
+    var tools = [];
+    var k = 0;
+
+    for (var i = 0; i < n; i += 1)
+    {
+        if (i % 2 != phase)
+        {
+            continue;
+        }
+
+        var a = lo + i * step;
+        var b = lo + (i + 1) * step;
+
+        if (i > 0)      { a = a + kerf / 2; }   // interior cut
+        if (i < n - 1)  { b = b - kerf / 2; }   // interior cut
+
+        var r = ranges;
+        r[axis] = [a, b];
+
+        fCuboid(context, id + ("f" ~ k), {
+                "corner1" : vector(r[0][0], r[1][0], r[2][0]),
+                "corner2" : vector(r[0][1], r[1][1], r[2][1])
+        });
+        tools = append(tools, qCreatedBy(id + ("f" ~ k), EntityType.BODY));
+        k += 1;
+    }
+
+    if (size(tools) > 0)
+    {
+        opBoolean(context, id + "b", {
+                "tools"         : qUnion(tools),
+                "targets"       : target,
+                "operationType" : BooleanOperationType.SUBTRACTION
+        });
+    }
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// Box walls
+// ────────────────────────────────────────────────────────────────────────
+// Four walls forming a rectangular tube along z, finger-jointed to each
+// other at the four vertical corners. The tube runs from the panel front
+// face (z = 0) back to the electronics bay floor; the bezel caps the front
+// and the back cover closes the rear.
+//
+// Left/right walls take phase 0 at every corner and top/bottom take phase
+// 1, so the interlock alternates consistently the whole way round.
+
+annotation { "Feature Type Name" : "Box walls" }
+export const boxWalls = defineFeature(function(context is Context, id is Id, definition is map)
+    precondition
+    {
+        annotation { "Name" : "Box width" }
+        isLength(definition.boxW, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Box height" }
+        isLength(definition.boxH, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Box y centre" }
+        isLength(definition.boxYCentre, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Internal depth" }
+        isLength(definition.depth, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Sheet thickness" }
+        isLength(definition.thickness, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Target finger length" }
+        isLength(definition.fingerLen, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Kerf" }
+        isLength(definition.kerf, KERF_BOUNDS);
+    }
+    {
+        const t      = definition.thickness;
+        const left   = -definition.boxW / 2;
+        const right  =  definition.boxW / 2;
+        const bottom = definition.boxYCentre - definition.boxH / 2;
+        const top    = definition.boxYCentre + definition.boxH / 2;
+        const zFront = 0 * meter;
+        const zBack  = -definition.depth;
+
+        const n = fingerCount(definition.depth, definition.fingerLen);
+
+        // Left/right span the full height; top/bottom span the full width.
+        // They overlap at the four corners, which the joints then resolve.
+        fCuboid(context, id + "wallL", {
+                "corner1" : vector(left,      bottom, zBack),
+                "corner2" : vector(left + t,  top,    zFront) });
+        fCuboid(context, id + "wallR", {
+                "corner1" : vector(right - t, bottom, zBack),
+                "corner2" : vector(right,     top,    zFront) });
+        fCuboid(context, id + "wallB", {
+                "corner1" : vector(left,  bottom,     zBack),
+                "corner2" : vector(right, bottom + t, zFront) });
+        fCuboid(context, id + "wallT", {
+                "corner1" : vector(left,  top - t, zBack),
+                "corner2" : vector(right, top,     zFront) });
+
+        const corners = [
+            { "vert" : "wallL", "horz" : "wallB", "x" : [left, left + t],   "y" : [bottom, bottom + t] },
+            { "vert" : "wallR", "horz" : "wallB", "x" : [right - t, right], "y" : [bottom, bottom + t] },
+            { "vert" : "wallL", "horz" : "wallT", "x" : [left, left + t],   "y" : [top - t, top] },
+            { "vert" : "wallR", "horz" : "wallT", "x" : [right - t, right], "y" : [top - t, top] }
+        ];
+
+        for (var ci = 0; ci < size(corners); ci += 1)
+        {
+            const c = corners[ci];
+            const ranges = [c.x, c.y, [zBack, zFront]];
+
+            cutFingers(context, id + ("cv" ~ ci), qCreatedBy(id + c.vert, EntityType.BODY),
+                       ranges, 2, n, 0, definition.kerf);
+            cutFingers(context, id + ("ch" ~ ci), qCreatedBy(id + c.horz, EntityType.BODY),
+                       ranges, 2, n, 1, definition.kerf);
+        }
+    });
