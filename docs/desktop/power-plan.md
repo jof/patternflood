@@ -248,3 +248,82 @@ changes.
    12 V @ 3 A gives 36 W against 27 W and more margin at the buck input.
 3. **Implement the firmware power clamp** regardless of supply — see
    [`firmware-delta.md`](firmware-delta.md).
+
+---
+
+## 7. The bank: Voltaic V50
+
+Selected after checking candidates against §0's four criteria. **Pass-through
+plus always-on plus ≥36 W turns out to be an empty set** — nothing found meets
+all three, so this is a considered compromise, not a clean win.
+
+| | Voltaic V50 | Voltaic V88 |
+|---|---|---|
+| Size | **118 × 82 × 26 mm**, 368 g | 218 × 137 × 22 mm |
+| Capacity | 13,400 mAh / **48 Wh** | 24,000 mAh / 88.8 Wh |
+| Output | USB-C PD 5V/3.6A, 9V/2.2A, 12V/1.6A → **~20 W** | DC **12V/6A = 72 W** |
+| Always-on | ✅ documented, ~7 mA idle | ✅ documented |
+| Pass-through | ✅ **documented** | ❌ **see below** |
+
+> ⚠️ **The V88 does not do pass-through, whatever the retailers say.** Multiple
+> listings advertise it, but the actual usage documentation states: *"Do NOT
+> simultaneously charge the Voltaic V88 power bank and use it to power your
+> robot."* Charge-while-running is the entire reason for a fixed USB-C inlet, so
+> that rules it out despite the far better 72 W output.
+
+### The V50's ceiling, and why it's acceptable
+
+Waveshare rates each P2 64×64 panel at **5 V / 3 A, ≤15 W**, so the pair's rated
+maximum is **30 W**. Upstream measured **4.8 A (24 W)** for real full white on the
+same 8192 pixels, and about a third of that for a typical generative pattern.
+
+The V50 delivers ~20 W, or ~18 W after the buck:
+
+| | Draw | V50 |
+|---|---|---|
+| Typical pattern | ~8 W | ✅ comfortable |
+| Measured full white | ~25 W | clamp to ~72 % |
+| Rated maximum | 30 W | clamp to ~60 % |
+
+So **every realistic pattern runs at full brightness**; only near-full-white
+frames get clamped. The firmware power clamp
+([`firmware-delta.md`](firmware-delta.md) §5) therefore moves from prudent to
+**required** — it is what keeps the bank inside its output limit.
+
+Runtime at ~11 W typical: **48 Wh × ~0.85 ≈ 3.7 h**. Under 100 Wh, so it flies.
+
+### Mounting
+
+The bank straps to the **inside of the removable back cover** with two velcro
+straps through obround slots, so lifting the cover takes the bank with it and
+there is no separate battery tray. Obround rather than rectangular because a
+strap slot is loaded in tension every time it is tightened, and sharp internal
+corners are where soft basswood splits.
+
+Modelled at `bankX = -80`, offset left so the Matrix Portal gets the rest of the
+bay. Verified clearances: **1 mm** to the brace backs at z −17.5, **1 mm** to the
+back cover's inner face at z −45.5, 6.5 mm to the left wall.
+
+`bayDepth` is now **34 mm** — clear bay space is `bayDepth − 6`, independent of
+panel depth, so 34 gives the 28 mm the 26 mm bank needs.
+
+### USB-C inlet, not a barrel jack
+
+A **panel-mount USB-C passthrough** in the right wall replaces the DC barrel
+jack. One external connector, and it is the same one the bank charges through,
+so plugging a charger into the case charges the bank in place.
+
+Cutout and flange screw dimensions are placeholders — **verify against the actual
+part**, they vary between panel-mount USB-C extensions. Positioned at
+`usbY = 0, usbZ = -30`, clear of the corner fingers and the rail mortises.
+
+### Still to resolve
+
+1. **Bank port orientation.** Its USB-C ports must face the open bay (+x), not
+   the left wall 6.5 mm away. Check which edge they're on before finalising
+   `bankX`.
+2. **The cable to the buck must survive cover removal** — long enough to hinge
+   the cover aside, or a connector inline.
+3. **Matrix Portal vs bank.** The bank occupies x −139…−21. If the panel's HUB75
+   header sits centrally or on the left panel, `bankX` has to move. Another
+   thing the caliper session settles.

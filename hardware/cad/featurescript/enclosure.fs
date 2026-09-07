@@ -62,6 +62,50 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
     });
 
 // ────────────────────────────────────────────────────────────────────────
+// Power bank proxy
+// ────────────────────────────────────────────────────────────────────────
+// Voltaic V50 — 118 x 82 x 26 mm, 13,400 mAh / 48 Wh. Chosen because it is
+// the only bank found that documents BOTH pass-through charging and an
+// always-on mode (~7 mA idle), which is what stops Patternflow's sleep mode
+// shutting the bank off. Its USB-C PD output tops out around 20 W, so the
+// firmware power clamp is required rather than optional — see power-plan.md.
+//
+// An envelope only. It sits strapped to the inside of the back cover, so
+// lifting the cover takes the bank with it.
+
+annotation { "Feature Type Name" : "Power bank proxy" }
+export const bankProxy = defineFeature(function(context is Context, id is Id, definition is map)
+    precondition
+    {
+        annotation { "Name" : "Length (x)" }
+        isLength(definition.bankL, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Width (y)" }
+        isLength(definition.bankW, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Thickness (z)" }
+        isLength(definition.bankT, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Centre x" }
+        isLength(definition.bankX, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Centre y" }
+        isLength(definition.bankY, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Front face z" }
+        isLength(definition.bankZ, ANY_LENGTH_BOUNDS);
+    }
+    {
+        fCuboid(context, id + "bank", {
+                "corner1" : vector(definition.bankX - definition.bankL / 2,
+                                   definition.bankY - definition.bankW / 2,
+                                   definition.bankZ),
+                "corner2" : vector(definition.bankX + definition.bankL / 2,
+                                   definition.bankY + definition.bankW / 2,
+                                   definition.bankZ + definition.bankT) });
+    });
+
+// ────────────────────────────────────────────────────────────────────────
 // Finger joints
 // ────────────────────────────────────────────────────────────────────────
 // Two perpendicular plates meeting at an edge overlap in a rectangular
@@ -291,6 +335,42 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
 
         annotation { "Name" : "Back cover clearance" }
         isLength(definition.backClearance, KERF_BOUNDS);
+
+        annotation { "Name" : "Bank length (x)" }
+        isLength(definition.bankL, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Bank width (y)" }
+        isLength(definition.bankW, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Bank centre x" }
+        isLength(definition.bankX, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Bank centre y" }
+        isLength(definition.bankY, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Strap slot length" }
+        isLength(definition.strapSlotW, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Strap slot width" }
+        isLength(definition.strapSlotH, LENGTH_BOUNDS);
+
+        annotation { "Name" : "USB-C cutout width" }
+        isLength(definition.usbCutW, LENGTH_BOUNDS);
+
+        annotation { "Name" : "USB-C cutout height" }
+        isLength(definition.usbCutH, LENGTH_BOUNDS);
+
+        annotation { "Name" : "USB-C screw spacing" }
+        isLength(definition.usbScrewSpacing, LENGTH_BOUNDS);
+
+        annotation { "Name" : "USB-C screw diameter" }
+        isLength(definition.usbScrewDia, LENGTH_BOUNDS);
+
+        annotation { "Name" : "USB-C position y" }
+        isLength(definition.usbY, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "USB-C position z" }
+        isLength(definition.usbZ, ANY_LENGTH_BOUNDS);
     }
     {
         const t    = definition.thickness;
@@ -643,6 +723,91 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                     "targets"       : qCreatedBy(id + ("railC" ~ ri), EntityType.BODY),
                     "operationType" : BooleanOperationType.SUBTRACTION });
         }
+
+        // ── velcro strap slots in the back cover ────────────────────────
+        // The bank straps to the INSIDE of the removable cover, so lifting
+        // the cover takes the bank out with it and there is no separate
+        // battery tray. Two straps at the bank's quarter points, each running
+        // in y across its width, through a pair of slots either side.
+        //
+        // Obround, not rectangular: sharp internal corners are where soft
+        // basswood splits, and a strap slot is loaded in exactly that
+        // direction every time the strap is tensioned.
+
+        const ssr = definition.strapSlotH / 2 - kerf / 2;
+        for (var st = 0; st < 2; st += 1)
+        {
+            var sxc = definition.bankX - definition.bankL / 4;
+            if (st == 1)
+            {
+                sxc = definition.bankX + definition.bankL / 4;
+            }
+
+            for (var sd = 0; sd < 2; sd += 1)
+            {
+                var syc = definition.bankY - definition.bankW / 2 - definition.strapSlotH;
+                if (sd == 1)
+                {
+                    syc = definition.bankY + definition.bankW / 2 + definition.strapSlotH;
+                }
+
+                const sa = sxc - definition.strapSlotW / 2 + ssr;
+                const sb = sxc + definition.strapSlotW / 2 - ssr;
+                const stag = "" ~ st ~ sd;
+
+                fCylinder(context, id + ("spa" ~ stag), {
+                        "topCenter"    : vector(sa, syc, zBc1 + over),
+                        "bottomCenter" : vector(sa, syc, zBc0 - over),
+                        "radius"       : ssr });
+                fCylinder(context, id + ("spb" ~ stag), {
+                        "topCenter"    : vector(sb, syc, zBc1 + over),
+                        "bottomCenter" : vector(sb, syc, zBc0 - over),
+                        "radius"       : ssr });
+                fCuboid(context, id + ("spm" ~ stag), {
+                        "corner1" : vector(sa, syc - ssr, zBc0 - over),
+                        "corner2" : vector(sb, syc + ssr, zBc1 + over) });
+
+                coverHoles = append(coverHoles, qCreatedBy(id + ("spa" ~ stag), EntityType.BODY));
+                coverHoles = append(coverHoles, qCreatedBy(id + ("spb" ~ stag), EntityType.BODY));
+                coverHoles = append(coverHoles, qCreatedBy(id + ("spm" ~ stag), EntityType.BODY));
+            }
+        }
+
+        // ── panel-mount USB-C passthrough, right wall ───────────────────
+        // Replaces a DC barrel jack. A chassis USB-C extension means the
+        // only external connector is the same one the bank charges from, so
+        // plugging a charger into the case charges the bank in place — which
+        // is the whole reason the bank has to support pass-through.
+        //
+        // Placed clear of the corner fingers and the rail mortises.
+
+        var usbTools = [];
+
+        fCuboid(context, id + "usbCut", {
+                "corner1" : vector(right - t - over, definition.usbY - definition.usbCutW / 2 + kerf / 2,
+                                                     definition.usbZ - definition.usbCutH / 2 + kerf / 2),
+                "corner2" : vector(right + over,     definition.usbY + definition.usbCutW / 2 - kerf / 2,
+                                                     definition.usbZ + definition.usbCutH / 2 - kerf / 2) });
+        usbTools = append(usbTools, qCreatedBy(id + "usbCut", EntityType.BODY));
+
+        for (var us = 0; us < 2; us += 1)
+        {
+            var uy = definition.usbY - definition.usbScrewSpacing / 2;
+            if (us == 1)
+            {
+                uy = definition.usbY + definition.usbScrewSpacing / 2;
+            }
+            fCylinder(context, id + ("usbScrew" ~ us), {
+                    "topCenter"    : vector(right + over,     uy, definition.usbZ),
+                    "bottomCenter" : vector(right - t - over, uy, definition.usbZ),
+                    "radius"       : definition.usbScrewDia / 2 - kerf / 2 });
+            usbTools = append(usbTools, qCreatedBy(id + ("usbScrew" ~ us), EntityType.BODY));
+        }
+
+        opBoolean(context, id + "usbCutOp", {
+                "tools"         : qUnion(usbTools),
+                "targets"       : qCreatedBy(id + "wallR", EntityType.BODY),
+                "operationType" : BooleanOperationType.SUBTRACTION });
 
         opBoolean(context, id + "coverCut", {
                 "tools"         : qUnion(coverHoles),
