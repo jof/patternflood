@@ -144,6 +144,43 @@ function cutFingers(context is Context, id is Id, target is Query,
 }
 
 // ────────────────────────────────────────────────────────────────────────
+// Hex pocket
+// ────────────────────────────────────────────────────────────────────────
+// A hexagon is the intersection of three slabs at 60 degrees to each other,
+// each as wide as the nut's across-flats. Cheaper and more robust than
+// sketching a polygon, and it verifies easily: the result must be an
+// 8-faced prism.
+
+function hexPrism(context is Context, id is Id, cx is ValueWithUnits, cy is ValueWithUnits,
+                  acrossFlats is ValueWithUnits, z0 is ValueWithUnits, z1 is ValueWithUnits) returns Query
+{
+    const reach = acrossFlats * 1.5;
+    var slabs = [];
+
+    for (var i = 0; i < 3; i += 1)
+    {
+        fCuboid(context, id + ("slab" ~ i), {
+                "corner1" : vector(cx - reach, cy - acrossFlats / 2, z0),
+                "corner2" : vector(cx + reach, cy + acrossFlats / 2, z1) });
+
+        if (i > 0)
+        {
+            opTransform(context, id + ("rot" ~ i), {
+                    "bodies"    : qCreatedBy(id + ("slab" ~ i), EntityType.BODY),
+                    "transform" : rotationAround(line(vector(cx, cy, z0), vector(0, 0, 1)),
+                                                 i * 60 * degree) });
+        }
+        slabs = append(slabs, qCreatedBy(id + ("slab" ~ i), EntityType.BODY));
+    }
+
+    opBoolean(context, id + "hex", {
+            "tools"         : qUnion(slabs),
+            "operationType" : BooleanOperationType.INTERSECTION });
+
+    return qCreatedBy(id, EntityType.BODY);
+}
+
+// ────────────────────────────────────────────────────────────────────────
 // Enclosure shell  (named enclosureShell — a bare `shell` collides with std)
 // ────────────────────────────────────────────────────────────────────────
 // Bezel laminations plus the four walls, in ONE feature — the finger joints
@@ -239,6 +276,21 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
 
         annotation { "Name" : "Screw slot length" }
         isLength(definition.slotLen, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Rear rail width" }
+        isLength(definition.railW, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Nut across flats" }
+        isLength(definition.nutAcrossFlats, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Screw x span" }
+        isLength(definition.screwXSpan, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Screws per rail" }
+        isInteger(definition.screwsPerRail, POSITIVE_COUNT_BOUNDS);
+
+        annotation { "Name" : "Back cover clearance" }
+        isLength(definition.backClearance, KERF_BOUNDS);
     }
     {
         const t    = definition.thickness;
@@ -452,6 +504,125 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                     "targets"       : qCreatedBy(id + ("brace" ~ s), EntityType.BODY),
                     "operationType" : BooleanOperationType.SUBTRACTION });
         }
+
+        // ── rear rails and the removable back cover ─────────────────────
+        // The finger joints get glued; the back does not. It is held by M3
+        // machine screws into hex nuts held CAPTIVE between two laminations:
+        //
+        //     z:  -D      -D+t     -D+2t    -D+3t
+        //         ├────────┼─────────┼─────────┤
+        //         │ back   │ rail A  │ rail B  │
+        //         │ cover  │ hex     │ solid   │
+        //         │ Ø3.2   │ pocket  │ backer  │
+        //         └────────┴─────────┴─────────┘
+        //          screw ────────►  nut
+        //
+        // Rail A's pocket is a through-cut, so the nut drops in during
+        // assembly; rail B glues behind it and traps it for good. Nothing
+        // threads into wood, nothing can spin or fall out, and the joint
+        // survives being opened indefinitely — which wood screws in basswood
+        // would not.
+        //
+        // The back cover is INSET into the wall opening rather than lapped
+        // over it, so its outer face finishes flush with the wall rear edges
+        // and the fixings are the only thing visible from behind.
+
+        const zBc0 = zBack;                 // back cover, flush with wall rear
+        const zBc1 = zBack + t;
+        const zRa0 = zBc1;                  // rail A — hex nut pockets
+        const zRa1 = zBc1 + t;
+        const zRb0 = zRa1;                  // rail B — solid backer
+        const zRb1 = zRa1 + t;
+
+        const bcl = definition.backClearance;
+        const railW = definition.railW;
+
+        fCuboid(context, id + "backCover", {
+                "corner1" : vector(left + t + bcl,  bottom + t + bcl, zBc0),
+                "corner2" : vector(right - t - bcl, top - t - bcl,    zBc1) });
+
+        const railY0 = [bottom + t, top - t - railW];
+        var coverHoles = [];
+
+        for (var ri = 0; ri < 2; ri += 1)
+        {
+            const y0 = railY0[ri];
+            const y1 = y0 + railW;
+            const yMid = (y0 + y1) / 2;
+
+            // Rail A: full width, through-tenons into the side walls, tenon
+            // grown by kerf/2 per side exactly as the braces are.
+            fCuboid(context, id + ("railA" ~ ri), {
+                    "corner1" : vector(left,  y0 - kerf / 2, zRa0),
+                    "corner2" : vector(right, y1 + kerf / 2, zRa1) });
+
+            const rSide = ["wallL", "wallR"];
+            for (var w = 0; w < 2; w += 1)
+            {
+                fCuboid(context, id + ("rmort" ~ ri ~ w), {
+                        "corner1" : vector(left - over,  y0 + kerf / 2, zRa0 + kerf / 2),
+                        "corner2" : vector(right + over, y1 - kerf / 2, zRa1 - kerf / 2) });
+                opBoolean(context, id + ("rmortCut" ~ ri ~ w), {
+                        "tools"         : qCreatedBy(id + ("rmort" ~ ri ~ w), EntityType.BODY),
+                        "targets"       : qCreatedBy(id + rSide[w], EntityType.BODY),
+                        "operationType" : BooleanOperationType.SUBTRACTION });
+            }
+
+            // Rail B: inner width only — it is glued to rail A, so it needs
+            // no joint of its own.
+            fCuboid(context, id + ("railB" ~ ri), {
+                    "corner1" : vector(left + t,  y0, zRb0),
+                    "corner2" : vector(right - t, y1, zRb1) });
+
+            var pockets = [];
+            var thru = [];
+            for (var k = 0; k < definition.screwsPerRail; k += 1)
+            {
+                var sx = 0 * meter;
+                if (definition.screwsPerRail > 1)
+                {
+                    sx = -definition.screwXSpan
+                       + k * (2 * definition.screwXSpan / (definition.screwsPerRail - 1));
+                }
+
+                // clearance hole through the back cover
+                fCylinder(context, id + ("bch" ~ ri ~ k), {
+                        "topCenter"    : vector(sx, yMid, zBc1 + over),
+                        "bottomCenter" : vector(sx, yMid, zBc0 - over),
+                        "radius"       : definition.screwDia / 2 - kerf / 2 });
+                coverHoles = append(coverHoles, qCreatedBy(id + ("bch" ~ ri ~ k), EntityType.BODY));
+
+                // captive hex pocket through rail A
+                pockets = append(pockets,
+                    hexPrism(context, id + ("hexp" ~ ri ~ k), sx, yMid,
+                             definition.nutAcrossFlats - kerf, zRa0 - over, zRa1 + over));
+
+                // Clearance through rail B. The nut pocket is only one sheet
+                // thick, so without this an M3x8 bottoms out on the backer
+                // instead of clamping and the cover never pulls up tight.
+                // With it, any screw from M3x6 upward works.
+                fCylinder(context, id + ("rbh" ~ ri ~ k), {
+                        "topCenter"    : vector(sx, yMid, zRb1 + over),
+                        "bottomCenter" : vector(sx, yMid, zRb0 - over),
+                        "radius"       : definition.screwDia / 2 + 0.25 * millimeter });
+                thru = append(thru, qCreatedBy(id + ("rbh" ~ ri ~ k), EntityType.BODY));
+            }
+
+            opBoolean(context, id + ("pocketCut" ~ ri), {
+                    "tools"         : qUnion(pockets),
+                    "targets"       : qCreatedBy(id + ("railA" ~ ri), EntityType.BODY),
+                    "operationType" : BooleanOperationType.SUBTRACTION });
+
+            opBoolean(context, id + ("thruCut" ~ ri), {
+                    "tools"         : qUnion(thru),
+                    "targets"       : qCreatedBy(id + ("railB" ~ ri), EntityType.BODY),
+                    "operationType" : BooleanOperationType.SUBTRACTION });
+        }
+
+        opBoolean(context, id + "coverCut", {
+                "tools"         : qUnion(coverHoles),
+                "targets"       : qCreatedBy(id + "backCover", EntityType.BODY),
+                "operationType" : BooleanOperationType.SUBTRACTION });
 
         // ── display aperture and knob bores, through every lamination ───
         var tools = [];
