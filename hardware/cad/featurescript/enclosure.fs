@@ -215,6 +215,30 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
 
         annotation { "Name" : "Kerf" }
         isLength(definition.kerf, KERF_BOUNDS);
+
+        annotation { "Name" : "Panel width" }
+        isLength(definition.panelW, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Panel count" }
+        isInteger(definition.panelCount, POSITIVE_COUNT_BOUNDS);
+
+        annotation { "Name" : "Panel depth" }
+        isLength(definition.panelDepth, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Brace y offset" }
+        isLength(definition.braceYOffset, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Brace width" }
+        isLength(definition.braceW, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Panel post x offset" }
+        isLength(definition.postXOffset, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Screw diameter" }
+        isLength(definition.screwDia, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Screw slot length" }
+        isLength(definition.slotLen, LENGTH_BOUNDS);
     }
     {
         const t    = definition.thickness;
@@ -330,6 +354,103 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                        ranges, e.axis, ne, 1, kerf);
             cutFingers(context, id + ("fw" ~ ei), qCreatedBy(id + e.wall, EntityType.BODY),
                        ranges, e.axis, ne, 0, kerf);
+        }
+
+        // ── panel cross-braces ──────────────────────────────────────────
+        // The panels hang from these, not from the bezel. Each brace lies
+        // flat against the panel backs and carries M3 screws driven from
+        // BEHIND, forward into the panels' own rear threaded posts — so the
+        // panel weight goes brace -> through-tenon -> wall, and the bezel
+        // stays purely cosmetic.
+        //
+        // The screw holes are OBROUND, running in x. Panel post positions
+        // shift between production runs and the datasheets do not give them,
+        // so the slot absorbs the error; #postXOffset and #braceYOffset are
+        // placeholders until measured off the actual panels.
+        //
+        // Each brace is a through-tenon: it spans the full box width, so its
+        // ends sit inside the walls, and subtracting it from the walls cuts
+        // an exactly matching mortise. Kerf goes the opposite way from the
+        // finger joints here — the tenon is GROWN by kerf/2 per side and the
+        // mortise SHRUNK by kerf/2, so both land on nominal after cutting.
+
+        const zBraceF = -definition.panelDepth;         // against the panel backs
+        const zBraceB = zBraceF - t;
+        const panelSpan = definition.panelCount * definition.panelW;
+
+        for (var s = 0; s < 2; s += 1)
+        {
+            var yc = definition.braceYOffset;
+            if (s == 1)
+            {
+                yc = -definition.braceYOffset;
+            }
+
+            const tenonHalf = (definition.braceW + kerf) / 2;
+
+            fCuboid(context, id + ("brace" ~ s), {
+                    "corner1" : vector(left,  yc - tenonHalf, zBraceB),
+                    "corner2" : vector(right, yc + tenonHalf, zBraceF) });
+
+            // Mortise both side walls. Shrunk by kerf/2 in the wall's own
+            // plane (y and z); x overshoots, which is harmless because only
+            // the wall is a target.
+            const mY0 = yc - definition.braceW / 2 + kerf / 2;
+            const mY1 = yc + definition.braceW / 2 - kerf / 2;
+            const mZ0 = zBraceB + kerf / 2;
+            const mZ1 = zBraceF - kerf / 2;
+
+            const sideWalls = ["wallL", "wallR"];
+            for (var w = 0; w < 2; w += 1)
+            {
+                fCuboid(context, id + ("mort" ~ s ~ w), {
+                        "corner1" : vector(left - over,  mY0, mZ0),
+                        "corner2" : vector(right + over, mY1, mZ1) });
+                opBoolean(context, id + ("mortCut" ~ s ~ w), {
+                        "tools"         : qCreatedBy(id + ("mort" ~ s ~ w), EntityType.BODY),
+                        "targets"       : qCreatedBy(id + sideWalls[w], EntityType.BODY),
+                        "operationType" : BooleanOperationType.SUBTRACTION });
+            }
+
+            // Obround screw slots, two per panel.
+            const r = definition.screwDia / 2 - kerf / 2;
+            var slots = [];
+            for (var pi = 0; pi < definition.panelCount; pi += 1)
+            {
+                const pc = -panelSpan / 2 + (pi + 0.5) * definition.panelW;
+                for (var k = 0; k < 2; k += 1)
+                {
+                    var px = pc + definition.postXOffset;
+                    if (k == 1)
+                    {
+                        px = pc - definition.postXOffset;
+                    }
+                    const a = px - definition.slotLen / 2;
+                    const b = px + definition.slotLen / 2;
+                    const tag = "" ~ s ~ pi ~ k;
+
+                    fCylinder(context, id + ("sa" ~ tag), {
+                            "topCenter"    : vector(a, yc, zBraceF + over),
+                            "bottomCenter" : vector(a, yc, zBraceB - over),
+                            "radius"       : r });
+                    fCylinder(context, id + ("sb" ~ tag), {
+                            "topCenter"    : vector(b, yc, zBraceF + over),
+                            "bottomCenter" : vector(b, yc, zBraceB - over),
+                            "radius"       : r });
+                    fCuboid(context, id + ("sm" ~ tag), {
+                            "corner1" : vector(a, yc - r, zBraceB - over),
+                            "corner2" : vector(b, yc + r, zBraceF + over) });
+
+                    slots = append(slots, qCreatedBy(id + ("sa" ~ tag), EntityType.BODY));
+                    slots = append(slots, qCreatedBy(id + ("sb" ~ tag), EntityType.BODY));
+                    slots = append(slots, qCreatedBy(id + ("sm" ~ tag), EntityType.BODY));
+                }
+            }
+
+            opBoolean(context, id + ("slotCut" ~ s), {
+                    "tools"         : qUnion(slots),
+                    "targets"       : qCreatedBy(id + ("brace" ~ s), EntityType.BODY),
+                    "operationType" : BooleanOperationType.SUBTRACTION });
         }
 
         // ── display aperture and knob bores, through every lamination ───
