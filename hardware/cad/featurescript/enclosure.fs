@@ -106,6 +106,91 @@ export const bankProxy = defineFeature(function(context is Context, id is Id, de
     });
 
 // ────────────────────────────────────────────────────────────────────────
+// Bay obstructions
+// ────────────────────────────────────────────────────────────────────────
+// Proxies for everything that already occupies the bay, so anything added
+// there can be checked against them instead of assumed to fit.
+//
+// Per panel, one connector KEEP-OUT covering the HUB75 IN and OUT headers
+// and the JST power connector. Positions are not published and vary, so
+// this is one generous envelope rather than individual bosses — measure it
+// off a real panel and shrink it.
+//
+// Plus the Matrix Portal itself, which is the big one: it does not sit
+// against the panel, it rides ON the HUB75 header, so it reaches roughly
+// 20mm back even though the board's own span is 19.1mm. Footprint measured
+// from the vendored Adafruit STEP.
+
+annotation { "Feature Type Name" : "Bay obstructions" }
+export const bayObstructions = defineFeature(function(context is Context, id is Id, definition is map)
+    precondition
+    {
+        annotation { "Name" : "Panel width" }
+        isLength(definition.panelW, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Panel count" }
+        isInteger(definition.panelCount, POSITIVE_COUNT_BOUNDS);
+
+        annotation { "Name" : "Panel depth" }
+        isLength(definition.panelDepth, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Keep-out width" }
+        isLength(definition.keepoutW, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Keep-out height" }
+        isLength(definition.keepoutH, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Keep-out projection" }
+        isLength(definition.keepoutProj, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Keep-out offset x" }
+        isLength(definition.keepoutX, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Keep-out offset y" }
+        isLength(definition.keepoutY, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Board width" }
+        isLength(definition.mpW, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Board height" }
+        isLength(definition.mpH, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Board projection" }
+        isLength(definition.mpProj, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Board centre x" }
+        isLength(definition.mpX, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Board centre y" }
+        isLength(definition.mpY, ANY_LENGTH_BOUNDS);
+    }
+    {
+        const back = -definition.panelDepth;
+        const span = definition.panelCount * definition.panelW;
+
+        for (var i = 0; i < definition.panelCount; i += 1)
+        {
+            const pc = -span / 2 + (i + 0.5) * definition.panelW + definition.keepoutX;
+
+            fCuboid(context, id + ("keepout" ~ i), {
+                    "corner1" : vector(pc - definition.keepoutW / 2,
+                                       definition.keepoutY - definition.keepoutH / 2,
+                                       back - definition.keepoutProj),
+                    "corner2" : vector(pc + definition.keepoutW / 2,
+                                       definition.keepoutY + definition.keepoutH / 2,
+                                       back) });
+        }
+
+        fCuboid(context, id + "board", {
+                "corner1" : vector(definition.mpX - definition.mpW / 2,
+                                   definition.mpY - definition.mpH / 2,
+                                   back - definition.mpProj),
+                "corner2" : vector(definition.mpX + definition.mpW / 2,
+                                   definition.mpY + definition.mpH / 2,
+                                   back) });
+    });
+
+// ────────────────────────────────────────────────────────────────────────
 // Finger joints
 // ────────────────────────────────────────────────────────────────────────
 // Two perpendicular plates meeting at an edge overlap in a rectangular
