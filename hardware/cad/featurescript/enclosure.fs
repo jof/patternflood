@@ -506,36 +506,45 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         }
 
         // ── rear rails and the removable back cover ─────────────────────
-        // The finger joints get glued; the back does not. It is held by M3
-        // machine screws into hex nuts held CAPTIVE between two laminations:
+        // The finger joints get glued. The back does not, so it needs a
+        // fastening that survives being opened indefinitely — wood screws in
+        // 3mm basswood would strip after a few cycles.
         //
-        //     z:  -D      -D+t     -D+2t    -D+3t
-        //         ├────────┼─────────┼─────────┤
-        //         │ back   │ rail A  │ rail B  │
-        //         │ cover  │ hex     │ solid   │
-        //         │ Ø3.2   │ pocket  │ backer  │
-        //         └────────┴─────────┴─────────┘
-        //          screw ────────►  nut
+        // Tightening pulls the nut TOWARD the screw head, so the nut must
+        // bear against material on that side, with only a clearance hole
+        // through it. That is a counterbore, and one laser-cut sheet cannot
+        // make one — so the rail is three laminations:
         //
-        // Rail A's pocket is a through-cut, so the nut drops in during
-        // assembly; rail B glues behind it and traps it for good. Nothing
-        // threads into wood, nothing can spin or fall out, and the joint
-        // survives being opened indefinitely — which wood screws in basswood
-        // would not.
+        //     z:  -D      -D+t    -D+2t    -D+3t    -D+4t
+        //         ├────────┼────────┼────────┼────────┤
+        //         │ back   │ rail A │ rail B │ rail C │
+        //         │ cover  │ Ø clr  │  hex   │ Ø clr  │
+        //         │ Ø clr  │        │  nut   │        │
+        //         └────────┴────────┴────────┴────────┘
+        //          screw ───────────►  ↑
+        //                    nut pulls back against rail A
+        //
+        // Rail A takes the load: the nut bears on its rear face and rail A
+        // is through-tenoned into the side walls, so the path is
+        // nut -> rail A -> tenon -> wall. The screw head clamps the cover
+        // against rail A's front face.
+        //
+        // Rail B holds the nut laterally. Rail C stops it escaping into the
+        // box when the screw is out — its hole is smaller than the nut's
+        // across-flats, so the nut cannot pass, but any screw length can.
+        // A and C are geometrically identical, so they are the same DXF.
         //
         // The back cover is INSET into the wall opening rather than lapped
         // over it, so its outer face finishes flush with the wall rear edges
-        // and the fixings are the only thing visible from behind.
+        // and the fixings are all that shows from behind.
 
         const zBc0 = zBack;                 // back cover, flush with wall rear
         const zBc1 = zBack + t;
-        const zRa0 = zBc1;                  // rail A — hex nut pockets
-        const zRa1 = zBc1 + t;
-        const zRb0 = zRa1;                  // rail B — solid backer
-        const zRb1 = zRa1 + t;
+        const railZ = [zBc1, zBc1 + t, zBc1 + 2 * t, zBc1 + 3 * t];
 
         const bcl = definition.backClearance;
         const railW = definition.railW;
+        const clrR = definition.screwDia / 2 + 0.25 * millimeter;
 
         fCuboid(context, id + "backCover", {
                 "corner1" : vector(left + t + bcl,  bottom + t + bcl, zBc0),
@@ -550,32 +559,35 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             const y1 = y0 + railW;
             const yMid = (y0 + y1) / 2;
 
-            // Rail A: full width, through-tenons into the side walls, tenon
-            // grown by kerf/2 per side exactly as the braces are.
+            // Rail A — load-bearing, through-tenoned into the side walls.
             fCuboid(context, id + ("railA" ~ ri), {
-                    "corner1" : vector(left,  y0 - kerf / 2, zRa0),
-                    "corner2" : vector(right, y1 + kerf / 2, zRa1) });
+                    "corner1" : vector(left,  y0 - kerf / 2, railZ[0]),
+                    "corner2" : vector(right, y1 + kerf / 2, railZ[1]) });
 
             const rSide = ["wallL", "wallR"];
             for (var w = 0; w < 2; w += 1)
             {
                 fCuboid(context, id + ("rmort" ~ ri ~ w), {
-                        "corner1" : vector(left - over,  y0 + kerf / 2, zRa0 + kerf / 2),
-                        "corner2" : vector(right + over, y1 - kerf / 2, zRa1 - kerf / 2) });
+                        "corner1" : vector(left - over,  y0 + kerf / 2, railZ[0] + kerf / 2),
+                        "corner2" : vector(right + over, y1 - kerf / 2, railZ[1] - kerf / 2) });
                 opBoolean(context, id + ("rmortCut" ~ ri ~ w), {
                         "tools"         : qCreatedBy(id + ("rmort" ~ ri ~ w), EntityType.BODY),
                         "targets"       : qCreatedBy(id + rSide[w], EntityType.BODY),
                         "operationType" : BooleanOperationType.SUBTRACTION });
             }
 
-            // Rail B: inner width only — it is glued to rail A, so it needs
-            // no joint of its own.
+            // Rails B and C — inner width, glued to A, so no joints needed.
             fCuboid(context, id + ("railB" ~ ri), {
-                    "corner1" : vector(left + t,  y0, zRb0),
-                    "corner2" : vector(right - t, y1, zRb1) });
+                    "corner1" : vector(left + t,  y0, railZ[1]),
+                    "corner2" : vector(right - t, y1, railZ[2]) });
+            fCuboid(context, id + ("railC" ~ ri), {
+                    "corner1" : vector(left + t,  y0, railZ[2]),
+                    "corner2" : vector(right - t, y1, railZ[3]) });
 
+            var clrA = [];
             var pockets = [];
-            var thru = [];
+            var clrC = [];
+
             for (var k = 0; k < definition.screwsPerRail; k += 1)
             {
                 var sx = 0 * meter;
@@ -584,38 +596,46 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                     sx = -definition.screwXSpan
                        + k * (2 * definition.screwXSpan / (definition.screwsPerRail - 1));
                 }
+                const tag = "" ~ ri ~ k;
 
-                // clearance hole through the back cover
-                fCylinder(context, id + ("bch" ~ ri ~ k), {
+                // clearance through the back cover
+                fCylinder(context, id + ("bch" ~ tag), {
                         "topCenter"    : vector(sx, yMid, zBc1 + over),
                         "bottomCenter" : vector(sx, yMid, zBc0 - over),
                         "radius"       : definition.screwDia / 2 - kerf / 2 });
-                coverHoles = append(coverHoles, qCreatedBy(id + ("bch" ~ ri ~ k), EntityType.BODY));
+                coverHoles = append(coverHoles, qCreatedBy(id + ("bch" ~ tag), EntityType.BODY));
 
-                // captive hex pocket through rail A
+                // clearance through rail A — the nut bears on the ring around it
+                fCylinder(context, id + ("cah" ~ tag), {
+                        "topCenter"    : vector(sx, yMid, railZ[1] + over),
+                        "bottomCenter" : vector(sx, yMid, railZ[0] - over),
+                        "radius"       : clrR });
+                clrA = append(clrA, qCreatedBy(id + ("cah" ~ tag), EntityType.BODY));
+
+                // hex pocket through rail B — the nut itself
                 pockets = append(pockets,
-                    hexPrism(context, id + ("hexp" ~ ri ~ k), sx, yMid,
-                             definition.nutAcrossFlats - kerf, zRa0 - over, zRa1 + over));
+                    hexPrism(context, id + ("hexp" ~ tag), sx, yMid,
+                             definition.nutAcrossFlats - kerf, railZ[1] - over, railZ[2] + over));
 
-                // Clearance through rail B. The nut pocket is only one sheet
-                // thick, so without this an M3x8 bottoms out on the backer
-                // instead of clamping and the cover never pulls up tight.
-                // With it, any screw from M3x6 upward works.
-                fCylinder(context, id + ("rbh" ~ ri ~ k), {
-                        "topCenter"    : vector(sx, yMid, zRb1 + over),
-                        "bottomCenter" : vector(sx, yMid, zRb0 - over),
-                        "radius"       : definition.screwDia / 2 + 0.25 * millimeter });
-                thru = append(thru, qCreatedBy(id + ("rbh" ~ ri ~ k), EntityType.BODY));
+                // clearance through rail C — retains the nut, passes any screw
+                fCylinder(context, id + ("cch" ~ tag), {
+                        "topCenter"    : vector(sx, yMid, railZ[3] + over),
+                        "bottomCenter" : vector(sx, yMid, railZ[2] - over),
+                        "radius"       : clrR });
+                clrC = append(clrC, qCreatedBy(id + ("cch" ~ tag), EntityType.BODY));
             }
 
-            opBoolean(context, id + ("pocketCut" ~ ri), {
-                    "tools"         : qUnion(pockets),
+            opBoolean(context, id + ("clrACut" ~ ri), {
+                    "tools"         : qUnion(clrA),
                     "targets"       : qCreatedBy(id + ("railA" ~ ri), EntityType.BODY),
                     "operationType" : BooleanOperationType.SUBTRACTION });
-
-            opBoolean(context, id + ("thruCut" ~ ri), {
-                    "tools"         : qUnion(thru),
+            opBoolean(context, id + ("pocketCut" ~ ri), {
+                    "tools"         : qUnion(pockets),
                     "targets"       : qCreatedBy(id + ("railB" ~ ri), EntityType.BODY),
+                    "operationType" : BooleanOperationType.SUBTRACTION });
+            opBoolean(context, id + ("clrCCut" ~ ri), {
+                    "tools"         : qUnion(clrC),
+                    "targets"       : qCreatedBy(id + ("railC" ~ ri), EntityType.BODY),
                     "operationType" : BooleanOperationType.SUBTRACTION });
         }
 
