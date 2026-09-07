@@ -149,7 +149,8 @@ and it left with the lidar.
 
 ## 7. Onshape workflow
 
-The path that matches how you already work:
+> Full version, including where the vendor CAD is and how to set up the
+> document: [`onshape-workflow.md`](onshape-workflow.md). Summary:
 
 1. **Model the box as a solid** at external dimensions (~300 × 190 × 46 mm).
 2. **Box Panelise** — decomposes it into overlapping flat panels. Set thickness

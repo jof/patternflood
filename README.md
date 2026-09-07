@@ -35,6 +35,7 @@ borrows the idea.
 docs/desktop/    Project B — the Patternflow fork
 docs/wall/       Project A — the room-interactive wall
 firmware/        patch series against upstream (desktop build)
+hardware/cad/    vendor STEP models (MIT, from Adafruit_CAD_Parts)
 upstream/        clone @ 87700bd (v3.9.5), gitignored; `desktop` branch holds the fork
 ```
 
