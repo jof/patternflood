@@ -189,7 +189,7 @@ function hexPrism(context is Context, id is Id, cx is ValueWithUnits, cy is Valu
 //
 // Construction, front to back:
 //
-//   z = nl*t ┬─────────────────────────────┬  outer lamination: FULL footprint,
+//   z = 0    ┬─────────────────────────────┬  outer lamination: FULL footprint,
 //            │  ┌───────────────────────┐  │  finger-jointed to the wall front
 //   z = t    ┼──┤ inner lamination(s)   ├──┼  edges. Inner laminations are
 //            │  │ INSET by t, drop      │  │  inset by t so they drop inside
@@ -303,10 +303,14 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         const bottom = -(definition.apertureH / 2 + definition.controlH);
         const top    =   definition.apertureH / 2 + definition.marginTop;
 
+        // DATUM: z = 0 is the front plane — the bezel's outer face AND the
+        // LED surface, coplanar. The bezel therefore hangs BACK from z = 0
+        // and the panel passes through its aperture to finish flush.
         const zBack  = -definition.depth;
-        const zFront = nl * t;                  // outer face of the bezel
-        const zOut0  = (nl - 1) * t;            // outer lamination band
-        const zOut1  = nl * t;
+        const zFront = 0 * meter;               // outer face of the bezel
+        const zOut0  = -t;                      // outer lamination band
+        const zOut1  = 0 * meter;
+        const zBezB  = -nl * t;                 // rearmost bezel lamination
 
         // ── walls ───────────────────────────────────────────────────────
         // Left/right span the full height, top/bottom the full width; they
@@ -373,9 +377,10 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 in0 = 0 * meter;
             }
 
+            // i = 0 is the rearmost lamination; i = nl-1 is the outer face.
             fCuboid(context, id + ("layer" ~ i), {
-                    "corner1" : vector(left + in0,  bottom + in0, i * t),
-                    "corner2" : vector(right - in0, top - in0,    (i + 1) * t) });
+                    "corner1" : vector(left + in0,  bottom + in0, -(nl - i) * t),
+                    "corner2" : vector(right - in0, top - in0,    -(nl - i - 1) * t) });
             plates = append(plates, qCreatedBy(id + ("layer" ~ i), EntityType.BODY));
         }
         const outerPlate = qCreatedBy(id + ("layer" ~ (nl - 1)), EntityType.BODY);
@@ -648,8 +653,8 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         var tools = [];
 
         fCuboid(context, id + "apTool", {
-                "corner1" : vector(-definition.apertureW / 2, -definition.apertureH / 2, -over),
-                "corner2" : vector( definition.apertureW / 2,  definition.apertureH / 2, zFront + over) });
+                "corner1" : vector(-definition.apertureW / 2, -definition.apertureH / 2, zBezB - over),
+                "corner2" : vector( definition.apertureW / 2,  definition.apertureH / 2, over) });
         tools = append(tools, qCreatedBy(id + "apTool", EntityType.BODY));
 
         const knobY = -definition.apertureH / 2 - definition.controlH / 2;
@@ -657,8 +662,8 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         {
             const knobX = (i - (definition.knobCount - 1) / 2) * definition.knobPitch;
             fCylinder(context, id + ("bore" ~ i), {
-                    "topCenter"    : vector(knobX, knobY, zFront + over),
-                    "bottomCenter" : vector(knobX, knobY, -over),
+                    "topCenter"    : vector(knobX, knobY, over),
+                    "bottomCenter" : vector(knobX, knobY, zBezB - over),
                     "radius"       : definition.boreDia / 2 });
             tools = append(tools, qCreatedBy(id + ("bore" ~ i), EntityType.BODY));
         }

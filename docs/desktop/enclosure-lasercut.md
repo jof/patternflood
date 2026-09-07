@@ -219,3 +219,84 @@ be exact.
   angled stand is easy and suits a desktop object; keyholes need doubled pads.
 - **Grain direction as decoration.** If the doublers are cross-grained anyway,
   the exposed edges will show it. Worth deciding whether that's a feature.
+
+---
+
+## 11. Panel mounting: there is no standard
+
+Researched because the braces need to hit the panels' rear threaded posts, and
+those positions decide whether the braces work at all.
+
+**Waveshare publishes no mechanical drawing.** Neither the wiki nor the docs
+platform gives hole positions, count, thread size or even panel thickness. The
+Adafruit forum thread on exactly this question concludes that panel makers don't
+publish mounting drawings and that positions **vary batch to batch**, because
+these are secondary-market industrial modules.
+
+Upstream Patternflow hit the same wall independently. Its BOM tells you to buy
+one specific listing because *"its mounting-screw positions are known to match
+the case"*, and `hardware/case/bed_256mm/for_other_panels/` exists solely because
+*"panel suppliers drill them in different places"* — with the warning that
+*"adjustable ≠ universal"*.
+
+So there is nothing reliable to clone. But there is one real data point.
+
+### Measured: Adafruit 5036 (P2.5 64×32)
+
+Extracted from the Ø3.0 mm circles in its published STEP
+(`hardware/cad/vendor/` sources, Adafruit_CAD_Parts):
+
+| | |
+|---|---|
+| Panel | 160 × 80 × **17.5** mm |
+| Posts | **4 × M3**, one per corner |
+| x inset | 12.45 / 12.50 mm (spacing 135.05) |
+| y inset | 15.75 / 15.75 mm (spacing 48.50) |
+| Thread depth | ~11.5 mm |
+
+**The convention that generalises:** four M3 holes, one near each corner, inset
+**12–16 mm** from each edge. Nothing else does — the insets aren't equal between
+axes, so there's no single rule to apply.
+
+Extrapolated to a 128 × 128 P2 64×64, that puts the posts about `64 − 14 = 50 mm`
+from the panel's own centre, which is what `postXOffset` and `braceYOffset` are
+now set to. Both were previously guesses (54 and 59) with nothing behind them.
+
+**Still measure them.** The obround slots absorb error in x; **y has no such
+forgiveness**, and if the posts aren't at ±`braceYOffset` the braces miss
+entirely. One variable fixes it, but only once you know the number.
+
+Also note the 17.5 mm thickness against our 15 mm `panelDepth` placeholder — see
+§12, because that number now does more work than it used to.
+
+---
+
+## 12. Flush LEDs, and what it costs
+
+The display surface now finishes **coplanar with the bezel's outer face**: both
+sit on `z = 0`. Previously the bezel stood 6 mm proud and the LEDs sat in a
+shadowbox recess.
+
+How it works: the bezel hangs back from the front plane (`z = -6 … 0`) and the
+aperture is cut **larger** than the panel, so the panel passes through it and
+its own front face forms part of the front surface. `#apertureGap` is signed:
+
+| `#apertureGap` | Result |
+|---|---|
+| **+0.5 mm** *(current)* | aperture clears the panel → **flush**, hairline gap all round |
+| −0.25 mm | aperture laps over the panel edge → LEDs recess by the bezel thickness |
+
+> ⚠️ **Flush means there is no front stop, and that is unavoidable.** A stop has
+> to sit in front of the thing it stops, so any lip that locates the panel in z
+> necessarily also covers it and pushes the LEDs back. Nothing can hold the
+> panel forward except what is behind it.
+>
+> So **`#panelDepth` alone decides how flush the result is.** The braces sit at
+> `-panelDepth`, and any error there shows directly as the panel sitting proud
+> or shy. Measure it properly, expect to shim the braces on first assembly, and
+> if that tolerance turns out to be unwinnable, `#apertureGap` negative is the
+> forgiving fallback: a lip locates the panel positively at the cost of a small
+> recess.
+
+External depth drops to **40 mm** as a side effect, since the bezel no longer
+adds to the stack.
