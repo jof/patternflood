@@ -36,13 +36,34 @@ against Adafruit's CircuitPython board definition:
 Ten of fourteen already match — upstream evidently took the Matrix Portal as
 its pinout reference. **Four `#define`s in `config.h`** and the display works.
 
-Alongside them:
+That is genuinely the whole display change:
 
 ```c
 #define PANEL_RES_W 128   // unchanged
 #define PANEL_RES_H 64    // unchanged
-#define PANEL_CHAIN 2     // was 1 — two 64-wide panels in a straight chain
+#define PANEL_CHAIN 1     // unchanged — see below
 ```
+
+**The panel config needs no change at all.** Two 64×64 shift-register panels
+chained are electrically indistinguishable from one 128×64 panel — the data just
+shifts straight through — so upstream's stock values are already correct.
+
+`PANEL_CHAIN 2` would be **wrong**, and it's worth understanding why, because the
+trap is subtle. `core_display.h` passes `PANEL_RES_W` to the driver as the
+*module* width:
+
+```c
+HUB75_I2S_CFG mxconfig(PANEL_RES_W, PANEL_RES_H, PANEL_CHAIN, _pins);
+```
+
+and the library's physical width is `mx_width × chain_length`. But `PANEL_RES_W`
+is **simultaneously** the canvas width everywhere else — `core_canvas.h`,
+`core_tables.h`, `pf_module.h`, the module ABI's array bounds. Those two uses
+only agree when `PANEL_CHAIN` is 1. Setting it to 2 gives a 256-px-wide physical
+display driven by a 128-px-wide canvas.
+
+In practice `PANEL_CHAIN` is effectively pinned at 1 in this codebase. Change
+`PANEL_RES_W` to describe the whole chain, not the module.
 
 `config.h` explicitly documents this as the supported path: *"Running a panel
 other than the stock 128x64? Change these to match your hardware and reflash —
@@ -182,8 +203,9 @@ chain ever gets swapped for a plain 5 V supply.
 
 ## 6. Order of work
 
-1. Flash stock firmware with the four pin edits + `PANEL_CHAIN 2`, on **USB
-   power, one panel, low brightness**. Confirm pixels before anything else.
+1. Flash stock firmware with the four pin edits, on **USB power, one panel,
+   low brightness** (`PANEL_RES_W 64` for the single-panel test). Confirm
+   pixels before anything else.
 2. Fix `platformio.ini` for 8 MB / quad PSRAM + new partition table. Tune colour
    depth until stable.
 3. Second panel, confirm the chain and the seam.

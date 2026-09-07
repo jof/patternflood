@@ -64,11 +64,13 @@ Two Waveshare P2 64×64 panels, chained horizontally:
             = 128 × 64 px, 8192 px, P2 pitch
 ```
 
-This is a **straight HUB75 chain**, not a 2×2 tile — `PANEL_CHAIN 2` with
-`PANEL_RES_W 128 / PANEL_RES_H 64`. No `VirtualMatrixPanel` mapping, no
-serpentine coordinate transform, and **every upstream pattern runs unmodified**
-because the pixel grid is bit-identical to stock. That is the whole reason
-this layout is the right v1.
+This is a **straight HUB75 chain**, not a 2×2 tile, and it needs upstream's
+stock `PANEL_RES_W 128 / PANEL_RES_H 64 / PANEL_CHAIN 1` **unchanged** — two
+chained shift-register panels are electrically one 128-wide panel. No
+`VirtualMatrixPanel` mapping, no serpentine transform, and **every upstream
+pattern runs unmodified** because the pixel grid is bit-identical to stock.
+That is the whole reason this layout is the right v1. (Why `PANEL_CHAIN 2`
+would be wrong: [`firmware-delta.md`](firmware-delta.md) §1.)
 
 Physically it is *smaller* than upstream: 256×128 mm vs 320×160 mm, because P2
 is a finer pitch than P2.5. Denser, brighter-looking, and easier to enclose.
@@ -240,8 +242,13 @@ aperture into a finished bezel is the one change that ruins a front panel.
 
 ## 3. Fabrication
 
-Left open deliberately — the plan above is dimensioned, not fabrication-locked.
-Three viable routes:
+> ✅ **Decided: laser-cut 3 mm basswood, finger-jointed, doubled where it
+> matters.** The full design is in
+> [`enclosure-lasercut.md`](enclosure-lasercut.md). The survey below is kept for
+> the reasoning; note that the "hybrid" row is essentially what was chosen, with
+> wood laminations in place of printed internals.
+
+Three routes were considered:
 
 | Route | Fit | Notes |
 |---|---|---|

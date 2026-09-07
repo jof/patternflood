@@ -73,8 +73,8 @@ you depend on.
 under what USB-C will give you, and it's the safest possible first test.
 
 1. Matrix Portal S3 plugs directly onto the panel's HUB75 input header.
-2. In `config.h`, apply the four pin fixes
-   ([`firmware-delta.md`](firmware-delta.md) §1) and start with **one** panel:
+2. Apply the pinout patch (`firmware/patches/0001-*`, already on the `desktop`
+   branch) and set `config.h` for **one** panel:
    ```c
    #define PANEL_RES_W 64      // one panel for now
    #define PANEL_RES_H 64
@@ -92,15 +92,18 @@ under what USB-C will give you, and it's the safest possible first test.
 
 ### A4. Second panel
 
-Short HUB75 ribbon from panel A's **OUT** to panel B's **IN**, then:
+Short HUB75 ribbon from panel A's **OUT** to panel B's **IN**, then put
+`PANEL_RES_W` back to its stock value:
 
 ```c
-#define PANEL_RES_W 128
-#define PANEL_CHAIN 2
+#define PANEL_RES_W 128   // stock
+#define PANEL_CHAIN 1     // stock — NOT 2, see firmware-delta.md §1
 ```
 
-Still on USB, still dim. Confirm the image is continuous across the seam and
-that column 64 isn't duplicated or dropped.
+Two chained shift-register panels are electrically one 128-wide panel, so this
+is upstream's untouched configuration. Still on USB, still dim. Confirm the
+image is continuous across the seam and that column 64 isn't duplicated or
+dropped.
 
 ### A5. `platformio.ini` and the partition table
 

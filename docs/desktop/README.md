@@ -13,14 +13,16 @@ to keep tracking it.
 | Controller | **Adafruit Matrix Portal S3** (no custom PCB) |
 | Input | **4 × Adafruit 4991 seesaw encoders** on I²C |
 | Power | **USB-C**, optionally a bank — see [`power-plan.md`](power-plan.md) |
-| Firmware | **Forked Patternflow**, tracking upstream |
+| Firmware | **Forked Patternflow** — `desktop` branch, patches in [`../../firmware/`](../../firmware/) |
+| Enclosure | **Laser-cut 3 mm basswood**, finger-jointed, selectively doubled |
 
 ## Plans
 
 | Doc | Covers |
 |---|---|
 | [**`build-prep.md`**](build-prep.md) | **What to do and order, in sequence — start here** |
-| [`mechanical-plan.md`](mechanical-plan.md) | Geometry, stackup, front panel, fabrication |
+| [`mechanical-plan.md`](mechanical-plan.md) | Geometry, stackup, front panel, clearances |
+| [`enclosure-lasercut.md`](enclosure-lasercut.md) | Finger-joint box in 3 mm basswood, Onshape workflow |
 | [`power-plan.md`](power-plan.md) | USB-C, PD trigger, buck, optional bank |
 | [`firmware-delta.md`](firmware-delta.md) | Pinout diff, memory port, I²C encoders |
 

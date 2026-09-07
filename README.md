@@ -11,7 +11,8 @@ They started as one build. They're separate because they want opposite things.
 | Display | 128 × 64 px, 256 × 128 mm | 192 × 192 px, 576 × 576 mm |
 | Input | four seesaw encoders | VL53L9CX lidar, contactless |
 | Compute | Matrix Portal S3 | Pi + RP2350 front-end |
-| Power | USB-C, ~10 W | mains, ~200 W peak |
+| Power | mains 5 V 8 A, ~10 W | mains, ~200 W peak |
+| Enclosure | laser-cut basswood box | frame + wall mount |
 | Code | **tracks upstream** | new codebase |
 | Status | **ready to build** | concept — lidar on order |
 
@@ -33,7 +34,8 @@ borrows the idea.
 ```
 docs/desktop/    Project B — the Patternflow fork
 docs/wall/       Project A — the room-interactive wall
-upstream/        pristine clone @ 87700bd (v3.9.5), gitignored, never edited
+firmware/        patch series against upstream (desktop build)
+upstream/        clone @ 87700bd (v3.9.5), gitignored; `desktop` branch holds the fork
 ```
 
 ## The findings that shaped both

@@ -1,0 +1,59 @@
+From 4e32c3073ef82c0d5defd4c6b5ddb826a907b544 Mon Sep 17 00:00:00 2001
+From: Jonathan Lassoff <jof@thejof.com>
+Date: Sun, 6 Sep 2026 18:19:47 -0700
+Subject: [PATCH] Retarget HUB75 pinout to Adafruit Matrix Portal S3
+
+Ten of the fourteen HUB75 pins already matched upstream's v3 carrier
+board; only B2, A, B and D differ. Source is Adafruit's CircuitPython
+board definition for adafruit_matrixportal_s3.
+
+PANEL_RES_W/H and PANEL_CHAIN are deliberately unchanged. Two 64x64
+panels chained are electrically one 128x64 panel, and PANEL_CHAIN must
+stay 1 regardless: core_display.h passes PANEL_RES_W as the module width
+so physical width is PANEL_RES_W * PANEL_CHAIN, while PANEL_RES_W is also
+the canvas width in core_canvas.h, core_tables.h and the module ABI.
+Those agree only when chain is 1.
+---
+ firmware/patternflow/config.h | 20 +++++++++++++++-----
+ 1 file changed, 15 insertions(+), 5 deletions(-)
+
+diff --git a/firmware/patternflow/config.h b/firmware/patternflow/config.h
+index d970f4d..18fde09 100644
+--- a/firmware/patternflow/config.h
++++ b/firmware/patternflow/config.h
+@@ -146,17 +146,27 @@ constexpr float EULER      = 2.71828182845904523536f;
+   #define HUB75_DRIVER HUB75_I2S_CFG::SHIFTREG  // plain shift-register panel
+ #endif
+ 
+-// --- HUB75 Pin Mapping (ESP32-S3) ---
++// --- HUB75 Pin Mapping (Adafruit Matrix Portal S3) ---
++// Retargeted from upstream's custom v3 carrier PCB. Ten of the fourteen
++// already matched; only B2, A, B and D differ. Source: Adafruit's
++// CircuitPython board definition for adafruit_matrixportal_s3.
++//
++// NOTE ON PANEL_CHAIN: this build runs two 64x64 panels chained, and that
++// still wants PANEL_RES_W 128 / PANEL_CHAIN 1 -- i.e. the stock values.
++// core_display.h passes PANEL_RES_W as the *module* width and the library
++// computes physical width as mx_width * chain_length, while PANEL_RES_W is
++// ALSO the canvas width everywhere else. Those only agree when chain is 1.
++// Two chained shift-register panels are electrically one 128-wide panel.
+ #define R1_PIN  42
+ #define G1_PIN  41
+ #define B1_PIN  40
+ #define R2_PIN  38
+ #define G2_PIN  39
+-#define B2_PIN  13
+-#define PIN_A   46
+-#define PIN_B   11
++#define B2_PIN  37
++#define PIN_A   45
++#define PIN_B   36
+ #define PIN_C   48
+-#define PIN_D   12
++#define PIN_D   35
+ #define PIN_E   21
+ #define LAT_PIN 47
+ #define OE_PIN  14
+-- 
+2.43.0
+
