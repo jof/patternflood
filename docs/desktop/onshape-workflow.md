@@ -195,3 +195,54 @@ Steps 1–5 are worth doing **before** the caliper session in
 [`build-prep.md`](build-prep.md) §B, because the model tells you exactly which
 dimensions you need to measure, and you can drop them straight into the Variable
 Studio while the parts are still in your hand.
+
+---
+
+## 8. The live document
+
+**Free-tier documents are public.**
+
+| | |
+|---|---|
+| Document | [`8cfb8d4f799392c05f62f6ad`](https://cad.onshape.com/documents/8cfb8d4f799392c05f62f6ad/w/b5dfed0b24d2121a79e8b1a8) |
+| Workspace | `b5dfed0b24d2121a79e8b1a8` |
+| Variables | `ecb5fd1eaa5c82ce2840db45` — 17 variables |
+| Patternflow FS | `3c1a0a201f41714feba73536` — from [`../../hardware/cad/featurescript/enclosure.fs`](../../hardware/cad/featurescript/enclosure.fs) |
+| Part Studio 1 | `06ba580a80083894ed24609b` — panel proxy + bezel |
+
+**The repo is the source of truth**, not the document. `enclosure.fs` is authored
+here and uploaded; the document is only where it gets instantiated.
+
+### Verified state
+
+```
+bodies=4   cylindricalFaces=8
+  panels  2 x 128 x 128 x 15 mm   z -15..0    245,760 mm3 each
+  bezel   2 x 295.5 x 192.5 x 3   z 0..6       72,461 mm3 each (57.5% removed)
+```
+
+Volume closes exactly: 170,651 bbox − 97,729 aperture − 462 bores = 72,460.
+
+## 9. Gotchas found the hard way
+
+**FeatureScript version.** `FeatureScript 2600;` fails to compile **silently** —
+`featurespecs` returns an empty list with `libraryVersion: 0` and no error text.
+The current library is **3070**, which any eval response reports back. Check this
+first when a Feature Studio appears to do nothing.
+
+**Custom-feature namespace** is `e<elementId>::m<microversionId>`, and the
+`featurespecs` response hands it to you — don't construct it. It pins a
+**microversion**, so editing the Feature Studio leaves existing instances on the
+old one. Re-adding the feature (or updating its namespace) is required after every
+source change.
+
+**Variable references resolve against the committed table, not your payload.**
+So a table with derived variables cannot be created in one POST — it takes one
+POST per dependency level: base literals, then first-order derived, then anything
+referencing those. `#` is mandatory; bare names are rejected.
+
+**POST to `/variables` REPLACES the whole table.** Anything absent is deleted.
+
+**Part Studios see Variable Studio variables automatically** — no explicit
+reference needed, despite the `variablestudioreferences` endpoint existing.
+
