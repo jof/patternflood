@@ -327,3 +327,78 @@ part**, they vary between panel-mount USB-C extensions. Positioned at
 3. **Matrix Portal vs bank.** The bank occupies x −139…−21. If the panel's HUB75
    header sits centrally or on the left panel, `bankX` has to move. Another
    thing the caliper session settles.
+
+---
+
+## 8. Mains, superseding §§0–7
+
+Decision changed 2026-09-08: **mains AC in, Mean Well LRS-50-5 mounted on the
+chassis.** No bank, no PD sink, no buck, no USB-C inlet. Sections 0–7 are kept
+for the reasoning but the parts list in them is dead.
+
+```
+IEC C14 + switch + fuse  ──mains──►  LRS-50-5  ──5V──►  Matrix Portal terminals
+```
+
+### The parts, measured
+
+**Mean Well LRS-50-5** (spec sheet, Case 239A):
+
+| | |
+|---|---|
+| Size | **99 × 82 × 30 mm**, 210 g |
+| Output | 5 V, 10 A, 50 W, efficiency 83 % |
+| Mounting | **2 × M3 per side face, 74 mm apart**, ~15 mm up from the base, max penetration **L = 5 mm** |
+| | 2 × M3 on the base, 55 mm apart, max penetration **L = 3.0 mm** |
+| Terminals | 5-pin: **1 AC/L · 2 AC/N · 3 FG ⏚ · 4 DC −V · 5 DC +V** |
+| Inrush | **45 A @ 230 VAC** |
+| Derating | begins ~40 °C ambient |
+
+Note the penetration limits — M3 × 6 into the side (3 mm wood + washer) is right;
+anything longer bottoms out inside the supply.
+
+**IEC320 C14 inlet with rocker switch and 5 × 20 mm fuse:** cutout
+**47.0 × 27.4 mm**, 2 screws on **40 mm** centres, 10 A / 250 V. Switch itself is
+rated 6 A at 250 V.
+
+### Thermal: comfortable
+
+| Load | Out | % of rated | PSU dissipates |
+|---|---|---|---|
+| Typical pattern | 11 W | 22 % | **2.3 W** |
+| Full white | 25 W | 50 % | **5.1 W** |
+
+A 50 W supply running at a quarter to half load, well below the 40 °C derating
+knee. It still needs convection though — vents low on the walls and in the back
+cover, and the supply stood off the wood rather than laid on it.
+
+Worth noting the sizing is now generous rather than marginal: 10 A against a
+~5 A worst case. **The firmware power clamp becomes optional again** — the
+supply, not the source, is no longer the limit.
+
+## 9. Mains safety — read before wiring
+
+Mains inside a wooden box with a removable back is fine if done deliberately.
+Four things are not optional:
+
+> ⚠️ **1. The LRS-50's mains terminals are bare screw terminals.** Pins 1–3
+> are L, N and earth on an open block. The back cover comes off with six screws,
+> so sooner or later it will be opened while the thing is plugged in. **Make a
+> laser-cut terminal shroud** over the input side of the block, and rely on the
+> IEC switch as the second layer, not the first.
+
+**2. Earth the supply.** IEC pin 3 → the LRS-50's FG terminal. The LRS-50 has a
+metal case and expects to be earthed; the wooden enclosure is non-conductive so
+nothing else needs bonding, but the supply's chassis does.
+
+**3. Fuse for inrush, not for load.** The datasheet gives **45 A inrush**. At
+115 V a 50 W supply draws under 0.5 A running, so a **1 A time-delay (T)** fuse
+is about right — a fast-blow of that rating will nuisance-trip on switch-on.
+
+**4. Separate and restrain.** Mains wiring sleeved and strain-relieved at the
+IEC module, routed away from the DC side and the I²C runs. The included 18 AWG
+leads are fine for the current; it's the mechanical restraint that matters in a
+box that gets picked up.
+
+Also: basswood is combustible. Nothing here gets near ignition at 2–5 W of
+dissipation, but do not let the enclosure block the supply's own vents.
