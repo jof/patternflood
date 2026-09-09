@@ -75,47 +75,49 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
     });
 
 // ────────────────────────────────────────────────────────────────────────
-// Power bank proxy
+// PSU proxy
 // ────────────────────────────────────────────────────────────────────────
-// Voltaic V50 — 118 x 82 x 26 mm, 13,400 mAh / 48 Wh. Chosen because it is
-// the only bank found that documents BOTH pass-through charging and an
-// always-on mode (~7 mA idle), which is what stops Patternflow's sleep mode
-// shutting the bank off. Its USB-C PD output tops out around 20 W, so the
-// firmware power clamp is required rather than optional — see power-plan.md.
+// Mean Well LRS-50-5 — 99 x 82 x 30 mm, 210 g, 5V 10A. An envelope only.
 //
-// An envelope only. It sits strapped to the inside of the back cover, so
-// lifting the cover takes the bank with it.
+// It hangs from the divider shelf's underside on its own side-face M3 holes,
+// inside the mains compartment. Laid with its 82mm dimension along y, which
+// is why that compartment exists at all: 82mm fits no clear band in the bay
+// behind the panels, because the panel connector keep-outs occupy the middle
+// of it.
+//
+// (The Voltaic V50 bank proxy this replaces is in git history — the design
+// went mains on 2026-09-08.)
 
-annotation { "Feature Type Name" : "Power bank proxy" }
-export const bankProxy = defineFeature(function(context is Context, id is Id, definition is map)
+annotation { "Feature Type Name" : "PSU proxy" }
+export const psuProxy = defineFeature(function(context is Context, id is Id, definition is map)
     precondition
     {
         annotation { "Name" : "Length (x)" }
-        isLength(definition.bankL, LENGTH_BOUNDS);
+        isLength(definition.psuL, LENGTH_BOUNDS);
 
         annotation { "Name" : "Width (y)" }
-        isLength(definition.bankW, LENGTH_BOUNDS);
+        isLength(definition.psuW, LENGTH_BOUNDS);
 
         annotation { "Name" : "Thickness (z)" }
-        isLength(definition.bankT, LENGTH_BOUNDS);
+        isLength(definition.psuT, LENGTH_BOUNDS);
 
         annotation { "Name" : "Centre x" }
-        isLength(definition.bankX, ANY_LENGTH_BOUNDS);
+        isLength(definition.psuX, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "Centre y" }
-        isLength(definition.bankY, ANY_LENGTH_BOUNDS);
+        annotation { "Name" : "Top face y" }
+        isLength(definition.psuYTop, ANY_LENGTH_BOUNDS);
 
         annotation { "Name" : "Front face z" }
-        isLength(definition.bankZ, ANY_LENGTH_BOUNDS);
+        isLength(definition.psuZFront, ANY_LENGTH_BOUNDS);
     }
     {
-        fCuboid(context, id + "bank", {
-                "corner1" : vector(definition.bankX - definition.bankL / 2,
-                                   definition.bankY - definition.bankW / 2,
-                                   definition.bankZ),
-                "corner2" : vector(definition.bankX + definition.bankL / 2,
-                                   definition.bankY + definition.bankW / 2,
-                                   definition.bankZ + definition.bankT) });
+        fCuboid(context, id + "psu", {
+                "corner1" : vector(definition.psuX - definition.psuL / 2,
+                                   definition.psuYTop - definition.psuW,
+                                   definition.psuZFront - definition.psuT),
+                "corner2" : vector(definition.psuX + definition.psuL / 2,
+                                   definition.psuYTop,
+                                   definition.psuZFront) });
     });
 
 // ────────────────────────────────────────────────────────────────────────
@@ -168,8 +170,11 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
         annotation { "Name" : "Board height" }
         isLength(definition.mpH, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Board projection" }
+        annotation { "Name" : "Board thickness" }
         isLength(definition.mpProj, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Board front face z" }
+        isLength(definition.mpZFront, ANY_LENGTH_BOUNDS);
 
         annotation { "Name" : "Board centre x" }
         isLength(definition.mpX, ANY_LENGTH_BOUNDS);
@@ -194,13 +199,18 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
                                        back) });
         }
 
+        // The Matrix Portal is now mounted to the CASE, not plugged onto the
+        // panel, so its depth is set by where it is bolted rather than by the
+        // header height. A HUB75 ribbon reaches the panel instead — which is
+        // why the keep-out above got deeper, not shallower: a ribbon needs
+        // room to turn behind the connector where a board did not.
         fCuboid(context, id + "board", {
                 "corner1" : vector(definition.mpX - definition.mpW / 2,
                                    definition.mpY - definition.mpH / 2,
-                                   back - definition.mpProj),
+                                   definition.mpZFront - definition.mpProj),
                 "corner2" : vector(definition.mpX + definition.mpW / 2,
                                    definition.mpY + definition.mpH / 2,
-                                   back) });
+                                   definition.mpZFront) });
     });
 
 // ────────────────────────────────────────────────────────────────────────
@@ -437,41 +447,47 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "Back cover clearance" }
         isLength(definition.backClearance, KERF_BOUNDS);
 
-        annotation { "Name" : "Bank length (x)" }
-        isLength(definition.bankL, LENGTH_BOUNDS);
+        annotation { "Name" : "PSU compartment clear height" }
+        isLength(definition.psuClear, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Bank width (y)" }
-        isLength(definition.bankW, LENGTH_BOUNDS);
+        annotation { "Name" : "PSU length (x)" }
+        isLength(definition.psuL, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Bank centre x" }
-        isLength(definition.bankX, ANY_LENGTH_BOUNDS);
+        annotation { "Name" : "PSU centre x" }
+        isLength(definition.psuX, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "Bank centre y" }
-        isLength(definition.bankY, ANY_LENGTH_BOUNDS);
+        annotation { "Name" : "PSU front face z" }
+        isLength(definition.psuZFront, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "Strap slot length" }
-        isLength(definition.strapSlotW, LENGTH_BOUNDS);
+        annotation { "Name" : "PSU hole A from low-x end" }
+        isLength(definition.psuHoleAX, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Strap slot width" }
-        isLength(definition.strapSlotH, LENGTH_BOUNDS);
+        annotation { "Name" : "PSU hole B from low-x end" }
+        isLength(definition.psuHoleBX, LENGTH_BOUNDS);
 
-        annotation { "Name" : "USB-C cutout width" }
-        isLength(definition.usbCutW, LENGTH_BOUNDS);
+        annotation { "Name" : "PSU hole height from base" }
+        isLength(definition.psuHoleZ, LENGTH_BOUNDS);
 
-        annotation { "Name" : "USB-C cutout height" }
-        isLength(definition.usbCutH, LENGTH_BOUNDS);
+        annotation { "Name" : "PSU hole clearance dia" }
+        isLength(definition.psuHoleDia, LENGTH_BOUNDS);
 
-        annotation { "Name" : "USB-C screw spacing" }
-        isLength(definition.usbScrewSpacing, LENGTH_BOUNDS);
+        annotation { "Name" : "IEC cutout width" }
+        isLength(definition.iecCutW, LENGTH_BOUNDS);
 
-        annotation { "Name" : "USB-C screw diameter" }
-        isLength(definition.usbScrewDia, LENGTH_BOUNDS);
+        annotation { "Name" : "IEC cutout height" }
+        isLength(definition.iecCutH, LENGTH_BOUNDS);
 
-        annotation { "Name" : "USB-C position y" }
-        isLength(definition.usbY, ANY_LENGTH_BOUNDS);
+        annotation { "Name" : "IEC screw spacing" }
+        isLength(definition.iecScrewSpacing, LENGTH_BOUNDS);
 
-        annotation { "Name" : "USB-C position z" }
-        isLength(definition.usbZ, ANY_LENGTH_BOUNDS);
+        annotation { "Name" : "IEC screw diameter" }
+        isLength(definition.iecScrewDia, LENGTH_BOUNDS);
+
+        annotation { "Name" : "IEC position y" }
+        isLength(definition.iecY, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "IEC position z" }
+        isLength(definition.iecZ, ANY_LENGTH_BOUNDS);
     }
     {
         const t    = definition.thickness;
@@ -481,7 +497,11 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
 
         const left   = -(definition.apertureW / 2 + definition.marginSide);
         const right  =   definition.apertureW / 2 + definition.marginSide;
-        const bottom = -(definition.apertureH / 2 + definition.controlH);
+        // The control band's lower edge is the divider shelf; below it sits the
+        // mains compartment, so the box extends a shelf thickness plus the
+        // compartment's clear height further down.
+        const shelfTop = -(definition.apertureH / 2 + definition.controlH);
+        const bottom   = shelfTop - 2 * t - definition.psuClear;
         const top    =   definition.apertureH / 2 + definition.marginTop;
 
         // DATUM: z = 0 is the front plane — the bezel's outer face AND the
@@ -830,88 +850,85 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                     "operationType" : BooleanOperationType.SUBTRACTION });
         }
 
-        // ── velcro strap slots in the back cover ────────────────────────
-        // The bank straps to the INSIDE of the removable cover, so lifting
-        // the cover takes the bank out with it and there is no separate
-        // battery tray. Two straps at the bank's quarter points, each running
-        // in y across its width, through a pair of slots either side.
+        // ── divider shelf, and the mains compartment below it ───────────
+        // A horizontal shelf on the control band's lower edge, through-tenoned
+        // into both side walls. It does three jobs: stiffens a now much taller
+        // box, carries the PSU, and — the reason it is not optional —
+        // physically separates mains from the low-voltage side.
         //
-        // Obround, not rectangular: sharp internal corners are where soft
-        // basswood splits, and a strap slot is loaded in exactly that
-        // direction every time the strap is tensioned.
+        // The PSU hangs from the shelf's underside on its own side-face M3
+        // holes (74mm apart, 15mm up from its base, max 5mm penetration, so
+        // M3x6 through 3mm of wood and a washer). Those holes are NOT
+        // symmetric about the case: the spec puts them 10 and 84 from one end
+        // of a 99mm case, which is 2.5mm off centre. The shelf clearance is
+        // deliberately generous to absorb that plus the wedge of tolerance in
+        // a laser-cut part.
 
-        const ssr = definition.strapSlotH / 2 - kerf / 2;
-        for (var st = 0; st < 2; st += 1)
+        const shelfZ0 = zBezB;                  // bezel back
+        const shelfZ1 = zBack + t;              // back cover inner face
+
+        fCuboid(context, id + "shelf", {
+                "corner1" : vector(left,  shelfTop - t - kerf / 2, shelfZ0),
+                "corner2" : vector(right, shelfTop + kerf / 2,     shelfZ1) });
+
+        const shelfSides = ["wallL", "wallR"];
+        for (var w = 0; w < 2; w += 1)
         {
-            var sxc = definition.bankX - definition.bankL / 4;
-            if (st == 1)
-            {
-                sxc = definition.bankX + definition.bankL / 4;
-            }
-
-            for (var sd = 0; sd < 2; sd += 1)
-            {
-                var syc = definition.bankY - definition.bankW / 2 - definition.strapSlotH;
-                if (sd == 1)
-                {
-                    syc = definition.bankY + definition.bankW / 2 + definition.strapSlotH;
-                }
-
-                const sa = sxc - definition.strapSlotW / 2 + ssr;
-                const sb = sxc + definition.strapSlotW / 2 - ssr;
-                const stag = "" ~ st ~ sd;
-
-                fCylinder(context, id + ("spa" ~ stag), {
-                        "topCenter"    : vector(sa, syc, zBc1 + over),
-                        "bottomCenter" : vector(sa, syc, zBc0 - over),
-                        "radius"       : ssr });
-                fCylinder(context, id + ("spb" ~ stag), {
-                        "topCenter"    : vector(sb, syc, zBc1 + over),
-                        "bottomCenter" : vector(sb, syc, zBc0 - over),
-                        "radius"       : ssr });
-                fCuboid(context, id + ("spm" ~ stag), {
-                        "corner1" : vector(sa, syc - ssr, zBc0 - over),
-                        "corner2" : vector(sb, syc + ssr, zBc1 + over) });
-
-                coverHoles = append(coverHoles, qCreatedBy(id + ("spa" ~ stag), EntityType.BODY));
-                coverHoles = append(coverHoles, qCreatedBy(id + ("spb" ~ stag), EntityType.BODY));
-                coverHoles = append(coverHoles, qCreatedBy(id + ("spm" ~ stag), EntityType.BODY));
-            }
+            fCuboid(context, id + ("smort" ~ w), {
+                    "corner1" : vector(left - over,  shelfTop - t + kerf / 2, shelfZ0 + kerf / 2),
+                    "corner2" : vector(right + over, shelfTop - kerf / 2,     shelfZ1 - kerf / 2) });
+            opBoolean(context, id + ("smortCut" ~ w), {
+                    "tools"         : qCreatedBy(id + ("smort" ~ w), EntityType.BODY),
+                    "targets"       : qCreatedBy(id + shelfSides[w], EntityType.BODY),
+                    "operationType" : BooleanOperationType.SUBTRACTION });
         }
 
-        // ── panel-mount USB-C passthrough, right wall ───────────────────
-        // Replaces a DC barrel jack. A chassis USB-C extension means the
-        // only external connector is the same one the bank charges from, so
-        // plugging a charger into the case charges the bank in place — which
-        // is the whole reason the bank has to support pass-through.
-        //
-        // Placed clear of the corner fingers and the rail mortises.
+        // PSU mounting clearance through the shelf
+        var psuHoles = [];
+        const psuX0 = definition.psuX - definition.psuL / 2;
+        const psuHoleXs = [psuX0 + definition.psuHoleAX, psuX0 + definition.psuHoleBX];
+        for (var ph = 0; ph < 2; ph += 1)
+        {
+            fCylinder(context, id + ("psuh" ~ ph), {
+                    "topCenter"    : vector(psuHoleXs[ph], shelfTop + over,     definition.psuZFront - definition.psuHoleZ),
+                    "bottomCenter" : vector(psuHoleXs[ph], shelfTop - t - over, definition.psuZFront - definition.psuHoleZ),
+                    "radius"       : definition.psuHoleDia / 2 - kerf / 2 });
+            psuHoles = append(psuHoles, qCreatedBy(id + ("psuh" ~ ph), EntityType.BODY));
+        }
+        opBoolean(context, id + "psuHoleCut", {
+                "tools"         : qUnion(psuHoles),
+                "targets"       : qCreatedBy(id + "shelf", EntityType.BODY),
+                "operationType" : BooleanOperationType.SUBTRACTION });
 
-        var usbTools = [];
+        // ── IEC inlet, right wall, inside the mains compartment ─────────
+        // Deliberately in the PSU compartment rather than the electronics bay,
+        // so every mains conductor stays on one side of the shelf.
 
-        fCuboid(context, id + "usbCut", {
-                "corner1" : vector(right - t - over, definition.usbY - definition.usbCutW / 2 + kerf / 2,
-                                                     definition.usbZ - definition.usbCutH / 2 + kerf / 2),
-                "corner2" : vector(right + over,     definition.usbY + definition.usbCutW / 2 - kerf / 2,
-                                                     definition.usbZ + definition.usbCutH / 2 - kerf / 2) });
-        usbTools = append(usbTools, qCreatedBy(id + "usbCut", EntityType.BODY));
+        var iecTools = [];
+
+        fCuboid(context, id + "iecCut", {
+                "corner1" : vector(right - t - over, definition.iecY - definition.iecCutW / 2 + kerf / 2,
+                                                     definition.iecZ - definition.iecCutH / 2 + kerf / 2),
+                "corner2" : vector(right + over,     definition.iecY + definition.iecCutW / 2 - kerf / 2,
+                                                     definition.iecZ + definition.iecCutH / 2 - kerf / 2) });
+        iecTools = append(iecTools, qCreatedBy(id + "iecCut", EntityType.BODY));
 
         for (var us = 0; us < 2; us += 1)
         {
-            var uy = definition.usbY - definition.usbScrewSpacing / 2;
+            var uy = definition.iecY - definition.iecScrewSpacing / 2;
             if (us == 1)
             {
-                uy = definition.usbY + definition.usbScrewSpacing / 2;
+                uy = definition.iecY + definition.iecScrewSpacing / 2;
             }
-            fCylinder(context, id + ("usbScrew" ~ us), {
-                    "topCenter"    : vector(right + over,     uy, definition.usbZ),
-                    "bottomCenter" : vector(right - t - over, uy, definition.usbZ),
-                    "radius"       : definition.usbScrewDia / 2 - kerf / 2 });
-            usbTools = append(usbTools, qCreatedBy(id + ("usbScrew" ~ us), EntityType.BODY));
+            fCylinder(context, id + ("iecScrew" ~ us), {
+                    "topCenter"    : vector(right + over,     uy, definition.iecZ),
+                    "bottomCenter" : vector(right - t - over, uy, definition.iecZ),
+                    "radius"       : definition.iecScrewDia / 2 - kerf / 2 });
+            iecTools = append(iecTools, qCreatedBy(id + ("iecScrew" ~ us), EntityType.BODY));
         }
 
-        opBoolean(context, id + "usbCutOp", {
-                "tools"         : qUnion(usbTools),
+        opBoolean(context, id + "iecCutOp", {
+                "tools"         : qUnion(iecTools),
                 "targets"       : qCreatedBy(id + "wallR", EntityType.BODY),
                 "operationType" : BooleanOperationType.SUBTRACTION });
 
