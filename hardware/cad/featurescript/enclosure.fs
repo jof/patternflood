@@ -45,18 +45,31 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
 
         annotation { "Name" : "Panel count" }
         isInteger(definition.count, POSITIVE_COUNT_BOUNDS);
+
+        annotation { "Name" : "Panel body (undersize)" }
+        isLength(definition.panelBody, LENGTH_BOUNDS);
     }
     {
+        // panelW/panelH are the TILING PITCH; panelBody is the physical part,
+        // which is smaller. The difference is the inter-panel gap, and that
+        // gap is REQUIRED, not slop: each panel carries a half-gap border
+        // between its edge pixel centre and its edge, so
+        //     border + gap + border = one pixel pitch
+        // keeps the pixel grid continuous across the seam. Butting the bodies
+        // tight would put a whole gap's worth of error in the grid at every
+        // seam. Measured on a Waveshare P3 64x64: body 190, pitch 192, gap 2,
+        // and 189mm of pixel span — which is exactly 0.5mm of border per edge.
         const n = definition.count;
-        const totalW = n * definition.panelW;
+        const gap = definition.panelW - definition.panelBody;
+        const bodySpan = n * definition.panelBody + (n - 1) * gap;
 
         for (var i = 0; i < n; i += 1)
         {
-            const x0 = -totalW / 2 + i * definition.panelW;
+            const x0 = -bodySpan / 2 + i * definition.panelW;
 
             fCuboid(context, id + ("panel" ~ i), {
-                    "corner1" : vector(x0, -definition.panelH / 2, -definition.panelDepth),
-                    "corner2" : vector(x0 + definition.panelW, definition.panelH / 2, 0 * meter)
+                    "corner1" : vector(x0, -definition.panelBody / 2, -definition.panelDepth),
+                    "corner2" : vector(x0 + definition.panelBody, definition.panelBody / 2, 0 * meter)
             });
         }
     });
@@ -406,6 +419,9 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "Screw slot length" }
         isLength(definition.slotLen, LENGTH_BOUNDS);
 
+        annotation { "Name" : "Screw slot width" }
+        isLength(definition.slotW, LENGTH_BOUNDS);
+
         annotation { "Name" : "Rear rail width" }
         isLength(definition.railW, LENGTH_BOUNDS);
 
@@ -634,8 +650,13 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                         "operationType" : BooleanOperationType.SUBTRACTION });
             }
 
-            // Obround screw slots, two per panel.
-            const r = definition.screwDia / 2 - kerf / 2;
+            // Obround screw slots, two per panel. Deliberately oversize in
+            // BOTH axes: slotLen absorbs x variation between production runs,
+            // and slotW absorbs the fact that a panel's hole row is not
+            // collinear — measured 8mm edge inset for the end holes and 9mm
+            // for the centre hole on a P3, so a straight brace needs ~1mm of
+            // perpendicular give too. Use washers under the screw heads.
+            const r = definition.slotW / 2 - kerf / 2;
             var slots = [];
             for (var pi = 0; pi < definition.panelCount; pi += 1)
             {

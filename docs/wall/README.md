@@ -191,3 +191,57 @@ The lidar is the blocker, but nothing else is:
    aperture, and does room-scale presence well. Arguably both — see
    [`lidar-plan.md`](lidar-plan.md) §4 for the two-tier attention model, which
    was written for the combined build but fits this project better.
+
+---
+
+## 8. Measured panel data (P3 64×64)
+
+Measured off the actual panels, 2026-09-08. **This is the only hard mounting
+data for these parts** — Waveshare publishes no drawing, and §7 of the desktop
+[`enclosure-lasercut.md`](../desktop/enclosure-lasercut.md) records why nothing
+generalises between panel types.
+
+| | |
+|---|---|
+| Body | **190 × 190 mm** (not 192 — see below) |
+| Thread | **M3** |
+| Hole row, along the edge | **16 / 95 / 174 mm** from one corner (79 mm pitch, symmetric) |
+| Hole row, perpendicular | **8 mm** from the edge for the end holes, **9 mm** for the centre hole |
+| Tiling pitch | **192 mm** hole-centre to hole-centre between stacked panels |
+| Flatness | slightly **wedge-shaped**; laid together the gap is ~2 mm |
+
+### The 2 mm gap is required, not slop
+
+This is the important part, and it was not obvious:
+
+```
+  64 px x 3 mm pitch      -> 189 mm first-to-last pixel centre
+  body 190 mm             -> 189 + 0.5 mm border per edge
+  continuity across a seam requires  border + gap + border = 3 mm
+                                     0.5   + 2.0 + 0.5    = 3.0   ✓
+  tiling pitch = 190 + 2 = 192 = 64 x 3 mm                        ✓
+```
+
+So the panels are **deliberately undersize** and the gap makes up the pixel
+pitch. **Butting them tight would put a 2 mm error into the pixel grid at every
+seam** — a visible jog, not a cosmetic gap. The carrier must therefore be built
+on a **192 mm hole grid**, not on the panel bodies.
+
+For the 3 × 3 array: bodies span `3 × 190 + 2 × 2 = 574 mm`, pixel area
+`3 × 192 = 576 mm`. The wedge shape is also why alignment must come from the
+hole grid and not from panels touching each other.
+
+### Two consequences for the frame
+
+1. **The hole row is not collinear.** 8 mm for the end holes, 9 mm for the
+   centre one. Any straight rail bolting to all three needs ~1 mm of
+   perpendicular give — oversized holes or slots wide in both axes, with
+   washers.
+2. **Hole inset does not generalise at all.** Third data point now:
+
+   | Panel | Size | Inset | From centre |
+   |---|---|---|---|
+   | Adafruit 5036 (P2.5 64×32) | 160 × 80 | 15.75 mm | 24.25 mm |
+   | Waveshare P3 64×64 | 190 × 190 | **8 mm** | 87 mm |
+
+   Nearly a 2× spread in inset. Measure every panel type; infer nothing.

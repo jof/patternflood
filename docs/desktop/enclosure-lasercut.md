@@ -87,10 +87,19 @@ doubled front fixes it, and 6 mm happens to suit the part:
 
 ## 4. Aperture — and why there's no front lip
 
-Tiling LED panels have **no bezel margin**: P2 at 64 px is 128 mm of pixels in a
-128 mm module, edge to edge, because they're designed to butt seamlessly. So
-there is no border to grab, and **the panels cannot be retained from the front**
-the way a picture frame holds glass.
+> ⚠️ **Corrected 2026-09-08 from measured panels.** This section previously said
+> tiling panels are "128 mm of pixels in a 128 mm module, edge to edge". They are
+> not. The panel body is **undersize** and the gap between panels is **required**
+> for pixel continuity — measured on a P3: body 190, pitch 192, gap 2, with
+> 189 mm of pixel span, i.e. 0.5 mm of border per edge. The model now separates
+> `#panelW` (tiling pitch) from `#panelBody` (the physical part), and the
+> aperture is derived from `#panelBodySpan`. Full measurements and the arithmetic
+> are in [`../wall/README.md`](../wall/README.md) §8.
+
+Tiling LED panels have a **negligible** bezel margin — half a pixel pitch, so
+0.5 mm on P2. That is far too little to retain a panel from the front, so **the
+panels still cannot be held from the front** the way a picture frame holds glass,
+and everything below stands.
 
 Consequences:
 
