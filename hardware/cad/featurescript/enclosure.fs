@@ -447,8 +447,17 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "Back cover clearance" }
         isLength(definition.backClearance, KERF_BOUNDS);
 
-        annotation { "Name" : "PSU compartment clear height" }
-        isLength(definition.psuClear, LENGTH_BOUNDS);
+        annotation { "Name" : "Knob cluster centre x" }
+        isLength(definition.knobXCentre, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Knob row below aperture" }
+        isLength(definition.knobYOffset, LENGTH_BOUNDS);
+
+        annotation { "Name" : "PSU standoff from bottom wall" }
+        isLength(definition.psuStandoff, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Mains divider x" }
+        isLength(definition.dividerX, ANY_LENGTH_BOUNDS);
 
         annotation { "Name" : "PSU length (x)" }
         isLength(definition.psuL, LENGTH_BOUNDS);
@@ -497,11 +506,11 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
 
         const left   = -(definition.apertureW / 2 + definition.marginSide);
         const right  =   definition.apertureW / 2 + definition.marginSide;
-        // The control band's lower edge is the divider shelf; below it sits the
-        // mains compartment, so the box extends a shelf thickness plus the
-        // compartment's clear height further down.
-        const shelfTop = -(definition.apertureH / 2 + definition.controlH);
-        const bottom   = shelfTop - 2 * t - definition.psuClear;
+        // The PSU shares the control band rather than having a compartment of
+        // its own — the knobs are clustered to one end and the supply takes
+        // the other. That is what keeps the box 43mm shorter than a separate
+        // compartment below would.
+        const bottom = -(definition.apertureH / 2 + definition.controlH);
         const top    =   definition.apertureH / 2 + definition.marginTop;
 
         // DATUM: z = 0 is the front plane — the bezel's outer face AND the
@@ -850,54 +859,64 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                     "operationType" : BooleanOperationType.SUBTRACTION });
         }
 
-        // ── divider shelf, and the mains compartment below it ───────────
-        // A horizontal shelf on the control band's lower edge, through-tenoned
-        // into both side walls. It does three jobs: stiffens a now much taller
-        // box, carries the PSU, and — the reason it is not optional —
-        // physically separates mains from the low-voltage side.
+        // ── mains barrier: vertical divider + pocket top rail ───────────
+        // The PSU sits in the bottom-right of the control band, boxed in by
+        // the right wall, the bottom wall, a VERTICAL divider on its left and
+        // a short horizontal rail across its top. Together those enclose it,
+        // which is the point: every mains conductor stays inside that pocket,
+        // and the knob cluster and its I2C wiring stay outside it.
         //
-        // The PSU hangs from the shelf's underside on its own side-face M3
-        // holes (74mm apart, 15mm up from its base, max 5mm penetration, so
-        // M3x6 through 3mm of wood and a washer). Those holes are NOT
-        // symmetric about the case: the spec puts them 10 and 84 from one end
-        // of a 99mm case, which is 2.5mm off centre. The shelf clearance is
-        // deliberately generous to absorb that plus the wedge of tolerance in
-        // a laser-cut part.
+        // A vertical divider replaces the horizontal shelf of the previous
+        // layout. Same job, and it falls out of clustering the knobs — the
+        // band is now wide enough to share.
 
-        const shelfZ0 = zBezB;                  // bezel back
-        const shelfZ1 = zBack + t;              // back cover inner face
+        const barZ0 = zBezB;                    // bezel back
+        const barZ1 = zBack + t;                // back cover inner face
+        const railTopY = -definition.apertureH / 2;
+        const railBotY = railTopY - t;
 
-        fCuboid(context, id + "shelf", {
-                "corner1" : vector(left,  shelfTop - t - kerf / 2, shelfZ0),
-                "corner2" : vector(right, shelfTop + kerf / 2,     shelfZ1) });
+        // vertical divider, tenoned into the bottom wall
+        fCuboid(context, id + "divider", {
+                "corner1" : vector(definition.dividerX - t / 2 - kerf / 2, bottom,   barZ0),
+                "corner2" : vector(definition.dividerX + t / 2 + kerf / 2, railBotY, barZ1) });
+        fCuboid(context, id + "dmort", {
+                "corner1" : vector(definition.dividerX - t / 2 + kerf / 2, bottom - over,  barZ0 + kerf / 2),
+                "corner2" : vector(definition.dividerX + t / 2 - kerf / 2, bottom + t - kerf / 2, barZ1 - kerf / 2) });
+        opBoolean(context, id + "dmortCut", {
+                "tools"         : qCreatedBy(id + "dmort", EntityType.BODY),
+                "targets"       : qCreatedBy(id + "wallB", EntityType.BODY),
+                "operationType" : BooleanOperationType.SUBTRACTION });
 
-        const shelfSides = ["wallL", "wallR"];
-        for (var w = 0; w < 2; w += 1)
-        {
-            fCuboid(context, id + ("smort" ~ w), {
-                    "corner1" : vector(left - over,  shelfTop - t + kerf / 2, shelfZ0 + kerf / 2),
-                    "corner2" : vector(right + over, shelfTop - kerf / 2,     shelfZ1 - kerf / 2) });
-            opBoolean(context, id + ("smortCut" ~ w), {
-                    "tools"         : qCreatedBy(id + ("smort" ~ w), EntityType.BODY),
-                    "targets"       : qCreatedBy(id + shelfSides[w], EntityType.BODY),
-                    "operationType" : BooleanOperationType.SUBTRACTION });
-        }
+        // pocket top rail, tenoned into the right wall
+        fCuboid(context, id + "pocketRail", {
+                "corner1" : vector(definition.dividerX, railBotY - kerf / 2, barZ0),
+                "corner2" : vector(right,                railTopY + kerf / 2, barZ1) });
+        fCuboid(context, id + "prmort", {
+                "corner1" : vector(right - t - over, railBotY + kerf / 2, barZ0 + kerf / 2),
+                "corner2" : vector(right + over,     railTopY - kerf / 2, barZ1 - kerf / 2) });
+        opBoolean(context, id + "prmortCut", {
+                "tools"         : qCreatedBy(id + "prmort", EntityType.BODY),
+                "targets"       : qCreatedBy(id + "wallR", EntityType.BODY),
+                "operationType" : BooleanOperationType.SUBTRACTION });
 
-        // PSU mounting clearance through the shelf
+        // PSU mounting clearance through the BOTTOM wall. Its side-face holes
+        // are 10 and 84 from one end of a 99mm case — 2.5mm off centre, so
+        // these are not symmetric either. Screw path is 3mm wall + a
+        // psuStandoff spacer + up to 5mm of thread, i.e. M3x12.
         var psuHoles = [];
         const psuX0 = definition.psuX - definition.psuL / 2;
         const psuHoleXs = [psuX0 + definition.psuHoleAX, psuX0 + definition.psuHoleBX];
         for (var ph = 0; ph < 2; ph += 1)
         {
             fCylinder(context, id + ("psuh" ~ ph), {
-                    "topCenter"    : vector(psuHoleXs[ph], shelfTop + over,     definition.psuZFront - definition.psuHoleZ),
-                    "bottomCenter" : vector(psuHoleXs[ph], shelfTop - t - over, definition.psuZFront - definition.psuHoleZ),
+                    "topCenter"    : vector(psuHoleXs[ph], bottom + t + over, definition.psuZFront - definition.psuHoleZ),
+                    "bottomCenter" : vector(psuHoleXs[ph], bottom - over,     definition.psuZFront - definition.psuHoleZ),
                     "radius"       : definition.psuHoleDia / 2 - kerf / 2 });
             psuHoles = append(psuHoles, qCreatedBy(id + ("psuh" ~ ph), EntityType.BODY));
         }
         opBoolean(context, id + "psuHoleCut", {
                 "tools"         : qUnion(psuHoles),
-                "targets"       : qCreatedBy(id + "shelf", EntityType.BODY),
+                "targets"       : qCreatedBy(id + "wallB", EntityType.BODY),
                 "operationType" : BooleanOperationType.SUBTRACTION });
 
         // ── IEC inlet, right wall, inside the mains compartment ─────────
@@ -945,10 +964,14 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 "corner2" : vector( definition.apertureW / 2,  definition.apertureH / 2, over) });
         tools = append(tools, qCreatedBy(id + "apTool", EntityType.BODY));
 
-        const knobY = -definition.apertureH / 2 - definition.controlH / 2;
+        // Clustered, and hung off the aperture edge rather than centred in the
+        // band: the band is tall because of the PSU, not the knobs, so
+        // centring them in it would drop them oddly low.
+        const knobY = -definition.apertureH / 2 - definition.knobYOffset;
         for (var i = 0; i < definition.knobCount; i += 1)
         {
-            const knobX = (i - (definition.knobCount - 1) / 2) * definition.knobPitch;
+            const knobX = definition.knobXCentre
+                        + (i - (definition.knobCount - 1) / 2) * definition.knobPitch;
             fCylinder(context, id + ("bore" ~ i), {
                     "topCenter"    : vector(knobX, knobY, over),
                     "bottomCenter" : vector(knobX, knobY, zBezB - over),
