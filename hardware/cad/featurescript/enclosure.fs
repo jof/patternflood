@@ -450,8 +450,11 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "Knob cluster centre x" }
         isLength(definition.knobXCentre, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "Knob row below aperture" }
-        isLength(definition.knobYOffset, LENGTH_BOUNDS);
+        annotation { "Name" : "Knob grid columns" }
+        isInteger(definition.knobCols, POSITIVE_COUNT_BOUNDS);
+
+        annotation { "Name" : "Knob cluster centre y" }
+        isLength(definition.knobYCentre, ANY_LENGTH_BOUNDS);
 
         annotation { "Name" : "PSU standoff from bottom wall" }
         isLength(definition.psuStandoff, LENGTH_BOUNDS);
@@ -964,14 +967,27 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 "corner2" : vector( definition.apertureW / 2,  definition.apertureH / 2, over) });
         tools = append(tools, qCreatedBy(id + "apTool", EntityType.BODY));
 
-        // Clustered, and hung off the aperture edge rather than centred in the
-        // band: the band is tall because of the PSU, not the knobs, so
-        // centring them in it would drop them oddly low.
-        const knobY = -definition.apertureH / 2 - definition.knobYOffset;
+        // A 2-D cluster, not a row. Four knobs in a 2x2 block occupy 70mm of
+        // band width against 160mm for a 1x4 — and that 90mm is exactly what
+        // the IEC module needs, because it protrudes ~30mm behind its panel
+        // and a full-width knob row left only 10mm beside the PSU.
+        //
+        // Index order is reading order: K1 top-left, K2 top-right, K3
+        // bottom-left, K4 bottom-right. Upstream assigns fixed functions to
+        // K1..K4 (brightness, network, knob values, pattern list), so write
+        // this down next to the I2C addresses or the front panel will not
+        // match its own documentation.
+        const kCols = definition.knobCols;
+        const kRows = floor((definition.knobCount + kCols - 1) / kCols);
+
         for (var i = 0; i < definition.knobCount; i += 1)
         {
+            const kc = i % kCols;
+            const kr = floor(i / kCols);
             const knobX = definition.knobXCentre
-                        + (i - (definition.knobCount - 1) / 2) * definition.knobPitch;
+                        + (kc - (kCols - 1) / 2) * definition.knobPitch;
+            const knobY = definition.knobYCentre
+                        - (kr - (kRows - 1) / 2) * definition.knobPitch;
             fCylinder(context, id + ("bore" ~ i), {
                     "topCenter"    : vector(knobX, knobY, over),
                     "bottomCenter" : vector(knobX, knobY, zBezB - over),
