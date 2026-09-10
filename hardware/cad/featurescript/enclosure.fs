@@ -583,9 +583,6 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "PSU standoff from bottom wall" }
         isLength(definition.psuStandoff, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Stiffening web x" }
-        isLength(definition.webX, ANY_LENGTH_BOUNDS);
-
         annotation { "Name" : "Stiffening web depth" }
         isLength(definition.webDepth, LENGTH_BOUNDS);
 
@@ -992,15 +989,42 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                     "operationType" : BooleanOperationType.SUBTRACTION });
         }
 
-        // ── stiffening: one vertical web only ───────────────────────────
-        // A horizontal mid rail was tried here and removed. It sat in the
-        // same z band as the back-cover rail stacks and fought them, and the
-        // vertical web already braces the longer span (296mm of top/bottom
-        // wall against 244mm of side wall) while the panel braces handle the
-        // other axis. One brace, no conflict.
+        // ── stiffening: one horizontal brace ────────────────────────────
+        // Horizontal, and that orientation is the whole point. The
+        // back-cover rail stacks run HORIZONTALLY along the top and bottom
+        // edges, so a vertical brace has to cross both of them — no position
+        // avoids it, only notching, which is what made the earlier vertical
+        // web fight them. This brace is parallel to the rails and sits
+        // between them, so it cannot clash at any depth.
         //
-        // The web itself is defined further down, after the rails exist, so
-        // it can be cross-lapped against them.
+        // Placed just under the display aperture, which is the one y band
+        // clear of everything: 3mm above the PSU, 0.5mm below the panels,
+        // clear of the knob cluster, and nowhere near either rail stack.
+        //
+        // 18mm deep at the rear, leaving ~33mm at the front for the I2C run
+        // from the knob cluster up to the Matrix Portal, which sits above the
+        // display centreline.
+
+        const braceTopY = -definition.apertureH / 2 - 0.5 * millimeter;
+        const braceBotY = braceTopY - t;
+        const stiffZ0 = zBack + t;
+        const stiffZ1 = stiffZ0 + definition.webDepth;
+
+        fCuboid(context, id + "stiff", {
+                "corner1" : vector(left,  braceBotY - kerf / 2, stiffZ0),
+                "corner2" : vector(right, braceTopY + kerf / 2, stiffZ1) });
+
+        const stiffSides = ["wallL", "wallR"];
+        for (var w = 0; w < 2; w += 1)
+        {
+            fCuboid(context, id + ("stmort" ~ w), {
+                    "corner1" : vector(left - over,  braceBotY + kerf / 2, stiffZ0 + kerf / 2),
+                    "corner2" : vector(right + over, braceTopY - kerf / 2, stiffZ1 - kerf / 2) });
+            opBoolean(context, id + ("stmortCut" ~ w), {
+                    "tools"         : qCreatedBy(id + ("stmort" ~ w), EntityType.BODY),
+                    "targets"       : qCreatedBy(id + stiffSides[w], EntityType.BODY),
+                    "operationType" : BooleanOperationType.SUBTRACTION });
+        }
 
         // PSU mounting clearance through the BOTTOM wall. Its side-face holes
         // are 10 and 84 from one end of a 99.24mm case — 2.5mm off centre, so
@@ -1069,54 +1093,6 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 "tools"         : qUnion(iecTools),
                 "targets"       : qCreatedBy(id + "wallR", EntityType.BODY),
                 "operationType" : BooleanOperationType.SUBTRACTION });
-
-        // ── vertical stiffening web ─────────────────────────────────────
-        // Full height, top wall to bottom wall, at the REAR where nothing
-        // lives. The panel braces already tie the side walls across the
-        // display, but they tie left-to-right; this ties top-to-bottom, which
-        // is the longer span (296mm of wall against 244mm).
-        //
-        // Its z band is chosen so x is free: at z -57..-39 it passes behind
-        // the PSU (front face -38) and behind the Matrix Portal (-37.6), so
-        // it cannot foul either wherever it sits laterally.
-        //
-        // It does cross the two back-cover rail stacks, so those are
-        // subtracted from it — giving cross-lap notches for free rather than
-        // computing them.
-
-        const webZ0 = railZ[0];
-        const webZ1 = railZ[0] + definition.webDepth;
-
-        fCuboid(context, id + "web", {
-                "corner1" : vector(definition.webX - t / 2 - kerf / 2, bottom, webZ0),
-                "corner2" : vector(definition.webX + t / 2 + kerf / 2, top,    webZ1) });
-
-        // tenons into the top and bottom walls
-        const webWalls = ["wallB", "wallT"];
-        for (var w = 0; w < 2; w += 1)
-        {
-            fCuboid(context, id + ("wmort" ~ w), {
-                    "corner1" : vector(definition.webX - t / 2 + kerf / 2, bottom - over, webZ0 + kerf / 2),
-                    "corner2" : vector(definition.webX + t / 2 - kerf / 2, top + over,    webZ1 - kerf / 2) });
-            opBoolean(context, id + ("wmortCut" ~ w), {
-                    "tools"         : qCreatedBy(id + ("wmort" ~ w), EntityType.BODY),
-                    "targets"       : qCreatedBy(id + webWalls[w], EntityType.BODY),
-                    "operationType" : BooleanOperationType.SUBTRACTION });
-        }
-
-        // cross-lap: notch the web where the rails pass through it
-        var railBodies = [];
-        for (var ri = 0; ri < 2; ri += 1)
-        {
-            railBodies = append(railBodies, qCreatedBy(id + ("railA" ~ ri), EntityType.BODY));
-            railBodies = append(railBodies, qCreatedBy(id + ("railB" ~ ri), EntityType.BODY));
-            railBodies = append(railBodies, qCreatedBy(id + ("railC" ~ ri), EntityType.BODY));
-        }
-        opBoolean(context, id + "webNotch", {
-                "tools"           : qUnion(railBodies),
-                "targets"         : qCreatedBy(id + "web", EntityType.BODY),
-                "operationType"   : BooleanOperationType.SUBTRACTION,
-                "keepTools"       : true });
 
         opBoolean(context, id + "coverCut", {
                 "tools"         : qUnion(coverHoles),
