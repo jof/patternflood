@@ -121,6 +121,95 @@ export const psuProxy = defineFeature(function(context is Context, id is Id, def
     });
 
 // ────────────────────────────────────────────────────────────────────────
+// IEC inlet proxy
+// ────────────────────────────────────────────────────────────────────────
+// IEC320 C14 + rocker switch + 5x20mm fuse, all measured 2026-09-09.
+//
+// The flange is NOT a plain rectangle. It overhangs 6.25mm beyond the
+// cutout on the short sides, but on the long sides it is a shallow
+// triangular lobe peaking 10.75mm out at the middle and tapering to meet
+// the short-side flange — with the screw hole sitting in that lobe.
+//
+// Modelling it settles the screw-spacing contradiction. The screws are on
+// the SHORT axis, not the long one: cutH/2 + tip/2 from centre, so about
+// 38mm apart. A 40mm spacing (as the listings claimed) puts the hole
+// 6.38mm out of a 10.75mm lobe, which is also plausible — hence the
+// derived variable and the note to measure hole centre to hole centre.
+//
+// It also shows why this module cannot go in a side wall: the flange's
+// short extent is cutH + 2*tip = 48.75mm against a 44.5mm deep case.
+
+annotation { "Feature Type Name" : "IEC inlet proxy" }
+export const iecProxy = defineFeature(function(context is Context, id is Id, definition is map)
+    precondition
+    {
+        annotation { "Name" : "Outer face x" }
+        isLength(definition.faceX, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Centre y" }
+        isLength(definition.cy, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Centre z" }
+        isLength(definition.cz, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Cutout long (y)" }
+        isLength(definition.cutW, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Cutout short (z)" }
+        isLength(definition.cutH, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Body depth" }
+        isLength(definition.depth, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Flange end overhang" }
+        isLength(definition.flEnd, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Flange lobe tip" }
+        isLength(definition.flTip, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Flange thickness" }
+        isLength(definition.flThk, LENGTH_BOUNDS);
+    }
+    {
+        // body behind the panel
+        fCuboid(context, id + "body", {
+                "corner1" : vector(definition.faceX - definition.depth,
+                                   definition.cy - definition.cutW / 2,
+                                   definition.cz - definition.cutH / 2),
+                "corner2" : vector(definition.faceX,
+                                   definition.cy + definition.cutW / 2,
+                                   definition.cz + definition.cutH / 2) });
+
+        // flange: hexagonal outline, sketched on the wall face
+        const hl = definition.cutW / 2 + definition.flEnd;   // half long extent
+        const hs = definition.cutH / 2;                      // half short extent
+        const tp = hs + definition.flTip;                    // lobe apex
+
+        var sk = newSketchOnPlane(context, id + "flSk", {
+                "sketchPlane" : plane(vector(definition.faceX, definition.cy, definition.cz),
+                                      vector(1, 0, 0),
+                                      vector(0, 1, 0)) });
+
+        skPolyline(sk, "outline", {
+                "points" : [
+                    vector(-hl, -hs),
+                    vector(0 * meter, -tp),
+                    vector( hl, -hs),
+                    vector( hl,  hs),
+                    vector(0 * meter,  tp),
+                    vector(-hl,  hs),
+                    vector(-hl, -hs)
+                ] });
+        skSolve(sk);
+
+        opExtrude(context, id + "flEx", {
+                "entities"  : qSketchRegion(id + "flSk"),
+                "direction" : vector(1, 0, 0),
+                "endBound"  : BoundingType.BLIND,
+                "endDepth"  : definition.flThk });
+    });
+
+// ────────────────────────────────────────────────────────────────────────
 // Bay obstructions
 // ────────────────────────────────────────────────────────────────────────
 // Proxies for everything that already occupies the bay, so anything added
