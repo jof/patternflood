@@ -271,23 +271,7 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
         annotation { "Name" : "Board centre y" }
         isLength(definition.mpY, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "IEC outer face x" }
-        isLength(definition.iecXFace, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "IEC centre y" }
-        isLength(definition.iecY, ANY_LENGTH_BOUNDS);
-
-        annotation { "Name" : "IEC centre z" }
-        isLength(definition.iecZ, ANY_LENGTH_BOUNDS);
-
-        annotation { "Name" : "IEC width (y)" }
-        isLength(definition.iecCutW, LENGTH_BOUNDS);
-
-        annotation { "Name" : "IEC height (z)" }
-        isLength(definition.iecCutH, LENGTH_BOUNDS);
-
-        annotation { "Name" : "IEC depth behind face" }
-        isLength(definition.iecDepth, LENGTH_BOUNDS);
     }
     {
         const back = -definition.panelDepth;
@@ -311,17 +295,8 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
         // header height. A HUB75 ribbon reaches the panel instead — which is
         // why the keep-out above got deeper, not shallower: a ribbon needs
         // room to turn behind the connector where a board did not.
-        // IEC module envelope — measured 46.75 x 27.25 cutout and 37.45mm of
-        // depth behind the outer face. Modelled because it is the reason the
-        // knobs are a 2x2 cluster: a full-width knob row left 10.5mm here
-        // against the 37.45mm this actually needs.
-        fCuboid(context, id + "iec", {
-                "corner1" : vector(definition.iecXFace - definition.iecDepth,
-                                   definition.iecY - definition.iecCutW / 2,
-                                   definition.iecZ - definition.iecCutH / 2),
-                "corner2" : vector(definition.iecXFace,
-                                   definition.iecY + definition.iecCutW / 2,
-                                   definition.iecZ + definition.iecCutH / 2) });
+        // (The IEC envelope used to be duplicated here. It is modelled
+        // properly in iecProxy, flange included, so this copy is gone.)
 
         fCuboid(context, id + "board", {
                 "corner1" : vector(definition.mpX - definition.mpW / 2,
