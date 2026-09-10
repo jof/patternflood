@@ -583,8 +583,11 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "PSU standoff from bottom wall" }
         isLength(definition.psuStandoff, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Mains divider x" }
-        isLength(definition.dividerX, ANY_LENGTH_BOUNDS);
+        annotation { "Name" : "Stiffening web x" }
+        isLength(definition.webX, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Stiffening web depth" }
+        isLength(definition.webDepth, LENGTH_BOUNDS);
 
         annotation { "Name" : "PSU length (x)" }
         isLength(definition.psuL, LENGTH_BOUNDS);
@@ -986,53 +989,62 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                     "operationType" : BooleanOperationType.SUBTRACTION });
         }
 
-        // ── mains barrier: vertical divider + pocket top rail ───────────
-        // The PSU sits in the bottom-right of the control band, boxed in by
-        // the right wall, the bottom wall, a VERTICAL divider on its left and
-        // a short horizontal rail across its top. Together those enclose it,
-        // which is the point: every mains conductor stays inside that pocket,
-        // and the knob cluster and its I2C wiring stay outside it.
+        // ── mid rail ────────────────────────────────────────────────────
+        // What used to be a vertical mains divider plus a pocket top rail is
+        // now a single horizontal stiffener, and the mains is protected by
+        // INSULATION instead of a barrier.
         //
-        // A vertical divider replaces the horizontal shelf of the previous
-        // layout. Same job, and it falls out of clustering the knobs — the
-        // band is now wide enough to share.
+        // That is the right call rather than a shortcut. The LRS-50's input
+        // terminal block is the only exposed mains point in the whole build —
+        // everything else is already inside the supply's metal case, the IEC
+        // module's plastic body, or insulated wire. A terminal boot and
+        // heatshrinked fork terminals address that point directly, whereas a
+        // barrier only stopped you reaching past it. What the barrier also
+        // did was stop a loose conductor migrating into the low-voltage side,
+        // so strain relief and tie-downs now carry that job (power-plan.md §9).
+        //
+        // The rail keeps the divider's OTHER job. The panel braces tie the
+        // side walls together across the display, but below them the box had
+        // nothing between the bezel and the bottom wall — a 90mm unsupported
+        // run on a 244mm-tall box. This ties them at the control band.
+        //
+        // Deliberately only 18mm deep and pushed to the rear, so the ~33mm in
+        // front of it stays clear for the I2C run from the knob cluster up to
+        // the Matrix Portal, which now sits above the display centreline.
 
-        const barZ0 = zBezB;                    // bezel back
-        const barZ1 = zBack + t;                // back cover inner face
         const railTopY = -definition.apertureH / 2;
         const railBotY = railTopY - t;
+        const midZ0 = zBack + t;                    // back cover inner face
+        const midZ1 = midZ0 + definition.railW;
 
-        // vertical divider, tenoned into the bottom wall
-        fCuboid(context, id + "divider", {
-                "corner1" : vector(definition.dividerX - t / 2 - kerf / 2, bottom,   barZ0),
-                "corner2" : vector(definition.dividerX + t / 2 + kerf / 2, railBotY, barZ1) });
-        fCuboid(context, id + "dmort", {
-                "corner1" : vector(definition.dividerX - t / 2 + kerf / 2, bottom - over,  barZ0 + kerf / 2),
-                "corner2" : vector(definition.dividerX + t / 2 - kerf / 2, bottom + t - kerf / 2, barZ1 - kerf / 2) });
-        opBoolean(context, id + "dmortCut", {
-                "tools"         : qCreatedBy(id + "dmort", EntityType.BODY),
-                "targets"       : qCreatedBy(id + "wallB", EntityType.BODY),
-                "operationType" : BooleanOperationType.SUBTRACTION });
+        fCuboid(context, id + "midRail", {
+                "corner1" : vector(left,  railBotY - kerf / 2, midZ0),
+                "corner2" : vector(right, railTopY + kerf / 2, midZ1) });
 
-        // pocket top rail, tenoned into the right wall
-        fCuboid(context, id + "pocketRail", {
-                "corner1" : vector(definition.dividerX, railBotY - kerf / 2, barZ0),
-                "corner2" : vector(right,                railTopY + kerf / 2, barZ1) });
-        fCuboid(context, id + "prmort", {
-                "corner1" : vector(right - t - over, railBotY + kerf / 2, barZ0 + kerf / 2),
-                "corner2" : vector(right + over,     railTopY - kerf / 2, barZ1 - kerf / 2) });
-        opBoolean(context, id + "prmortCut", {
-                "tools"         : qCreatedBy(id + "prmort", EntityType.BODY),
-                "targets"       : qCreatedBy(id + "wallR", EntityType.BODY),
-                "operationType" : BooleanOperationType.SUBTRACTION });
+        const midSides = ["wallL", "wallR"];
+        for (var w = 0; w < 2; w += 1)
+        {
+            fCuboid(context, id + ("mrmort" ~ w), {
+                    "corner1" : vector(left - over,  railBotY + kerf / 2, midZ0 + kerf / 2),
+                    "corner2" : vector(right + over, railTopY - kerf / 2, midZ1 - kerf / 2) });
+            opBoolean(context, id + ("mrmortCut" ~ w), {
+                    "tools"         : qCreatedBy(id + ("mrmort" ~ w), EntityType.BODY),
+                    "targets"       : qCreatedBy(id + midSides[w], EntityType.BODY),
+                    "operationType" : BooleanOperationType.SUBTRACTION });
+        }
 
         // PSU mounting clearance through the BOTTOM wall. Its side-face holes
-        // are 10 and 84 from one end of a 99mm case — 2.5mm off centre, so
+        // are 10 and 84 from one end of a 99.24mm case — 2.5mm off centre, so
         // these are not symmetric either. Screw path is 3mm wall + a
         // psuStandoff spacer + up to 5mm of thread, i.e. M3x12.
+        // Datum is the TERMINAL end. Both views on the spec sheet dimension
+        // from it, and the terminals have to face +x toward the IEC inlet or
+        // the mains run crosses the whole box — so these come off the HIGH-x
+        // end. That matters because the pair is centred 2.62mm off the case
+        // centre; referencing the wrong end puts them 5.24mm out.
         var psuHoles = [];
-        const psuX0 = definition.psuX - definition.psuL / 2;
-        const psuHoleXs = [psuX0 + definition.psuHoleAX, psuX0 + definition.psuHoleBX];
+        const psuXHi = definition.psuX + definition.psuL / 2;
+        const psuHoleXs = [psuXHi - definition.psuHoleBX, psuXHi - definition.psuHoleAX];
         for (var ph = 0; ph < 2; ph += 1)
         {
             fCylinder(context, id + ("psuh" ~ ph), {
@@ -1046,9 +1058,10 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 "targets"       : qCreatedBy(id + "wallB", EntityType.BODY),
                 "operationType" : BooleanOperationType.SUBTRACTION });
 
-        // ── IEC inlet, right wall, inside the mains compartment ─────────
-        // Deliberately in the PSU compartment rather than the electronics bay,
-        // so every mains conductor stays on one side of the shelf.
+        // ── IEC inlet, right wall ───────────────────────────────────────
+        // Low in the case, beside the PSU, so the mains run from inlet to
+        // supply is as short as possible — which matters more now that a
+        // barrier is not doing the containing.
 
         var iecTools = [];
 
@@ -1083,6 +1096,54 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 "tools"         : qUnion(iecTools),
                 "targets"       : qCreatedBy(id + "wallR", EntityType.BODY),
                 "operationType" : BooleanOperationType.SUBTRACTION });
+
+        // ── vertical stiffening web ─────────────────────────────────────
+        // Full height, top wall to bottom wall, at the REAR where nothing
+        // lives. The panel braces already tie the side walls across the
+        // display, but they tie left-to-right; this ties top-to-bottom, which
+        // is the longer span (296mm of wall against 244mm).
+        //
+        // Its z band is chosen so x is free: at z -57..-39 it passes behind
+        // the PSU (front face -38) and behind the Matrix Portal (-37.6), so
+        // it cannot foul either wherever it sits laterally.
+        //
+        // It does cross the two back-cover rail stacks, so those are
+        // subtracted from it — giving cross-lap notches for free rather than
+        // computing them.
+
+        const webZ0 = railZ[0];
+        const webZ1 = railZ[0] + definition.webDepth;
+
+        fCuboid(context, id + "web", {
+                "corner1" : vector(definition.webX - t / 2 - kerf / 2, bottom, webZ0),
+                "corner2" : vector(definition.webX + t / 2 + kerf / 2, top,    webZ1) });
+
+        // tenons into the top and bottom walls
+        const webWalls = ["wallB", "wallT"];
+        for (var w = 0; w < 2; w += 1)
+        {
+            fCuboid(context, id + ("wmort" ~ w), {
+                    "corner1" : vector(definition.webX - t / 2 + kerf / 2, bottom - over, webZ0 + kerf / 2),
+                    "corner2" : vector(definition.webX + t / 2 - kerf / 2, top + over,    webZ1 - kerf / 2) });
+            opBoolean(context, id + ("wmortCut" ~ w), {
+                    "tools"         : qCreatedBy(id + ("wmort" ~ w), EntityType.BODY),
+                    "targets"       : qCreatedBy(id + webWalls[w], EntityType.BODY),
+                    "operationType" : BooleanOperationType.SUBTRACTION });
+        }
+
+        // cross-lap: notch the web where the rails pass through it
+        var railBodies = [];
+        for (var ri = 0; ri < 2; ri += 1)
+        {
+            railBodies = append(railBodies, qCreatedBy(id + ("railA" ~ ri), EntityType.BODY));
+            railBodies = append(railBodies, qCreatedBy(id + ("railB" ~ ri), EntityType.BODY));
+            railBodies = append(railBodies, qCreatedBy(id + ("railC" ~ ri), EntityType.BODY));
+        }
+        opBoolean(context, id + "webNotch", {
+                "tools"           : qUnion(railBodies),
+                "targets"         : qCreatedBy(id + "web", EntityType.BODY),
+                "operationType"   : BooleanOperationType.SUBTRACTION,
+                "keepTools"       : true });
 
         opBoolean(context, id + "coverCut", {
                 "tools"         : qUnion(coverHoles),

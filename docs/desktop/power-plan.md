@@ -424,9 +424,20 @@ Four things are not optional:
 
 > ⚠️ **1. The LRS-50's mains terminals are bare screw terminals.** Pins 1–3
 > are L, N and earth on an open block. The back cover comes off with six screws,
-> so sooner or later it will be opened while the thing is plugged in. **Make a
-> laser-cut terminal shroud** over the input side of the block, and rely on the
-> IEC switch as the second layer, not the first.
+> so sooner or later it will be opened while the thing is plugged in.
+>
+> **Insulation is the primary control, not a barrier.** An earlier revision put
+> a vertical divider and a top rail around the supply to box it in. That was
+> dropped 2026-09-09 — it obstructed assembly, and it was solving the problem
+> indirectly. The input block is the *only* exposed mains point in the build:
+> everything else is already inside the supply's metal case, the IEC module's
+> plastic body, or insulated wire. So protect that point directly —
+> **a terminal boot or shroud over the input side, and heatshrink over
+> insulated fork terminals** — with the IEC switch as the second layer.
+>
+> What the barrier *also* did was stop a loose conductor migrating into the
+> low-voltage side. That job now belongs to strain relief and tie-downs, item 4
+> below, which is no longer optional.
 
 **2. Earth the supply.** IEC pin 3 → the LRS-50's FG terminal. The LRS-50 has a
 metal case and expects to be earthed; the wooden enclosure is non-conductive so
