@@ -169,6 +169,12 @@ export const iecProxy = defineFeature(function(context is Context, id is Id, def
 
         annotation { "Name" : "Flange thickness" }
         isLength(definition.flThk, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Screw spacing (short axis)" }
+        isLength(definition.screwSpacing, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Screw hole diameter" }
+        isLength(definition.screwDia, LENGTH_BOUNDS);
     }
     {
         // body behind the panel
@@ -207,6 +213,30 @@ export const iecProxy = defineFeature(function(context is Context, id is Id, def
                 "direction" : vector(1, 0, 0),
                 "endBound"  : BoundingType.BLIND,
                 "endDepth"  : definition.flThk });
+
+        // Drill the flange too. The wall had these holes but the flange did
+        // not, so the model showed screws passing through solid material —
+        // which is exactly the sort of thing a proxy is meant to catch.
+        var holes = [];
+        for (var i = 0; i < 2; i += 1)
+        {
+            var hz = definition.cz - definition.screwSpacing / 2;
+            if (i == 1)
+            {
+                hz = definition.cz + definition.screwSpacing / 2;
+            }
+            fCylinder(context, id + ("fh" ~ i), {
+                    "topCenter"    : vector(definition.faceX + definition.flThk + 1 * millimeter,
+                                            definition.cy, hz),
+                    "bottomCenter" : vector(definition.faceX - 1 * millimeter,
+                                            definition.cy, hz),
+                    "radius"       : definition.screwDia / 2 });
+            holes = append(holes, qCreatedBy(id + ("fh" ~ i), EntityType.BODY));
+        }
+        opBoolean(context, id + "flDrill", {
+                "tools"         : qUnion(holes),
+                "targets"       : qCreatedBy(id + "flEx", EntityType.BODY),
+                "operationType" : BooleanOperationType.SUBTRACTION });
     });
 
 // ────────────────────────────────────────────────────────────────────────
