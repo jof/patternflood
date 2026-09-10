@@ -604,8 +604,11 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "PSU hole B from low-x end" }
         isLength(definition.psuHoleBX, LENGTH_BOUNDS);
 
-        annotation { "Name" : "PSU hole height from base" }
-        isLength(definition.psuHoleZ, LENGTH_BOUNDS);
+        annotation { "Name" : "PSU hole A height" }
+        isLength(definition.psuHoleAZ, LENGTH_BOUNDS);
+
+        annotation { "Name" : "PSU hole B height" }
+        isLength(definition.psuHoleBZ, LENGTH_BOUNDS);
 
         annotation { "Name" : "PSU hole clearance dia" }
         isLength(definition.psuHoleDia, LENGTH_BOUNDS);
@@ -989,49 +992,15 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                     "operationType" : BooleanOperationType.SUBTRACTION });
         }
 
-        // ── mid rail ────────────────────────────────────────────────────
-        // What used to be a vertical mains divider plus a pocket top rail is
-        // now a single horizontal stiffener, and the mains is protected by
-        // INSULATION instead of a barrier.
+        // ── stiffening: one vertical web only ───────────────────────────
+        // A horizontal mid rail was tried here and removed. It sat in the
+        // same z band as the back-cover rail stacks and fought them, and the
+        // vertical web already braces the longer span (296mm of top/bottom
+        // wall against 244mm of side wall) while the panel braces handle the
+        // other axis. One brace, no conflict.
         //
-        // That is the right call rather than a shortcut. The LRS-50's input
-        // terminal block is the only exposed mains point in the whole build —
-        // everything else is already inside the supply's metal case, the IEC
-        // module's plastic body, or insulated wire. A terminal boot and
-        // heatshrinked fork terminals address that point directly, whereas a
-        // barrier only stopped you reaching past it. What the barrier also
-        // did was stop a loose conductor migrating into the low-voltage side,
-        // so strain relief and tie-downs now carry that job (power-plan.md §9).
-        //
-        // The rail keeps the divider's OTHER job. The panel braces tie the
-        // side walls together across the display, but below them the box had
-        // nothing between the bezel and the bottom wall — a 90mm unsupported
-        // run on a 244mm-tall box. This ties them at the control band.
-        //
-        // Deliberately only 18mm deep and pushed to the rear, so the ~33mm in
-        // front of it stays clear for the I2C run from the knob cluster up to
-        // the Matrix Portal, which now sits above the display centreline.
-
-        const railTopY = -definition.apertureH / 2;
-        const railBotY = railTopY - t;
-        const midZ0 = zBack + t;                    // back cover inner face
-        const midZ1 = midZ0 + definition.railW;
-
-        fCuboid(context, id + "midRail", {
-                "corner1" : vector(left,  railBotY - kerf / 2, midZ0),
-                "corner2" : vector(right, railTopY + kerf / 2, midZ1) });
-
-        const midSides = ["wallL", "wallR"];
-        for (var w = 0; w < 2; w += 1)
-        {
-            fCuboid(context, id + ("mrmort" ~ w), {
-                    "corner1" : vector(left - over,  railBotY + kerf / 2, midZ0 + kerf / 2),
-                    "corner2" : vector(right + over, railTopY - kerf / 2, midZ1 - kerf / 2) });
-            opBoolean(context, id + ("mrmortCut" ~ w), {
-                    "tools"         : qCreatedBy(id + ("mrmort" ~ w), EntityType.BODY),
-                    "targets"       : qCreatedBy(id + midSides[w], EntityType.BODY),
-                    "operationType" : BooleanOperationType.SUBTRACTION });
-        }
+        // The web itself is defined further down, after the rails exist, so
+        // it can be cross-lapped against them.
 
         // PSU mounting clearance through the BOTTOM wall. Its side-face holes
         // are 10 and 84 from one end of a 99.24mm case — 2.5mm off centre, so
@@ -1045,11 +1014,15 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         var psuHoles = [];
         const psuXHi = definition.psuX + definition.psuL / 2;
         const psuHoleXs = [psuXHi - definition.psuHoleBX, psuXHi - definition.psuHoleAX];
+        // The two side holes sit at DIFFERENT heights — they are not
+        // collinear, so each carries its own z. Both are still to be
+        // measured; the spec side view is ambiguous at this resolution.
+        const psuHoleZs = [definition.psuHoleBZ, definition.psuHoleAZ];
         for (var ph = 0; ph < 2; ph += 1)
         {
             fCylinder(context, id + ("psuh" ~ ph), {
-                    "topCenter"    : vector(psuHoleXs[ph], bottom + t + over, definition.psuZFront - definition.psuHoleZ),
-                    "bottomCenter" : vector(psuHoleXs[ph], bottom - over,     definition.psuZFront - definition.psuHoleZ),
+                    "topCenter"    : vector(psuHoleXs[ph], bottom + t + over, definition.psuZFront - psuHoleZs[ph]),
+                    "bottomCenter" : vector(psuHoleXs[ph], bottom - over,     definition.psuZFront - psuHoleZs[ph]),
                     "radius"       : definition.psuHoleDia / 2 - kerf / 2 });
             psuHoles = append(psuHoles, qCreatedBy(id + ("psuh" ~ ph), EntityType.BODY));
         }
