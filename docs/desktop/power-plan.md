@@ -357,9 +357,27 @@ IEC C14 + switch + fuse  ──mains──►  LRS-50-5  ──5V──►  Matr
 Note the penetration limits — M3 × 6 into the side (3 mm wood + washer) is right;
 anything longer bottoms out inside the supply.
 
-**IEC320 C14 inlet with rocker switch and 5 × 20 mm fuse:** cutout
-**47.0 × 27.4 mm**, 2 screws on **40 mm** centres, 10 A / 250 V. Switch itself is
-rated 6 A at 250 V.
+**IEC320 C14 inlet with rocker switch and 5 × 20 mm fuse**, measured
+2026-09-09 (listing figures were wrong and self-contradictory):
+
+| | |
+|---|---|
+| Cutout | **46.75 × 27.25 mm** |
+| Depth behind the face | **37.45 mm** |
+| Rating | 10 A / 250 V; switch 6 A at 250 V |
+| Flange screws | **not yet measured** |
+
+The 46.75 dimension has to run along **y** — the pocket is only 35.5 mm in z.
+That leaves ~4.1 mm of margin at both the bezel and the back cover.
+
+**37.45 mm of depth is the number that reshaped the enclosure.** A full-width
+knob row left only 10.5 mm between the PSU and the right wall, so the module
+would not have fitted at all. Clustering the knobs 2 × 2 freed 90 mm.
+
+> ⚠️ **Flange screws are not modelled and the module is not yet properly
+> retained.** The listing gave 40 mm centres against a 47 mm cutout, which is
+> impossible — a flange has to bear on material *outside* the hole it clamps
+> around. Measure the spacing and its axis before cutting the right wall.
 
 ### Thermal: comfortable
 
