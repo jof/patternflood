@@ -374,10 +374,33 @@ That leaves ~4.1 mm of margin at both the bezel and the back cover.
 knob row left only 10.5 mm between the PSU and the right wall, so the module
 would not have fitted at all. Clustering the knobs 2 × 2 freed 90 mm.
 
-> ⚠️ **Flange screws are not modelled and the module is not yet properly
-> retained.** The listing gave 40 mm centres against a 47 mm cutout, which is
-> impossible — a flange has to bear on material *outside* the hole it clamps
-> around. Measure the spacing and its axis before cutting the right wall.
+### The flange, and why it sets the case depth
+
+Measured, and it is not a plain rectangle:
+
+| | |
+|---|---|
+| Overhang, short sides | **6.25 mm** beyond the cutout → 59.25 mm long extent |
+| Long sides | **triangular lobe**, tip **10.75 mm** out at the middle, tapering to meet the short-side flange, screw hole in the lobe |
+| Proud of the face | **3.5 mm** |
+| Flange hole | Ø3.6–3.7 → M3 clearance, or the supplied woodscrews |
+
+**The screws are on the SHORT axis.** That is what made the listing's 40 mm look
+impossible — 40 mm cannot straddle the 46.75 mm cutout, but it straddles the
+27.25 mm one comfortably. So the number was right and I had the axis wrong.
+Derived spacing is `cutH + tip` = **38 mm** if the hole sits at the lobe's
+mid-height; 40 mm puts it 6.38 mm out of a 10.75 mm lobe, also plausible. One
+hole-centre-to-hole-centre measurement settles it, and it is one variable.
+
+> **The flange is what sets the case depth.** Its short extent is
+> `27.25 + 2 × 10.75 = 48.75 mm`, which did not fit a 44.5 mm case at all — it
+> overhung the rear edge by 3.62 mm and the front by 0.62 mm, and rotating it
+> does not help because the lobes are always perpendicular to the long side.
+>
+> `bayDepth` is therefore **derived, not chosen**:
+> `iecCutH + 2×iecFlangeTip + 2×iecFlangeMargin − panelDepth`, giving a
+> **56.75 mm** external depth. For comparison the bay itself wanted only
+> ~40.6 mm and the connector keep-out ~37.5 mm. The box follows the insides.
 
 ### Thermal: comfortable
 

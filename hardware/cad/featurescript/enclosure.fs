@@ -1054,12 +1054,25 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                                                      definition.iecZ + definition.iecCutH / 2 - kerf / 2) });
         iecTools = append(iecTools, qCreatedBy(id + "iecCut", EntityType.BODY));
 
-        // Flange screws are NOT cut yet. The listing figures were mutually
-        // impossible — 40mm screw centres cannot straddle a 46.75mm cutout,
-        // since a flange has to bear on panel material outside the hole it
-        // clamps around. Measure the spacing and its axis off the part, then
-        // add them here. Until then the module is held by friction and the
-        // cutout alone, which is not good enough to ship.
+        // Flange screws, on the SHORT axis. That is what made the listing's
+        // 40mm look impossible: 40mm cannot straddle the 46.75mm cutout, but
+        // it straddles the 27.25mm one comfortably. The hole sits in the
+        // triangular lobe, so the spacing is cutH + tip if it is at the
+        // lobe's mid-height. Confirm by measuring hole centre to hole centre;
+        // it is one variable either way.
+        for (var us = 0; us < 2; us += 1)
+        {
+            var uz = definition.iecZ - definition.iecScrewSpacing / 2;
+            if (us == 1)
+            {
+                uz = definition.iecZ + definition.iecScrewSpacing / 2;
+            }
+            fCylinder(context, id + ("iecScrew" ~ us), {
+                    "topCenter"    : vector(right + over,     definition.iecY, uz),
+                    "bottomCenter" : vector(right - t - over, definition.iecY, uz),
+                    "radius"       : definition.iecScrewDia / 2 - kerf / 2 });
+            iecTools = append(iecTools, qCreatedBy(id + ("iecScrew" ~ us), EntityType.BODY));
+        }
 
         opBoolean(context, id + "iecCutOp", {
                 "tools"         : qUnion(iecTools),
