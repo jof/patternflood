@@ -382,12 +382,62 @@ against the drawing's ±1 mm position tolerance over the 74 mm span.
 | Rating | 10 A / 250 V; switch 6 A at 250 V |
 | Flange screws | **not yet measured** |
 
-The 46.75 dimension has to run along **y** — the pocket is only 35.5 mm in z.
-That leaves ~4.1 mm of margin at both the bezel and the back cover.
+The 46.75 dimension runs along **x**, in the bottom wall, with the lobed
+27.25 axis in z. The lobes are what constrain it: `27.25 + 2 × 10.75 = 48.75 mm`
+in a 60 mm depth leaves **5.6 mm** of flange margin at both the bezel and the
+back cover, and the cutout itself leaves 16.4 mm of wood at each edge, so the
+finger joints on those edges are untouched.
+
+### Which wall, and why it is the bottom one
+
+Originally the right-hand (+x) wall. Moved 2026-09-10, because **portrait is the
+orientation this thing lives in** — stood on end, the box rests on a ±x wall, so
+an inlet there is directly underneath the case and the mating plug jacks it off
+the table.
+
+```
+   portrait (ideal)              landscape
+  ┌─────────┐                  ┌───────────────┐
+  │         │                  │    display    │
+  │  disp   │                  │ ◉◉  controls  │
+  │         │▮ ← inlet, a side └──┬─────▮───┬──┘
+  │  ◉◉     │                     ▄▄  ↑ plug ▄▄  ← feet only
+  └─────────┘                  ══════════════════   needed here
+  ══════════ table
+```
+
+The bottom wall is a vertical **side** in portrait, so the cord exits
+horizontally and **no feet are needed**. The price is that landscape now rests
+on the inlet instead. The +y top wall is the only one that is a side in *both*
+orientations, but it puts the inlet diagonally opposite the PSU terminals and
+runs mains across the whole box past the Matrix Portal — worse than giving up
+landscape.
+
+**x = 100 mm is not free either.** The body needs 37.45 mm behind the wall and
+the PSU occupies x −44.6…54.6 there, so the inlet has to clear it. Verified in
+the model:
+
+| Neighbour | Clearance |
+|---|---|
+| PSU (x ≤ 54.6) | **22.0 mm** |
+| +x wall inner face (145) | 21.6 mm |
+| Bottom back-cover rail (z −48) | 4.4 mm |
+| Bezel rear face (z −6) | 10.4 mm |
+
+Mirroring it to negative x would clear the PSU too, but the PSU's terminals face
++x, so that lengthens the mains run for nothing.
+
+**The flange screw at z = −49 gets a bonus.** Directly inside the bottom wall at
+that depth is the back-cover rail's outer lamination, 18 mm wide in y, so a
+12 mm woodscrew bites 3 mm of wall plus ~9 mm of rail rather than 3 mm of wall
+alone. The flip side is that an M3 nut cannot be fitted there — it is solid wood
+immediately behind. Use the supplied woodscrews, or a threaded insert. The
+z = −11 screw opens into the empty bay and takes either.
 
 **37.45 mm of depth is the number that reshaped the enclosure.** A full-width
 knob row left only 10.5 mm between the PSU and the right wall, so the module
-would not have fitted at all. Clustering the knobs 2 × 2 freed 90 mm.
+would not have fitted at all. Clustering the knobs 2 × 2 freed 90 mm — and that
+freed space is what the bottom-wall placement now uses.
 
 ### The flange, and why it sets the case depth
 

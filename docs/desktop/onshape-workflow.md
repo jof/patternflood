@@ -213,15 +213,28 @@ Studio while the parts are still in your hand.
 **The repo is the source of truth**, not the document. `enclosure.fs` is authored
 here and uploaded; the document is only where it gets instantiated.
 
-### Verified state
+### Verified state — 2026-09-10
 
 ```
-bodies=4   cylindricalFaces=8
-  panels  2 x 128 x 128 x 15 mm   z -15..0    245,760 mm3 each
-  bezel   2 x 295.5 x 192.5 x 3   z 0..6       72,461 mm3 each (57.5% removed)
+bodies=24   fragments=0   bbox 296 x 247.5 x 60 mm
+  (247.5 in y = 244 box + 3.5 mm IEC flange proud of the bottom wall)
+
+  panels     2 x 128 x 128 x 14.5    x -127.5..127.5  y -63.5..63.5  z -14.5..0
+  PSU        99.24 x 82 x 30         x  -44.6..54.6   y -152..-70    z -38..-8
+  Matrix P.  77.47 x 53.5 x 19.1     x   21.2..98.8   y  23.3..76.8  z -37.6..-18.5
+  IEC body   46.75 x 37.45 x 27.25   x   76.6..123.4  y -160..-122.5 z -43.6..-16.4
+  IEC flange 59.25 x 3.5 x 48.75     x   70.4..129.6  y -163.5..-160 z -54.4..-5.6
 ```
 
-Volume closes exactly: 170,651 bbox − 97,729 aperture − 462 bores = 72,460.
+Two checks worth re-running after any change, both as one FeatureScript eval:
+
+- **Fragment count** — bodies under 500 mm³. Catches orphaned finger stubs,
+  which is how the front-edge joint phase bug showed up (four 3×3×3 fragments).
+- **Bounding-box overlap against one body.** `evCollision` is useless as a gate
+  here — it reports ~53 pairs on a clean model because every finger joint
+  carries deliberate kerf interference. Overlapping *bounding boxes* against a
+  single body of interest is the check that actually reads: the IEC inlet should
+  overlap exactly one body, the wall it passes through, by exactly its cutout.
 
 ## 9. Gotchas found the hard way
 

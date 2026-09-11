@@ -192,22 +192,40 @@ export const psuProxy = defineFeature(function(context is Context, id is Id, def
 // derived variable and the note to measure hole centre to hole centre.
 //
 // It also shows why this module cannot go in a side wall: the flange's
-// short extent is cutH + 2*tip = 48.75mm against a 44.5mm deep case.
+// short extent is cutH + 2*tip = 48.75mm against a 44.5mm deep case. That
+// is what drove bayDepth to 60mm, which is now what lets the flange live
+// in ANY wall — the 48.75mm short extent fits a 60mm depth with 5.6mm
+// each side, whichever wall it goes in.
+//
+// It sits in the BOTTOM (low-y) wall, not the right-hand one. The reason
+// is the portrait orientation: stood on end the box rests on a +/-x wall,
+// so an inlet there is underneath the case and the cord jacks it off the
+// table. The bottom wall is a vertical SIDE in portrait, so the cord
+// exits horizontally and no feet are needed. The cost is that landscape
+// then rests on the inlet instead — the +y top wall is the only one that
+// is a side in both, and it routes mains diagonally across the box past
+// the Matrix Portal, which is worse than giving up landscape.
+//
+// x = 100mm is not free either. The body needs 37.45mm of depth behind
+// the wall, and the PSU occupies x -44.6..54.6 there, so the inlet has to
+// clear it: 100 - cutW/2 = 76.6 leaves 22mm. Going the other way (x
+// negative) would clear the PSU too but put the inlet at the far end from
+// the PSU terminals, which face +x.
 
 annotation { "Feature Type Name" : "IEC inlet proxy" }
 export const iecProxy = defineFeature(function(context is Context, id is Id, definition is map)
     precondition
     {
-        annotation { "Name" : "Outer face x" }
-        isLength(definition.faceX, ANY_LENGTH_BOUNDS);
+        annotation { "Name" : "Outer face y" }
+        isLength(definition.faceY, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "Centre y" }
-        isLength(definition.cy, ANY_LENGTH_BOUNDS);
+        annotation { "Name" : "Centre x" }
+        isLength(definition.cx, ANY_LENGTH_BOUNDS);
 
         annotation { "Name" : "Centre z" }
         isLength(definition.cz, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "Cutout long (y)" }
+        annotation { "Name" : "Cutout long (x)" }
         isLength(definition.cutW, LENGTH_BOUNDS);
 
         annotation { "Name" : "Cutout short (z)" }
@@ -232,13 +250,13 @@ export const iecProxy = defineFeature(function(context is Context, id is Id, def
         isLength(definition.screwDia, LENGTH_BOUNDS);
     }
     {
-        // body behind the panel
+        // body, reaching INWARD (+y) from the outer face of the bottom wall
         fCuboid(context, id + "body", {
-                "corner1" : vector(definition.faceX - definition.depth,
-                                   definition.cy - definition.cutW / 2,
+                "corner1" : vector(definition.cx - definition.cutW / 2,
+                                   definition.faceY,
                                    definition.cz - definition.cutH / 2),
-                "corner2" : vector(definition.faceX,
-                                   definition.cy + definition.cutW / 2,
+                "corner2" : vector(definition.cx + definition.cutW / 2,
+                                   definition.faceY + definition.depth,
                                    definition.cz + definition.cutH / 2) });
 
         // flange: hexagonal outline, sketched on the wall face
@@ -246,10 +264,14 @@ export const iecProxy = defineFeature(function(context is Context, id is Id, def
         const hs = definition.cutH / 2;                      // half short extent
         const tp = hs + definition.flTip;                    // lobe apex
 
+        // Sketch on the wall's OUTER face, normal pointing out of the box
+        // (-y). With xDirection = global +x the sketch's own y axis comes
+        // out as global +z, so the polyline below is unchanged: u is the
+        // long extent, v the lobed short one.
         var sk = newSketchOnPlane(context, id + "flSk", {
-                "sketchPlane" : plane(vector(definition.faceX, definition.cy, definition.cz),
-                                      vector(1, 0, 0),
-                                      vector(0, 1, 0)) });
+                "sketchPlane" : plane(vector(definition.cx, definition.faceY, definition.cz),
+                                      vector(0, -1, 0),
+                                      vector(1, 0, 0)) });
 
         skPolyline(sk, "outline", {
                 "points" : [
@@ -265,7 +287,7 @@ export const iecProxy = defineFeature(function(context is Context, id is Id, def
 
         opExtrude(context, id + "flEx", {
                 "entities"  : qSketchRegion(id + "flSk"),
-                "direction" : vector(1, 0, 0),
+                "direction" : vector(0, -1, 0),
                 "endBound"  : BoundingType.BLIND,
                 "endDepth"  : definition.flThk });
 
@@ -281,10 +303,10 @@ export const iecProxy = defineFeature(function(context is Context, id is Id, def
                 hz = definition.cz + definition.screwSpacing / 2;
             }
             fCylinder(context, id + ("fh" ~ i), {
-                    "topCenter"    : vector(definition.faceX + definition.flThk + 1 * millimeter,
-                                            definition.cy, hz),
-                    "bottomCenter" : vector(definition.faceX - 1 * millimeter,
-                                            definition.cy, hz),
+                    "topCenter"    : vector(definition.cx,
+                                            definition.faceY - definition.flThk - 1 * millimeter, hz),
+                    "bottomCenter" : vector(definition.cx,
+                                            definition.faceY + 1 * millimeter, hz),
                     "radius"       : definition.screwDia / 2 });
             holes = append(holes, qCreatedBy(id + ("fh" ~ i), EntityType.BODY));
         }
@@ -674,8 +696,8 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "IEC screw diameter" }
         isLength(definition.iecScrewDia, LENGTH_BOUNDS);
 
-        annotation { "Name" : "IEC position y" }
-        isLength(definition.iecY, ANY_LENGTH_BOUNDS);
+        annotation { "Name" : "IEC position x" }
+        isLength(definition.iecX, ANY_LENGTH_BOUNDS);
 
         annotation { "Name" : "IEC position z" }
         isLength(definition.iecZ, ANY_LENGTH_BOUNDS);
@@ -1106,18 +1128,24 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 "targets"       : qCreatedBy(id + "wallB", EntityType.BODY),
                 "operationType" : BooleanOperationType.SUBTRACTION });
 
-        // ── IEC inlet, right wall ───────────────────────────────────────
-        // Low in the case, beside the PSU, so the mains run from inlet to
-        // supply is as short as possible — which matters more now that a
-        // barrier is not doing the containing.
+        // ── IEC inlet, bottom wall ──────────────────────────────────────
+        // In the bottom wall, at the +x end so it lands beside the PSU's
+        // terminals and the mains run stays short — which matters more now
+        // that a barrier is not doing the containing.
+        //
+        // The bottom wall rather than the right-hand one because portrait
+        // is the orientation this lives in, and portrait rests on a +/-x
+        // wall. See the iecProxy header for the full argument.
 
         var iecTools = [];
 
         fCuboid(context, id + "iecCut", {
-                "corner1" : vector(right - t - over, definition.iecY - definition.iecCutW / 2 + kerf / 2,
-                                                     definition.iecZ - definition.iecCutH / 2 + kerf / 2),
-                "corner2" : vector(right + over,     definition.iecY + definition.iecCutW / 2 - kerf / 2,
-                                                     definition.iecZ + definition.iecCutH / 2 - kerf / 2) });
+                "corner1" : vector(definition.iecX - definition.iecCutW / 2 + kerf / 2,
+                                   bottom - over,
+                                   definition.iecZ - definition.iecCutH / 2 + kerf / 2),
+                "corner2" : vector(definition.iecX + definition.iecCutW / 2 - kerf / 2,
+                                   bottom + t + over,
+                                   definition.iecZ + definition.iecCutH / 2 - kerf / 2) });
         iecTools = append(iecTools, qCreatedBy(id + "iecCut", EntityType.BODY));
 
         // Flange screws, on the SHORT axis. That is what made the listing's
@@ -1134,15 +1162,15 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 uz = definition.iecZ + definition.iecScrewSpacing / 2;
             }
             fCylinder(context, id + ("iecScrew" ~ us), {
-                    "topCenter"    : vector(right + over,     definition.iecY, uz),
-                    "bottomCenter" : vector(right - t - over, definition.iecY, uz),
+                    "topCenter"    : vector(definition.iecX, bottom - over,     uz),
+                    "bottomCenter" : vector(definition.iecX, bottom + t + over, uz),
                     "radius"       : definition.iecScrewDia / 2 - kerf / 2 });
             iecTools = append(iecTools, qCreatedBy(id + ("iecScrew" ~ us), EntityType.BODY));
         }
 
         opBoolean(context, id + "iecCutOp", {
                 "tools"         : qUnion(iecTools),
-                "targets"       : qCreatedBy(id + "wallR", EntityType.BODY),
+                "targets"       : qCreatedBy(id + "wallB", EntityType.BODY),
                 "operationType" : BooleanOperationType.SUBTRACTION });
 
         opBoolean(context, id + "coverCut", {
