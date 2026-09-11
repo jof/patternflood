@@ -109,6 +109,21 @@ export const psuProxy = defineFeature(function(context is Context, id is Id, def
 
         annotation { "Name" : "Front face z" }
         isLength(definition.psuZFront, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Hole A x from terminal end" }
+        isLength(definition.psuHoleAX, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Hole B x from terminal end" }
+        isLength(definition.psuHoleBX, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Hole height from front face" }
+        isLength(definition.psuHoleZ, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Thread nominal diameter" }
+        isLength(definition.threadDia, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Max screw penetration" }
+        isLength(definition.threadDepth, LENGTH_BOUNDS);
     }
     {
         fCuboid(context, id + "psu", {
@@ -118,6 +133,46 @@ export const psuProxy = defineFeature(function(context is Context, id is Id, def
                 "corner2" : vector(definition.psuX + definition.psuL / 2,
                                    definition.psuYTop,
                                    definition.psuZFront) });
+
+        // The threaded M3 side holes, blind into the low-y face — the one
+        // that faces the bottom panel. Same datums the shell uses: x from
+        // the TERMINAL (high-x) end, height down from the front face. The
+        // point of putting them on the proxy is that the screw run is now
+        // visible end to end: 3mm of wood, then psuStandoff of air, then
+        // these threads. That sets the screw length, and it is the only
+        // place the model can show the standoff being spanned rather than
+        // bridged by nothing.
+        //
+        // Nominal Ø3, not a clearance hole — these are threaded, so the
+        // proxy shows the thread envelope and the wall carries the 4.5mm
+        // clearance. The opposite (high-y) face carries a matching pair;
+        // it is not modelled because nothing bolts to it in this build.
+        //
+        // The depth is the spec sheet's L = 5mm MAXIMUM PENETRATION, not a
+        // thread depth to aim for. Modelling it as a blind pocket makes the
+        // limit visible: 3mm wood + 5mm standoff + 5mm penetration = 13mm,
+        // so M3 x 12 is the longest screw that cannot reach the internals.
+        const psuYLo = definition.psuYTop - definition.psuW;
+        const psuXHi = definition.psuX + definition.psuL / 2;
+        const holeZ = definition.psuZFront - definition.psuHoleZ;
+        var tools = [];
+        for (var i = 0; i < 2; i += 1)
+        {
+            var hx = psuXHi - definition.psuHoleAX;
+            if (i == 1)
+            {
+                hx = psuXHi - definition.psuHoleBX;
+            }
+            fCylinder(context, id + ("th" ~ i), {
+                    "topCenter"    : vector(hx, psuYLo + definition.threadDepth, holeZ),
+                    "bottomCenter" : vector(hx, psuYLo - 1 * millimeter, holeZ),
+                    "radius"       : definition.threadDia / 2 });
+            tools = append(tools, qCreatedBy(id + ("th" ~ i), EntityType.BODY));
+        }
+        opBoolean(context, id + "threadDrill", {
+                "tools"         : qUnion(tools),
+                "targets"       : qCreatedBy(id + "psu", EntityType.BODY),
+                "operationType" : BooleanOperationType.SUBTRACTION });
     });
 
 // ────────────────────────────────────────────────────────────────────────

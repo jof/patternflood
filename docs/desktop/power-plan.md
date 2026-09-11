@@ -354,8 +354,23 @@ IEC C14 + switch + fuse  ──mains──►  LRS-50-5  ──5V──►  Matr
 | Inrush | **45 A @ 230 VAC** |
 | Derating | begins ~40 °C ambient |
 
-Note the penetration limits — M3 × 6 into the side (3 mm wood + washer) is right;
-anything longer bottoms out inside the supply.
+**The side holes are threaded M3 and collinear** — confirmed on the part, so
+ordinary M3 screws go straight in and no slot, insert or captive nut is needed.
+They are modelled on the PSU proxy as blind Ø3 pockets 5 mm deep, which is the
+spec sheet's **maximum penetration**, not a depth to aim for. That makes the
+screw length fall out of the model rather than being guessed:
+
+```
+  3 mm  wood (side wall)
++ 5 mm  air  (psuStandoff, for airflow)
++ 5 mm  MAX penetration into the supply
+= 13 mm  →  use M3 × 12, which lands 4 mm in
+```
+
+M3 × 14 penetrates 6 mm and exceeds the limit. Use a 5 mm spacer or a stack of
+washers in the air gap so the case is not pulled out of flat when the screws are
+tightened. The wall holes are Ø4.5 (drawn 4.3, +kerf), giving ±0.75 mm per hole
+against the drawing's ±1 mm position tolerance over the 74 mm span.
 
 **IEC320 C14 inlet with rocker switch and 5 × 20 mm fuse**, measured
 2026-09-09 (listing figures were wrong and self-contradictory):
