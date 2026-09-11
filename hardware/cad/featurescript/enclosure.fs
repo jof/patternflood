@@ -601,11 +601,8 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "PSU hole B from low-x end" }
         isLength(definition.psuHoleBX, LENGTH_BOUNDS);
 
-        annotation { "Name" : "PSU hole A height" }
-        isLength(definition.psuHoleAZ, LENGTH_BOUNDS);
-
-        annotation { "Name" : "PSU hole B height" }
-        isLength(definition.psuHoleBZ, LENGTH_BOUNDS);
+        annotation { "Name" : "PSU hole height from base" }
+        isLength(definition.psuHoleZ, LENGTH_BOUNDS);
 
         annotation { "Name" : "PSU hole clearance dia" }
         isLength(definition.psuHoleDia, LENGTH_BOUNDS);
@@ -1038,15 +1035,14 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         var psuHoles = [];
         const psuXHi = definition.psuX + definition.psuL / 2;
         const psuHoleXs = [psuXHi - definition.psuHoleBX, psuXHi - definition.psuHoleAX];
-        // The two side holes sit at DIFFERENT heights — they are not
-        // collinear, so each carries its own z. Both are still to be
-        // measured; the spec side view is ambiguous at this resolution.
-        const psuHoleZs = [definition.psuHoleBZ, definition.psuHoleAZ];
+        // The two side holes ARE collinear — confirmed on the part — and they
+        // are threaded M3, so ordinary M3 hardware bolts straight in and no
+        // slot or insert is needed. One shared height.
         for (var ph = 0; ph < 2; ph += 1)
         {
             fCylinder(context, id + ("psuh" ~ ph), {
-                    "topCenter"    : vector(psuHoleXs[ph], bottom + t + over, definition.psuZFront - psuHoleZs[ph]),
-                    "bottomCenter" : vector(psuHoleXs[ph], bottom - over,     definition.psuZFront - psuHoleZs[ph]),
+                    "topCenter"    : vector(psuHoleXs[ph], bottom + t + over, definition.psuZFront - definition.psuHoleZ),
+                    "bottomCenter" : vector(psuHoleXs[ph], bottom - over,     definition.psuZFront - definition.psuHoleZ),
                     "radius"       : definition.psuHoleDia / 2 - kerf / 2 });
             psuHoles = append(psuHoles, qCreatedBy(id + ("psuh" ~ ph), EntityType.BODY));
         }
