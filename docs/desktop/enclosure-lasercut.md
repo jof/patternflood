@@ -187,6 +187,70 @@ lapped or hidden variants. Worth a look before hand-drawing tabs.
 
 ---
 
+## 7b. The back cover, and where a mortise may not go
+
+The finger joints get glued. The back does not — it has to open indefinitely —
+so it is through-bolted into captive nuts. One laser-cut sheet cannot make a
+counterbore, so the nut pocket is three laminations:
+
+```
+  z:  -60      -57      -54      -51      -48
+      ├────────┼────────┼────────┼────────┤
+      │ back   │ rail A │ rail B │ rail C │
+      │ cover  │ Ø clr  │  hex   │ Ø clr  │──┐ through-tenon
+      └────────┴────────┴────────┴────────┘  │ into both side walls
+       screw ───────────►  ↑                 │
+                 nut pulls back against A    └─ 9 mm of wall behind it
+```
+
+Rail A takes the nut's load; B holds the nut laterally; C stops it escaping
+into the box when the screw is out — its hole is smaller than the nut's
+across-flats, so the nut cannot pass but any screw length can.
+
+### Two mortise rules, both learned by drawing one that could not be cut
+
+**A mortise may not sit within one thickness of an edge.** Tenoning rail A — the
+obvious choice, since it is the one the nut bears on — puts the slot 3 mm from
+the wall's rear edge, leaving a 3 mm sliver of basswood along an 18 mm slot.
+
+**And it may not sit on the roots of a finger notch.** This is the one that
+actually bites. The rails were flush against the top and bottom walls, so the
+mortise's near edge landed exactly at y = −157 — which is also where the
+notches for the top/bottom wall fingers bottom out:
+
+```
+   side wall, y-z plane                        z=-60 rear edge
+      ...  ┌──────────────────────────┐          │
+   y=-139  │   rail A mortise 18x3    │ ◄─ 3mm ──┤   sliver
+   y=-157  └──────────────────────────┘          │
+   y=-160  ╥─╨─╥─╨─╥  finger notches, 3mm deep, roots AT y=-157
+```
+
+Any notch landing under the slot opens straight into it. Not thin — **absent**.
+
+**The fix is one variable per axis.** `#railInset` = 10 mm holds the rails off
+the top and bottom walls; the tenon moved from rail A to **rail C**, 3t from the
+rear edge. Margins are now 9.9 mm to the notch roots and 9.0 mm to the rear
+edge. The same 3 mm sliver existed on the stiffener mortise and got the same
+treatment.
+
+### What moving the tenon costs
+
+The nut's load now reaches the wall through the lamination stack's two glue
+lines rather than bearing directly on a tenoned rail. That sounds like a
+downgrade and isn't, because the tenon was never the strong part:
+
+| Path | Area | Basswood | Fails at |
+|---|---|---|---|
+| Tenon in shear | 3 × 18 × 2 sides = 108 mm² | ~6 MPa | **650 N** |
+| Glue line in tension | 18 × 290 = 5 220 mm² | ~2 MPa | ~10 kN |
+
+The tenon is 15× weaker either way, so which lamination carries it changes
+nothing that matters. Face-glued laminations loaded normal to the glue line are
+how plywood works.
+
+---
+
 ## 8. Basswood specifics
 
 - **Char.** Basswood chars readily and it transfers to hands and to light-coloured

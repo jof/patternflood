@@ -636,6 +636,9 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "Rear rail width" }
         isLength(definition.railW, LENGTH_BOUNDS);
 
+        annotation { "Name" : "Rear rail inset from top/bottom walls" }
+        isLength(definition.railInset, LENGTH_BOUNDS);
+
         annotation { "Name" : "Nut across flats" }
         isLength(definition.nutAcrossFlats, LENGTH_BOUNDS);
 
@@ -948,15 +951,34 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         //          screw ───────────►  ↑
         //                    nut pulls back against rail A
         //
-        // Rail A takes the load: the nut bears on its rear face and rail A
-        // is through-tenoned into the side walls, so the path is
-        // nut -> rail A -> tenon -> wall. The screw head clamps the cover
-        // against rail A's front face.
+        // Rail A takes the nut's load — it bears on A's front face, and the
+        // screw head clamps the cover against A's rear face.
         //
         // Rail B holds the nut laterally. Rail C stops it escaping into the
         // box when the screw is out — its hole is smaller than the nut's
         // across-flats, so the nut cannot pass, but any screw length can.
-        // A and C are geometrically identical, so they are the same DXF.
+        //
+        // THE TENON IS ON C, NOT A. A is the obvious choice — it is the one
+        // the nut bears on — but A sits one thickness from the rear edge, so
+        // its mortise leaves a 3mm sliver of side wall between the slot and
+        // the edge, and that sliver lands exactly on the roots of the
+        // bottom-wall finger notches. Any notch under it opens into the
+        // slot: not thin, absent. Tenoning C instead puts the mortise 3t
+        // from the rear edge with 9mm of wall behind it.
+        //
+        // The cost is that the nut's load reaches the wall through the two
+        // glue lines of the lamination stack rather than directly. That is
+        // not the weak link, and the numbers are not close:
+        //
+        //     tenon in shear   3 x 18 x 2 sides = 108mm^2 @ ~6MPa  ->  650N
+        //     glue line        18 x 290         = 5220mm^2 @ ~2MPa -> 10kN
+        //
+        // The tenon is 15x weaker either way, so moving which lamination
+        // carries it changes nothing that matters.
+        //
+        // The rails are also INSET from the top and bottom walls by
+        // railInset, for the same reason in the other axis — flush against
+        // the wall put the mortise hard against those same finger notches.
         //
         // The back cover is INSET into the wall opening rather than lapped
         // over it, so its outer face finishes flush with the wall rear edges
@@ -974,7 +996,8 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 "corner1" : vector(left + t + bcl,  bottom + t + bcl, zBc0),
                 "corner2" : vector(right - t - bcl, top - t - bcl,    zBc1) });
 
-        const railY0 = [bottom + t, top - t - railW];
+        const rIns = definition.railInset;
+        const railY0 = [bottom + t + rIns, top - t - rIns - railW];
         var coverHoles = [];
 
         for (var ri = 0; ri < 2; ri += 1)
@@ -983,30 +1006,31 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             const y1 = y0 + railW;
             const yMid = (y0 + y1) / 2;
 
-            // Rail A — load-bearing, through-tenoned into the side walls.
+            // Rails A and B — inner width, glued to C, so no joints needed.
             fCuboid(context, id + ("railA" ~ ri), {
-                    "corner1" : vector(left,  y0 - kerf / 2, railZ[0]),
-                    "corner2" : vector(right, y1 + kerf / 2, railZ[1]) });
+                    "corner1" : vector(left + t,  y0, railZ[0]),
+                    "corner2" : vector(right - t, y1, railZ[1]) });
+            fCuboid(context, id + ("railB" ~ ri), {
+                    "corner1" : vector(left + t,  y0, railZ[1]),
+                    "corner2" : vector(right - t, y1, railZ[2]) });
+
+            // Rail C — through-tenoned into the side walls, 3t from the rear
+            // edge so the mortise has wall material all the way round it.
+            fCuboid(context, id + ("railC" ~ ri), {
+                    "corner1" : vector(left,  y0 - kerf / 2, railZ[2]),
+                    "corner2" : vector(right, y1 + kerf / 2, railZ[3]) });
 
             const rSide = ["wallL", "wallR"];
             for (var w = 0; w < 2; w += 1)
             {
                 fCuboid(context, id + ("rmort" ~ ri ~ w), {
-                        "corner1" : vector(left - over,  y0 + kerf / 2, railZ[0] + kerf / 2),
-                        "corner2" : vector(right + over, y1 - kerf / 2, railZ[1] - kerf / 2) });
+                        "corner1" : vector(left - over,  y0 + kerf / 2, railZ[2] + kerf / 2),
+                        "corner2" : vector(right + over, y1 - kerf / 2, railZ[3] - kerf / 2) });
                 opBoolean(context, id + ("rmortCut" ~ ri ~ w), {
                         "tools"         : qCreatedBy(id + ("rmort" ~ ri ~ w), EntityType.BODY),
                         "targets"       : qCreatedBy(id + rSide[w], EntityType.BODY),
                         "operationType" : BooleanOperationType.SUBTRACTION });
             }
-
-            // Rails B and C — inner width, glued to A, so no joints needed.
-            fCuboid(context, id + ("railB" ~ ri), {
-                    "corner1" : vector(left + t,  y0, railZ[1]),
-                    "corner2" : vector(right - t, y1, railZ[2]) });
-            fCuboid(context, id + ("railC" ~ ri), {
-                    "corner1" : vector(left + t,  y0, railZ[2]),
-                    "corner2" : vector(right - t, y1, railZ[3]) });
 
             var clrA = [];
             var pockets = [];
@@ -1081,7 +1105,10 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
 
         const braceTopY = -definition.apertureH / 2 - 0.5 * millimeter;
         const braceBotY = braceTopY - t;
-        const stiffZ0 = zBack + t;
+        // Starts at the same depth as rail C's mortise, and for the same
+        // reason: at zBack + t its own mortise left a 3mm sliver at the rear
+        // edge of each side wall.
+        const stiffZ0 = railZ[2];
         const stiffZ1 = stiffZ0 + definition.webDepth;
 
         fCuboid(context, id + "stiff", {
