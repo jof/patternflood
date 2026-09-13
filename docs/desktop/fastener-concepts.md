@@ -1,6 +1,7 @@
 # Glueless Assembly — Fastener Concepts
 
-**Status: concepts for review. Nothing here is in the model yet.**
+**Status: concepts for review. Concept B is modelled as a study part; nothing is
+in the enclosure yet.**
 
 The enclosure as designed in [`enclosure-lasercut.md`](enclosure-lasercut.md) is a
 glued finger-jointed box with one demountable part (the back cover, on captive
@@ -11,39 +12,47 @@ Constraint set, as stated:
 
 - Laser-cut parts only — no machining, no counterbores, no threaded inserts.
 - M3 bolts, washers, lock washers, nuts.
-- No glue anywhere, including the laminations.
+- No glue anywhere, including the laminations. **An ideal, not a hard
+  constraint** — §6.5 argues for spending the one exception on the front face.
 - Must stay demountable, indefinitely.
 
 Short answer: **yes, and the box is already most of the way there** — but not by
-the route that looks obvious, and two pieces of arithmetic below rule out about
-half of the standard laser-cut joinery vocabulary in 3 mm stock.
+the route that looks obvious. Two pieces of arithmetic below rule out most of the
+standard laser-cut joinery vocabulary at 3 mm, and what survives is a different
+kind of assembly rather than a bolted version of the same one.
 
 ---
 
-## 1. Two numbers that kill the obvious answers
+## 1. Two facts that kill the obvious answers
 
-### 1.1 You cannot put an M3 cross-hole through 3 mm stock
+### 1.1 A bolt can only ever join two PARALLEL plates
 
-The canonical glueless laser-cut joint is the **T-slot** (a.k.a. tab-and-captive-nut):
-a tab on panel A passes through a slot in panel B, a cross-hole through the tab
-takes the bolt, and a T-shaped pocket in B's face traps the nut.
+A laser drills along one axis only: the sheet's own normal. So a hole in a part
+always has its axis perpendicular to that part. For one bolt to pass through two
+parts, it must be normal to both — which means **the two parts must be parallel.**
+Two perpendicular walls can never be bolted directly to each other, at any
+thickness. Every corner needs an intermediary that is parallel to one of them.
+
+That also kills the **T-slot** (tab-and-captive-nut), the canonical glueless
+laser-cut joint, but for a second and separate reason. A captive nut has to be
+held with its **5.5 mm across-flats lying in the sheet plane** and its 2.4 mm
+thickness across the sheet — nut axis and sheet normal are the same line:
 
 ```
-   panel B  ──┬────────────────┬──
-              │   ▄▄▄▄▄▄▄▄▄    │      T pocket, nut drops in
-      tab ════╪═══[O]══════════╪══    bolt through the TAB
-              │                │
+   sheet, 3 mm                       nut needs 5.5 mm
+   ┌──────────────┐                  ┌────────┐
+   │   ⬡  ← 5.5   │  in plane: ✓     │   ⬡    │  across thickness: ✗
+   └──────────────┘  2.4 across      └────────┘  3 mm is not 5.5
 ```
 
-M3 clearance is **3.2 mm**. The tab is **3.0 mm** thick. The hole is wider than
-the material it goes through. There is no version of this that works at this
-thickness — the tab has to be ≥ 6 mm, i.e. laminated, and a laminated tab cannot
-finger-joint into single-thickness panels ([`enclosure-lasercut.md`](enclosure-lasercut.md) §1).
+A T-slot puts the nut in the **edge** of the tabbed panel, so the 5.5 mm has to
+fit inside that panel's thickness. It does in the 6 mm ply every T-slot box is
+made from. It does not in 3 mm. **T-slot joints need ≥ 6 mm stock, full stop.**
 
-**Consequence: every bolt axis must be normal to a panel face, never into an
-edge, and every nut must live inside a lamination stack rather than an edge
-pocket.** That is exactly the back cover's rail A/B/C pattern, and it is the only
-nut-retention geometry available in 3 mm.
+**Consequence:** a nut pocket costs a whole lamination and is only worth it when
+the bolt is short. Where a bolt can pass right through and reach open air, a
+**plain nut on the far face is strictly better** — it needs no pocket and it ties
+every lamination it passes through, not just the two either side of the nut.
 
 ### 1.2 You cannot develop preload against basswood
 
@@ -115,8 +124,8 @@ leaving 20 mm rails top and sides and a 96 mm control band below. A 20 mm rail i
 
 ## 3. The concepts
 
-Four schemes, cheapest-change first. They are not exclusive — C is a supplement
-to any of them.
+Five schemes, cheapest-change first. They are not exclusive: C is a supplement
+to any of them, and B ends up borrowing E's key.
 
 ### Concept A — Dry press fit, diaphragms only
 
@@ -138,53 +147,85 @@ cover bolt on and provide the torsion path.
 costs nothing and tells you how tight the joints actually are. If it feels solid
 dry, every other scheme gets easier.
 
-### Concept B — Internal corner cleats with captive nuts ★ recommended
+### Concept B — Laminated corner post, bolted and tusked ★ recommended
 
-Add a wooden angle bracket inside each corner, made the only way 3 mm allows:
-as a **lamination stack** with the nut trapped between layers, exactly like rails
-A/B/C.
+**Modelled at full scale. Renders and dimensions below are from the CAD, not a
+sketch:** [`concept-b-corner-post.fs`](../../hardware/cad/featurescript/concept-b-corner-post.fs),
+Part Studio *Concept B — corner post*, on the enclosure's own datum.
+
+![Corner post, from inside the bay](img/concept-b-corner-post.png)
+
+A post runs the full height of each corner, parallel to the side wall. §1.1 says
+you can only bolt parallel plates, so **the post takes bolts on the side-wall
+face and an interlock on the bottom-wall face** — those are the only two options
+available, and each wall gets the one its orientation allows.
 
 ```
-   plan view, one corner              section through one bolt
-   ┌──────────────────────┐
-   │▓▓▓▓▓│  side wall     │            side wall  ███ 3 mm
-   │▓▓▓▓▓│                │       bolt ──────────►███
-   │▓▓▓▓▓│  cleat stack   │                       ▓▓▓  L1  clearance Ø3.2
-   ├─────┼────────────────┤                       ▓▓▓  L2  hex pocket 5.5 AF
-   │     │ top wall       │                       ▓▓▓  L3  blind — nut can't escape
-   └─────┴────────────────┘                       └── cleat, 9 mm of laminations
+   plan, one corner                     section through one bolt
+   x=133      139   142  145  148
+   ├──┬──┬──┬──┤     │    │              side wall  ███ 3 mm      x 145..148
+   │P1│P2│P3│P4│ side wall               ─────────► ███ ▓▓▓▓▓▓▓▓▓▓▓▓  M3 x 20
+   │▓▓│▓▓│  │  │                                        P4 P3 P2 P1
+   └──┴──┴──┴──┘                                                  ⬡ ─ plain nut
+    └tenon┘  └── bolts through here                               ○ ─ Ø12 washer
+      6 mm       into a plain nut inboard                     (inboard face, open)
 ```
 
-Each cleat is an L (or two separate strips) that bolts to both panels meeting at
-that corner: 2 bolts into the side wall, 2 into the top/bottom wall, per corner.
-The fingers still locate everything; the cleat supplies only the normal
-restraint, which is the one thing §2 says is missing.
+**Four laminations, 12 × 20 mm in section.** The bolts pass through the side wall
+and all four plates and take a **plain nut on the inboard face** — no hex pocket
+anywhere. One bolt therefore clamps every lamination, which is §1.1's corollary
+and solves Concept C for the post at the same time.
 
-| | |
-|---|---|
-| Hardware | 16 × M3 × 10 button head + nyloc, + 6 back cover |
-| New parts | 4 cleats × 3 laminations = 12, all small |
-| Nut pocket | proven pattern — identical to rails A/B/C |
-| Bolt loading | pure tension, no friction required |
-| Demountable | yes, indefinitely — nuts are captive, nothing threads into wood |
+**The bottom end is a through-tenon locked with a tusk key** — an interlock, not
+a fastener, because no bolt can reach across that corner:
 
-**Clearance check against the existing model** (interior `x −145…145`,
-`y −157…81`):
+![Tusk key through the tenon](img/concept-b-tusk-key.png)
 
-| Corner | Nearest obstruction | Room for a cleat |
+The key wedges between the bottom wall's **outer face** and the lower edge of a
+slot cut through the tenon. The slot's upper edge sits `keyDraw` = 0.3 mm *below*
+the wall face, so driving the taper home pulls the post's shoulder up tight
+against the wall's inner face. That 0.3 mm is the entire mechanism, and it is why
+this is a joint rather than a peg. Both faces of the key are straight cuts in the
+plate outline — nothing here needs a second setup.
+
+**The tenon is made from the two INBOARD laminations, not all four.** This is
+[`enclosure-lasercut.md`](enclosure-lasercut.md) §7b applied again: the mortise
+must not sit within 3t of the wall's edge. Tenoning all four plates would put the
+mortise 3 mm from the bottom wall's outer edge — straight into the finger notches.
+Using P1+P2 only puts it **9 mm** clear:
+
+![Outside, showing the corner finger joint and the mortise](img/concept-b-outside.png)
+
+| | Modelled | Check |
 |---|---|---|
-| bottom-left `(−145, −157)` | PSU starts at x = −44.6 | 100 mm — free |
-| bottom-right `(145, −157)` | IEC flange ends at x = 129.6 | **15.4 mm** — tight |
+| Post section | 12 × 20 mm, 4 × 3 mm | |
+| Post z band | **−45 … −25** | clears rails (−57…−48), braces (~−14.5), Matrix Portal (x 21…99) |
+| Tenon | 6 × 14 mm, 9 mm proud | mortise **9 mm** from the wall edge ✓ |
+| Tusk key | 3 × 5 mm, 0.3 mm draw | |
+| Bolts | M3 × 20, plain nut + Ø12 washer | 3 + 12 mm of wood, ~5 mm of thread left |
+| Bolts per post | ~5 over 238 mm | |
+| Sheet cost | 16 plates 238 × 20 mm ≈ **0.08 m²** | plus 8 keys |
+| Hardware | **20 × M3 × 20, 20 nuts, 20 washers** | plus the 6 back-cover screws |
+
+**Clearance against what is already in the box**, all four corners, from the
+current model:
+
+| Corner | Nearest obstruction | Gap to a 12 mm post |
+|---|---|---|
+| bottom-left `(−145, −157)` | PSU begins at x = −44.6 | 88 mm |
+| bottom-right `(145, −157)` | IEC flange ends at x = 129.6 | **3.4 mm** — fits, but that is the one to draw first |
 | top-left `(−145, 81)` | nothing | free |
-| top-right `(145, 81)` | Matrix Portal ends at x = 98.8 | 46 mm — free |
+| top-right `(145, 81)` | Matrix Portal ends at x = 98.8 | 34 mm |
 
-The bottom-right corner is the one to draw first. A 12 mm cleat fits with 3 mm to
-spare; anything wider collides with the IEC flange and the cleat has to become an
-L that runs up the side wall only.
+**What it costs:** the tusk keys protrude below the ±y walls. That is fine in the
+orientation already chosen — portrait stands on a ±x wall, so the ±y walls are
+vertical sides — but it does finally close the door on landscape, which the IEC
+inlet had already mostly closed. Visually the protruding keys read as a
+deliberate detail rather than an accident, which is a matter of taste.
 
-**Verdict: this is the one to model.** Smallest conceptual leap from what exists,
-reuses a pattern already verified in the part studio, and the load path is
-wood-in-bearing with the bolt only in tension.
+**Verdict: this is the one to model into the enclosure.** Every cut is in-plane,
+the nut pockets that would have eaten laminations are gone, and the one joint
+that cannot be bolted is solved by a joint that does not need to be.
 
 ### Concept C — Bolt the laminations (required by every scheme)
 
@@ -196,9 +237,9 @@ face-glues laminations in four places, and each needs a mechanical answer:
 | Front face | 2 | **4 encoder bushing nuts already clamp it** at the knob cluster, plus 4 × M3 in the bezel margin | mostly |
 | Panel cross-braces | 2 | **the panel mounting bolts already clamp it** — they pass through both layers into the panel posts | **yes, free** |
 | Rear rails A/B/C | 3 | **the back cover bolts already clamp them** — that is what they are for | **yes, free** |
-| Corner cleats (Concept B) | 3 | the cleat's own bolts clamp it | yes |
+| Corner posts (Concept B) | 4 | **the post's own through-bolts clamp it** — one bolt, all four plates | **yes, free** |
 
-Three of the four are already paid for by hardware the design needs anyway.
+Four of the five are already paid for by hardware the design needs anyway.
 Only the front face needs bolts added, and only in the 20 mm bezel margin.
 
 > ⚠️ **A bolted cross-grain lamination is not plywood.** The cross-grain trick in
@@ -240,10 +281,18 @@ The traditional answer, and it needs no M3 anything: the tenon passes through th
 wall and out the far side, a tapered slot in the protruding tenon takes a wooden
 wedge, and driving the wedge pulls the joint tight.
 
-**Rejected for this box**, for one reason: the wedge is loaded across a 3 mm
-section in a soft, straight-grained wood, and basswood wedges at that scale snap.
-It is also a lot of small loose parts on a desktop object. Worth remembering for
-the [wall project's](../wall/) frame, where the stock will be thicker.
+**Rejected as the whole scheme**, for one reason: the wedge would be loaded
+across a 3 mm tenon in a soft, straight-grained wood, and basswood at that scale
+snaps. A box held together by twenty of them is a box that sheds a wedge a month.
+
+**But adopted as a detail inside Concept B**, where both of those objections
+disappear: the tenon there is *laminated* to 6 mm, and the key is not the only
+thing holding that corner — the side wall is bolted, so the key is a retainer on
+one axis rather than the entire structure. §2's point again: a fastener that
+carries no preload and no shear can be much weaker than the joint it retains.
+
+That is the general lesson. **Wedges fail as a structural system at this
+thickness and succeed as a local interlock where a bolt physically cannot go.**
 
 ---
 
@@ -251,17 +300,22 @@ the [wall project's](../wall/) frame, where the stock will be thicker.
 
 Assuming Concept B.
 
-| Item | Spec | Why |
-|---|---|---|
-| Bolts | **M3 × 10 button head**, socket drive | 3 mm wall + 9 mm cleat means the thread lands in the middle lamination's nut; button heads sit flat on soft wood and there is no counterbore to hide a cap head in |
-| Washer, under the head | **Ø9 DIN 9021 minimum, Ø12 preferred** | §1.2 — a standard Ø7 M3 washer embeds at 70 N, which is less than finger-tight |
-| Washer, under the nut | **none needed** | the nut is captive between laminations and bears on wood over its full 5.5 mm hex, not a point |
-| Nut | **M3 nyloc (DIN 985)**, or plain DIN 934 + thread locker | **not a split lock washer** — see below |
-| Back cover | unchanged, 6 × M3 into the existing rails | already modelled |
+| Item | Spec | Count | Why |
+|---|---|---|---|
+| Bolts | **M3 × 20 button head**, socket drive | 20 | 3 mm wall + 12 mm post = 15 mm of wood; 20 mm leaves ~5 mm of thread for the nut. Button heads sit flat on soft wood and there is no counterbore to hide a cap head in |
+| Washer, under the head | **Ø9 DIN 9021 minimum, Ø12 preferred** | 20 | §1.2 — a standard Ø7 M3 washer embeds at 70 N, which is less than finger-tight |
+| Washer, under the nut | **Ø12, same** | 20 | the inboard face is bare wood here, so this one bears directly and needs the area more than the head does |
+| Nut | **M3 nyloc (DIN 985)** | 20 | **not a split lock washer** — see below |
+| Tusk keys | 3 mm offcut, 5 × 21 mm | 8 | laser-cut with everything else; cut spares, they are free |
+| Back cover | unchanged, 6 × M3 into the existing rails | 6 | already modelled |
+
+Nothing in that list is a captive nut, which is the pleasant surprise of §1.1's
+corollary: the only captive nuts left in the whole box are the six that were
+already there for the back cover.
 
 ### Why not lock washers
 
-The user's list included them, and they are the wrong part here. A split lock
+They were on the list, and they are the wrong part here. A split lock
 washer works by storing elastic energy in the split ring — it maintains preload
 as the joint relaxes. That assumes the *joint* relaxes by a few microns of
 thread settling. A basswood joint relaxes by **tenths of a millimetre** of
@@ -279,31 +333,41 @@ is demountability.
 
 ## 5. What to cut to decide this
 
-One test coupon settles it, and it is small:
+One test coupon settles it, and the part studio already draws it — set
+`frag` to 80 mm and export the four plates, the key and the two wall fragments.
+That is the exact geometry in the renders above, at full size:
 
 ```
    ┌──────────────┐
-   │              │  two 80 x 80 panels, finger-jointed
-   │      A       │  one 3-lamination corner cleat
-   │              │  4 x M3 x 10 + nyloc + Ø12 washers
-   └───┬──────────┘
-       │  B
-       │
+   │  side wall   │   80 mm of side wall + 80 mm of bottom wall
+   │   fragment   │   one 4-lamination post, 12 x 20 mm
+   │              │   3 x M3 x 20 + nyloc + Ø12 washers
+   └───┬──────────┘   one tusk key
+       │  bottom wall
+       │  ╨  tenon + key
 ```
 
 Cut it three ways and try to rack each by hand:
 
 1. **Dry fingers only** — Concept A's baseline. How much does it move?
-2. **Dry fingers + cleat + 4 bolts** — Concept B. Does the movement stop?
+2. **Dry fingers + post + 3 bolts + key** — Concept B. Does the movement stop?
 3. **Glued fingers** — the control. How much better is glue, really?
 
 If (2) is close to (3), the whole box goes glueless. If (2) is much closer to
 (1), the diaphragm argument in §2 is doing more work than the corners are, and
 the front face's 20 mm bezel rails become the thing to reinforce instead.
 
-**Also worth measuring on the coupon:** how much a Ø12 washer embeds at "snug",
-and whether the 5.5 mm hex pocket holds an M3 nut against a driver without
-spinning. Both are numbers that this doc currently *derives* rather than knows.
+**Four numbers this doc derives rather than knows**, all readable off that one
+coupon:
+
+- how far a Ø12 washer embeds at "snug", and what "snug" turns out to be in Nm;
+- whether 0.3 mm of key draw is enough to pull the shoulder tight, or too much
+  to drive without splitting the tenon;
+- whether a 6 × 14 mm tenon in 3 mm basswood survives being knocked apart and
+  reassembled ten times;
+- whether the 9 mm of wall between the mortise and the finger notches is really
+  enough, which is the same question §7b of the enclosure doc answered by
+  arithmetic and has never answered with a broken part.
 
 ---
 
@@ -318,10 +382,21 @@ spinning. Both are numbers that this doc currently *derives* rather than knows.
    path rather than a lid? `#screwsPerRail` is 3; going to 4 is a one-variable
    change, and the back cover split (still pending) may force a rethink anyway.
 3. **Seasonal movement.** Concept A's risk applies to B as well, just less: the
-   cleat bolts hold the corner closed but nothing stops a finger joint gapping
-   as the wood shrinks. Slotted holes in the cleat, in the grain direction,
+   post bolts hold the corner closed but nothing stops a finger joint gapping
+   as the wood shrinks. Slotted holes in the post, in the grain direction,
    would let it move. Probably over-thinking a desktop object in a heated room.
-4. **Is a hybrid allowed?** Gluing only the laminations (which never need to come
-   apart) while bolting all the corners gets most of §1's stiffness back for none
-   of the demountability cost. That may be the actual answer, and it is worth
-   deciding whether "no glue" is a hard constraint or a design exercise.
+4. **Post length: one piece or two?** The posts are drawn as full-height, 238 mm
+   of 12 × 20 mm section. Splitting each into two shorter posts near the corners
+   would halve the sheet area and lose very little, since the middle of a corner
+   is the part doing least work. Worth deciding before committing sheet.
+5. **Which laminations still get glued?** "No glue" is the ideal here, not a hard
+   constraint, and §3 Concept C shows the cost is not evenly spread. The corner
+   posts, rails and braces are all clamped for free by hardware the design needs
+   anyway — those are genuinely glue-free. The **front face** is the one that
+   pays: bolted at 60 mm it is not plywood between the bolts (§C), and the narrow
+   bezel rails around the aperture are exactly where the cross-grain lamination
+   was earning its keep. **Gluing only the front face's two layers** buys back
+   the whole cross-grain argument, costs nothing in demountability — that
+   lamination never needs to come apart — and leaves every joint that does come
+   apart on hardware. That looks like the right place to spend the one
+   compromise.

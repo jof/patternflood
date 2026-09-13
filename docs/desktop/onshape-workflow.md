@@ -209,6 +209,8 @@ Studio while the parts are still in your hand.
 | Variables | `ecb5fd1eaa5c82ce2840db45` — 17 variables |
 | Patternflow FS | `3c1a0a201f41714feba73536` — from [`../../hardware/cad/featurescript/enclosure.fs`](../../hardware/cad/featurescript/enclosure.fs) |
 | Part Studio 1 | `06ba580a80083894ed24609b` — panel proxy + bezel |
+| Concept B FS | `08032ce8ab6f26772845e4dd` — from [`../../hardware/cad/featurescript/concept-b-corner-post.fs`](../../hardware/cad/featurescript/concept-b-corner-post.fs) |
+| Concept B PS | `22bf9277c43f3b54c05038c8` — glueless corner post study, [`fastener-concepts.md`](fastener-concepts.md) §3B |
 
 **The repo is the source of truth**, not the document. `enclosure.fs` is authored
 here and uploaded; the document is only where it gets instantiated.
