@@ -9,7 +9,8 @@ Third-party models, unmodified. Import into Onshape with **Insert → Import**.
 | `adafruit-5991-husb238-pd-sink.step` | HUSB238 USB-C PD sink, I2C / switchable, STEMMA QT | [Adafruit_CAD_Parts](https://github.com/adafruit/Adafruit_CAD_Parts) `5991 HUSB238 USBC` | MIT |
 | `adafruit-5807-husb238-pd-sink-fixed.step` | HUSB238 USB-C PD sink, I2C / fixed | [Adafruit_CAD_Parts](https://github.com/adafruit/Adafruit_CAD_Parts) `5807 HUSB238 Breakout` | MIT |
 | `meanwell-lrs-50-5.step` | **Mean Well LRS-50 PSU** — the real one, 31 bodies | Mean Well vendor STEP (2017), via the public Onshape doc [`a46bc672`](https://cad.onshape.com/documents/a46bc672af8b94f9d83c7e9c) *MeanWell LRS-50* (Bukovinets) | vendor CAD |
-| `waveshare-p2.5-64x64-rgb-matrix.step` | **Waveshare P2.5 64×64 RGB matrix** — ⚠ 160 × 160, NOT the P2 this build uses | public Onshape doc [`731770dc`](https://cad.onshape.com/documents/731770dceeb7b7026a08d951) *HegBoard GanArray* (Samuel Gan) | third-party |
+| `waveshare-p2.5-64x64-rgb-matrix.step` | **Waveshare P2.5 64×64 RGB matrix** — ⚠ 160 × 160, and internally inconsistent; **no longer used**, see below | public Onshape doc [`731770dc`](https://cad.onshape.com/documents/731770dceeb7b7026a08d951) *HegBoard GanArray* (Samuel Gan) | third-party |
+| *(not imported)* | **IEC AC-14-F16A** inlet — consulted for the flange screw spacing only | public Onshape doc [`a0851c0b`](https://cad.onshape.com/documents/a0851c0ba6a0a5e0e3d6bbcf) *DC POWER SUPPLY* (Simon Page), `AC INLET` studio | third-party |
 
 That repo indexes 472 parts by Adafruit product ID and also carries `.f3d` and
 `.stl` for each. These two were the only BOM parts present — the PID 377
@@ -33,6 +34,12 @@ vendor publishes no drawing.
 | Adafruit 5036 panel (P2.5 64×32) | 160 × 80 × 17.5 | 4 × M3 posts, inset 12.45/12.50 in x and 15.75 in y |
 | **Waveshare P2.5 64×64** | **160 × 160 × 16.5** | 4 × M3 posts at **(±63.5, ±63.5)** — a **16.5 mm inset**, equal in both axes |
 | **Mean Well LRS-50** | 99 × 82 × 30 | side M3 at **x = 10 and 84 from the terminal end**, **z = 15** (dead centre of the 30 mm height); terminal block **5 ways at 9.3 mm pitch**, Ø6.5 screw heads sunk ~10 mm below the cover, **screws facing out of the cover** |
+| **IEC AC-14-F16A** | flange 48.6 × 58.2, 34.0 deep | flange screws **40.0 mm apart, Ø3.5**, on the short (lobed) axis. Only this one number was taken — the rest disagrees with our calipers by ~1 mm |
+
+> **Two of these three third-party models were wrong in ways that cost time.**
+> The rule that came out of it: *take the one number the model is authoritative
+> about, and keep your own measurements for everything else.* A hand-made model
+> is evidence about a hole pattern, not about a size.
 
 > ⚠️ **The Waveshare row is a P2.5, and this build uses P2.** 160 mm vs 128 mm
 > body, 16.5 mm vs 14.5 mm depth. Do not point `#panelBody` at it. What it is

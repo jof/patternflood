@@ -239,6 +239,8 @@ Studio while the parts are still in your hand.
 | LRS-50-5 | `d028b9441f5d077f2950e113` — sub-assembly wrapping the 31 vendor bodies so the PSU arrives as ONE instance |
 | LRS-50 (vendor) | `e474d54d0ff1822f6f0a417d` — Mean Well's own STEP, imported. The reference the PSU proxy is checked against |
 | Waveshare P2.5 (vendor) | `a70c6a06b8d205902705ee0c` — ⚠ 160 × 160, **not** the P2 this build uses. Layout evidence only |
+| Panel P2.5 (proxy) | `9aacde0e7a6103be9fff46fd` → assembly `726db9f2da48bde902e4e8e8` — one `panelProxy`, wrapped so it inserts as one instance |
+| IEC AC-14-F16A (proxy) | `f9604c88ee037028910ba08a` → assembly `bc9c97b16cf4f8a81c678cbd` — one `iecProxy`, same pattern |
 
 **The repo is the source of truth**, not the document. `enclosure.fs` is authored
 here and uploaded; the document is only where it gets instantiated.

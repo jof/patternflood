@@ -639,6 +639,9 @@ export const iecProxy = defineFeature(function(context is Context, id is Id, def
                 "tools"         : qUnion(holes),
                 "targets"       : qCreatedBy(id + "flEx", EntityType.BODY),
                 "operationType" : BooleanOperationType.SUBTRACTION });
+
+        nameBody(context, id + "nBody", id + "body", "IEC AC-14-F16A body");
+        nameBody(context, id + "nFl",   id + "flEx", "IEC AC-14-F16A flange");
     });
 
 // ────────────────────────────────────────────────────────────────────────

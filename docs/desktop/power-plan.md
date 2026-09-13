@@ -416,7 +416,34 @@ against the drawing's ±1 mm position tolerance over the 74 mm span.
 | Cutout | **46.75 × 27.25 mm** |
 | Depth behind the face | **37.45 mm** |
 | Rating | 10 A / 250 V; switch 6 A at 250 V |
-| Flange screws | **not yet measured** |
+| Flange screws | **40 mm centres, Ø3.5** — see below |
+
+### The flange screw spacing, at last
+
+`#iecScrewSpacing` was the last variable still marked UNKNOWN. The part is an
+**AC-14-F16A**, and a model of it exists in the public Onshape document
+[`a0851c0b`](https://cad.onshape.com/documents/a0851c0ba6a0a5e0e3d6bbcf)
+(*DC POWER SUPPLY*, Simon Page). Its `AC INLET` studio carries two Ø3.5 holes on
+the short axis at x = −6.3 and x = +33.7:
+
+```
+   spacing = 33.7 − (−6.3) = 40.0 mm
+```
+
+**The derivation it replaces was 2 mm short.** `#iecCutH + #iecFlangeTip`
+= 27.25 + 10.75 = 38 assumed the screws sit in the middle of each lobe; the real
+part puts them further out, 4.4 mm in from the lobe tip. A Ø3.4 clearance hole
+would not have absorbed 2 mm — the inlet simply would not have bolted on.
+
+> ⚠️ **This is not calipers.** That model is hand-made, and it disagrees with
+> the measured part by ~1 mm elsewhere (58.2 vs 59.25 across the flange, 34.0 vs
+> 40.95 deep). The cutout and depth figures above stay as measured; only the
+> screw spacing is taken from it, because it is the one number no one had.
+> 40 mm is also the standard AC-14 figure, which is why it is believable.
+> **Confirm with a rule before cutting** — and if it is wrong, these are two
+> Ø3.4 holes in a flat panel, trivially re-drilled.
+
+![The inlet flange on the bottom wall](img/iec-flange.png)
 
 The 46.75 dimension runs along **x**, in the bottom wall, with the lobed
 27.25 axis in z. The lobes are what constrain it: `27.25 + 2 × 10.75 = 48.75 mm`
