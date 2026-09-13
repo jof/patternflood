@@ -376,3 +376,133 @@ its own front face forms part of the front surface. `#apertureGap` is signed:
 
 External depth drops to **40 mm** as a side effect, since the bezel no longer
 adds to the stack.
+
+---
+
+## 13. Material — and why the 30 W laser is not the constraint
+
+Basswood was picked in [`mechanical-plan.md`](mechanical-plan.md) §3 without much
+argument, and three things have happened since that make it worth revisiting:
+§1's cross-grain lamination trick exists only to work around basswood's grain,
+§7b's mortise rules exist because it splits, and the whole of
+[`fastener-concepts.md`](fastener-concepts.md) §1.2 — "you cannot develop preload
+against basswood" — is a material property, not a geometry one.
+
+### 13.1 The laser barely narrows the field
+
+**At 3 mm, a 30 W CO₂ cuts every candidate here.** Denser stock needs a slower
+feed or a second pass, but nothing in the list below is out of reach:
+
+| Stock | 30 W, 3 mm | Notes |
+|---|---|---|
+| Basswood | 1 pass, fast | the easy baseline |
+| Poplar / "craft" ply | 1 pass | voids are the problem, not power |
+| **Baltic birch ply** | **1 pass, slower — or 2** | glue lines cut slower than the wood |
+| Cherry, walnut | 1–2 passes | best-looking char |
+| Hard maple | 2 passes | slow, and it chars dark |
+| Bamboo ply | 2–3 passes, heavy char | **marginal — skip it** |
+| **Any 6 mm** | **3+ passes, taper, heavy char** | **this is where 30 W actually runs out** |
+
+So the constraint bites at **thickness, not species.** The design never asks the
+laser for 6 mm — the 6 mm at the knob bores is two 3 mm laminations (§3) — so the
+laser is not choosing the material. Properties are.
+
+### 13.2 What the properties actually buy
+
+Handbook values at 12 % MC, run through the two numbers this design is sensitive
+to. "Ø12 washer" is the load at which a Ø12 penny washer starts embedding
+(§1.2 of the fastener doc); "tusk key" is the shear-out load on the corner post's
+key (Concept B).
+
+| Stock | ρ kg/m³ | Ø12 washer | Tusk key | Whole box |
+|---|---|---|---|---|
+| **Basswood** *(current)* | 400 | **270 N** | **300 N** | 480 g |
+| Poplar | 420 | 354 N | 364 N | 500 g |
+| Paper birch | 550 | 426 N | 369 N | 660 g |
+| **Baltic birch ply** | 680 | **624 N** | **533 N** | 815 g |
+| Cherry | 500 | 499 N | 519 N | 600 g |
+| Walnut | 550 | 728 N | 417 N | 660 g |
+| **Hard maple** | 705 | **1050 N** | **715 N** | 845 g |
+
+Two things to read off that:
+
+- **A hand-snug M3 is 400–600 N.** Basswood embeds well below that; Baltic birch
+  is at the top of the range; hard maple is clear of it. Maple is the only entry
+  that makes §1.2's conclusion stop being true — on maple you *can* torque a bolt
+  and have it stay clamped.
+- **The box roughly doubles in weight**, 480 g → ~820 g. On a desktop object that
+  is a feature, not a cost: it stops the thing sliding when you turn a knob.
+
+### 13.3 The argument that actually decides it
+
+Not strength — **plywood is already cross-plied, and that deletes the one place
+glue was still earning its keep.**
+
+[`fastener-concepts.md`](fastener-concepts.md) §6.5 concluded that the front
+face's two laminations should stay glued, because bolted at 60 mm centres they
+are not plywood between the bolts, and the narrow bezel rails around the aperture
+are exactly where the cross-grain trick was protecting the part. **On plywood
+stock that argument evaporates**: every sheet is already balanced and
+cross-grained, the doubler needs no grain-crossing, and the front face can be
+bolted like everything else.
+
+> **Switching to ply is what makes a fully glueless box reachable.** It is worth
+> more than the 2.3× bearing strength.
+
+It also quietly retires three other workarounds:
+
+| Existing workaround | On ply |
+|---|---|
+| §1 "laminate the doublers cross-grain" | **moot** — sheet is already cross-plied |
+| §8 "soft = screws strip" | still true, but 2.3× less so |
+| Concept A's humidity risk — 3 % seasonal movement across grain | **~0.2 %** — ply barely moves |
+
+And it fixes the most annoying practical thing in the whole build: **3 mm Baltic
+birch is genuinely 3.0 mm**, where "3 mm" basswood runs 2.7–3.2 and varies within
+one sheet (§7). Finger joints care about that more than they care about strength.
+
+### 13.4 What it costs
+
+- **The edge.** Ply shows its layer lines, and the most visible edge in the build
+  is the one running all the way around a 257 × 129 aperture. Solid hardwood cuts
+  a clean edge; ply does not. This is the real trade, and it is a taste question,
+  not an engineering one.
+- **Glue lines cut slower than the wood**, so kerf is slightly inconsistent
+  through the thickness and the char is darker at each line.
+- **Voids.** A void under the cut line is an uncut spot and a weak finger.
+
+### 13.5 Recommendation
+
+**3 mm Baltic birch ply, B/BB grade or better**, with hard maple as the
+alternative if the aperture edge matters more than going fully glueless.
+
+Sourcing caveat, because this is where it goes wrong: **"Baltic birch" is now
+often a grade description rather than an origin.** Check the *edge*, not the
+label — real stock shows uniform, void-free birch plies of equal thickness all
+the way through. A poplar or mixed-hardwood core is a different material with
+different numbers and worse voids. Model-shop "aircraft ply" is the same product
+sold honestly, and it is worth the premium for a one-box build.
+
+> ⚠️ **Do not mix stock.** §1's rule is absolute: fingers only mesh if every
+> mating panel is the same thickness, so a maple front face on a ply box does not
+> work — nominal 3 mm ply is 3.0 and nominal ⅛" hardwood is 3.18. Pick one
+> material for everything that carries a finger joint.
+
+**Never laser:** MDF (fastener bearing crumbles, and the bores would wallow worse
+than basswood), hardboard, and anything with PVC or vinyl content.
+
+### 13.6 What changes in the model
+
+Nothing structural — which is the point of having driven everything from the
+variable table:
+
+| | |
+|---|---|
+| `#thickness` | **re-measure.** Expect ~3.0, not 2.7–3.2 |
+| `#kerf` | **re-cut the comb.** Denser stock and glue lines both move it |
+| §1 cross-grain doublers | delete the requirement |
+| `fastener-concepts.md` §6.5 | resolved — the front face no longer needs glue |
+| Everything else | unchanged |
+
+The test comb in §9 step 2 was already the gate. It just needs cutting in the new
+stock instead.

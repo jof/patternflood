@@ -73,6 +73,12 @@ crushes the wood**, and then the wood creeps and the preload decays anyway.
 So: a bolted basswood joint has **no usable friction capacity**, and any design
 whose stiffness depends on clamp force is designing on sand.
 
+> **This is the one finding here that is a material property rather than a
+> geometric one, and it is therefore the one a different stock can fix.** Baltic
+> birch ply moves the Ø12 figure to ~620 N and hard maple to ~1050 N — on maple,
+> a hand-snug M3 genuinely stays clamped. See
+> [`enclosure-lasercut.md`](enclosure-lasercut.md) §13.
+
 ---
 
 ## 2. The reframing that makes this work
@@ -400,3 +406,8 @@ coupon:
    lamination never needs to come apart — and leaves every joint that does come
    apart on hardware. That looks like the right place to spend the one
    compromise.
+
+   **Unless the stock changes.** That whole answer is an artefact of solid
+   basswood having a grain direction. On plywood the front face is already
+   cross-plied and needs no glue at all, which is what makes a fully glueless
+   box reachable — see [`enclosure-lasercut.md`](enclosure-lasercut.md) §13.3.
