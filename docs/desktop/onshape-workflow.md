@@ -359,29 +359,39 @@ Applied as occurrence transforms, in metres, row-major:
 |---|---|---|
 | 16 enclosure parts | identity | none — they are modelled *in situ* |
 | `LRS-50-5` | 180° about y | (54.62, −167.75, −8) |
-| panel ×2 | 180° about y | (∓80, 0, −15.4) |
+| panel ×2 | **identity** | (∓80, 0, −2.21) |
 
-Verified: the whole assembly's bounding box is **exactly** the Part Studio's box
-— x ±179.75, y −175.75…99.75, z −60…0. Nothing pokes out.
+![The assembly](img/assembly-front.png)
 
-![The assembly](img/assembly-rear.png)
+> ⚠️ **A vendor *assembly* tab does not share its Part Studio's frame.** The
+> panels first went in backwards — the PCB rear facing out through the aperture
+> — because the transform was derived from the Part Studio
+> (`a70c6a06`, connectors at +z) while the thing actually inserted was the
+> Assembly (`3d1706bb`, connectors at −z). **Measure the element you are going to
+> insert, not the one next to it.** In the assembly's own frame the panel spans
+> z −15.40…+2.21, LED face at the high end, so it needs no rotation at all.
 
-### ⚠️ What the assembly immediately found
+### What the assembly found
 
-**The vendor panel assembly is ~25 mm deep, where `#panelDepth` is 15.** Seated
-with its front face flush at z = 0 it reaches z = −25, which is past the braces
-at −18…−15. Whether that is a real collision depends on where the panel's own
-mounting plane sits, and **the model does not say** — §4's caveat again, that
-this is a PCB plus connectors with the LEDs absent. It is the third time
-`#panelDepth` has come up as the number that decides everything and is still not
-measured.
+| | |
+|---|---|
+| **Panel depth is 17.6 mm** against `#panelDepth` = 15 | 2.6 mm, not the 25 mm first reported here — that figure was an artefact of the backwards transform. Still the number that decides how flush the LEDs sit, and still not measured |
+| Two sub-assemblies in the vendor panel protrude **7.43 mm through the LED face** | `IC_Connector_Layer` and friends are mis-placed in the *source* document; nothing to do with the transform. Cosmetic, but it is why the assembly bbox is z −60…**+7.43** rather than −60…0 |
+
+Everything else lands exactly: x ±179.75, y −175.75…99.75, z −60 — the Part
+Studio's box to the millimetre.
 
 ### Still to do
 
 - **Fastened mates.** The parts are positioned but not yet mated; the connectors
   they should mate to are published, which was the hard half. Until then a drag
   in the assembly will move a part with nothing to snap it back.
-- **Housekeeping.** `Assembly 1` and its BOM are superseded and carry 31 stale
-  instances from a first attempt. The Waveshare STEP import also dragged in
-  `LED_Matrix`, `IC_Connector_Layer`, four `QSOP-24` tabs and their BOMs — all
-  noise from `flattenAssemblies=false`. Safe to delete, none of it is referenced.
+- **Housekeeping.** The old scratch assembly is renamed
+  **`ZZ OLD scratch — superseded by Patternflow Desktop, safe to delete`** so it
+  cannot be mistaken for the real one. It carries 66 instances: everything twice,
+  plus 30 **untransformed** LRS-50 bodies sitting at raw STEP coordinates outside
+  the box, and two coincident panels that read as one. If you opened that tab it
+  would look exactly like a broken model — which is how it was found.
+  The Waveshare STEP import also dragged in `LED_Matrix`, `IC_Connector_Layer`,
+  four `QSOP-24` tabs and their BOMs, all noise from `flattenAssemblies=false`.
+  None of it is referenced; delete when convenient.
