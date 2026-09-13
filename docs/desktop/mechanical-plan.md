@@ -49,7 +49,21 @@ Two 64×64 panels are held spare. The 1"/20 mm knob duplication is treated as
 
 ### 2.1 Active area
 
-Two Waveshare P2 64×64 panels, chained horizontally:
+Two Waveshare P2 64×64 panels — **SKU 33838**, *RGB Full-Color LED Matrix
+Panel, 2 mm Pitch, 64 × 64 Pixels*, GOB version — chained horizontally.
+
+> **"64 × 64" is pixels; the panel is 128 × 128 mm.** The two numbers that get
+> confused are pixel count and pitch:
+>
+> ```
+>   64 px  ×  2 mm pitch  =  128 mm of panel
+>   pair:  128 × 64 px    =  256 × 128 mm
+> ```
+>
+> That 128 × 64 px is the whole point of the fork — it is upstream Patternflow's
+> exact pixel geometry, so every community pattern runs unmodified. A same-pixel
+> panel at a different pitch is a different *physical* part: the P2.5 64×64 is
+> also 64 × 64 px but 160 × 160 mm, and the P3 64×64 is 190 × 190 mm.
 
 ```
                     256 mm

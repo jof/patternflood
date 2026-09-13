@@ -386,11 +386,21 @@ thing this model does add is that on a *square* panel the insets are equal in
 both axes — which is more than could be assumed before, and it is the axis
 (`braceYOffset`, in y) that has no forgiveness.
 
-> ⚠️ **This model is a P2.5 and this build uses P2.** 160 × 160 × 16.5 against
-> 128 × 128 × 14.5. Pointing `#panelBody` at it is not a proxy swap — it is a
-> 64 mm wider box: `#panelW`, `#panelDepth` and the aperture all move, 256 → 320,
-> and `#boxW` follows to 360. **If the panels on the bench are actually P2.5, say
-> so before anything is cut**, because that is a redesign, not a variable edit.
+> ⚠️ **This model is a P2.5 and this build uses P2 (SKU 33838).** Both are
+> *64 × 64 pixels* — that is the number on the box, and it is not a size. The
+> size is pitch × pixels: **2 mm × 64 = 128 mm** for ours, **2.5 mm × 64 =
+> 160 mm** for the model. So it is 160 × 160 × 16.5 against our 128 × 128 × 14.5.
+> Pointing `#panelBody` at it would not be a proxy swap, it would be a 64 mm
+> wider box — aperture 256 → 320, `#boxW` → 360, and upstream's pixel geometry
+> broken for nothing, since the pixel count is identical either way.
+
+**One thing it does corroborate.** Its inset is 16.5 mm on a 160 mm body —
+10.3 % of the body. Scale that proportionally onto our 128 mm panel and the posts
+land **50.8 mm from centre**; `#postXOffset` and `#braceYOffset` are set to 50.
+That is a weak argument — one same-manufacturer, same-pixel-count data point, at
+a different pitch, and §11's whole lesson is that these do not generalise — but
+it is the first evidence of any kind that the 50 mm guess is not silly. **Still
+measure them.**
 
 ---
 
