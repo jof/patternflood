@@ -830,6 +830,21 @@ function hexPrism(context is Context, id is Id, cx is ValueWithUnits, cy is Valu
 }
 
 // ────────────────────────────────────────────────────────────────────────
+// Part naming
+// ────────────────────────────────────────────────────────────────────────
+// A body created by fCuboid has no name, and Onshape will happily call it
+// "Part 12". That is invisible until a DXF export or a BOM needs to say
+// WHICH part, so every body that survives to the end gets named here.
+
+function nameBody(context is Context, id is Id, bodyId is Id, name is string)
+{
+    setProperty(context, {
+            "entities"     : qCreatedBy(bodyId, EntityType.BODY),
+            "propertyType" : PropertyType.NAME,
+            "value"        : name });
+}
+
+// ────────────────────────────────────────────────────────────────────────
 // Enclosure shell  (named enclosureShell — a bare `shell` collides with std)
 // ────────────────────────────────────────────────────────────────────────
 // Bezel laminations plus the four walls, in ONE feature — the finger joints
@@ -1541,4 +1556,74 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 "tools"         : qUnion(tools),
                 "targets"       : qUnion(plates),
                 "operationType" : BooleanOperationType.SUBTRACTION });
+
+        // ── Part identity ──────────────────────────────────────────────
+        // Until now every body was anonymous, which was fine while the only
+        // consumer was a bounding-box query. It stops being fine the moment
+        // anything downstream needs to refer to ONE part: an assembly
+        // instance list, a BOM line, or a DXF file name. Naming here rather
+        // than in the document keeps the repo the source of truth — rename a
+        // body in Onshape and the next push silently reverts it.
+        nameBody(context, id + "n01", id + "layer0",  "Bezel outer");
+        nameBody(context, id + "n02", id + "layer1",  "Bezel inner");
+        nameBody(context, id + "n03", id + "wallL",   "Wall left");
+        nameBody(context, id + "n04", id + "wallR",   "Wall right");
+        nameBody(context, id + "n05", id + "wallB",   "Wall bottom (IEC)");
+        nameBody(context, id + "n06", id + "wallT",   "Wall top");
+        nameBody(context, id + "n07", id + "backCover", "Back cover");
+        nameBody(context, id + "n08", id + "stiff",   "Stiffener web");
+        nameBody(context, id + "n09", id + "brace0",  "Panel brace lower");
+        nameBody(context, id + "n10", id + "brace1",  "Panel brace upper");
+        for (var ri = 0; ri < 2; ri += 1)
+        {
+            var where = "lower";
+            if (ri == 1) { where = "upper"; }
+            nameBody(context, id + ("nrA" ~ ri), id + ("railA" ~ ri),
+                     "Rail A " ~ where ~ " (screw clearance)");
+            nameBody(context, id + ("nrB" ~ ri), id + ("railB" ~ ri),
+                     "Rail B " ~ where ~ " (hex pocket)");
+            nameBody(context, id + ("nrC" ~ ri), id + ("railC" ~ ri),
+                     "Rail C " ~ where ~ " (tenoned)");
+        }
+
+        // ── Mate connectors ────────────────────────────────────────────
+        // Published so the ASSEMBLY can position real vendor parts against
+        // the enclosure without re-deriving a single coordinate. Both sides
+        // then read the same Variable Studio, which is what keeps "the box
+        // follows the insides" true without in-context references.
+        opMateConnector(context, id + "mcOrigin", {
+                "coordSystem" : coordSystem(vector(0, 0, 0) * millimeter,
+                                            vector(1, 0, 0), vector(0, 0, 1)),
+                "owner"       : qCreatedBy(id + "layer0", EntityType.BODY) });
+
+        for (var i = 0; i < definition.panelCount; i += 1)
+        {
+            const pcx = (i - (definition.panelCount - 1) / 2) * definition.panelW;
+            opMateConnector(context, id + ("mcPanel" ~ i), {
+                    "coordSystem" : coordSystem(vector(pcx, 0 * millimeter, 0 * millimeter),
+                                                vector(1, 0, 0), vector(0, 0, 1)),
+                    "owner"       : qCreatedBy(id + "layer0", EntityType.BODY) });
+        }
+
+        // PSU datum. Mean Well's STEP has its origin at the corner where the
+        // TERMINAL end, the MOUNTING-HOLE face and the BASE meet, so this
+        // connector maps that corner into our frame:
+        //
+        //   ours = (psuXHi - X,  psuYLo + Y,  psuZFront - Z)
+        //
+        // The z flip is the part that matters — it is what puts the cover,
+        // and therefore the terminal screws, toward the removable back cover
+        // rather than the glued bezel. Fasten the vendor part to this and the
+        // orientation cannot be got wrong by hand.
+        opMateConnector(context, id + "mcPsu", {
+                "coordSystem" : coordSystem(vector(definition.psuX + definition.psuL / 2,
+                                                   bottom + t + definition.psuStandoff,
+                                                   definition.psuZFront),
+                                            vector(-1, 0, 0), vector(0, 0, -1)),
+                "owner"       : qCreatedBy(id + "wallB", EntityType.BODY) });
+
+        opMateConnector(context, id + "mcIec", {
+                "coordSystem" : coordSystem(vector(definition.iecX, bottom, definition.iecZ),
+                                            vector(1, 0, 0), vector(0, -1, 0)),
+                "owner"       : qCreatedBy(id + "wallB", EntityType.BODY) });
     });

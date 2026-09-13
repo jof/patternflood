@@ -235,6 +235,8 @@ Studio while the parts are still in your hand.
 | Concept B FS | `08032ce8ab6f26772845e4dd` — from [`../../hardware/cad/featurescript/concept-b-corner-post.fs`](../../hardware/cad/featurescript/concept-b-corner-post.fs) |
 | Concept B PS | `22bf9277c43f3b54c05038c8` — glueless corner post study, [`fastener-concepts.md`](fastener-concepts.md) §3B |
 | Proxies PS | `d1c871ec149418978f2eb283` — panel and PSU proxies alone, for looking at. No enclosure, so nothing hides them |
+| **Patternflow Desktop** | `0081005765a967d40fc7b23e` — **the assembly**: 16 named enclosure parts + PSU + 2 panels |
+| LRS-50-5 | `d028b9441f5d077f2950e113` — sub-assembly wrapping the 31 vendor bodies so the PSU arrives as ONE instance |
 | LRS-50 (vendor) | `e474d54d0ff1822f6f0a417d` — Mean Well's own STEP, imported. The reference the PSU proxy is checked against |
 | Waveshare P2.5 (vendor) | `a70c6a06b8d205902705ee0c` — ⚠ 160 × 160, **not** the P2 this build uses. Layout evidence only |
 
@@ -296,3 +298,90 @@ referencing those. `#` is mandatory; bare names are rejected.
 **Part Studios see Variable Studio variables automatically** — no explicit
 reference needed, despite the `variablestudioreferences` endpoint existing.
 
+---
+
+## 10. Part Studios and the Assembly — where the line goes
+
+Everything used to live in one Part Studio with absolute coordinates. That was
+right while the only consumer was a bounding-box query, and wrong as soon as
+real vendor parts needed placing. The split now is **not** one Part Studio per
+part, and the reason is worth stating because it is the opposite of the usual
+Onshape advice:
+
+> **One Part Studio per *solve*, not per *part*.** A finger joint is not an
+> assembly relationship — it is a single geometric solve across every panel
+> meeting at that edge. Put the side wall in one studio and the top wall in
+> another and the notch layout has to be derived twice from the same variables,
+> with no way to notice when the two derivations disagree except by cutting wood.
+
+The same argument covers the mortise/tenon pairs (rail C into the side walls,
+the brace tenons, Concept B's tusk) and the lamination stacks. All of it is one
+solve, so all of it is one Part Studio.
+
+What genuinely did not belong there is **placement**: where the PSU sits, where
+the panels sit. That is what mate connectors are for.
+
+```
+  Variable Studio ─────────────┬──────────────────────────┐
+   the single source of        │                          │
+   positional truth            ▼                          ▼
+                       Part Studio "Patternflow"     Assembly
+                       one solve: bezel, walls,      "Patternflow Desktop"
+                       braces, rails, stiffener,     16 named parts
+                       back cover                    + LRS-50-5
+                       publishes MATE CONNECTORS ───► + 2 x panel
+```
+
+**No in-context references, and no circularity.** The obvious way to make "the
+box follows the insides" true is in-context design — the Part Studio references
+the Assembly — which is fragile and fights a FeatureScript authored in this repo.
+It is not needed: the Variable Studio already *is* the interface. The
+FeatureScript builds the box from `#psuX`, `#iecX`, `#braceYOffset`; the
+Assembly places parts at the same numbers. Both read; neither writes.
+
+### What the Part Studio now publishes
+
+- **16 named parts** — every body that survives to the end is named in
+  `enclosure.fs`, not in the document. Rename one in Onshape and the next push
+  silently reverts it, which is the intended direction. Anonymous bodies were
+  fine for a bbox query and are useless to a BOM line or a DXF file name.
+- **Mate connectors** at the origin, both panel centres, the IEC cutout, and the
+  PSU datum. The PSU one earns its keep: it encodes the corner-mapping
+  `ours = (psuXHi − X, psuYLo + Y, psuZFront − Z)`, and the **z flip in that
+  expression is what puts the terminal screws toward the removable back cover**
+  rather than the glued bezel (see [`power-plan.md`](power-plan.md) §8).
+
+### Placements, so they are reproducible
+
+Applied as occurrence transforms, in metres, row-major:
+
+| Instance | Rotation | Translation (mm) |
+|---|---|---|
+| 16 enclosure parts | identity | none — they are modelled *in situ* |
+| `LRS-50-5` | 180° about y | (54.62, −167.75, −8) |
+| panel ×2 | 180° about y | (∓80, 0, −15.4) |
+
+Verified: the whole assembly's bounding box is **exactly** the Part Studio's box
+— x ±179.75, y −175.75…99.75, z −60…0. Nothing pokes out.
+
+![The assembly](img/assembly-rear.png)
+
+### ⚠️ What the assembly immediately found
+
+**The vendor panel assembly is ~25 mm deep, where `#panelDepth` is 15.** Seated
+with its front face flush at z = 0 it reaches z = −25, which is past the braces
+at −18…−15. Whether that is a real collision depends on where the panel's own
+mounting plane sits, and **the model does not say** — §4's caveat again, that
+this is a PCB plus connectors with the LEDs absent. It is the third time
+`#panelDepth` has come up as the number that decides everything and is still not
+measured.
+
+### Still to do
+
+- **Fastened mates.** The parts are positioned but not yet mated; the connectors
+  they should mate to are published, which was the hard half. Until then a drag
+  in the assembly will move a part with nothing to snap it back.
+- **Housekeeping.** `Assembly 1` and its BOM are superseded and carry 31 stale
+  instances from a first attempt. The Waveshare STEP import also dragged in
+  `LED_Matrix`, `IC_Connector_Layer`, four `QSOP-24` tabs and their BOMs — all
+  noise from `flattenAssemblies=false`. Safe to delete, none of it is referenced.
