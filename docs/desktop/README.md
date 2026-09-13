@@ -23,6 +23,7 @@ to keep tracking it.
 | [**`build-prep.md`**](build-prep.md) | **What to do and order, in sequence — start here** |
 | [`mechanical-plan.md`](mechanical-plan.md) | Geometry, stackup, front panel, clearances |
 | [`enclosure-lasercut.md`](enclosure-lasercut.md) | Finger-joint box in 3 mm basswood — the design |
+| [`fastener-concepts.md`](fastener-concepts.md) | **Concepts for review** — assembling it with M3 hardware and no glue |
 | [`onshape-workflow.md`](onshape-workflow.md) | Modelling it: vendor CAD, proxies, variables, rendering |
 | [`power-plan.md`](power-plan.md) | USB-C, PD trigger, buck, optional bank |
 | [`firmware-delta.md`](firmware-delta.md) | Pinout diff, memory port, I²C encoders |

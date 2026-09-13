@@ -261,7 +261,10 @@ how plywood works.
   back cover and low on the side walls. Pattern them — it's a laser, the vents
   can be the decoration.
 - **Glue.** Ordinary PVA on the doublers, clamped flat. Watch for cupping on a
-  300 mm face — clamp between something rigid while it dries.
+  300 mm face — clamp between something rigid while it dries. *(Whether there is
+  any glue at all is an open question — see
+  [`fastener-concepts.md`](fastener-concepts.md), which asks whether the box can
+  be held together with M3 hardware alone.)*
 - **Finish before assembly.** Much easier flat.
 
 ---
