@@ -25,6 +25,21 @@ import(path : "onshape/std/geometry.fs", version : "3070.0");
  */
 
 // ────────────────────────────────────────────────────────────────────────
+// Part naming
+// ────────────────────────────────────────────────────────────────────────
+// A body created by fCuboid has no name, and Onshape will happily call it
+// "Part 12". That is invisible until a DXF export or a BOM needs to say
+// WHICH part, so every body that survives to the end gets named here.
+
+function nameBody(context is Context, id is Id, bodyId is Id, name is string)
+{
+    setProperty(context, {
+            "entities"     : qCreatedBy(bodyId, EntityType.BODY),
+            "propertyType" : PropertyType.NAME,
+            "value"        : name });
+}
+
+// ────────────────────────────────────────────────────────────────────────
 // Panel proxy
 // ────────────────────────────────────────────────────────────────────────
 // Two levels of fidelity, switched by "Detailed":
@@ -225,6 +240,20 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
                     "corner1" : vector(xc - 11 * millimeter, -B / 2 + 14 * millimeter,
                                        zPcbB - 7 * millimeter),
                     "corner2" : vector(xc + 11 * millimeter, -B / 2 + 24 * millimeter, zPcbB) });
+
+            // Named for the same reason the enclosure parts are: an assembly
+            // instance list and a BOM both need to say WHICH body.
+            var tag = "Panel";
+            if (n > 1) { tag = "Panel " ~ (i + 1); }
+            nameBody(context, pid + "na", pid + "face",  tag ~ " — GOB module");
+            nameBody(context, pid + "nb", pid + "lit",   tag ~ " — lit area");
+            nameBody(context, pid + "nc", pid + "pcb",   tag ~ " — PCB");
+            nameBody(context, pid + "nd", pid + "frame", tag ~ " — rear frame");
+            nameBody(context, pid + "ne", pid + "pwr",   tag ~ " — power terminals");
+            for (var h = 0; h < 2; h += 1)
+            {
+                nameBody(context, pid + ("nh" ~ h), pid + ("hdr" ~ h), tag ~ " — HUB75");
+            }
         }
     });
 
@@ -827,21 +856,6 @@ function hexPrism(context is Context, id is Id, cx is ValueWithUnits, cy is Valu
             "operationType" : BooleanOperationType.INTERSECTION });
 
     return qCreatedBy(id, EntityType.BODY);
-}
-
-// ────────────────────────────────────────────────────────────────────────
-// Part naming
-// ────────────────────────────────────────────────────────────────────────
-// A body created by fCuboid has no name, and Onshape will happily call it
-// "Part 12". That is invisible until a DXF export or a BOM needs to say
-// WHICH part, so every body that survives to the end gets named here.
-
-function nameBody(context is Context, id is Id, bodyId is Id, name is string)
-{
-    setProperty(context, {
-            "entities"     : qCreatedBy(bodyId, EntityType.BODY),
-            "propertyType" : PropertyType.NAME,
-            "value"        : name });
 }
 
 // ────────────────────────────────────────────────────────────────────────

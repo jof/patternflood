@@ -277,6 +277,25 @@ Two checks worth re-running after any change, both as one FeatureScript eval:
 
 ## 9. Gotchas found the hard way
 
+**Never push by deleting and re-adding features.** This one is silent and
+expensive. `push.sh` used to DELETE every feature and re-add it, which works
+perfectly in isolation — and destroys every assembly that references the studio.
+The parts briefly cease to exist, and each assembly instance comes back with
+**`partId: ""`**: it keeps its old name in the instance list, reports
+`suppressed: false`, and renders **nothing**. The assembly looks like parts have
+gone missing, with no error anywhere.
+
+[`hardware/cad/tools/push.py`](../../hardware/cad/tools/push.py) replaces it and
+**updates each feature in place** (`POST …/features/featureid/{fid}` carrying the
+new namespace), which preserves part identity. To check for the damage:
+
+```
+  jq '[.rootAssembly.instances[] | select(.type=="Part" and .partId=="")] | length'
+```
+
+Anything above zero means dead instances; they must be deleted and re-inserted,
+since nothing repairs them in place.
+
 **FeatureScript version.** `FeatureScript 2600;` fails to compile **silently** —
 `featurespecs` returns an empty list with `libraryVersion: 0` and no error text.
 The current library is **3070**, which any eval response reports back. Check this
@@ -359,27 +378,38 @@ Applied as occurrence transforms, in metres, row-major:
 |---|---|---|
 | 16 enclosure parts | identity | none — they are modelled *in situ* |
 | `LRS-50-5` | 180° about y | (54.62, −167.75, −8) |
-| panel ×2 | **identity** | (∓80, 0, −2.21) |
+| `Panel P2.5` ×2 | identity | (∓80, 0, 0) — modelled LED-face-at-zero |
 
 ![The assembly](img/assembly-front.png)
 
-> ⚠️ **A vendor *assembly* tab does not share its Part Studio's frame.** The
-> panels first went in backwards — the PCB rear facing out through the aperture
-> — because the transform was derived from the Part Studio
-> (`a70c6a06`, connectors at +z) while the thing actually inserted was the
-> Assembly (`3d1706bb`, connectors at −z). **Measure the element you are going to
-> insert, not the one next to it.** In the assembly's own frame the panel spans
-> z −15.40…+2.21, LED face at the high end, so it needs no rotation at all.
+Verified: x ±179.75, y −175.75…99.75, z −60…0 — the Part Studio's box to the
+millimetre, and 19 instances with no dead references.
 
-### What the assembly found
+### The vendor panel model was abandoned, and why
+
+It went into the assembly twice and came out wrong twice — first backwards (a
+vendor *assembly* tab does not share its Part Studio's frame: `a70c6a06` has the
+connectors at +z, `3d1706bb` at −z), then, once turned round, with HUB75
+shrouds poking **through the LED face**. Taking it apart:
 
 | | |
 |---|---|
-| **Panel depth is 17.6 mm** against `#panelDepth` = 15 | 2.6 mm, not the 25 mm first reported here — that figure was an artefact of the backwards transform. Still the number that decides how flush the LEDs sit, and still not measured |
-| Two sub-assemblies in the vendor panel protrude **7.43 mm through the LED face** | `IC_Connector_Layer` and friends are mis-placed in the *source* document; nothing to do with the transform. Cosmetic, but it is why the assembly bbox is z −60…**+7.43** rather than −60…0 |
+| `PCB` | z 0…1.6 |
+| `LED_Matrix` | z 1.61…2.21 — a 0.6 mm plate, no actual LEDs |
+| `IC_Connector_Layer` | z **−15.40…+0.98** — crosses the board, and parts of it sit forward of it |
+| Occurrence count | **25 182**, for one panel |
 
-Everything else lands exactly: x ±179.75, y −175.75…99.75, z −60 — the Part
-Studio's box to the millimetre.
+So the source model is internally inconsistent, and it made the assembly heavy
+enough to be unpleasant. **It is no longer used.** In its place there is a
+`Panel P2.5 (proxy)` Part Studio holding one `panelProxy` instance, wrapped in a
+`Panel P2.5` assembly so it inserts as a single instance. Occurrences for the
+whole desktop dropped from 25 182 to **88**.
+
+The vendor tab stays in the document, because it did give one real thing that
+nothing else could: the mounting holes at (±63.5, ±63.5), now living in
+`#postXOffset` and `#braceYOffset`. **Panel depth is still unmeasured** — the
+earlier "17.6 mm" and "25 mm" figures were both artefacts of a bad transform and
+neither should be quoted.
 
 ### Still to do
 
