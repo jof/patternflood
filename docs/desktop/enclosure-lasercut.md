@@ -3,7 +3,8 @@
 Supersedes the fabrication section of [`mechanical-plan.md`](mechanical-plan.md) §3.
 Geometry, stackup and clearances there still hold; this is the how.
 
-**Material:** 3 mm basswood, finger-jointed, doubled selectively.
+**Material:** 3 mm Baltic birch ply, finger-jointed, doubled selectively.
+*(Switched from basswood 2026-09-12 — the reasoning is in §13.)*
 **CAD:** Onshape. **Cut:** CO₂ laser.
 
 ---
@@ -21,6 +22,11 @@ the finger depth (3 mm) on any jointed edge. That way Onshape's Laser Joint
 feature sees a uniform 3 mm box and the doublers are just laminations.
 
 ### Laminate the doublers cross-grain
+
+> ✅ **Superseded by the material change — see §13.3.** Plywood is already
+> cross-plied, so there is no grain direction to cross and no orientation to
+> get right. Kept because it is the reasoning that made the switch worth
+> making: this workaround existing at all was evidence the stock was wrong.
 
 Basswood sheet is usually **solid wood, not ply** — it has a grain direction and
 it will split along it. That matters most in the narrow rails above and below a
@@ -178,12 +184,14 @@ lapped or hidden variants. Worth a look before hand-drawing tabs.
 
 ### Two numbers to get right
 
-- **Actual sheet thickness.** "3 mm" basswood runs 2.7–3.2 mm and varies between
-  sheets, sometimes within one. Measure the sheet you'll cut and put that number
-  in the FeatureScript. Fingers cut for 3.0 into 2.7 stock are loose everywhere.
-- **Kerf.** Typically 0.15–0.25 mm on basswood, but it's yours to measure. Cut a
-  test comb — a strip of fingers at ±0.05 mm — before committing a full sheet.
-  You've done this before; do it again for this stock.
+- **Actual sheet thickness.** This is the main practical reason §13 switched
+  stock: "3 mm" basswood runs 2.7–3.2 mm and varies within one sheet, where 3 mm
+  Baltic birch holds 3.0 fairly honestly. **Measure it anyway** and put that
+  number in the FeatureScript — fingers cut for 3.0 into 2.7 stock are loose
+  everywhere.
+- **Kerf.** Was 0.15–0.25 mm on basswood; birch is denser and its glue lines cut
+  differently, so **the old figure does not carry over**. Cut a test comb — a
+  strip of fingers at ±0.05 mm — before committing a full sheet.
 
 ---
 
@@ -240,27 +248,35 @@ The nut's load now reaches the wall through the lamination stack's two glue
 lines rather than bearing directly on a tenoned rail. That sounds like a
 downgrade and isn't, because the tenon was never the strong part:
 
-| Path | Area | Basswood | Fails at |
-|---|---|---|---|
-| Tenon in shear | 3 × 18 × 2 sides = 108 mm² | ~6 MPa | **650 N** |
-| Glue line in tension | 18 × 290 = 5 220 mm² | ~2 MPa | ~10 kN |
+| Path | Area | Basswood | Baltic birch | Fails at |
+|---|---|---|---|---|
+| Tenon in shear | 3 × 18 × 2 sides = 108 mm² | ~6 MPa | ~12 MPa | 650 N → **1 300 N** |
+| Glue line in tension | 18 × 290 = 5 220 mm² | ~2 MPa | ~2 MPa | ~10 kN |
 
-The tenon is 15× weaker either way, so which lamination carries it changes
-nothing that matters. Face-glued laminations loaded normal to the glue line are
+The tenon is 15× weaker either way — 8× on birch — so which lamination carries
+it changes nothing that matters. (The glue-line row assumes the rails stay
+glued; [`fastener-concepts.md`](fastener-concepts.md) §3C bolts them instead,
+and the back-cover screws already clamp that stack for free.) Face-glued laminations loaded normal to the glue line are
 how plywood works.
 
 ---
 
-## 8. Basswood specifics
+## 8. Material specifics
 
-- **Char.** Basswood chars readily and it transfers to hands and to light-coloured
-  knobs. Mask the show face, or plan to sand and finish.
-- **Soft = screws strip.** Anywhere something threads into wood, use through-bolts
-  with washers, captive nuts, or threaded inserts. Not wood screws into 3 mm.
+- **Char.** Both basswood and birch char, and it transfers to hands and to
+  light-coloured knobs. Birch glue lines char darker than the wood either side,
+  which shows on every exposed edge. Mask the show face, or plan to sand and
+  finish.
+- **Soft = screws strip.** Still true on birch, just 2.3× less so (§13.2).
+  Anywhere something threads into wood, use through-bolts with washers, captive
+  nuts, or threaded inserts. Not wood screws into 3 mm.
+- **Voids.** A plywood problem basswood did not have: a void under the cut line
+  is an uncut spot and a weak finger. Buy on the edge, not the label — §13.5.
 - **Ventilation is free.** The PSU and panels both make heat; cut slots in the
   back cover and low on the side walls. Pattern them — it's a laser, the vents
   can be the decoration.
-- **Glue.** Ordinary PVA on the doublers, clamped flat. Watch for cupping on a
+- **Glue.** Ordinary PVA on the doublers, clamped flat. Cross-graining no
+  longer matters (§13.3), so orientation is free. Watch for cupping on a
   300 mm face — clamp between something rigid while it dries. *(Whether there is
   any glue at all is an open question — see
   [`fastener-concepts.md`](fastener-concepts.md), which asks whether the box can
@@ -344,6 +360,37 @@ entirely. One variable fixes it, but only once you know the number.
 
 Also note the 17.5 mm thickness against our 15 mm `panelDepth` placeholder — see
 §12, because that number now does more work than it used to.
+
+### Measured: Waveshare P2.5 64×64 — a real Waveshare rear at last
+
+A vendor CAD model is now in [`hardware/cad/vendor/`](../../hardware/cad/vendor/)
+— 121 bodies, measured rather than guessed:
+
+| | |
+|---|---|
+| Body | **160 × 160 × 16.5 mm** |
+| Posts | **4 × M3 at (±63.5, ±63.5)** from the panel centre |
+| Inset | **16.5 mm**, and **equal in both axes** |
+
+That makes three measured panels, and the spread got *worse*, not better:
+
+| Panel | Size | Inset | From centre |
+|---|---|---|---|
+| Adafruit 5036 (P2.5 64×32) | 160 × 80 | 15.75 / 12.5 mm | 24.25 mm |
+| Waveshare P3 64×64 | 190 × 190 | **8 mm** | 87 mm |
+| Waveshare P2.5 64×64 | 160 × 160 | **16.5 mm** | 63.5 mm |
+| *our P2 64×64, assumed* | *128 × 128* | *14 mm* | *50 mm* |
+
+Two Waveshare 64×64 panels, 8 mm and 16.5 mm. **There is no convention.** The one
+thing this model does add is that on a *square* panel the insets are equal in
+both axes — which is more than could be assumed before, and it is the axis
+(`braceYOffset`, in y) that has no forgiveness.
+
+> ⚠️ **This model is a P2.5 and this build uses P2.** 160 × 160 × 16.5 against
+> 128 × 128 × 14.5. Pointing `#panelBody` at it is not a proxy swap — it is a
+> 64 mm wider box: `#panelW`, `#panelDepth` and the aperture all move, 256 → 320,
+> and `#boxW` follows to 360. **If the panels on the bench are actually P2.5, say
+> so before anything is cut**, because that is a redesign, not a variable edit.
 
 ---
 

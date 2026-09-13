@@ -354,6 +354,42 @@ IEC C14 + switch + fuse  ──mains──►  LRS-50-5  ──5V──►  Matr
 | Inrush | **45 A @ 230 VAC** |
 | Derating | begins ~40 °C ambient |
 
+> ✅ **Confirmed against Mean Well's own STEP**, now in
+> [`hardware/cad/vendor/meanwell-lrs-50-5.step`](../../hardware/cad/vendor/meanwell-lrs-50-5.step)
+> and imported into the Onshape document. Side holes at **x = 10 and 84 from the
+> terminal end**, **z = 15** — dead centre of the 30 mm height. The spec-sheet
+> read above was right; it was the *proxy* that had drifted to 14.5 and 7
+> terminals, and both are now corrected.
+
+![Mean Well LRS-50, vendor model](img/vendor-lrs-50-5.png)
+
+### ⚠️ The terminal screws face the cover, and that fixes the PSU's rotation
+
+The thing the spec sheet does not make obvious and the solid model does: the five
+terminals sit in a **step recessed into the top cover**, and their screws tighten
+**perpendicular to the long axis, out through the cover face**. Wires enter along
+the axis; the screwdriver comes in at right angles to it.
+
+That turns a free choice into a constraint. The envelope is symmetric and the
+side mounting holes are centred, so nothing in the geometry stops the supply
+going in either way up — but **only one way up leaves the mains terminals
+reachable**:
+
+```
+   cover toward the BEZEL   ✗        cover toward the BACK COVER   ✓
+   ┌──────────────┐                  ┌──────────────┐
+   │ ⬡⬡⬡⬡⬡ screws │                  │              │
+   ├──────────────┤ bezel, glued     ├──────────────┤
+   │   no access  │ shut             │ ⬡⬡⬡⬡⬡ screws │ back cover, 6 bolts
+   └──────────────┘                  └──────────────┘
+```
+
+The proxy now encodes it: the terminal step is cut into the **−z** face, so the
+wrong orientation shows up as the terminals pointing at the bezel rather than
+passing silently. Clearance above them with the back cover off is ~19 mm — enough
+for a stubby driver, not a comfortable one — so **wire the PSU before the rear
+rails go in.**
+
 **The side holes are threaded M3 and collinear** — confirmed on the part, so
 ordinary M3 screws go straight in and no slot, insert or captive nut is needed.
 They are modelled on the PSU proxy as blind Ø3 pockets 5 mm deep, which is the

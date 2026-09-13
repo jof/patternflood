@@ -14,7 +14,7 @@ to keep tracking it.
 | Input | **4 × Adafruit 4991 seesaw encoders** on I²C |
 | Power | **USB-C**, optionally a bank — see [`power-plan.md`](power-plan.md) |
 | Firmware | **Forked Patternflow** — `desktop` branch, patches in [`../../firmware/`](../../firmware/) |
-| Enclosure | **Laser-cut 3 mm basswood**, finger-jointed, selectively doubled |
+| Enclosure | **Laser-cut 3 mm Baltic birch ply**, finger-jointed, selectively doubled |
 
 ## Plans
 

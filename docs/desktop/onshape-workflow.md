@@ -79,25 +79,48 @@ Then every sketch references `#thickness` rather than a typed 3. When your
 actual stock measures 2.83, you change one number and the whole box follows —
 finger joints, doubler offsets, bore depths, all of it.
 
-> **"3 mm" basswood runs 2.7–3.2 mm and varies between sheets.** Measure the
-> sheet you will actually cut. This is the single most common way a laser-cut
-> box comes out loose everywhere.
+> **Measure the sheet you will actually cut.** This is the single most common
+> way a laser-cut box comes out loose everywhere. It was the sharper risk on
+> basswood, which runs 2.7–3.2 mm and varies within one sheet; 3 mm Baltic birch
+> holds 3.0 much better, which is part of why the stock changed
+> ([`enclosure-lasercut.md`](enclosure-lasercut.md) §13).
 
 ---
 
 ## 4. The proxies
 
-**LED panel** — the important one, and it's just a box:
+**LED panel** — the important one. It has a `Detailed` switch:
 
-```
-   128 × 128 × [measured depth] mm
-   + rear mounting post positions (measure them)
-   + HUB75 IN/OUT header locations on the back
-   + mark the front face as the datum everything else references
-```
+| Off | On |
+|---|---|
+| a plain 128 × 128 × 14.5 envelope | the stack the panel really is |
+| what every clearance check in these docs was written against | for renders, and for seeing what the bay is actually full of |
 
-Make it a **configured part** or just two instances. The pair butted gives your
-aperture; model both so the assembly shows the real seam.
+![Panel proxy, rear](img/proxy-panel-rear.png)
+
+Detail on gives: the GOB resin module, the **lit area as its own body** so a
+render can make it emissive, the PCB, the rear frame ring, driver ICs, the two
+shrouded HUB75 headers, the power terminals, and four M3 mounting posts.
+
+> ⚠️ **Everything behind the PCB is representative, not measured.** The rear of
+> these panels is the one part of this build with no published drawing and no
+> consistency between batches — [`enclosure-lasercut.md`](enclosure-lasercut.md)
+> §11. The **post positions are the exception**: they are driven from
+> `#postXOffset` / `#braceYOffset`, so the proxy agrees with the braces that are
+> supposed to bolt to it. Agreeing with the model is not agreeing with the part.
+
+The pair butted gives your aperture; both instances are modelled so the assembly
+shows the real seam.
+
+**PSU (Mean Well LRS-50-5)** — same switch, same reasoning:
+
+![PSU proxy](img/proxy-psu.png)
+
+Vents are cut as 0.8 mm recesses rather than through-slots on purpose: a hollow
+proxy makes every bounding-box check noisier for no gain. The one feature here
+that is **not** cosmetic is the terminal block — its screws face +x, which is
+why `#psuX` is pushed left. The screwdriver needs a straight run at them, and
+that run is 90 mm of empty bay.
 
 **EC11 encoder** — revolve a profile:
 
@@ -211,14 +234,26 @@ Studio while the parts are still in your hand.
 | Part Studio 1 | `06ba580a80083894ed24609b` — panel proxy + bezel |
 | Concept B FS | `08032ce8ab6f26772845e4dd` — from [`../../hardware/cad/featurescript/concept-b-corner-post.fs`](../../hardware/cad/featurescript/concept-b-corner-post.fs) |
 | Concept B PS | `22bf9277c43f3b54c05038c8` — glueless corner post study, [`fastener-concepts.md`](fastener-concepts.md) §3B |
+| Proxies PS | `d1c871ec149418978f2eb283` — panel and PSU proxies alone, for looking at. No enclosure, so nothing hides them |
+| LRS-50 (vendor) | `e474d54d0ff1822f6f0a417d` — Mean Well's own STEP, imported. The reference the PSU proxy is checked against |
+| Waveshare P2.5 (vendor) | `a70c6a06b8d205902705ee0c` — ⚠ 160 × 160, **not** the P2 this build uses. Layout evidence only |
 
 **The repo is the source of truth**, not the document. `enclosure.fs` is authored
 here and uploaded; the document is only where it gets instantiated.
 
-### Verified state — 2026-09-10
+### Verified state — 2026-09-12
+
+**Body count is now 61, not 24** — the panel and PSU proxies went from plain
+envelopes to detailed ones (§4). The enclosure itself is unchanged.
+
+> ⚠️ **Turn `Detailed` OFF before running the fragment check.** It counts bodies
+> under 500 mm³, and a detailed panel legitimately has twelve driver ICs at
+> 130 mm³ and four mounting posts at ~340 mm³. With detail on, the check reports
+> sixteen "fragments" per panel that are all supposed to be there. With it off
+> the proxies collapse back to one box each and the count means what it used to.
 
 ```
-bodies=24   fragments=0   bbox 296 x 247.5 x 60 mm
+bodies=24   fragments=0   bbox 296 x 247.5 x 60 mm    ← Detailed OFF
   (247.5 in y = 244 box + 3.5 mm IEC flange proud of the bottom wall)
 
   panels     2 x 128 x 128 x 14.5    x -127.5..127.5  y -63.5..63.5  z -14.5..0

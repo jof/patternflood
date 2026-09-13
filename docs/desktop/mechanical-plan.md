@@ -242,8 +242,9 @@ aperture into a finished bezel is the one change that ruins a front panel.
 
 ## 3. Fabrication
 
-> ✅ **Decided: laser-cut 3 mm basswood, finger-jointed, doubled where it
-> matters.** The full design is in
+> ✅ **Decided: laser-cut 3 mm Baltic birch ply, finger-jointed, doubled where
+> it matters.** (Basswood originally; changed 2026-09-12 — the material survey
+> is [`enclosure-lasercut.md`](enclosure-lasercut.md) §13.) The full design is in
 > [`enclosure-lasercut.md`](enclosure-lasercut.md). The survey below is kept for
 > the reasoning; note that the "hybrid" row is essentially what was chosen, with
 > wood laminations in place of printed internals.

@@ -27,8 +27,31 @@ import(path : "onshape/std/geometry.fs", version : "3070.0");
 // ────────────────────────────────────────────────────────────────────────
 // Panel proxy
 // ────────────────────────────────────────────────────────────────────────
-// Deliberately a plain envelope. A laser-cut enclosure needs the outline,
-// the depth and a datum, not detail.
+// Two levels of fidelity, switched by "Detailed":
+//
+//   OFF  a plain 128 x 128 x 14.5 envelope. What the enclosure actually
+//        needs, and what every clearance check in the doc was written
+//        against. Leave it off when checking geometry.
+//   ON   the stack a GOB panel really is, so renders and interference
+//        checks read honestly:
+//
+//        z=0     ┬──────────────────────────────┬  emissive area, its own
+//        -0.3    ┼──┤ 0.5mm reveal all round ├──┼  body so a render can
+//                │      GOB resin module        │  make it a light source
+//        -3.0    ┼──────────────────────────────┼
+//                │            PCB               │  driver ICs on the back
+//        -4.6    ┼──┬────────────────────────┬──┼
+//                │  │  cavity: connectors,   │  │  rear frame, a ring
+//                │  │  posts, ICs            │  │
+//        -14.5   ┴──┴────────────────────────┴──┴
+//
+// ⚠ EVERYTHING BEHIND THE PCB IS REPRESENTATIVE, NOT MEASURED. The rear of
+// these panels is the one part of this build with no published drawing and
+// no consistency between batches — see enclosure-lasercut.md §11. The post
+// positions are driven from #postXOffset / #braceYOffset so the proxy at
+// least agrees with the braces it is supposed to bolt to, but agreeing
+// with the model is not the same as agreeing with the part in your hand.
+// The header block sizes are typical shrouded HUB75, not measured.
 
 annotation { "Feature Type Name" : "Panel proxy" }
 export const panelProxy = defineFeature(function(context is Context, id is Id, definition is map)
@@ -48,6 +71,39 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
 
         annotation { "Name" : "Panel body (undersize)" }
         isLength(definition.panelBody, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Detailed" }
+        definition.detail is boolean;
+
+        annotation { "Name" : "GOB module thickness" }
+        isLength(definition.gobT, LENGTH_BOUNDS);
+
+        annotation { "Name" : "PCB thickness" }
+        isLength(definition.pcbT, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Rear frame rail width" }
+        isLength(definition.frameW, LENGTH_BOUNDS);
+
+        annotation { "Name" : "HUB75 header width" }
+        isLength(definition.hdrW, LENGTH_BOUNDS);
+
+        annotation { "Name" : "HUB75 header depth" }
+        isLength(definition.hdrH, LENGTH_BOUNDS);
+
+        annotation { "Name" : "HUB75 header projection" }
+        isLength(definition.hdrProj, LENGTH_BOUNDS);
+
+        annotation { "Name" : "HUB75 header spacing" }
+        isLength(definition.hdrPitch, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Mounting post diameter" }
+        isLength(definition.postDia, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Post x from panel centre" }
+        isLength(definition.postXOffset, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Post y from panel centre" }
+        isLength(definition.postYOffset, LENGTH_BOUNDS);
     }
     {
         // panelW/panelH are the TILING PITCH; panelBody is the physical part,
@@ -60,17 +116,115 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
         // seam. Measured on a Waveshare P3 64x64: body 190, pitch 192, gap 2,
         // and 189mm of pixel span — which is exactly 0.5mm of border per edge.
         const n = definition.count;
-        const gap = definition.panelW - definition.panelBody;
-        const bodySpan = n * definition.panelBody + (n - 1) * gap;
+        const B = definition.panelBody;
+        const D = definition.panelDepth;
+        const gap = definition.panelW - B;
+        const bodySpan = n * B + (n - 1) * gap;
+
+        const reveal = 0.3 * millimeter;
+        const border = gap / 2;                 // the half-gap derived above
+        const zPcbF  = 0 * millimeter - definition.gobT;
+        const zPcbB  = zPcbF - definition.pcbT;
 
         for (var i = 0; i < n; i += 1)
         {
-            const x0 = -bodySpan / 2 + i * definition.panelW;
+            const x0  = -bodySpan / 2 + i * definition.panelW;
+            const x1  = x0 + B;
+            const xc  = x0 + B / 2;
+            const pid = id + ("p" ~ i);
 
-            fCuboid(context, id + ("panel" ~ i), {
-                    "corner1" : vector(x0, -definition.panelBody / 2, -definition.panelDepth),
-                    "corner2" : vector(x0 + definition.panelBody, definition.panelBody / 2, 0 * meter)
-            });
+            if (!definition.detail)
+            {
+                fCuboid(context, pid + "box", {
+                        "corner1" : vector(x0, -B / 2, -D),
+                        "corner2" : vector(x1,  B / 2, 0 * millimeter) });
+                continue;
+            }
+
+            // GOB resin module, and the lit area as a SEPARATE body so a
+            // render can give it an emissive appearance. The 0.5mm reveal
+            // around it is the same half-gap border the pixel arithmetic
+            // above derives — it is the real edge of the pixel field.
+            fCuboid(context, pid + "face", {
+                    "corner1" : vector(x0, -B / 2, zPcbF),
+                    "corner2" : vector(x1,  B / 2, -reveal) });
+            fCuboid(context, pid + "lit", {
+                    "corner1" : vector(x0 + border, -B / 2 + border, -reveal),
+                    "corner2" : vector(x1 - border,  B / 2 - border, 0 * millimeter) });
+
+            fCuboid(context, pid + "pcb", {
+                    "corner1" : vector(x0, -B / 2, zPcbB),
+                    "corner2" : vector(x1,  B / 2, zPcbF) });
+
+            // Rear frame: a ring, open in the middle where everything lives.
+            fCuboid(context, pid + "frame", {
+                    "corner1" : vector(x0, -B / 2, -D),
+                    "corner2" : vector(x1,  B / 2, zPcbB) });
+            fCuboid(context, pid + "cav", {
+                    "corner1" : vector(x0 + definition.frameW,
+                                       -B / 2 + definition.frameW, -D - 1 * millimeter),
+                    "corner2" : vector(x1 - definition.frameW,
+                                        B / 2 - definition.frameW, zPcbB + 1 * millimeter) });
+            opBoolean(context, pid + "frCut", {
+                    "tools"         : qCreatedBy(pid + "cav", EntityType.BODY),
+                    "targets"       : qCreatedBy(pid + "frame", EntityType.BODY),
+                    "operationType" : BooleanOperationType.SUBTRACTION });
+
+            // Threaded mounting posts. These are the ONLY rear feature whose
+            // position matters to the enclosure — the braces bolt to them —
+            // so they are driven from the same variables the braces are.
+            for (var sx = -1; sx <= 1; sx += 2)
+            {
+                for (var sy = -1; sy <= 1; sy += 2)
+                {
+                    const k  = "" ~ (sx + 1) ~ (sy + 1);
+                    const px = xc + sx * definition.postXOffset;
+                    const py = sy * definition.postYOffset;
+                    fCylinder(context, pid + ("post" ~ k), {
+                            "topCenter"    : vector(px, py, zPcbB),
+                            "bottomCenter" : vector(px, py, -D),
+                            "radius"       : definition.postDia / 2 });
+                    fCylinder(context, pid + ("bore" ~ k), {
+                            "topCenter"    : vector(px, py, zPcbB - 6 * millimeter),
+                            "bottomCenter" : vector(px, py, -D - 1 * millimeter),
+                            "radius"       : 1.5 * millimeter });
+                    opBoolean(context, pid + ("boreCut" ~ k), {
+                            "tools"         : qCreatedBy(pid + ("bore" ~ k), EntityType.BODY),
+                            "targets"       : qCreatedBy(pid + ("post" ~ k), EntityType.BODY),
+                            "operationType" : BooleanOperationType.SUBTRACTION });
+                }
+            }
+
+            // Row/column driver ICs on the back of the PCB. Pure cosmetics —
+            // they sit well inside every keep-out and touch nothing.
+            for (var a = 0; a < 4; a += 1)
+            {
+                for (var b = 0; b < 2; b += 1)
+                {
+                    const cxi = xc + (a - 1.5) * 22 * millimeter;
+                    const cyi = (b - 0.5) * 30 * millimeter;
+                    fCuboid(context, pid + ("ic" ~ a ~ b), {
+                            "corner1" : vector(cxi - 9 * millimeter, cyi - 3 * millimeter,
+                                               zPcbB - 1.2 * millimeter),
+                            "corner2" : vector(cxi + 9 * millimeter, cyi + 3 * millimeter, zPcbB) });
+                }
+            }
+
+            // HUB75 in and out, plus the power terminals. These are what
+            // #keepoutW/H/Proj abstract, so they live inside that envelope.
+            for (var h = 0; h < 2; h += 1)
+            {
+                const hx = xc + (2 * h - 1) * definition.hdrPitch / 2;
+                fCuboid(context, pid + ("hdr" ~ h), {
+                        "corner1" : vector(hx - definition.hdrW / 2, -definition.hdrH / 2,
+                                           zPcbB - definition.hdrProj),
+                        "corner2" : vector(hx + definition.hdrW / 2,  definition.hdrH / 2, zPcbB) });
+            }
+
+            fCuboid(context, pid + "pwr", {
+                    "corner1" : vector(xc - 11 * millimeter, -B / 2 + 14 * millimeter,
+                                       zPcbB - 7 * millimeter),
+                    "corner2" : vector(xc + 11 * millimeter, -B / 2 + 24 * millimeter, zPcbB) });
         }
     });
 
@@ -124,6 +278,24 @@ export const psuProxy = defineFeature(function(context is Context, id is Id, def
 
         annotation { "Name" : "Max screw penetration" }
         isLength(definition.threadDepth, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Detailed" }
+        definition.detail is boolean;
+
+        annotation { "Name" : "Vent slot width" }
+        isLength(definition.ventW, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Vent slot pitch" }
+        isLength(definition.ventPitch, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Terminal block depth" }
+        isLength(definition.termDepth, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Terminal pitch" }
+        isLength(definition.termPitch, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Terminal count" }
+        isInteger(definition.termCount, POSITIVE_COUNT_BOUNDS);
     }
     {
         fCuboid(context, id + "psu", {
@@ -173,6 +345,130 @@ export const psuProxy = defineFeature(function(context is Context, id is Id, def
                 "tools"         : qUnion(tools),
                 "targets"       : qCreatedBy(id + "psu", EntityType.BODY),
                 "operationType" : BooleanOperationType.SUBTRACTION });
+
+        if (!definition.detail)
+        {
+            return;
+        }
+
+        // ── Everything below is appearance, not clearance ──────────────
+        // The envelope above is what the box is designed around; this makes
+        // the proxy read as the part instead of as a brick. Vents are cut as
+        // 0.8mm recesses rather than through-slots deliberately: a hollow
+        // proxy would make every bounding-box check noisier for no gain.
+        //
+        // The one thing here that is NOT cosmetic is the terminal block. Its
+        // screws face +x, which is why #psuX is pushed left: the screwdriver
+        // needs a straight run at them, and that run is 90mm of empty bay.
+        const vD   = 0.8 * millimeter;
+        const zHi  = definition.psuZFront;
+        const zLo  = zHi - definition.psuT;
+        const xLo  = definition.psuX - definition.psuL / 2;
+        const yHi  = definition.psuYTop;
+        const yMid = (psuYLo + yHi) / 2;
+        const zMid = (zLo + zHi) / 2;
+
+        var vents = [];
+        var vk = 0;
+
+        // Top face: slots running across the short axis.
+        const topN = floor((definition.psuL - 42 * millimeter) / definition.ventPitch);
+        for (var i = 0; i < topN; i += 1)
+        {
+            const vx = xLo + 12 * millimeter + i * definition.ventPitch;
+            fCuboid(context, id + ("vt" ~ vk), {
+                    "corner1" : vector(vx, psuYLo + 18 * millimeter, zHi - vD),
+                    "corner2" : vector(vx + definition.ventW, yHi - 18 * millimeter,
+                                       zHi + 1 * millimeter) });
+            vents = append(vents, qCreatedBy(id + ("vt" ~ vk), EntityType.BODY));
+            vk += 1;
+        }
+
+        // Both long side faces, in a band across the middle. Slots that would
+        // land on a mounting hole are skipped rather than merged into it.
+        const hA = psuXHi - definition.psuHoleAX;
+        const hB = psuXHi - definition.psuHoleBX;
+        const sideN = floor((definition.psuL - 30 * millimeter) / definition.ventPitch);
+        for (var i = 0; i < sideN; i += 1)
+        {
+            const vx = xLo + 10 * millimeter + i * definition.ventPitch;
+            const cx = vx + definition.ventW / 2;
+            if (abs(cx - hA) < 6 * millimeter || abs(cx - hB) < 6 * millimeter)
+            {
+                continue;
+            }
+            for (var sgn = 0; sgn < 2; sgn += 1)
+            {
+                var y0 = psuYLo - 1 * millimeter;
+                var y1 = psuYLo + vD;
+                if (sgn == 1)
+                {
+                    y0 = yHi - vD;
+                    y1 = yHi + 1 * millimeter;
+                }
+                fCuboid(context, id + ("vt" ~ vk), {
+                        "corner1" : vector(vx, y0, zMid - 8 * millimeter),
+                        "corner2" : vector(vx + definition.ventW, y1, zMid + 8 * millimeter) });
+                vents = append(vents, qCreatedBy(id + ("vt" ~ vk), EntityType.BODY));
+                vk += 1;
+            }
+        }
+
+        // Terminal block, in a step recessed into the PSU's TOP COVER at the
+        // terminal end. Measured off Mean Well's own STEP (see
+        // hardware/cad/vendor/meanwell-lrs-50-5.step): five ways — L, N, FG,
+        // -V, +V — at 9.3mm pitch, Ø6.5 screw heads sunk ~10mm below the
+        // cover plane, and the screws face OUT OF THE COVER.
+        //
+        // ⚠ THAT DIRECTION IS A DESIGN CONSTRAINT, not decoration. The screws
+        // are the only way mains gets connected, so the cover has to face
+        // something openable. Here it faces -z, the back cover. Rotate this
+        // part 180 degrees about its long axis and the terminals point at the
+        // bezel, which is glued shut — see power-plan.md.
+        const zTop = zLo;                       // cover face, toward the back
+        fCuboid(context, id + "termPk", {
+                "corner1" : vector(psuXHi - definition.termDepth, psuYLo + 4 * millimeter,
+                                   zTop - 1 * millimeter),
+                "corner2" : vector(psuXHi + 1 * millimeter, yHi - 4 * millimeter,
+                                   zTop + 10 * millimeter) });
+        vents = append(vents, qCreatedBy(id + "termPk", EntityType.BODY));
+
+        opBoolean(context, id + "ventCut", {
+                "tools"         : qUnion(vents),
+                "targets"       : qCreatedBy(id + "psu", EntityType.BODY),
+                "operationType" : BooleanOperationType.SUBTRACTION });
+
+        // Vadj trimmer, on the cover near the DC end.
+        fCylinder(context, id + "vadj", {
+                "topCenter"    : vector(psuXHi - 30 * millimeter, psuYLo + 16 * millimeter,
+                                        zHi - 1.6 * millimeter),
+                "bottomCenter" : vector(psuXHi - 30 * millimeter, psuYLo + 16 * millimeter,
+                                        zHi + 2 * millimeter),
+                "radius"       : 3.5 * millimeter });
+        opBoolean(context, id + "vadjCut", {
+                "tools"         : qCreatedBy(id + "vadj", EntityType.BODY),
+                "targets"       : qCreatedBy(id + "psu", EntityType.BODY),
+                "operationType" : BooleanOperationType.SUBTRACTION });
+
+        fCuboid(context, id + "term", {
+                "corner1" : vector(psuXHi - definition.termDepth, psuYLo + 4 * millimeter,
+                                   zTop + 1 * millimeter),
+                "corner2" : vector(psuXHi, yHi - 4 * millimeter, zTop + 10 * millimeter) });
+        var screws = [qCreatedBy(id + "term", EntityType.BODY)];
+        for (var i = 0; i < definition.termCount; i += 1)
+        {
+            const ty = yMid + (i - (definition.termCount - 1) / 2) * definition.termPitch;
+            fCylinder(context, id + ("ts" ~ i), {
+                    "topCenter"    : vector(psuXHi - definition.termDepth / 2, ty,
+                                            zTop + 0.8 * millimeter),
+                    "bottomCenter" : vector(psuXHi - definition.termDepth / 2, ty,
+                                            zTop + 4 * millimeter),
+                    "radius"       : 3.25 * millimeter });
+            screws = append(screws, qCreatedBy(id + ("ts" ~ i), EntityType.BODY));
+        }
+        opBoolean(context, id + "termJoin", {
+                "tools"         : qUnion(screws),
+                "operationType" : BooleanOperationType.UNION });
     });
 
 // ────────────────────────────────────────────────────────────────────────

@@ -243,5 +243,10 @@ hole grid and not from panels touching each other.
    |---|---|---|---|
    | Adafruit 5036 (P2.5 64×32) | 160 × 80 | 15.75 mm | 24.25 mm |
    | Waveshare P3 64×64 | 190 × 190 | **8 mm** | 87 mm |
+   | Waveshare P2.5 64×64 | 160 × 160 | **16.5 mm** | 63.5 mm |
 
-   Nearly a 2× spread in inset. Measure every panel type; infer nothing.
+   **A 2× spread, and the two widest-apart entries are both Waveshare 64×64.**
+   The P2.5 figure is off a vendor CAD model (see the desktop
+   [`enclosure-lasercut.md`](../desktop/enclosure-lasercut.md) §11), not a
+   caliper, so it is solid — and it still does not predict the P3 in this
+   project. Measure every panel type; infer nothing.
