@@ -386,7 +386,13 @@ thing this model does add is that on a *square* panel the insets are equal in
 both axes — which is more than could be assumed before, and it is the axis
 (`braceYOffset`, in y) that has no forgiveness.
 
-> ⚠️ **This model is a P2.5 and this build uses P2 (SKU 33838).** Both are
+> ✅ **The design is now built at P2.5** — see
+> [`mechanical-plan.md`](mechanical-plan.md) §2.1 for the decision and the list
+> of variables to flip when the panels arrive. The note below is kept because it
+> is the arithmetic that makes the two interchangeable on paper and very much
+> not interchangeable in wood.
+
+> ⚠️ **This model is a P2.5; the P2 (SKU 33838) is the other candidate.** Both are
 > *64 × 64 pixels* — that is the number on the box, and it is not a size. The
 > size is pitch × pixels: **2 mm × 64 = 128 mm** for ours, **2.5 mm × 64 =
 > 160 mm** for the model. So it is 160 × 160 × 16.5 against our 128 × 128 × 14.5.
@@ -394,13 +400,19 @@ both axes — which is more than could be assumed before, and it is the axis
 > wider box — aperture 256 → 320, `#boxW` → 360, and upstream's pixel geometry
 > broken for nothing, since the pixel count is identical either way.
 
-**One thing it does corroborate.** Its inset is 16.5 mm on a 160 mm body —
-10.3 % of the body. Scale that proportionally onto our 128 mm panel and the posts
-land **50.8 mm from centre**; `#postXOffset` and `#braceYOffset` are set to 50.
-That is a weak argument — one same-manufacturer, same-pixel-count data point, at
-a different pitch, and §11's whole lesson is that these do not generalise — but
-it is the first evidence of any kind that the 50 mm guess is not silly. **Still
-measure them.**
+**What the model is and is not good for.** Checked body by body, it is a
+**160 × 160 × 1.6 PCB plus a handful of connectors** — 121 bodies, but the LEDs
+are not modelled at all. So:
+
+| | Trust it? | |
+|---|---|---|
+| Mounting holes at (±63.5, ±63.5) | **yes** | deliberate features, and `#postXOffset` / `#braceYOffset` now use them |
+| PCB outline 160 × 160 | **no** | exactly the pitch, which would mean a zero seam gap — see §4. `#panelBody` uses 158.5 from the border arithmetic instead |
+| Overall depth 16.5 | **no** | that is PCB + HUB75 shroud, not the panel module. `#panelDepth` stays a flagged placeholder |
+| Rear layout | as shape only | topology, not positions |
+
+That is the useful discipline with a found model: it upgraded one guess to a
+measurement and left two others exactly as uncertain as they were.
 
 ---
 

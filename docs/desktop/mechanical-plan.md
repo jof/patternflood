@@ -49,21 +49,55 @@ Two 64×64 panels are held spare. The 1"/20 mm knob duplication is treated as
 
 ### 2.1 Active area
 
-Two Waveshare P2 64×64 panels — **SKU 33838**, *RGB Full-Color LED Matrix
-Panel, 2 mm Pitch, 64 × 64 Pixels*, GOB version — chained horizontally.
+Two Waveshare 64×64 GOB panels, chained horizontally.
 
-> **"64 × 64" is pixels; the panel is 128 × 128 mm.** The two numbers that get
-> confused are pixel count and pitch:
+### 2.1 Pitch: modelled at P2.5, provisionally
+
+> **"64 × 64" is pixels, not millimetres.** The physical size is pitch × pixels,
+> and the pixel count is identical across the whole family:
 >
-> ```
->   64 px  ×  2 mm pitch  =  128 mm of panel
->   pair:  128 × 64 px    =  256 × 128 mm
-> ```
+> | | Pitch | Panel | Pair | Pixels |
+> |---|---|---|---|---|
+> | **P2** (SKU 33838) | 2 mm | 128 × 128 | 256 × 128 mm | 128 × 64 |
+> | **P2.5** *(modelled)* | 2.5 mm | 160 × 160 | **320 × 160 mm** | 128 × 64 |
+> | P3 | 3 mm | 190 × 190 | 380 × 190 mm | 128 × 64 |
 >
-> That 128 × 64 px is the whole point of the fork — it is upstream Patternflow's
-> exact pixel geometry, so every community pattern runs unmodified. A same-pixel
-> panel at a different pitch is a different *physical* part: the P2.5 64×64 is
-> also 64 × 64 px but 160 × 160 mm, and the P3 64×64 is 190 × 190 mm.
+> **The pixel geometry never changes**, which is the whole point of the fork —
+> 128 × 64 is upstream Patternflow's exact grid, so every community pattern runs
+> unmodified whichever pitch arrives. Pitch is a purely mechanical choice.
+
+> ✅ **Decided 2026-09-12: model at P2.5 until the panels are on the bench.**
+> Not because P2.5 is preferred, but because a **measured** vendor model exists
+> for it and P2 is still four guesses. Designing against real geometry and
+> re-running the numbers later is cheaper than designing against placeholders
+> twice. The box is parametric; the switch is a handful of variables.
+
+Current external size is **359.5 × 275.5 × 60 mm**.
+
+![The box at P2.5](img/box-p2.5.png)
+
+### Switching back to P2 when the panels arrive
+
+Everything below is a variable edit — no geometry is hand-placed against panel
+size — but **do not flip only `#panelW`**: the panel body, the depth and the
+post positions are independent measurements, not derivations.
+
+| Variable | P2.5 now | P2 would be | How it is known |
+|---|---|---|---|
+| `#panelW` | 160 | **128** | certain: pitch × 64 |
+| `#panelBody` | 158.5 | ~126.5 | derived from the border/gap rule, §2.2 — **measure** |
+| `#panelDepth` | 15 | 14.5 | **placeholder either way — measure** |
+| `#postXOffset` | 63.5 | ? | measured off the P2.5 vendor model; **no P2 data exists** |
+| `#braceYOffset` | 63.5 | ? | same holes; y has no forgiveness |
+| `#screwXSpan` | 150 | 120 | follows the box width |
+| `#knobYCentre` | −128 | −110 | follows the control band |
+
+Derived and automatic: `#apertureW/H`, `#boxW/H`, `#panelGap`, `#panelBodySpan`,
+`#bayDepth`, the finger counts, the rails, the braces and the back cover.
+
+**The two that will actually hurt** are `#panelDepth`, which alone decides how
+flush the LEDs sit (§12 of [`enclosure-lasercut.md`](enclosure-lasercut.md)),
+and `#braceYOffset`, because the brace slots absorb error in x but not in y.
 
 ```
                     256 mm

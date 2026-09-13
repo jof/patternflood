@@ -253,7 +253,7 @@ envelopes to detailed ones (§4). The enclosure itself is unchanged.
 > the proxies collapse back to one box each and the count means what it used to.
 
 ```
-bodies=24   fragments=0   bbox 296 x 247.5 x 60 mm    ← Detailed OFF
+bodies=24   fragments=0   bbox 359.5 x 279 x 60 mm    ← Detailed OFF, at P2.5
   (247.5 in y = 244 box + 3.5 mm IEC flange proud of the bottom wall)
 
   panels     2 x 128 x 128 x 14.5    x -127.5..127.5  y -63.5..63.5  z -14.5..0

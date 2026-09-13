@@ -9,7 +9,7 @@ to keep tracking it.
 
 | | |
 |---|---|
-| Panels | **2 × Waveshare P2 64×64 GOB**, SKU **33838** → 128 × 64 px, 256 × 128 mm |
+| Panels | **2 × Waveshare 64×64 GOB** → 128 × 64 px. Modelled at **P2.5** (320 × 160 mm) pending the panels; P2 SKU 33838 is 256 × 128 mm — see [`mechanical-plan.md`](mechanical-plan.md) §2.1 |
 | Controller | **Adafruit Matrix Portal S3** (no custom PCB) |
 | Input | **4 × Adafruit 4991 seesaw encoders** on I²C |
 | Power | **USB-C**, optionally a bank — see [`power-plan.md`](power-plan.md) |
