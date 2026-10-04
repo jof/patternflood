@@ -127,10 +127,12 @@ change**, the device must be exactly "a 128 × 64 panel stood on its end":
 
 ![Stood on end](img/assembly-portrait.png)
 
-> ⚠ The registration pins are modelled at **+29**, i.e. near the panel's own top
-> edge. That assumes the edge measured as "top" is the pixel-row-0 edge. If the
-> arrows on the back say otherwise, set `#pinYOffset` to −29: the lower brace is
-> the same width and picks them up.
+> ✅ **Confirmed 2026-10-04:** the edge measured as "top" is the panel's marked
+> top edge, so the pins sit near it at **+29** and land in the upper brace. One
+> cheap check is left for first light: pixel (0, 0) should light at that top
+> edge, on the left as seen from the front. If it lights at the bottom, the
+> marking lies and `#pinYOffset` goes to −29 — the lower brace is the same width
+> and picks the pins up.
 
 ```
                     256 mm
