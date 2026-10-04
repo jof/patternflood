@@ -51,53 +51,86 @@ Two 64×64 panels are held spare. The 1"/20 mm knob duplication is treated as
 
 Two Waveshare 64×64 GOB panels, chained horizontally.
 
-### 2.1 Pitch: modelled at P2.5, provisionally
+### 2.1 Pitch: P2, measured
 
 > **"64 × 64" is pixels, not millimetres.** The physical size is pitch × pixels,
 > and the pixel count is identical across the whole family:
 >
 > | | Pitch | Panel | Pair | Pixels |
 > |---|---|---|---|---|
-> | **P2** (SKU 33838) | 2 mm | 128 × 128 | 256 × 128 mm | 128 × 64 |
-> | **P2.5** *(modelled)* | 2.5 mm | 160 × 160 | **320 × 160 mm** | 128 × 64 |
+> | **P2** *(built — RGB-Matrix-P2-64x64-B)* | 2 mm | 128 × 128 | **256 × 128 mm** | 128 × 64 |
+> | P2.5 | 2.5 mm | 160 × 160 | 320 × 160 mm | 128 × 64 |
 > | P3 | 3 mm | 190 × 190 | 380 × 190 mm | 128 × 64 |
 >
 > **The pixel geometry never changes**, which is the whole point of the fork —
 > 128 × 64 is upstream Patternflow's exact grid, so every community pattern runs
-> unmodified whichever pitch arrives. Pitch is a purely mechanical choice.
+> unmodified whichever pitch arrives. Pitch is a purely mechanical choice, and
+> it is also the right lever if this ever wants to be bigger: two P3 or P4
+> panels change the box and nothing else, where more panels change the pixel
+> grid and the loader rejects every existing `.pfm` (`pf_abi.h`).
 
-> ✅ **Decided 2026-09-12: model at P2.5 until the panels are on the bench.**
-> Not because P2.5 is preferred, but because a **measured** vendor model exists
-> for it and P2 is still four guesses. Designing against real geometry and
-> re-running the numbers later is cheaper than designing against placeholders
-> twice. The box is parametric; the switch is a handful of variables.
+> ✅ **2026-10-03: the panels are on the bench, and the model is now at P2.**
+> It was built at P2.5 from 2026-09-12 because a measured vendor model existed
+> for that pitch and P2 was four guesses. Every number below is now calipers.
 
-Current external size is **359.5 × 275.5 × 60 mm**.
+Current external size is **297 × 245 × 60 mm** — landscape as modelled, and
+**245 wide × 297 tall** stood on end, which is how it lives (see *Portrait*
+below).
 
-![The box at P2.5](img/box-p2.5.png)
+![The box at P2](img/box-p2.png)
 
-### Switching back to P2 when the panels arrive
+### The measured panel
 
-Everything below is a variable edit — no geometry is hand-placed against panel
-size — but **do not flip only `#panelW`**: the panel body, the depth and the
-post positions are independent measurements, not derivations.
+Waveshare **RGB-Matrix-P2-64x64-B**, measured from the back with the origin at
+the top-left corner, converted here to panel-centre coordinates (+y up):
 
-| Variable | P2.5 now | P2 would be | How it is known |
+| | Measured | Model | Variable |
 |---|---|---|---|
-| `#panelW` | 160 | **128** | certain: pitch × 64 |
-| `#panelBody` | 158.5 | ~126.5 | derived from the border/gap rule, §2.2 — **measure** |
-| `#panelDepth` | 15 | 14.5 | **placeholder either way — measure** |
-| `#postXOffset` | 63.5 | ? | measured off the P2.5 vendor model; **no P2 data exists** |
-| `#braceYOffset` | 63.5 | ? | same holes; y has no forgiveness |
-| `#screwXSpan` | 150 | 120 | follows the box width |
-| `#knobYCentre` | −128 | −110 | follows the control band |
+| Front face | 128 × 128 | — | `#panelBody` = 128 |
+| Back face | 127 × 127 | 0.5 mm draft per side, not modelled | — |
+| Pair, butted | 256 × 128 | 2 × 128, **zero gap** | `#panelGap` = 0 |
+| Depth, face to back of frame | 14.5 | — | `#panelDepth` |
+| Depth incl. registration pins | 17.8 | pins 3.3 proud | `#pinProj` |
+| Threaded inserts, sides | M3; 6.5 in, 19.5 from top & bottom | (±57, ±44) | `#postXOffset`, `#braceYOffset` |
+| Threaded inserts, mid-edge | M3; 6.5 in, centred top & bottom | (0, ±57) | `#midPostYOffset` |
+| Registration pins | Ø2.87, 7.75 in, 34.5 down | (±55.75, +29) | `#pinXOffset`, `#pinYOffset`, `#pinDia` |
 
-Derived and automatic: `#apertureW/H`, `#boxW/H`, `#panelGap`, `#panelBodySpan`,
-`#bayDepth`, the finger counts, the rails, the braces and the back cover.
+![Rear of one panel proxy, seen from behind](img/panel-p2-rear.png)
 
-**The two that will actually hurt** are `#panelDepth`, which alone decides how
-flush the LEDs sit (§12 of [`enclosure-lasercut.md`](enclosure-lasercut.md)),
-and `#braceYOffset`, because the brace slots absorb error in x but not in y.
+Two things came out of it that the model had wrong:
+
+- **The front face is exactly the pitch, so there is no seam gap.** The P3
+  measured body 190 on a 192 pitch, and the model generalised that into "the body
+  is undersize". On this panel the edge pixel sits a full half-pitch (1 mm) in
+  from the edge instead, and 1 + 0 + 1 is still one pitch, so the grid stays
+  continuous across a tight butt. The rule that holds is **border + gap + border
+  = pitch**; how it splits is a property of the panel, not the pitch.
+- **The back is 1 mm smaller than the front.** Neighbours touch only along the
+  front edge, which is the edge that matters, and the draft gives the butt joint
+  somewhere to close.
+
+### Panel orientation is set by upstream's portrait mapping
+
+The box stands on end, and upstream already handles that: a pattern that
+declares a 64 × 128 grid is rotated onto the 128 × 64 panel by
+`core_canvas.h`, logical `(x, y)` → panel `(127 − y, x)`. So **with no firmware
+change**, the device must be exactly "a 128 × 64 panel stood on its end":
+
+- Model frame: both panels **upright** (pixel row 0 at +y), side by side, chain
+  running **left → right** — panel at −x is first.
+- Stood on end: **+x is up**, so the box rests on its **−x wall**. The knob
+  cluster ends up lower-right of the display, and the IEC inlet on the right-hand
+  side near the top.
+- The Matrix Portal can sit anywhere — it is ribbon-connected — but its ribbon
+  goes to the **−x panel's HUB75 IN**, then −x OUT → +x IN. Get that backwards
+  and every portrait pattern comes out upside down.
+
+![Stood on end](img/assembly-portrait.png)
+
+> ⚠ The registration pins are modelled at **+29**, i.e. near the panel's own top
+> edge. That assumes the edge measured as "top" is the pixel-row-0 edge. If the
+> arrows on the back say otherwise, set `#pinYOffset` to −29: the lower brace is
+> the same width and picks them up.
 
 ```
                     256 mm
@@ -123,12 +156,9 @@ would be wrong: [`firmware-delta.md`](firmware-delta.md) §1.)
 Physically it is *smaller* than upstream: 256×128 mm vs 320×160 mm, because P2
 is a finer pitch than P2.5. Denser, brighter-looking, and easier to enclose.
 
-> **Verify before cutting anything:** Waveshare's published 128×128 mm is the
-> module pitch. Confirm with calipers whether the two panels butt with zero
-> seam or whether the plastic frame adds a fraction of a millimetre per side.
-> A 0.5 mm error across the seam is visible as a dark line straight down the
-> middle of the display. Dry-fit both panels edge to edge and measure the
-> **actual** overall width before committing the bezel aperture.
+> ✅ **Verified 2026-10-03:** two panels butted measure **256 × 128** — zero
+> seam, the plastic adds nothing. The aperture is 257 × 129 (`#apertureGap`
+> 0.5 mm all round, so the panels pass through and finish flush).
 
 ### 2.2 Stackup (front to back)
 
@@ -143,8 +173,8 @@ is a finer pitch than P2.5. Denser, brighter-looking, and easier to enclose.
     │        resin-filled, already flat & diffused
     │        → NO separate diffuser needed
     │
-    ├─ [2]  Panel bodies ........................ ~13–16 mm  ⚠ MEASURE
-    │        2× 128×128 mm, M3/M4 threaded posts on back
+    ├─ [2]  Panel bodies ........................ 14.5 mm  ✅ measured
+    │        2× 128×128 mm, 6 × M3 inserts + 2 pins on back
     │
     ├─ [3]  Electronics bay ..................... 15–20 mm
     │        Matrix Portal S3 (rides on panel A HUB75 hdr)
@@ -273,11 +303,14 @@ aperture into a finished bezel is the one change that ruins a front panel.
 
 ### 2.5 Panel and board mounting
 
-- **Panels:** each Waveshare 64×64 has threaded mounting posts on the back.
-  Bolt both to a shared **panel carrier plate** (flat, rigid — 3 mm aluminium,
-  acrylic, or a printed part with a metal spine). Do not rely on the bezel to
-  hold panel alignment: the seam between the two panels is the most visible
-  feature of the whole build, and it needs a rigid common datum.
+- **Panels:** both hang from two shared **cross-braces** that span the box
+  (the carrier plate, in wood — [`enclosure-lasercut.md`](enclosure-lasercut.md)
+  §5). Do not rely on the bezel to hold panel alignment: the seam between the
+  two panels is the most visible feature of the whole build, and it needs a
+  rigid common datum. Each panel gets **four M3 screws** into its side inserts
+  for clamping, and its **two registration pins** drop into holes in the upper
+  brace for location — exact in y, so rows line up across the seam, with
+  1.5 mm of travel in x so the panels can still be pushed together by hand.
 - **Matrix Portal S3:** plugs directly onto panel A's HUB75 header and is
   supported by it. Add one standoff or a printed clip so a tugged USB-C cable
   loads the enclosure, not the connector.
@@ -317,8 +350,8 @@ dimensions don't carry over.
 Ordered by how expensive they are to get wrong:
 
 1. **EC11 bushing thread length** → sets max bezel thickness. Blocks bezel stock choice.
-2. **Actual two-panel butted width** → sets bezel aperture. Blocks bezel cutting.
-3. **Panel body depth incl. connectors** → sets electronics bay depth.
+2. ~~**Actual two-panel butted width**~~ → ✅ 256 × 128, zero seam (§2.1).
+3. ~~**Panel body depth incl. connectors**~~ → ✅ 14.5, 17.8 over the pins (§2.1).
 4. **4991 breakout outline** → confirms 45 mm knob pitch has no collision.
 5. **Chosen power bank dimensions** → sets bay [4], which dominates total depth. See [`power-plan.md`](power-plan.md).
 

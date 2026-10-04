@@ -136,12 +136,13 @@ Ordered by how expensive each is to get wrong:
 | # | Measure | Decides |
 |---|---|---|
 | 1 | **EC11 bushing thread length** (PID 377) | max bezel thickness — blocks stock choice |
-| 2 | **Two panels butted, actual overall width** | bezel aperture — blocks cutting |
-| 3 | **Panel depth incl. rear connectors** | electronics bay depth |
+| 2 | ~~Two panels butted, actual overall width~~ | ✅ 256 × 128, zero seam |
+| 3 | ~~Panel depth incl. rear connectors~~ | ✅ 14.5 (17.8 over the pins) |
 | 4 | **4991 breakout outline** | confirms 45 mm knob pitch doesn't collide |
 
 Details and why each matters: [`mechanical-plan.md`](mechanical-plan.md) §4.
-Do all four in one sitting and the enclosure stops being provisional.
+#2 and #3 done 2026-10-03, along with the insert and pin positions — the model is
+now at P2 ([`mechanical-plan.md`](mechanical-plan.md) §2.1). #1 and #4 remain.
 
 ---
 

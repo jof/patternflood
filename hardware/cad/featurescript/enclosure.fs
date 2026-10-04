@@ -17,7 +17,8 @@ import(path : "onshape/std/geometry.fs", version : "3070.0");
  * already diffuse, so there is no air gap and no separate diffuser.
  *
  * Drive every parameter from the Variables studio. Placeholders that MUST be
- * measured before cutting: #thickness, #kerf, #panelDepth. The EC11 bushing
+ * measured before cutting: #thickness, #kerf. (#panelDepth was measured on the
+ * P2 64x64-B, 2026-10-03.) The EC11 bushing
  * thread length caps #frontThickness — measure it first.
  *
  * Source of truth for this file is the repo, not the Onshape document:
@@ -60,13 +61,13 @@ function nameBody(context is Context, id is Id, bodyId is Id, name is string)
 //                │  │  posts, ICs            │  │
 //        -14.5   ┴──┴────────────────────────┴──┴
 //
-// ⚠ EVERYTHING BEHIND THE PCB IS REPRESENTATIVE, NOT MEASURED. The rear of
-// these panels is the one part of this build with no published drawing and
-// no consistency between batches — see enclosure-lasercut.md §11. The post
-// positions are driven from #postXOffset / #braceYOffset so the proxy at
-// least agrees with the braces it is supposed to bolt to, but agreeing
-// with the model is not the same as agreeing with the part in your hand.
-// The header block sizes are typical shrouded HUB75, not measured.
+// Behind the PCB, only the inserts and registration pins are MEASURED (on
+// the P2 64x64-B, 2026-10-03), and they are the only rear features the
+// enclosure touches. Everything else back there — frame ring, ICs, HUB75
+// shrouds, power header — is REPRESENTATIVE. These panels have no published
+// drawing and no consistency between batches (enclosure-lasercut.md §11), so
+// a different batch means re-measuring the inserts and pins, not trusting
+// this.
 
 annotation { "Feature Type Name" : "Panel proxy" }
 export const panelProxy = defineFeature(function(context is Context, id is Id, definition is map)
@@ -119,6 +120,21 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
 
         annotation { "Name" : "Post y from panel centre" }
         isLength(definition.postYOffset, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Mid-edge post y from panel centre" }
+        isLength(definition.midPostYOffset, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Registration pin x from panel centre" }
+        isLength(definition.pinXOffset, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Registration pin y from panel centre" }
+        isLength(definition.pinYOffset, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Registration pin diameter" }
+        isLength(definition.pinDia, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Registration pin projection" }
+        isLength(definition.pinProj, LENGTH_BOUNDS);
     }
     {
         // panelW/panelH are the TILING PITCH; panelBody is the physical part,
@@ -136,8 +152,11 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
         const gap = definition.panelW - B;
         const bodySpan = n * B + (n - 1) * gap;
 
+        // border + gap + border = one pixel pitch. On the P3 that was
+        // 0.5 + 2 + 0.5; on the P2 the body IS the pitch, so the gap is zero
+        // and the border is a full half-pitch, 1 + 0 + 1.
         const reveal = 0.3 * millimeter;
-        const border = gap / 2;                 // the half-gap derived above
+        const border = (definition.panelW / 64 - gap) / 2;
         const zPcbF  = 0 * millimeter - definition.gobT;
         const zPcbB  = zPcbF - definition.pcbT;
 
@@ -157,9 +176,9 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
             }
 
             // GOB resin module, and the lit area as a SEPARATE body so a
-            // render can give it an emissive appearance. The 0.5mm reveal
-            // around it is the same half-gap border the pixel arithmetic
-            // above derives — it is the real edge of the pixel field.
+            // render can give it an emissive appearance. The reveal around
+            // it is the border the pixel arithmetic above derives — it is
+            // the real edge of the pixel field.
             fCuboid(context, pid + "face", {
                     "corner1" : vector(x0, -B / 2, zPcbF),
                     "corner2" : vector(x1,  B / 2, -reveal) });
@@ -185,29 +204,57 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
                     "targets"       : qCreatedBy(pid + "frame", EntityType.BODY),
                     "operationType" : BooleanOperationType.SUBTRACTION });
 
-            // Threaded mounting posts. These are the ONLY rear feature whose
-            // position matters to the enclosure — the braces bolt to them —
-            // so they are driven from the same variables the braces are.
+            // Threaded inserts, six of them, MEASURED on the P2 64x64-B: two
+            // down each side at (+/-postX, +/-postY) — the ones the braces
+            // screw into, so they are driven from the same variables the
+            // braces are — and one mid-way along the top and bottom edges at
+            // (0, +/-midPostY), which nothing uses yet.
+            var inserts = [];
             for (var sx = -1; sx <= 1; sx += 2)
             {
                 for (var sy = -1; sy <= 1; sy += 2)
                 {
-                    const k  = "" ~ (sx + 1) ~ (sy + 1);
-                    const px = xc + sx * definition.postXOffset;
-                    const py = sy * definition.postYOffset;
-                    fCylinder(context, pid + ("post" ~ k), {
-                            "topCenter"    : vector(px, py, zPcbB),
-                            "bottomCenter" : vector(px, py, -D),
-                            "radius"       : definition.postDia / 2 });
-                    fCylinder(context, pid + ("bore" ~ k), {
-                            "topCenter"    : vector(px, py, zPcbB - 6 * millimeter),
-                            "bottomCenter" : vector(px, py, -D - 1 * millimeter),
-                            "radius"       : 1.5 * millimeter });
-                    opBoolean(context, pid + ("boreCut" ~ k), {
-                            "tools"         : qCreatedBy(pid + ("bore" ~ k), EntityType.BODY),
-                            "targets"       : qCreatedBy(pid + ("post" ~ k), EntityType.BODY),
-                            "operationType" : BooleanOperationType.SUBTRACTION });
+                    inserts = append(inserts, [sx * definition.postXOffset,
+                                               sy * definition.postYOffset]);
                 }
+            }
+            inserts = append(inserts, [0 * millimeter,  definition.midPostYOffset]);
+            inserts = append(inserts, [0 * millimeter, -definition.midPostYOffset]);
+            for (var ki = 0; ki < size(inserts); ki += 1)
+            {
+                const k  = "" ~ ki;
+                const px = xc + inserts[ki][0];
+                const py = inserts[ki][1];
+                fCylinder(context, pid + ("post" ~ k), {
+                        "topCenter"    : vector(px, py, zPcbB),
+                        "bottomCenter" : vector(px, py, -D),
+                        "radius"       : definition.postDia / 2 });
+                fCylinder(context, pid + ("bore" ~ k), {
+                        "topCenter"    : vector(px, py, zPcbB - 6 * millimeter),
+                        "bottomCenter" : vector(px, py, -D - 1 * millimeter),
+                        "radius"       : 1.5 * millimeter });
+                opBoolean(context, pid + ("boreCut" ~ k), {
+                        "tools"         : qCreatedBy(pid + ("bore" ~ k), EntityType.BODY),
+                        "targets"       : qCreatedBy(pid + ("post" ~ k), EntityType.BODY),
+                        "operationType" : BooleanOperationType.SUBTRACTION });
+            }
+
+            var tag = "Panel";
+            if (n > 1) { tag = "Panel " ~ (i + 1); }
+
+            // Registration pins: two, near the TOP edge (the panel's own +y),
+            // standing proud of the rear frame. They are why the upper brace
+            // is as wide as it is — it carries the holes that locate them.
+            for (var sx = -1; sx <= 1; sx += 2)
+            {
+                const k = "" ~ (sx + 1);
+                fCylinder(context, pid + ("pin" ~ k), {
+                        "topCenter"    : vector(xc + sx * definition.pinXOffset,
+                                                definition.pinYOffset, -D),
+                        "bottomCenter" : vector(xc + sx * definition.pinXOffset,
+                                                definition.pinYOffset, -D - definition.pinProj),
+                        "radius"       : definition.pinDia / 2 });
+                nameBody(context, pid + ("npin" ~ k), pid + ("pin" ~ k), tag ~ " — registration pin");
             }
 
             // Row/column driver ICs on the back of the PCB. Pure cosmetics —
@@ -243,8 +290,6 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
 
             // Named for the same reason the enclosure parts are: an assembly
             // instance list and a BOM both need to say WHICH body.
-            var tag = "Panel";
-            if (n > 1) { tag = "Panel " ~ (i + 1); }
             nameBody(context, pid + "na", pid + "face",  tag ~ " — GOB module");
             nameBody(context, pid + "nb", pid + "lit",   tag ~ " — lit area");
             nameBody(context, pid + "nc", pid + "pcb",   tag ~ " — PCB");
@@ -952,6 +997,18 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "Panel post x offset" }
         isLength(definition.postXOffset, LENGTH_BOUNDS);
 
+        annotation { "Name" : "Registration pin x offset" }
+        isLength(definition.pinXOffset, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Registration pin y offset" }
+        isLength(definition.pinYOffset, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Registration pin hole diameter" }
+        isLength(definition.pinHoleDia, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Registration pin hole x travel" }
+        isLength(definition.pinSlotLen, LENGTH_BOUNDS);
+
         annotation { "Name" : "Screw diameter" }
         isLength(definition.screwDia, LENGTH_BOUNDS);
 
@@ -1165,10 +1222,16 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         // panel weight goes brace -> through-tenon -> wall, and the bezel
         // stays purely cosmetic.
         //
-        // The screw holes are OBROUND, running in x. Panel post positions
-        // shift between production runs and the datasheets do not give them,
-        // so the slot absorbs the error; #postXOffset and #braceYOffset are
-        // placeholders until measured off the actual panels.
+        // The screw holes are OBROUND, running in x, so the two panels can be
+        // slid together and butted before the screws are tightened.
+        // #postXOffset and #braceYOffset are measured off the P2 64x64-B.
+        //
+        // Location in y is NOT the screws' job. The panels carry two
+        // registration pins near their top edge, and whichever brace covers
+        // them gets a hole for each: exact in y, with #pinSlotLen of travel
+        // in x. y is the axis the seam shows — a row that jogs by a fraction
+        // of a pixel is visible from across the room — and x is the one the
+        // butt joint sets anyway.
         //
         // Each brace is a through-tenon: it spans the full box width, so its
         // ends sit inside the walls, and subtracting it from the walls cuts
@@ -1214,12 +1277,11 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                         "operationType" : BooleanOperationType.SUBTRACTION });
             }
 
-            // Obround screw slots, two per panel. Deliberately oversize in
-            // BOTH axes: slotLen absorbs x variation between production runs,
-            // and slotW absorbs the fact that a panel's hole row is not
-            // collinear — measured 8mm edge inset for the end holes and 9mm
-            // for the centre hole on a P3, so a straight brace needs ~1mm of
-            // perpendicular give too. Use washers under the screw heads.
+            // Obround screw slots, two per panel. Oversize in BOTH axes:
+            // slotLen is the butting travel, and slotW leaves the y location
+            // to the pins rather than fighting them — a screw that also
+            // located would over-constrain the panel. Use washers under the
+            // screw heads.
             const r = definition.slotW / 2 - kerf / 2;
             var slots = [];
             for (var pi = 0; pi < definition.panelCount; pi += 1)
@@ -1251,6 +1313,45 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                     slots = append(slots, qCreatedBy(id + ("sa" ~ tag), EntityType.BODY));
                     slots = append(slots, qCreatedBy(id + ("sb" ~ tag), EntityType.BODY));
                     slots = append(slots, qCreatedBy(id + ("sm" ~ tag), EntityType.BODY));
+                }
+            }
+
+            // Registration pin holes, in whichever brace the pins land on.
+            // Same obround construction and kerf rule as the screw slots.
+            if (abs(definition.pinYOffset - yc) + definition.pinHoleDia / 2 < definition.braceW / 2)
+            {
+                const pr = definition.pinHoleDia / 2 - kerf / 2;
+                for (var pi = 0; pi < definition.panelCount; pi += 1)
+                {
+                    const pc = -panelSpan / 2 + (pi + 0.5) * definition.panelW;
+                    for (var k = 0; k < 2; k += 1)
+                    {
+                        var px = pc + definition.pinXOffset;
+                        if (k == 1)
+                        {
+                            px = pc - definition.pinXOffset;
+                        }
+                        const py = definition.pinYOffset;
+                        const a = px - definition.pinSlotLen / 2;
+                        const b = px + definition.pinSlotLen / 2;
+                        const tag = "" ~ s ~ pi ~ k;
+
+                        fCylinder(context, id + ("pa" ~ tag), {
+                                "topCenter"    : vector(a, py, zBraceF + over),
+                                "bottomCenter" : vector(a, py, zBraceB - over),
+                                "radius"       : pr });
+                        fCylinder(context, id + ("pb" ~ tag), {
+                                "topCenter"    : vector(b, py, zBraceF + over),
+                                "bottomCenter" : vector(b, py, zBraceB - over),
+                                "radius"       : pr });
+                        fCuboid(context, id + ("pm" ~ tag), {
+                                "corner1" : vector(a, py - pr, zBraceB - over),
+                                "corner2" : vector(b, py + pr, zBraceF + over) });
+
+                        slots = append(slots, qCreatedBy(id + ("pa" ~ tag), EntityType.BODY));
+                        slots = append(slots, qCreatedBy(id + ("pb" ~ tag), EntityType.BODY));
+                        slots = append(slots, qCreatedBy(id + ("pm" ~ tag), EntityType.BODY));
+                    }
                 }
             }
 
@@ -1589,8 +1690,8 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         nameBody(context, id + "n06", id + "wallT",   "Wall top");
         nameBody(context, id + "n07", id + "backCover", "Back cover");
         nameBody(context, id + "n08", id + "stiff",   "Stiffener web");
-        nameBody(context, id + "n09", id + "brace0",  "Panel brace lower");
-        nameBody(context, id + "n10", id + "brace1",  "Panel brace upper");
+        nameBody(context, id + "n09", id + "brace0",  "Panel brace upper");     // +y
+        nameBody(context, id + "n10", id + "brace1",  "Panel brace lower");     // -y
         for (var ri = 0; ri < 2; ri += 1)
         {
             var where = "lower";

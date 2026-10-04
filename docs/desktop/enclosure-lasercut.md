@@ -101,6 +101,12 @@ doubled front fixes it, and 6 mm happens to suit the part:
 > `#panelW` (tiling pitch) from `#panelBody` (the physical part), and the
 > aperture is derived from `#panelBodySpan`. Full measurements and the arithmetic
 > are in [`../wall/README.md`](../wall/README.md) §8.
+>
+> ✅ **And refined 2026-10-03 by the P2 itself:** its front face is 128.0 on a
+> 128 pitch — **no gap at all**. The edge pixel sits a full half-pitch in
+> instead. What generalises is *border + gap + border = one pitch*; the P3 splits
+> it 0.5 + 2 + 0.5 and the P2 splits it 1 + 0 + 1. The variables already
+> handled it — `#panelGap` is derived and is simply zero now.
 
 Tiling LED panels have a **negligible** bezel margin — half a pixel pitch, so
 0.5 mm on P2. That is far too little to retain a panel from the front, so **the
@@ -142,6 +148,21 @@ Slot the braces so bolt positions can slide — panel post locations vary betwee
 production runs, and a slot costs nothing on a laser. Load goes brace → finger
 joint → side wall → box, not into the front face.
 
+**The P2-B's registration pins do the locating.** Each panel has two Ø2.87 pins
+standing 3.3 mm proud of its back, near the top edge at (±55.75, +29). The
+upper brace is widened to 40 mm so it reaches them, and carries a hole for each:
+
+| Hole | Width (y) | Travel (x) | Job |
+|---|---|---|---|
+| Pin | **3.0** — 0.13 over the pin | 1.5 mm | **locates**: rows line up across the seam |
+| Screw, ×4 per panel | 5.2 | 10 mm | **clamps** only |
+
+y is the axis the seam shows — a row that jogs by a fraction of a pixel is
+visible from across the room — and x is set by butting the panels together, so
+the pins are exact in y and free in x. The screw slots stay oversize in both
+axes on purpose: a screw that also located would fight the pins. Brace edge to
+pin hole is 3.5 mm of birch.
+
 ---
 
 ## 6. Depth
@@ -151,7 +172,7 @@ Mains-first (no battery bay), from [`mechanical-plan.md`](mechanical-plan.md) §
 | Layer | Depth |
 |---|---|
 | Front face, doubled | 6 mm |
-| Panel bodies | ~13–16 mm ⚠ measure #3 |
+| Panel bodies | 14.5 mm ✅ measured |
 | Electronics bay — Matrix Portal on the HUB75 header, encoders, wiring | 15–20 mm |
 | Back cover | 3 mm |
 | **Internal** | **~40 mm** |
@@ -361,6 +382,24 @@ entirely. One variable fixes it, but only once you know the number.
 Also note the 17.5 mm thickness against our 15 mm `panelDepth` placeholder — see
 §12, because that number now does more work than it used to.
 
+### Measured: Waveshare P2 64×64-B — the panel actually in the box
+
+Calipers, 2026-10-03. Back face 127 × 127 (front 128), positions from its
+centre:
+
+| | |
+|---|---|
+| Body | **128 × 128 × 14.5 mm** front face; 127 × 127 at the back |
+| Inserts | **6 × M3**: (±57, ±44) down the sides, (0, ±57) mid top and bottom |
+| Inset | **6.5 mm** for every insert |
+| Registration pins | **2 × Ø2.87**, 3.3 proud, at (±55.75, +29) |
+
+So the fourth data point is a sixth pattern: not one-per-corner at all. The
+braces use the four side inserts, which share a y (`#braceYOffset` = 44) and so
+suit a horizontal brace; the mid-edge pair is modelled and left free. The
+§11 caution below still stands for any *other* batch — but this one is
+measured, and the 50 mm extrapolation in the table is retired.
+
 ### Measured: Waveshare P2.5 64×64 — a real Waveshare rear at last
 
 A vendor CAD model is now in [`hardware/cad/vendor/`](../../hardware/cad/vendor/)
@@ -379,14 +418,15 @@ That makes three measured panels, and the spread got *worse*, not better:
 | Adafruit 5036 (P2.5 64×32) | 160 × 80 | 15.75 / 12.5 mm | 24.25 mm |
 | Waveshare P3 64×64 | 190 × 190 | **8 mm** | 87 mm |
 | Waveshare P2.5 64×64 | 160 × 160 | **16.5 mm** | 63.5 mm |
-| *our P2 64×64, assumed* | *128 × 128* | *14 mm* | *50 mm* |
+| **Waveshare P2 64×64-B** *(measured)* | 128 × 128 | **6.5 mm** | 57 / 44 mm, 6 inserts |
 
 Two Waveshare 64×64 panels, 8 mm and 16.5 mm. **There is no convention.** The one
 thing this model does add is that on a *square* panel the insets are equal in
 both axes — which is more than could be assumed before, and it is the axis
 (`braceYOffset`, in y) that has no forgiveness.
 
-> ✅ **The design is now built at P2.5** — see
+> ✅ **Superseded 2026-10-03 — the design is now built at the measured P2.**
+> It was built at P2.5 in the meantime — see
 > [`mechanical-plan.md`](mechanical-plan.md) §2.1 for the decision and the list
 > of variables to flip when the panels arrive. The note below is kept because it
 > is the arithmetic that makes the two interchangeable on paper and very much
@@ -438,7 +478,8 @@ its own front face forms part of the front surface. `#apertureGap` is signed:
 >
 > So **`#panelDepth` alone decides how flush the result is.** The braces sit at
 > `-panelDepth`, and any error there shows directly as the panel sitting proud
-> or shy. Measure it properly, expect to shim the braces on first assembly, and
+> or shy. Now measured at **14.5** (17.8 over the pins, which pass through the
+> brace and so do not count). Still expect to shim the braces on first assembly, and
 > if that tolerance turns out to be unwinnable, `#apertureGap` negative is the
 > forgiving fallback: a lip locates the panel positively at the cost of a small
 > recess.

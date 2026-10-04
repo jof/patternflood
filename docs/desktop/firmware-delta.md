@@ -65,6 +65,15 @@ display driven by a 128-px-wide canvas.
 In practice `PANEL_CHAIN` is effectively pinned at 1 in this codebase. Change
 `PANEL_RES_W` to describe the whole chain, not the module.
 
+**Portrait is free too, if the panels go in the right way round.** The box
+stands on end. Upstream maps a pattern that declares a 64 × 128 grid onto the
+128 × 64 panel itself (`core_canvas.h`: logical `(x, y)` → panel `(127 − y, x)`),
+so the hardware must be exactly a 128 × 64 panel turned so its x = 127 end is up:
+both panels upright in the landscape model, chain left → right, box resting on
+its −x wall. Then there is still no config change. Stack the panels any other
+way and portrait needs a remap patch — see
+[`mechanical-plan.md`](mechanical-plan.md) §2.1.
+
 `config.h` explicitly documents this as the supported path: *"Running a panel
 other than the stock 128x64? Change these to match your hardware and reflash —
 that is the whole change."* Because we land on 128×64 anyway, even that is

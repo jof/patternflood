@@ -65,6 +65,26 @@
    [
     "postYOffset",
     "#braceYOffset"
+   ],
+   [
+    "midPostYOffset",
+    "#midPostYOffset"
+   ],
+   [
+    "pinXOffset",
+    "#pinXOffset"
+   ],
+   [
+    "pinYOffset",
+    "#pinYOffset"
+   ],
+   [
+    "pinDia",
+    "#pinDia"
+   ],
+   [
+    "pinProj",
+    "#pinProj"
    ]
   ]
  ],
@@ -329,6 +349,22 @@
    [
     "postXOffset",
     "#postXOffset"
+   ],
+   [
+    "pinXOffset",
+    "#pinXOffset"
+   ],
+   [
+    "pinYOffset",
+    "#pinYOffset"
+   ],
+   [
+    "pinHoleDia",
+    "#pinHoleDia"
+   ],
+   [
+    "pinSlotLen",
+    "#pinSlotLen"
    ],
    [
     "screwDia",

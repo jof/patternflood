@@ -239,7 +239,7 @@ Studio while the parts are still in your hand.
 | LRS-50-5 | `d028b9441f5d077f2950e113` — sub-assembly wrapping the 31 vendor bodies so the PSU arrives as ONE instance |
 | LRS-50 (vendor) | `e474d54d0ff1822f6f0a417d` — Mean Well's own STEP, imported. The reference the PSU proxy is checked against |
 | Waveshare P2.5 (vendor) | `a70c6a06b8d205902705ee0c` — ⚠ 160 × 160, **not** the P2 this build uses. Layout evidence only |
-| Panel P2.5 (proxy) | `9aacde0e7a6103be9fff46fd` → assembly `726db9f2da48bde902e4e8e8` — one `panelProxy`, wrapped so it inserts as one instance |
+| Panel P2 (proxy) | `9aacde0e7a6103be9fff46fd` → assembly `726db9f2da48bde902e4e8e8` — one `panelProxy`, wrapped so it inserts as one instance |
 | IEC AC-14-F16A (proxy) | `f9604c88ee037028910ba08a` → assembly `bc9c97b16cf4f8a81c678cbd` — one `iecProxy`, same pattern |
 
 **The repo is the source of truth**, not the document. `enclosure.fs` is authored
@@ -379,13 +379,20 @@ Applied as occurrence transforms, in metres, row-major:
 | Instance | Rotation | Translation (mm) |
 |---|---|---|
 | 16 enclosure parts | identity | none — they are modelled *in situ* |
-| `LRS-50-5` | 180° about y | (54.62, −167.75, −8) |
-| `Panel P2.5` ×2 | identity | (∓80, 0, 0) — modelled LED-face-at-zero |
+| `LRS-50-5` | 180° about y | (54.62, −152.5, −8) |
+| `Panel P2` ×2 | identity | (∓64, 0, 0) — modelled LED-face-at-zero |
 
 ![The assembly](img/assembly-front.png)
 
-Verified: x ±179.75, y −175.75…99.75, z −60…0 — the Part Studio's box to the
-millimetre, and 19 instances with no dead references.
+Verified at P2 (2026-10-03): x ±148.5, y −164…84.5, z −60…0 — the Part
+Studio's box to the millimetre.
+
+> ⚠ **These translations are absolute, and nothing updates them.** The Part
+> Studio follows the Variable Studio; the Assembly does not. Changing pitch moved
+> the panels (±80 → ±64) and, less obviously, the PSU — the control band rides
+> up with a shorter aperture, so the LRS-50 moved 15.25 mm in y. After any
+> variable change that moves the aperture or the control band, compare the
+> Assembly's bounding box against the Part Studio's.
 
 ### The vendor panel model was abandoned, and why
 
@@ -403,8 +410,11 @@ shrouds poking **through the LED face**. Taking it apart:
 
 So the source model is internally inconsistent, and it made the assembly heavy
 enough to be unpleasant. **It is no longer used.** In its place there is a
-`Panel P2.5 (proxy)` Part Studio holding one `panelProxy` instance, wrapped in a
-`Panel P2.5` assembly so it inserts as a single instance. Occurrences for the
+`Panel P2 (proxy)` Part Studio holding one `panelProxy` instance, wrapped in a
+`Panel P2` assembly so it inserts as a single instance (both were "P2.5" until
+the model moved to the measured panel). `push.py` refreshes that instance and
+the one in `Proxies (view only)` along with the main studio — before, they kept
+whatever parameter list they were created with. Occurrences for the
 whole desktop dropped from 25 182 to **88**.
 
 The vendor tab stays in the document, because it did give one real thing that
