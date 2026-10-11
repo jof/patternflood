@@ -148,13 +148,13 @@ Slot the braces so bolt positions can slide — panel post locations vary betwee
 production runs, and a slot costs nothing on a laser. Load goes brace → finger
 joint → side wall → box, not into the front face.
 
-**The P2-B's registration pins do the locating.** Each panel has two Ø2.87 pins
+**The P2-B's registration pins do the locating.** Each panel has two Ø2.83–2.87 pins
 standing 3.3 mm proud of its back, near the top edge at (±55.75, +29). The
 upper brace is widened to 40 mm so it reaches them, and carries a hole for each:
 
 | Hole | Width (y) | Travel (x) | Job |
 |---|---|---|---|
-| Pin | **3.0** — 0.13 over the pin | 1.5 mm | **locates**: rows line up across the seam |
+| Pin | **3.0** — 0.13–0.17 over the pin | 1.5 mm | **locates**: rows line up across the seam |
 | Screw, ×4 per panel | 5.2 | 10 mm | **clamps** only |
 
 y is the axis the seam shows — a row that jogs by a fraction of a pixel is
@@ -392,7 +392,7 @@ centre:
 | Body | **128 × 128 × 14.5 mm** front face; 127 × 127 at the back |
 | Inserts | **6 × M3**: (±57, ±44) down the sides, (0, ±57) mid top and bottom |
 | Inset | **6.5 mm** for every insert |
-| Registration pins | **2 × Ø2.87**, 3.3 proud, at (±55.75, +29) |
+| Registration pins | **2 × Ø2.83–2.87** (nominal Ø3 hole), 3.3 proud, at (±55.75, +29) |
 
 So the fourth data point is a sixth pattern: not one-per-corner at all. The
 braces use the four side inserts, which share a y (`#braceYOffset` = 44) and so
@@ -405,27 +405,50 @@ measured, and the 50 mm extrapolation in the table is retired.
 The back face was scanned at 600 dpi on the Epson
 ([`p2-rear-scan-600dpi.jpg`](img/p2-rear-scan-600dpi.jpg), pins up) and a second
 hand-measured sheet was scanned alongside it ([`p2-dims-sheet.png`](img/p2-dims-sheet.png)).
-The scan positions are taken from the brass inserts' centroids, relative to the
-centre of the insert pattern. The panel's edges are not used, because the frame
-sits on its bosses and is out of focus, and the top edge ran ~1 mm past the scan
-origin. The panel lay 0.9° skewed, and that has been removed.
 
-| | Calipers 10-03 | Sheet 10-11 | Scan |
+**The datum is the rear outer edge.** The panel has no feature at its centre, so
+the sheet measures everything from the back edges. This scan cannot do that:
+- the dark rim sits against a dark background (grey ~40 vs ~60), so the fitted
+  top edge wanders by 2 mm;
+- the right edge ran off the platen;
+- the left edge is doubled, probably the 127 back plus the 128 front lip.
+
+Both caliper sets are edge-referenced, so they compare directly
+([mechanical-plan](mechanical-plan.md) has the 10-03 edge figures):
+
+| From the rear edge | Calipers 10-03 | Sheet 10-11 |
+|---|---|---|
+| Side inserts, in from the side | 6.5 / 6.5 | 6.5 / **7** |
+| Side inserts, down from top | 19.5 | **20** |
+| Side inserts, up from bottom | 19.5 | not dimensioned |
+| Mid inserts, in from top / bottom | 6.5 | 6.5 |
+| Pins, in from the side | 7.75 | **in line with the side inserts** |
+| Pins, down from top | 34.5 | **34** |
+
+The scan needs no datum to measure the gap *between* holes, and that settles the
+disagreements. These are its centroids with the panel's 0.9° skew removed:
+
+| Hole to hole | 10-03 implies | Sheet implies | Scan |
 |---|---|---|---|
-| Side inserts, x | ±57 | −57 / +56.5 (6.5 left, **7** right) | ±56.9 (56.84–56.96) |
-| Side inserts, y | ±44 | +43.5 (20 from top); bottom not dimensioned | ±43.9 (43.65–44.08) |
-| Mid inserts, y | ±57 | ±57 (6.5 from edge) | ±56.7 |
-| Pins | Ø2.87 at (±55.75, +29) | "2 mm", under the side inserts, +29.5 (34 from top) | tip face Ø2.2–2.3 at (±55.7–56.0, +28.7–28.9) |
+| Side insert columns, across | 114 | 113.5 | 113.8, symmetric to 0.1 |
+| Top side-insert row to mid-top insert | 13 | 13.5 | 12.8 |
+| Top side-insert row to pins | 15 | 14 | 15.1 |
+| Pin inboard of its side-insert column | 1.25 | 0 | 0.9 – 1.2 |
+| Mid-top to mid-bottom insert | 114 | 114 | 113.3 |
 
-The scan agrees with the 10-03 table to ±0.3 mm and is left–right symmetric to
-0.1 mm, so the sheet's 7 mm right inset and 20 mm top offset look like reading
-error, not real asymmetry. The model variables stay as they are. The scanner's
-scale is not calibrated: ~0.2 % would be ~0.25 mm over the pattern.
+On every spacing where the two sheets differ, the scan sides with 10-03, so
+the model stays as it is.
 
-The open item is the pin diameter. The flatbed only sees the face that touches
-the glass (2.2–2.3), so the pin probably tapers or is chamfered to its tip, and
-2.87 stays the shank. The 3.0 brace holes clear both, but if the shank really is
-2 mm then they stop locating.
+The scanner's scale is uncalibrated: ~0.2 % would be ~0.25 mm over the pattern.
+
+**Pins: Ø2.83–2.87 by calipers on the shank** (re-measured 10-11), so they are
+made for a nominal Ø3 hole, which is what the brace has. The flatbed sees only
+the tip face that touches the glass, Ø2.2–2.3, so the tips are chamfered.
+
+An edge-referenced scan needs:
+- the panel ~10 mm in from both platen edges;
+- white paper draped over it, so the rim reads dark on white;
+- the in-focus step read at 127, not the blurred shoulder of the 128 front lip.
 
 ### Measured: Waveshare P2.5 64×64 — a real Waveshare rear at last
 

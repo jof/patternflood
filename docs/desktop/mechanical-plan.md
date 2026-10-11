@@ -93,7 +93,7 @@ the top-left corner, converted here to panel-centre coordinates (+y up):
 | Depth incl. registration pins | 17.8 | pins 3.3 proud | `#pinProj` |
 | Threaded inserts, sides | M3; 6.5 in, 19.5 from top & bottom | (±57, ±44) | `#postXOffset`, `#braceYOffset` |
 | Threaded inserts, mid-edge | M3; 6.5 in, centred top & bottom | (0, ±57) | `#midPostYOffset` |
-| Registration pins | Ø2.87, 7.75 in, 34.5 down | (±55.75, +29) | `#pinXOffset`, `#pinYOffset`, `#pinDia` |
+| Registration pins | Ø2.83–2.87 (nominal Ø3 hole), 7.75 in, 34.5 down | (±55.75, +29) | `#pinXOffset`, `#pinYOffset`, `#pinDia` |
 
 ![Rear of one panel proxy, seen from behind](img/panel-p2-rear.png)
 
