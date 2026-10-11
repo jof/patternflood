@@ -400,6 +400,33 @@ suit a horizontal brace; the mid-edge pair is modelled and left free. The
 §11 caution below still stands for any *other* batch — but this one is
 measured, and the 50 mm extrapolation in the table is retired.
 
+#### Flatbed cross-check, 2026-10-11
+
+The back face was scanned at 600 dpi on the Epson
+([`p2-rear-scan-600dpi.jpg`](img/p2-rear-scan-600dpi.jpg), pins up) and a second
+hand-measured sheet was scanned alongside it ([`p2-dims-sheet.png`](img/p2-dims-sheet.png)).
+The scan positions are taken from the brass inserts' centroids, relative to the
+centre of the insert pattern. The panel's edges are not used, because the frame
+sits on its bosses and is out of focus, and the top edge ran ~1 mm past the scan
+origin. The panel lay 0.9° skewed, and that has been removed.
+
+| | Calipers 10-03 | Sheet 10-11 | Scan |
+|---|---|---|---|
+| Side inserts, x | ±57 | −57 / +56.5 (6.5 left, **7** right) | ±56.9 (56.84–56.96) |
+| Side inserts, y | ±44 | +43.5 (20 from top); bottom not dimensioned | ±43.9 (43.65–44.08) |
+| Mid inserts, y | ±57 | ±57 (6.5 from edge) | ±56.7 |
+| Pins | Ø2.87 at (±55.75, +29) | "2 mm", under the side inserts, +29.5 (34 from top) | tip face Ø2.2–2.3 at (±55.7–56.0, +28.7–28.9) |
+
+The scan agrees with the 10-03 table to ±0.3 mm and is left–right symmetric to
+0.1 mm, so the sheet's 7 mm right inset and 20 mm top offset look like reading
+error, not real asymmetry. The model variables stay as they are. The scanner's
+scale is not calibrated: ~0.2 % would be ~0.25 mm over the pattern.
+
+The open item is the pin diameter. The flatbed only sees the face that touches
+the glass (2.2–2.3), so the pin probably tapers or is chamfered to its tip, and
+2.87 stays the shank. The 3.0 brace holes clear both, but if the shank really is
+2 mm then they stop locating.
+
 ### Measured: Waveshare P2.5 64×64 — a real Waveshare rear at last
 
 A vendor CAD model is now in [`hardware/cad/vendor/`](../../hardware/cad/vendor/)
