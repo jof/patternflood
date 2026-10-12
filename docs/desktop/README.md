@@ -24,6 +24,7 @@ ESP32 `.pfm` patterns do not run here as binaries
 | [**`driver-colorlight.md`**](driver-colorlight.md) | **The controller: Colorlight + Pi, panel chips, power cap, bring-up — start here** |
 | [`build-prep.md`](build-prep.md) | Ordered build plan (written for the Matrix Portal; caliper and hardware items still apply) |
 | [`mechanical-plan.md`](mechanical-plan.md) | Geometry, stackup, front panel, clearances |
+| [**`../../hardware/laser/`**](../../hardware/laser/MANIFEST.md) | **Cut files: one DXF per part, quantities, preview** — regenerate with `hardware/cad/tools/export_dxf.py` |
 | [`enclosure-lasercut.md`](enclosure-lasercut.md) | Finger-joint box in 3 mm sheet — the design, and §13 the material choice |
 | [`fastener-concepts.md`](fastener-concepts.md) | **Concepts for review** — assembling it with M3 hardware and no glue |
 | [`onshape-workflow.md`](onshape-workflow.md) | Modelling it: vendor CAD, proxies, variables, rendering |
