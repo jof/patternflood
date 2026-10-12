@@ -1,32 +1,34 @@
 # Project B — Patternflow Desktop
 
-**Status: ready to build.** Nothing is blocked.
+**Status: enclosure modelled; driver bring-up next.** Redesigned 2026-10-12.
 
-A Patternflow fork at roughly upstream's scale, on different parts. Four knobs,
-a 128 × 64 panel, USB-C. Keeps upstream's exact pixel geometry, so **every
-community pattern runs unmodified**, and stays close enough to upstream's tree
-to keep tracking it.
+A Patternflow-inspired instrument: four knobs and a **2 × 2 array of P2 GOB
+panels**, driven by a **Colorlight 5A-75B** with a **Raspberry Pi Zero 2 W**
+rendering the frames. That trades upstream compatibility for panel count — the
+ESP32 `.pfm` patterns do not run here as binaries
+([`driver-colorlight.md`](driver-colorlight.md) §1).
 
 | | |
 |---|---|
-| Panels | **2 × Waveshare RGB-Matrix-P2-64x64-B (GOB)** → 128 × 64 px, 256 × 128 mm, **measured** and modelled — see [`mechanical-plan.md`](mechanical-plan.md) §2.1. Stood on end: 64 × 128 portrait, upstream's mapping, no firmware change |
-| Controller | **Adafruit Matrix Portal S3** (no custom PCB) |
-| Input | **4 × Adafruit 4991 seesaw encoders** on I²C |
-| Power | **USB-C**, optionally a bank — see [`power-plan.md`](power-plan.md) |
-| Firmware | **Forked Patternflow** — `desktop` branch, patches in [`../../firmware/`](../../firmware/) |
-| Enclosure | **Laser-cut 3 mm Baltic birch ply**, finger-jointed, selectively doubled |
+| Panels | **4 × Waveshare RGB-Matrix-P2-64x64-B (GOB), 2 × 2** → 128 × 128 px, 256 × 256 mm, **measured** and modelled — see [`mechanical-plan.md`](mechanical-plan.md) §2.1. Six owned, two spare |
+| Controller | **Colorlight 5A-75B** (one panel per HUB75 output) + **Pi Zero 2 W** via a **USB gigabit adapter** — [`driver-colorlight.md`](driver-colorlight.md) |
+| Input | **4 × Adafruit 4991 seesaw encoders** on the Pi's I²C |
+| Power | **IEC mains → Mean Well LRS-50-5**, panel load capped per frame — [`driver-colorlight.md`](driver-colorlight.md) §4 |
+| Software | A Pi-side renderer streaming to the card; FPP for first pixels |
+| Enclosure | **Laser-cut 3 mm Baltic birch ply**, finger-jointed, 297 × 373 × 60 mm, stands upright |
 
 ## Plans
 
 | Doc | Covers |
 |---|---|
-| [**`build-prep.md`**](build-prep.md) | **What to do and order, in sequence — start here** |
+| [**`driver-colorlight.md`**](driver-colorlight.md) | **The controller: Colorlight + Pi, panel chips, power cap, bring-up — start here** |
+| [`build-prep.md`](build-prep.md) | Ordered build plan (written for the Matrix Portal; caliper and hardware items still apply) |
 | [`mechanical-plan.md`](mechanical-plan.md) | Geometry, stackup, front panel, clearances |
 | [`enclosure-lasercut.md`](enclosure-lasercut.md) | Finger-joint box in 3 mm sheet — the design, and §13 the material choice |
 | [`fastener-concepts.md`](fastener-concepts.md) | **Concepts for review** — assembling it with M3 hardware and no glue |
 | [`onshape-workflow.md`](onshape-workflow.md) | Modelling it: vendor CAD, proxies, variables, rendering |
-| [`power-plan.md`](power-plan.md) | USB-C, PD trigger, buck, optional bank |
-| [`firmware-delta.md`](firmware-delta.md) | Pinout diff, memory port, I²C encoders |
+| [`power-plan.md`](power-plan.md) | *Superseded* — USB-C, PD trigger, buck, optional bank |
+| [`firmware-delta.md`](firmware-delta.md) | *Superseded* — the ESP32 fork's pinout diff and memory port |
 
 ## What the split changed
 

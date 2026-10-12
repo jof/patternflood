@@ -173,7 +173,7 @@ Mains-first (no battery bay), from [`mechanical-plan.md`](mechanical-plan.md) §
 |---|---|
 | Front face, doubled | 6 mm |
 | Panel bodies | 14.5 mm ✅ measured |
-| Electronics bay — Matrix Portal on the HUB75 header, encoders, wiring | 15–20 mm |
+| Electronics bay — Colorlight + Pi on the back cover, HUB75 ribbons, encoders, wiring | 15–20 mm |
 | Back cover | 3 mm |
 | **Internal** | **~40 mm** |
 | **External** | **~46 mm** |

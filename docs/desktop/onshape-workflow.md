@@ -9,12 +9,13 @@ design itself.
 ## 1. What you need to model, and what you don't
 
 For a laser-cut enclosure you need **envelopes and mounting features**, not
-detail. A photorealistic Matrix Portal doesn't make the box fit better; knowing
+detail. A photorealistic receiver card doesn't make the box fit better; knowing
 that its HUB75 socket sits X mm off the panel face does.
 
 | Part | Source | Fidelity needed |
 |---|---|---|
-| **Matrix Portal S3** | ✅ vendor STEP, in repo | as-supplied |
+| **Colorlight 5A-75B, Pi Zero 2 W, USB gigabit adapter** | ✋ envelopes in `Bay obstructions` | outline + height off the back cover; the 5A-75B is a placeholder until calipered |
+| ~~Matrix Portal S3~~ | vendor STEP still in repo | no longer in the build (2026-10-12) |
 | **4991 encoder breakout** | ✅ vendor STEP, in repo | as-supplied |
 | **Waveshare P2 64×64 GOB** | ✋ model it | box + rear post positions |
 | **EC11 encoder (PID 377)** | ✋ model it | bushing Ø/thread, shaft, body |
@@ -170,7 +171,7 @@ you want lapped or hidden joints.
   a knob.
 - 4991 breakout bodies don't collide at `#knobPitch` — they're wider than the
   encoders.
-- Matrix Portal clears the back cover once it's on the panel's HUB75 header.
+- The boards on the back cover stay behind the panel connector keep-outs (the 5A-75B has 2.5 mm at a 20 mm stack).
 - Panel rear posts line up with the cross-brace slots.
 - Barrel jack, vents and wall-mount features don't land on a finger joint.
 

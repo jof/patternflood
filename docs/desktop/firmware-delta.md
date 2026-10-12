@@ -1,5 +1,11 @@
 # Firmware Delta
 
+> 🔁 **2026-10-12: superseded.** The desktop build no longer runs upstream
+> Patternflow on an ESP32: a Raspberry Pi Zero 2 W renders frames and a
+> Colorlight 5A-75B drives the panels — [`driver-colorlight.md`](driver-colorlight.md).
+> This document describes the Matrix Portal S3 fork that was planned instead,
+> and is kept for that history.
+
 What has to change in `upstream/firmware/patternflow/` to run on this hardware.
 Not a work plan — a record of what the mechanical and power decisions imply, so
 nothing here is a surprise later.

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Upload enclosure.fs and UPDATE the five features in place.
 
-Also refreshes the standalone panelProxy instances in the two proxy Part
-Studios, which would otherwise keep the old parameter list and quietly fall
-back to defaults for anything new.
+Also refreshes the standalone proxy instances (panel, PSU, IEC) in the proxy
+Part Studios, which would otherwise keep the old parameter list and quietly
+fall back to defaults for anything new — or, when a parameter is renamed,
+fail outright.
 
 The old shell version deleted every feature and re-added it. That works, but
 it briefly destroys every part in the studio, and any assembly instance
@@ -19,9 +20,12 @@ HERE=os.path.dirname(os.path.abspath(__file__))
 F=os.path.join(HERE,"..","featurescript","enclosure.fs")
 DEFS=os.path.join(HERE,"featuredefs.json")
 S=tempfile.mkdtemp(prefix="pfpush-")
-# Single-panel proxy studios: same panelProxy parameters, one panel.
+# Proxy studios that instance the same features standalone. Every feature in
+# them whose type is pushed here is refreshed with the same parameters; panel
+# proxies are forced to a single 1 x 1 panel.
 PROXY_STUDIOS={"9aacde0e7a6103be9fff46fd":"Panel P2 (proxy)",
-               "d1c871ec149418978f2eb283":"Proxies (view only)"}
+               "d1c871ec149418978f2eb283":"Proxies (view only)",
+               "f9604c88ee037028910ba08a":"IEC AC-14-F16A (proxy)"}
 
 def curl(method,url,body=None,out=None):
     cmd=["curl","-s","--netrc","-X",method]
@@ -70,12 +74,14 @@ for ft,(nm,params) in WANT.items():
         r=curl("POST",base,{"feature":feat}); verb="add"
     report(verb,nm,r)
 
-pnm,pparams=WANT["panelProxy"]
-pparams=[(k,"1" if k=="count" else v) for k,v in pparams]
 for eid,label in PROXY_STUDIOS.items():
     pbase=f"{API}/partstudios/d/{DID}/w/{WID}/e/{eid}/features"
     for f in json.loads(curl("GET",pbase)).get("features",[]):
-        if f.get("featureType")!="panelProxy": continue
-        feat=mkfeat("panelProxy",f["name"],pparams); feat["featureId"]=f["featureId"]
+        ft=f.get("featureType")
+        if ft not in WANT: continue
+        params=WANT[ft][1]
+        if ft=="panelProxy":
+            params=[(k,"1" if k in ("cols","rows") else v) for k,v in params]
+        feat=mkfeat(ft,f["name"],params); feat["featureId"]=f["featureId"]
         report("update",f"{label[:12]}/{f['name']}"[:20],
                curl("POST",f"{pbase}/featureid/{f['featureId']}",{"feature":feat}))

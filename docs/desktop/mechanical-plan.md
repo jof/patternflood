@@ -3,8 +3,15 @@
 Fork of [engmung/patternflow](https://github.com/engmung/patternflow) (pristine clone in `upstream/`, at `87700bd`, v3.9.5).
 
 This plan covers geometry, stackup, mounting and fabrication. Power is in
-[`power-plan.md`](power-plan.md). Firmware deltas are in
-[`firmware-delta.md`](firmware-delta.md).
+[`power-plan.md`](power-plan.md). The controller is in
+[`driver-colorlight.md`](driver-colorlight.md).
+
+> 🔁 **2026-10-12: redesigned as a 2 × 2 array on a Colorlight 5A-75B + Pi
+> Zero 2 W.** The Matrix Portal S3 and the 2 × 1 landscape layout are gone, and
+> with them the "every upstream pattern runs unmodified" property — see
+> [`driver-colorlight.md`](driver-colorlight.md) §1. Sections below are
+> updated where the change reaches them. The upstream comparison in §1 and the
+> sensor notes in §2.4 are kept as the record of how the build got here.
 
 ---
 
@@ -17,13 +24,12 @@ everything else.
 
 | | Upstream v3.9 | This build |
 |---|---|---|
-| Controller | ESP32-S3 DevKit N16R8 on custom PCB | **Adafruit Matrix Portal S3** (no PCB) |
-| Flash / PSRAM | 16 MB / 8 MB **octal** | 8 MB / 2 MB **quad** |
-| Panel | 1× 128×64 P2.5, 320×160 mm | **2× Waveshare P2 64×64 GOB**, 256×128 mm |
-| Resolution | 128 × 64 px | **128 × 64 px — identical** |
-| Encoders | 4× EC11 soldered to PCB, on GPIO | **4× Adafruit 4991 seesaw breakouts on I²C** |
-| Power in | Screw terminal, sacrificial USB cable | **USB-C → internal sealed bank** |
-| Extra sensing | none | **LD2450 radar + VL53L9CX 3D lidar** |
+| Controller | ESP32-S3 DevKit N16R8 on custom PCB | **Colorlight 5A-75B + Raspberry Pi Zero 2 W** (was Matrix Portal S3) |
+| Panel | 1× 128×64 P2.5, 320×160 mm | **4× Waveshare P2 64×64 GOB, 2 × 2**, 256 × 256 mm |
+| Resolution | 128 × 64 px | **128 × 128 px** (was 128 × 64, upstream's grid) |
+| Encoders | 4× EC11 soldered to PCB, on GPIO | **4× Adafruit 4991 seesaw breakouts on I²C** (to the Pi) |
+| Power in | Screw terminal, sacrificial USB cable | **IEC mains → Mean Well LRS-50-5**, capped panel load |
+| Extra sensing | none | none in v1 (the lidar moved to the [wall project](../wall/)) |
 
 The single most important consequence: **the upstream enclosure does not
 fit and cannot be adapted.** It is dimensioned around a 320×160 mm panel and
@@ -31,16 +37,16 @@ a board that no longer exists in this design. `upstream/hardware/case/` is
 reference and precedent, not a starting STL.
 
 The second consequence is a happy one: **there is no custom PCB in this
-build.** The Matrix Portal S3 plugs directly onto a panel's HUB75 header, and
-every control and sensor arrives on I²C or UART over a cable. That removes
-the board-to-front-panel alignment problem that drives most of upstream's
-enclosure complexity (encoder nut access, PCB standoffs, board outline
-tolerance). The front panel now only has to hold four encoders and one open
-sensor aperture.
+build.** The Colorlight card and the Pi are off-the-shelf boards on the back
+cover, ribbon- and cable-connected, and every control arrives on I²C over a
+cable. That removes the board-to-front-panel alignment problem that drives
+most of upstream's enclosure complexity (encoder nut access, PCB standoffs,
+board outline tolerance). The front panel only has to hold four encoders.
 
 ### Deliberately unused BOM
 
-Two 64×64 panels are held spare. The 1"/20 mm knob duplication is treated as
+Two 64×64 panels are held spare (six owned, four used; the 5A-75B has outputs
+J5–J8 free for them). The 1"/20 mm knob duplication is treated as
 "design for both" below. Not every line of the BOM needs to land in v1.
 
 ---
@@ -49,7 +55,7 @@ Two 64×64 panels are held spare. The 1"/20 mm knob duplication is treated as
 
 ### 2.1 Active area
 
-Two Waveshare 64×64 GOB panels, chained horizontally.
+Four Waveshare 64×64 GOB panels in a 2 × 2 grid: 128 × 128 px, 256 × 256 mm.
 
 ### 2.1 Pitch: P2, measured
 
@@ -68,16 +74,24 @@ Two Waveshare 64×64 GOB panels, chained horizontally.
 > it is also the right lever if this ever wants to be bigger: two P3 or P4
 > panels change the box and nothing else, where more panels change the pixel
 > grid and the loader rejects every existing `.pfm` (`pf_abi.h`).
+>
+> *(2026-10-12: that is the trade this build has now made — four panels, a
+> 128 × 128 grid, and a Pi host instead of the `.pfm` loader. See
+> [`driver-colorlight.md`](driver-colorlight.md) §1.)*
 
 > ✅ **2026-10-03: the panels are on the bench, and the model is now at P2.**
 > It was built at P2.5 from 2026-09-12 because a measured vendor model existed
 > for that pitch and P2 was four guesses. Every number below is now calipers.
 
-Current external size is **297 × 245 × 60 mm** — landscape as modelled, and
-**245 wide × 297 tall** stood on end, which is how it lives (see *Portrait*
-below).
+Current external size is **297 wide × 373 tall × 60 deep**, standing upright on
+its bottom wall: display on top, the knob and PSU band below. (The 2 × 1 box
+was 297 × 245 × 60 and lived on its side.)
 
-![The box at P2](img/box-p2.png)
+![The 2 x 2 box](img/box-2x2.png)
+
+> ⚠️ **It is 373 mm tall on a 60 mm footprint** — about 6 : 1. The PSU sits low,
+> which helps, but it will tip if knocked. Feet that splay to the rear, or a
+> kickstand on the back cover, are an open item (§4).
 
 ### The measured panel
 
@@ -89,6 +103,7 @@ the top-left corner, converted here to panel-centre coordinates (+y up):
 | Front face | 128 × 128 | — | `#panelBody` = 128 |
 | Back face | 127 × 127 | 0.5 mm draft per side, not modelled | — |
 | Pair, butted | 256 × 128 | 2 × 128, **zero gap** | `#panelGap` = 0 |
+| Array | 2 × 2 | 256 × 256, zero gap both ways | `#panelCols`, `#panelRows` |
 | Depth, face to back of frame | 14.5 | — | `#panelDepth` |
 | Depth incl. registration pins | 17.8 | pins 3.3 proud | `#pinProj` |
 | Threaded inserts, sides | M3; 6.5 in, 19.5 from top & bottom | (±57, ±44) | `#postXOffset`, `#braceYOffset` |
@@ -109,58 +124,39 @@ Two things came out of it that the model had wrong:
   front edge, which is the edge that matters, and the draft gives the butt joint
   somewhere to close.
 
-### Panel orientation is set by upstream's portrait mapping
+### Panel layout and wiring
 
-The box stands on end, and upstream already handles that: a pattern that
-declares a 64 × 128 grid is rotated onto the 128 × 64 panel by
-`core_canvas.h`, logical `(x, y)` → panel `(127 − y, x)`. So **with no firmware
-change**, the device must be exactly "a 128 × 64 panel stood on its end":
-
-- Model frame: both panels **upright** (pixel row 0 at +y), side by side, chain
-  running **left → right** — panel at −x is first.
-- Stood on end: **+x is up**, so the box rests on its **−x wall**. The knob
-  cluster ends up lower-right of the display, and the IEC inlet on the right-hand
-  side near the top.
-- The Matrix Portal can sit anywhere — it is ribbon-connected — but its ribbon
-  goes to the **−x panel's HUB75 IN**, then −x OUT → +x IN. Get that backwards
-  and every portrait pattern comes out upside down.
-
-![Stood on end](img/assembly-portrait.png)
-
-> ✅ **Confirmed 2026-10-04:** the edge measured as "top" is the panel's marked
-> top edge, so the pins sit near it at **+29** and land in the upper brace. One
-> cheap check is left for first light: pixel (0, 0) should light at that top
-> edge, on the left as seen from the front. If it lights at the bottom, the
-> marking lies and `#pinYOffset` goes to −29 — the lower brace is the same width
-> and picks the pins up.
+All four panels sit **the same way up** — pixel row 0 and the registration pins
+at +y — numbered in reading order:
 
 ```
                     256 mm
    ┌──────────────────┬──────────────────┐
-   │                  │                  │
-   │   Panel A        │   Panel B        │   128 mm
-   │   64 × 64 px     │   64 × 64 px     │
-   │   128 × 128 mm   │   128 × 128 mm   │
+   │   Panel 1        │   Panel 2        │
+   │   ◦ pins ◦       │   ◦ pins ◦       │   128 mm
+   │   J1             │   J2             │
+   ├──────────────────┼──────────────────┤
+   │   Panel 3        │   Panel 4        │
+   │   ◦ pins ◦       │   ◦ pins ◦       │   128 mm
+   │   J3             │   J4             │
    └──────────────────┴──────────────────┘
-   HUB75 IN ──────► OUT ──► IN
-
-            = 128 × 64 px, 8192 px, P2 pitch
+          each panel on its own 5A-75B HUB75 output
+            = 128 × 128 px, 16 384 px, P2 pitch
 ```
 
-This is a **straight HUB75 chain**, not a 2×2 tile, and it needs upstream's
-stock `PANEL_RES_W 128 / PANEL_RES_H 64 / PANEL_CHAIN 1` **unchanged** — two
-chained shift-register panels are electrically one 128-wide panel. No
-`VirtualMatrixPanel` mapping, no serpentine transform, and **every upstream
-pattern runs unmodified** because the pixel grid is bit-identical to stock.
-That is the whole reason this layout is the right v1. (Why `PANEL_CHAIN 2`
-would be wrong: [`firmware-delta.md`](firmware-delta.md) §1.)
+There is **no HUB75 chain** and no portrait mapping any more. Each panel has its
+own output on the Colorlight, and the card's mapping (set once in LEDVision)
+places each output's 64 × 64 in the 128 × 128 canvas. Orientation is therefore a
+software setting, not a wiring constraint, and the box simply stands on its
+bottom wall.
 
-Physically it is *smaller* than upstream: 256×128 mm vs 320×160 mm, because P2
-is a finer pitch than P2.5. Denser, brighter-looking, and easier to enclose.
+The pins are still the y datum: each panel row's pins land in a brace (§2.5).
+The 2026-10-04 check carries over: pixel (0, 0) of each panel should light at
+its pin edge.
 
-> ✅ **Verified 2026-10-03:** two panels butted measure **256 × 128** — zero
-> seam, the plastic adds nothing. The aperture is 257 × 129 (`#apertureGap`
-> 0.5 mm all round, so the panels pass through and finish flush).
+> ✅ **Verified 2026-10-03:** two panels butted measure **256 × 128**, zero
+> seam. With no draft on the front faces, the 2 × 2 is 256 × 256 and the
+> aperture 257 × 257 (`#apertureGap` 0.5 mm all round).
 
 ### 2.2 Stackup (front to back)
 
@@ -168,28 +164,27 @@ is a finer pitch than P2.5. Denser, brighter-looking, and easier to enclose.
    front
     │
     ├─ [0]  Bezel / front face .................. 3–6 mm
-    │        aperture 256 × 128 mm (+fit allowance)
-    │        4× encoder bores, 2× sensor apertures
+    │        aperture 256 × 256 mm (+fit allowance)
+    │        4× encoder bores
     │
     ├─ [1]  GOB panel face ...................... 0 mm standoff
     │        resin-filled, already flat & diffused
     │        → NO separate diffuser needed
     │
     ├─ [2]  Panel bodies ........................ 14.5 mm  ✅ measured
-    │        2× 128×128 mm, 6 × M3 inserts + 2 pins on back
+    │        4× 128×128 mm, 6 × M3 inserts + 2 pins on back
     │
-    ├─ [3]  Electronics bay ..................... 15–20 mm
-    │        Matrix Portal S3 (rides on panel A HUB75 hdr)
-    │        panel A→B ribbon, 5 V distribution
-    │        4× encoder breakouts + STEMMA QT chain
+    ├─ [3]  Braces + connector keep-outs ........ 3 + 20 mm
+    │        three cross-braces, four HUB75 ribbons turning
     │
-    ├─ [4]  Power bay ........................... 25–30 mm  ⚠ SET BY BANK
-    │        sealed USB-C bank, see power-plan.md
+    ├─ [4]  Electronics on the back cover ....... ≤ 20 mm
+    │        Colorlight 5A-75B, Pi Zero 2 W, USB gigabit adapter
+    │        (the PSU is in the control band below, not here)
     │
-    └─ [5]  Back cover .......................... 3–4 mm
-             vents, USB-C port cutout, wall-mount keyholes
+    └─ [5]  Back cover + rails .................. 3 + 9 mm
+             removable, carries the boards
 
-   Total depth ≈ 60–75 mm, dominated by [4].
+   Total depth 60 mm external, set by the PSU stack in the control band.
 ```
 
 **GOB is doing real work here.** Glue-on-board panels have an epoxy-filled
@@ -305,21 +300,26 @@ aperture into a finished bezel is the one change that ruins a front panel.
 
 ### 2.5 Panel and board mounting
 
-- **Panels:** both hang from two shared **cross-braces** that span the box
+- **Panels:** all four hang from shared **cross-braces** that span the box
   (the carrier plate, in wood — [`enclosure-lasercut.md`](enclosure-lasercut.md)
-  §5). Do not rely on the bezel to hold panel alignment: the seam between the
-  two panels is the most visible feature of the whole build, and it needs a
-  rigid common datum. Each panel gets **four M3 screws** into its side inserts
-  for clamping, and its **two registration pins** drop into holes in the upper
-  brace for location — exact in y, so rows line up across the seam, with
-  1.5 mm of travel in x so the panels can still be pushed together by hand.
-- **Matrix Portal S3:** plugs directly onto panel A's HUB75 header and is
-  supported by it. Add one standoff or a printed clip so a tugged USB-C cable
-  loads the enclosure, not the connector.
-- **Panel A → Panel B:** short HUB75 ribbon. Keep it short and clear of the
-  radar.
-- **Strain relief the USB-C entry.** It is the only user-touched connector and
-  it is on a board that is only held by a 16-pin header.
+  §5). Do not rely on the bezel to hold panel alignment: the seams are the most
+  visible feature of the whole build, and they need a rigid common datum. Each
+  panel gets **four M3 screws** into its side inserts for clamping, and its
+  **two registration pins** drop into holes in a brace for location — exact in
+  y, so rows line up across the vertical seam, with 1.5 mm of travel in x so the
+  panels can still be pushed together by hand. The horizontal seam is set by
+  the two rows' pins landing in braces cut from one sheet.
+- **Braces:** one per row of side inserts, at each panel row's centre ± 44.
+  In the 2 × 2 the lower brace of the top row and the upper brace of the bottom
+  row meet at y = 0, so they are **merged into one 80 mm middle brace**. Three
+  braces in all, [88, 128], [−40, 40], [−128, −88], each a through-tenon into
+  both side walls. Each row's pins land in a brace with 3.5 mm of wood beyond
+  the pin hole.
+- **Electronics:** on standoffs off the inside of the back cover — see
+  [`driver-colorlight.md`](driver-colorlight.md) §6. Leave enough slack in the
+  four ribbons, the Cat6 patch and the 5 V leads for the cover to come off.
+- **Mains:** the IEC inlet is in the **right wall**, low, beside the PSU
+  terminals; the box stands on its bottom wall so the inlet cannot go there.
 
 ---
 
@@ -352,11 +352,14 @@ dimensions don't carry over.
 Ordered by how expensive they are to get wrong:
 
 1. **EC11 bushing thread length** → sets max bezel thickness. Blocks bezel stock choice.
+1a. **Colorlight 5A-75B outline, hole pattern and tallest part** → `#clW`, `#clH`, `#clT` are placeholders. At over 22.5 mm off the cover it hits the panel keep-outs; its holes are not cut in the cover until measured.
 2. ~~**Actual two-panel butted width**~~ → ✅ 256 × 128, zero seam (§2.1).
 3. ~~**Panel body depth incl. connectors**~~ → ✅ 14.5, 17.8 over the pins (§2.1).
 4. **4991 breakout outline** → confirms 45 mm knob pitch has no collision.
-5. **Chosen power bank dimensions** → sets bay [4], which dominates total depth. See [`power-plan.md`](power-plan.md).
+5. ~~**Chosen power bank dimensions**~~ → no bank: mains through the LRS-50-5.
+6. **Stability** → 373 tall on 60 deep. Feet or a rear kickstand, before it
+   lives on a desk.
+7. **USB gigabit adapter envelope** → `#nicW/H/T` are typical; measure the one
+   bought.
 
-Items 1–4 are all measurable the moment the parts are on the bench. Item 5 is a
-purchasing decision, not a measurement — and it's the one that sets how thick
-this object ends up being.
+Items 1, 1a, 4 and 7 are calipers on parts in hand. Item 6 is a design choice.

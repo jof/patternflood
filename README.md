@@ -7,14 +7,14 @@ They started as one build. They're separate because they want opposite things.
 
 | | [**Desktop**](docs/desktop/) | [**Wall**](docs/wall/) |
 |---|---|---|
-| | Patternflow fork, four knobs | Room-interactive LED wall |
-| Display | 128 × 64 px, 256 × 128 mm | 192 × 192 px, 576 × 576 mm |
+| | Patternflow-inspired, four knobs | Room-interactive LED wall |
+| Display | 128 × 128 px, 256 × 256 mm (2 × 2 P2) | 192 × 192 px, 576 × 576 mm |
 | Input | four seesaw encoders | VL53L9CX lidar, contactless |
-| Compute | Matrix Portal S3 | Pi + RP2350 front-end |
-| Power | mains 5 V 8 A, ~10 W | mains, ~200 W peak |
-| Enclosure | laser-cut basswood box | frame + wall mount |
-| Code | **tracks upstream** | new codebase |
-| Status | **ready to build** | concept — lidar on order |
+| Compute | Pi Zero 2 W + Colorlight 5A-75B | Pi + RP2350 front-end |
+| Power | mains, LRS-50-5, panel load capped | mains, ~200 W peak |
+| Enclosure | laser-cut birch ply box | frame + wall mount |
+| Code | Pi renderer (left upstream 2026-10-12) | new codebase |
+| Status | **enclosure modelled; driver bring-up next** | concept — lidar on order |
 
 ## Why two
 
@@ -28,6 +28,11 @@ The clean split: **the desktop build stays a Patternflow** and inherits
 everything upstream has — the `.pfm` pattern loader, the frozen ABI, the web
 console, 100+ community patterns. **The wall build is a new thing** that only
 borrows the idea.
+
+*2026-10-12:* the desktop build has since left upstream too. The P2 panels are
+small enough that four of them make the instrument, and four panels want a
+Colorlight 5A-75B and a Pi rather than an ESP32 —
+[`docs/desktop/driver-colorlight.md`](docs/desktop/driver-colorlight.md).
 
 ## Layout
 

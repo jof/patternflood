@@ -1,5 +1,13 @@
 # Build Prep — Desktop
 
+> 🔁 **2026-10-12: the controller changed.** The Matrix Portal S3 steps below
+> (first light on its pins, the `desktop` firmware branch) no longer apply.
+> First light is now one panel on a Colorlight 5A-75B configured in LEDVision,
+> then the Pi Zero 2 W + USB gigabit adapter in front of it —
+> [`driver-colorlight.md`](driver-colorlight.md) §5. The enclosure is a 2 × 2
+> array — [`mechanical-plan.md`](mechanical-plan.md). The caliper items and the
+> mechanical hardware below still apply.
+
 Ordered so that **nothing blocks on a delivery**. Section A needs only what's
 already on your bench; B is a caliper session; C is the shopping list, and it's
 shorter than the earlier power plan implied.

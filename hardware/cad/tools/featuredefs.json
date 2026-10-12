@@ -15,8 +15,12 @@
     "#panelDepth"
    ],
    [
-    "count",
-    "2"
+    "cols",
+    "#panelCols"
+   ],
+   [
+    "rows",
+    "#panelRows"
    ],
    [
     "panelBody",
@@ -96,8 +100,16 @@
     "#panelW"
    ],
    [
-    "panelCount",
-    "2"
+    "panelH",
+    "#panelH"
+   ],
+   [
+    "panelCols",
+    "#panelCols"
+   ],
+   [
+    "panelRows",
+    "#panelRows"
    ],
    [
     "panelDepth",
@@ -124,28 +136,68 @@
     "#keepoutY"
    ],
    [
-    "mpW",
-    "#mpW"
+    "coverZ",
+    "0 mm - #panelDepth - #bayDepth + #thickness"
    ],
    [
-    "mpH",
-    "#mpH"
+    "clW",
+    "#clW"
    ],
    [
-    "mpProj",
-    "#mpProj"
+    "clH",
+    "#clH"
    ],
    [
-    "mpZFront",
-    "0 mm - #panelDepth - #thickness - 1 mm"
+    "clT",
+    "#clT"
    ],
    [
-    "mpX",
-    "#mpX"
+    "clX",
+    "#clX"
    ],
    [
-    "mpY",
-    "#mpY"
+    "clY",
+    "#clY"
+   ],
+   [
+    "piW",
+    "#piW"
+   ],
+   [
+    "piH",
+    "#piH"
+   ],
+   [
+    "piT",
+    "#piT"
+   ],
+   [
+    "piX",
+    "#piX"
+   ],
+   [
+    "piY",
+    "#piY"
+   ],
+   [
+    "nicW",
+    "#nicW"
+   ],
+   [
+    "nicH",
+    "#nicH"
+   ],
+   [
+    "nicT",
+    "#nicT"
+   ],
+   [
+    "nicX",
+    "#nicX"
+   ],
+   [
+    "nicY",
+    "#nicY"
    ]
   ]
  ],
@@ -226,12 +278,12 @@
   "IEC inlet proxy",
   [
    [
-    "faceY",
-    "0 mm - #apertureH / 2 - #controlH"
+    "faceX",
+    "#apertureW / 2 + #marginSide"
    ],
    [
-    "cx",
-    "#iecX"
+    "cy",
+    "#iecY"
    ],
    [
     "cz",
@@ -331,8 +383,16 @@
     "#panelW"
    ],
    [
-    "panelCount",
-    "2"
+    "panelH",
+    "#panelH"
+   ],
+   [
+    "panelCols",
+    "#panelCols"
+   ],
+   [
+    "panelRows",
+    "#panelRows"
    ],
    [
     "panelDepth",
@@ -467,12 +527,32 @@
     "#iecScrewDia"
    ],
    [
-    "iecX",
-    "#iecX"
-   ],
-   [
     "iecZ",
     "#iecZ"
+   ],
+   [
+    "iecY",
+    "#iecY"
+   ],
+   [
+    "piX",
+    "#piX"
+   ],
+   [
+    "piY",
+    "#piY"
+   ],
+   [
+    "piHoleX",
+    "#piHoleX"
+   ],
+   [
+    "piHoleY",
+    "#piHoleY"
+   ],
+   [
+    "piHoleDia",
+    "#piHoleDia"
    ]
   ]
  ]

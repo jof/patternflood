@@ -4,8 +4,9 @@ import(path : "onshape/std/geometry.fs", version : "3070.0");
 /**
  * Patternflow desktop enclosure — parametric features.
  *
- * Laser-cut 3 mm basswood finger-joint box, 2 x Waveshare P2 64x64 GOB panels,
- * Matrix Portal S3, 4 x Adafruit 4991 seesaw encoders.
+ * Laser-cut 3 mm finger-joint box, a 2 x 2 array of Waveshare P2 64x64 GOB
+ * panels driven by a Colorlight 5A-75B receiver card and a Raspberry Pi Zero 2 W,
+ * 4 x Adafruit 4991 seesaw encoders.
  *
  * DATUM CONVENTION — every part depends on this:
  *   z = 0          the LED panel FRONT face
@@ -82,8 +83,11 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
         annotation { "Name" : "Panel depth" }
         isLength(definition.panelDepth, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Panel count" }
-        isInteger(definition.count, POSITIVE_COUNT_BOUNDS);
+        annotation { "Name" : "Panel columns" }
+        isInteger(definition.cols, POSITIVE_COUNT_BOUNDS);
+
+        annotation { "Name" : "Panel rows" }
+        isInteger(definition.rows, POSITIVE_COUNT_BOUNDS);
 
         annotation { "Name" : "Panel body (undersize)" }
         isLength(definition.panelBody, LENGTH_BOUNDS);
@@ -146,11 +150,12 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
         // tight would put a whole gap's worth of error in the grid at every
         // seam. Measured on a Waveshare P3 64x64: body 190, pitch 192, gap 2,
         // and 189mm of pixel span — which is exactly 0.5mm of border per edge.
-        const n = definition.count;
+        const nc = definition.cols;
+        const nr = definition.rows;
+        const n  = nc * nr;
         const B = definition.panelBody;
         const D = definition.panelDepth;
         const gap = definition.panelW - B;
-        const bodySpan = n * B + (n - 1) * gap;
 
         // border + gap + border = one pixel pitch. On the P3 that was
         // 0.5 + 2 + 0.5; on the P2 the body IS the pitch, so the gap is zero
@@ -160,18 +165,25 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
         const zPcbF  = 0 * millimeter - definition.gobT;
         const zPcbB  = zPcbF - definition.pcbT;
 
+        // Panels are numbered in reading order, top-left first. Centres sit on
+        // the tiling pitch, so the bodies are separated by exactly the gap.
         for (var i = 0; i < n; i += 1)
         {
-            const x0  = -bodySpan / 2 + i * definition.panelW;
-            const x1  = x0 + B;
-            const xc  = x0 + B / 2;
+            const col = i % nc;
+            const row = floor(i / nc);
+            const xc  = (col - (nc - 1) / 2) * definition.panelW;
+            const yc  = ((nr - 1) / 2 - row) * definition.panelH;
+            const x0  = xc - B / 2;
+            const x1  = xc + B / 2;
+            const y0  = yc - B / 2;
+            const y1  = yc + B / 2;
             const pid = id + ("p" ~ i);
 
             if (!definition.detail)
             {
                 fCuboid(context, pid + "box", {
-                        "corner1" : vector(x0, -B / 2, -D),
-                        "corner2" : vector(x1,  B / 2, 0 * millimeter) });
+                        "corner1" : vector(x0, y0, -D),
+                        "corner2" : vector(x1, y1, 0 * millimeter) });
                 continue;
             }
 
@@ -180,25 +192,25 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
             // it is the border the pixel arithmetic above derives — it is
             // the real edge of the pixel field.
             fCuboid(context, pid + "face", {
-                    "corner1" : vector(x0, -B / 2, zPcbF),
-                    "corner2" : vector(x1,  B / 2, -reveal) });
+                    "corner1" : vector(x0, y0, zPcbF),
+                    "corner2" : vector(x1, y1, -reveal) });
             fCuboid(context, pid + "lit", {
-                    "corner1" : vector(x0 + border, -B / 2 + border, -reveal),
-                    "corner2" : vector(x1 - border,  B / 2 - border, 0 * millimeter) });
+                    "corner1" : vector(x0 + border, y0 + border, -reveal),
+                    "corner2" : vector(x1 - border, y1 - border, 0 * millimeter) });
 
             fCuboid(context, pid + "pcb", {
-                    "corner1" : vector(x0, -B / 2, zPcbB),
-                    "corner2" : vector(x1,  B / 2, zPcbF) });
+                    "corner1" : vector(x0, y0, zPcbB),
+                    "corner2" : vector(x1, y1, zPcbF) });
 
             // Rear frame: a ring, open in the middle where everything lives.
             fCuboid(context, pid + "frame", {
-                    "corner1" : vector(x0, -B / 2, -D),
-                    "corner2" : vector(x1,  B / 2, zPcbB) });
+                    "corner1" : vector(x0, y0, -D),
+                    "corner2" : vector(x1, y1, zPcbB) });
             fCuboid(context, pid + "cav", {
                     "corner1" : vector(x0 + definition.frameW,
-                                       -B / 2 + definition.frameW, -D - 1 * millimeter),
+                                       y0 + definition.frameW, -D - 1 * millimeter),
                     "corner2" : vector(x1 - definition.frameW,
-                                        B / 2 - definition.frameW, zPcbB + 1 * millimeter) });
+                                       y1 - definition.frameW, zPcbB + 1 * millimeter) });
             opBoolean(context, pid + "frCut", {
                     "tools"         : qCreatedBy(pid + "cav", EntityType.BODY),
                     "targets"       : qCreatedBy(pid + "frame", EntityType.BODY),
@@ -224,7 +236,7 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
             {
                 const k  = "" ~ ki;
                 const px = xc + inserts[ki][0];
-                const py = inserts[ki][1];
+                const py = yc + inserts[ki][1];
                 fCylinder(context, pid + ("post" ~ k), {
                         "topCenter"    : vector(px, py, zPcbB),
                         "bottomCenter" : vector(px, py, -D),
@@ -250,9 +262,9 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
                 const k = "" ~ (sx + 1);
                 fCylinder(context, pid + ("pin" ~ k), {
                         "topCenter"    : vector(xc + sx * definition.pinXOffset,
-                                                definition.pinYOffset, -D),
+                                                yc + definition.pinYOffset, -D),
                         "bottomCenter" : vector(xc + sx * definition.pinXOffset,
-                                                definition.pinYOffset, -D - definition.pinProj),
+                                                yc + definition.pinYOffset, -D - definition.pinProj),
                         "radius"       : definition.pinDia / 2 });
                 nameBody(context, pid + ("npin" ~ k), pid + ("pin" ~ k), tag ~ " — registration pin");
             }
@@ -264,7 +276,7 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
                 for (var b = 0; b < 2; b += 1)
                 {
                     const cxi = xc + (a - 1.5) * 22 * millimeter;
-                    const cyi = (b - 0.5) * 30 * millimeter;
+                    const cyi = yc + (b - 0.5) * 30 * millimeter;
                     fCuboid(context, pid + ("ic" ~ a ~ b), {
                             "corner1" : vector(cxi - 9 * millimeter, cyi - 3 * millimeter,
                                                zPcbB - 1.2 * millimeter),
@@ -278,15 +290,15 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
             {
                 const hx = xc + (2 * h - 1) * definition.hdrPitch / 2;
                 fCuboid(context, pid + ("hdr" ~ h), {
-                        "corner1" : vector(hx - definition.hdrW / 2, -definition.hdrH / 2,
+                        "corner1" : vector(hx - definition.hdrW / 2, yc - definition.hdrH / 2,
                                            zPcbB - definition.hdrProj),
-                        "corner2" : vector(hx + definition.hdrW / 2,  definition.hdrH / 2, zPcbB) });
+                        "corner2" : vector(hx + definition.hdrW / 2, yc + definition.hdrH / 2, zPcbB) });
             }
 
             fCuboid(context, pid + "pwr", {
-                    "corner1" : vector(xc - 11 * millimeter, -B / 2 + 14 * millimeter,
+                    "corner1" : vector(xc - 11 * millimeter, y0 + 14 * millimeter,
                                        zPcbB - 7 * millimeter),
-                    "corner2" : vector(xc + 11 * millimeter, -B / 2 + 24 * millimeter, zPcbB) });
+                    "corner2" : vector(xc + 11 * millimeter, y0 + 24 * millimeter, zPcbB) });
 
             // Named for the same reason the enclosure parts are: an assembly
             // instance list and a BOM both need to say WHICH body.
@@ -567,35 +579,33 @@ export const psuProxy = defineFeature(function(context is Context, id is Id, def
 // in ANY wall — the 48.75mm short extent fits a 60mm depth with 5.6mm
 // each side, whichever wall it goes in.
 //
-// It sits in the BOTTOM (low-y) wall, not the right-hand one. The reason
-// is the portrait orientation: stood on end the box rests on a +/-x wall,
-// so an inlet there is underneath the case and the cord jacks it off the
-// table. The bottom wall is a vertical SIDE in portrait, so the cord
-// exits horizontally and no feet are needed. The cost is that landscape
-// then rests on the inlet instead — the +y top wall is the only one that
-// is a side in both, and it routes mains diagonally across the box past
-// the Matrix Portal, which is worse than giving up landscape.
+// It sits in the RIGHT (+x) wall, low in the control band. The 2 x 2 box
+// stands upright on its bottom wall, so an inlet there would be under the
+// case; the right wall is a vertical side, the cord exits horizontally,
+// and the inlet lands beside the PSU's terminals, which face +x. (The 2 x 1
+// portrait design had it in the bottom wall for the mirror-image reason —
+// that box stood on a side wall.)
 //
-// x = 100mm is not free either. The body needs 37.45mm of depth behind
-// the wall, and the PSU occupies x -44.6..54.6 there, so the inlet has to
-// clear it: 100 - cutW/2 = 76.6 leaves 22mm. Going the other way (x
-// negative) would clear the PSU too but put the inlet at the far end from
-// the PSU terminals, which face +x.
+// Placed low: its centre is #iecY, 40mm above the outer bottom face, so
+// the flange clears the bottom corner joint and the cutout stays clear of
+// the lower rail C mortise (which is 4.6mm away in z, not y). The body
+// reaches 37.45mm in from the wall, to x ~111, against the PSU's
+// x 54.6 — 56mm clear.
 
 annotation { "Feature Type Name" : "IEC inlet proxy" }
 export const iecProxy = defineFeature(function(context is Context, id is Id, definition is map)
     precondition
     {
-        annotation { "Name" : "Outer face y" }
-        isLength(definition.faceY, ANY_LENGTH_BOUNDS);
+        annotation { "Name" : "Outer face x" }
+        isLength(definition.faceX, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "Centre x" }
-        isLength(definition.cx, ANY_LENGTH_BOUNDS);
+        annotation { "Name" : "Centre y" }
+        isLength(definition.cy, ANY_LENGTH_BOUNDS);
 
         annotation { "Name" : "Centre z" }
         isLength(definition.cz, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "Cutout long (x)" }
+        annotation { "Name" : "Cutout long (y)" }
         isLength(definition.cutW, LENGTH_BOUNDS);
 
         annotation { "Name" : "Cutout short (z)" }
@@ -620,13 +630,13 @@ export const iecProxy = defineFeature(function(context is Context, id is Id, def
         isLength(definition.screwDia, LENGTH_BOUNDS);
     }
     {
-        // body, reaching INWARD (+y) from the outer face of the bottom wall
+        // body, reaching INWARD (-x) from the outer face of the right wall
         fCuboid(context, id + "body", {
-                "corner1" : vector(definition.cx - definition.cutW / 2,
-                                   definition.faceY,
+                "corner1" : vector(definition.faceX - definition.depth,
+                                   definition.cy - definition.cutW / 2,
                                    definition.cz - definition.cutH / 2),
-                "corner2" : vector(definition.cx + definition.cutW / 2,
-                                   definition.faceY + definition.depth,
+                "corner2" : vector(definition.faceX,
+                                   definition.cy + definition.cutW / 2,
                                    definition.cz + definition.cutH / 2) });
 
         // flange: hexagonal outline, sketched on the wall face
@@ -635,13 +645,13 @@ export const iecProxy = defineFeature(function(context is Context, id is Id, def
         const tp = hs + definition.flTip;                    // lobe apex
 
         // Sketch on the wall's OUTER face, normal pointing out of the box
-        // (-y). With xDirection = global +x the sketch's own y axis comes
-        // out as global +z, so the polyline below is unchanged: u is the
-        // long extent, v the lobed short one.
+        // (+x). With xDirection = global +y the sketch's own y axis is
+        // normal x xDirection = global +z, so u is the long extent (along
+        // the wall, y) and v the lobed short one (z).
         var sk = newSketchOnPlane(context, id + "flSk", {
-                "sketchPlane" : plane(vector(definition.cx, definition.faceY, definition.cz),
-                                      vector(0, -1, 0),
-                                      vector(1, 0, 0)) });
+                "sketchPlane" : plane(vector(definition.faceX, definition.cy, definition.cz),
+                                      vector(1, 0, 0),
+                                      vector(0, 1, 0)) });
 
         skPolyline(sk, "outline", {
                 "points" : [
@@ -657,7 +667,7 @@ export const iecProxy = defineFeature(function(context is Context, id is Id, def
 
         opExtrude(context, id + "flEx", {
                 "entities"  : qSketchRegion(id + "flSk"),
-                "direction" : vector(0, -1, 0),
+                "direction" : vector(1, 0, 0),
                 "endBound"  : BoundingType.BLIND,
                 "endDepth"  : definition.flThk });
 
@@ -673,10 +683,10 @@ export const iecProxy = defineFeature(function(context is Context, id is Id, def
                 hz = definition.cz + definition.screwSpacing / 2;
             }
             fCylinder(context, id + ("fh" ~ i), {
-                    "topCenter"    : vector(definition.cx,
-                                            definition.faceY - definition.flThk - 1 * millimeter, hz),
-                    "bottomCenter" : vector(definition.cx,
-                                            definition.faceY + 1 * millimeter, hz),
+                    "topCenter"    : vector(definition.faceX + definition.flThk + 1 * millimeter,
+                                            definition.cy, hz),
+                    "bottomCenter" : vector(definition.faceX - 1 * millimeter,
+                                            definition.cy, hz),
                     "radius"       : definition.screwDia / 2 });
             holes = append(holes, qCreatedBy(id + ("fh" ~ i), EntityType.BODY));
         }
@@ -700,20 +710,34 @@ export const iecProxy = defineFeature(function(context is Context, id is Id, def
 // this is one generous envelope rather than individual bosses — measure it
 // off a real panel and shrink it.
 //
-// Plus the Matrix Portal itself, which is the big one: it does not sit
-// against the panel, it rides ON the HUB75 header, so it reaches roughly
-// 20mm back even though the board's own span is 19.1mm. Footprint measured
-// from the vendored Adafruit STEP.
+// Plus the driving electronics, which are mounted on the INSIDE of the
+// removable back cover rather than on the panels: a Colorlight 5A-75B
+// receiver card (ribbons to all four panels, so it sits in the middle), a
+// Raspberry Pi Zero 2 W, and the USB gigabit adapter between them — the
+// 5A-75B will not link at 100 Mbit, and the Zero has no Ethernet of its
+// own. Each is an envelope standing off the cover's inner face, heights
+// INCLUDING standoffs, so the check that matters is simple: the front of
+// every board must stay behind the panel keep-outs.
+//
+// The 5A-75B outline and hole pattern are PLACEHOLDERS — there is no
+// published drawing; caliper one. The Pi Zero 2 W is the documented
+// 65 x 30 board with M2.5 holes on a 58 x 23 pattern.
 
 annotation { "Feature Type Name" : "Bay obstructions" }
 export const bayObstructions = defineFeature(function(context is Context, id is Id, definition is map)
     precondition
     {
-        annotation { "Name" : "Panel width" }
+        annotation { "Name" : "Panel width (pitch x)" }
         isLength(definition.panelW, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Panel count" }
-        isInteger(definition.panelCount, POSITIVE_COUNT_BOUNDS);
+        annotation { "Name" : "Panel height (pitch y)" }
+        isLength(definition.panelH, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Panel columns" }
+        isInteger(definition.panelCols, POSITIVE_COUNT_BOUNDS);
+
+        annotation { "Name" : "Panel rows" }
+        isInteger(definition.panelRows, POSITIVE_COUNT_BOUNDS);
 
         annotation { "Name" : "Panel depth" }
         isLength(definition.panelDepth, LENGTH_BOUNDS);
@@ -733,58 +757,94 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
         annotation { "Name" : "Keep-out offset y" }
         isLength(definition.keepoutY, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "Board width" }
-        isLength(definition.mpW, LENGTH_BOUNDS);
+        annotation { "Name" : "Back cover inner face z" }
+        isLength(definition.coverZ, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "Board height" }
-        isLength(definition.mpH, LENGTH_BOUNDS);
+        annotation { "Name" : "Receiver card width (x)" }
+        isLength(definition.clW, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Board thickness" }
-        isLength(definition.mpProj, LENGTH_BOUNDS);
+        annotation { "Name" : "Receiver card height (y)" }
+        isLength(definition.clH, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Board front face z" }
-        isLength(definition.mpZFront, ANY_LENGTH_BOUNDS);
+        annotation { "Name" : "Receiver card height off cover" }
+        isLength(definition.clT, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Board centre x" }
-        isLength(definition.mpX, ANY_LENGTH_BOUNDS);
+        annotation { "Name" : "Receiver card centre x" }
+        isLength(definition.clX, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "Board centre y" }
-        isLength(definition.mpY, ANY_LENGTH_BOUNDS);
+        annotation { "Name" : "Receiver card centre y" }
+        isLength(definition.clY, ANY_LENGTH_BOUNDS);
 
+        annotation { "Name" : "Pi width (x)" }
+        isLength(definition.piW, LENGTH_BOUNDS);
 
+        annotation { "Name" : "Pi height (y)" }
+        isLength(definition.piH, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Pi height off cover" }
+        isLength(definition.piT, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Pi centre x" }
+        isLength(definition.piX, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Pi centre y" }
+        isLength(definition.piY, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Ethernet adapter width (x)" }
+        isLength(definition.nicW, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Ethernet adapter height (y)" }
+        isLength(definition.nicH, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Ethernet adapter height off cover" }
+        isLength(definition.nicT, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Ethernet adapter centre x" }
+        isLength(definition.nicX, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Ethernet adapter centre y" }
+        isLength(definition.nicY, ANY_LENGTH_BOUNDS);
     }
     {
         const back = -definition.panelDepth;
-        const span = definition.panelCount * definition.panelW;
+        const nc = definition.panelCols;
+        const nr = definition.panelRows;
 
-        for (var i = 0; i < definition.panelCount; i += 1)
+        for (var i = 0; i < nc * nr; i += 1)
         {
-            const pc = -span / 2 + (i + 0.5) * definition.panelW + definition.keepoutX;
+            const xc = (i % nc - (nc - 1) / 2) * definition.panelW + definition.keepoutX;
+            const yc = ((nr - 1) / 2 - floor(i / nc)) * definition.panelH + definition.keepoutY;
 
             fCuboid(context, id + ("keepout" ~ i), {
-                    "corner1" : vector(pc - definition.keepoutW / 2,
-                                       definition.keepoutY - definition.keepoutH / 2,
+                    "corner1" : vector(xc - definition.keepoutW / 2,
+                                       yc - definition.keepoutH / 2,
                                        back - definition.keepoutProj),
-                    "corner2" : vector(pc + definition.keepoutW / 2,
-                                       definition.keepoutY + definition.keepoutH / 2,
+                    "corner2" : vector(xc + definition.keepoutW / 2,
+                                       yc + definition.keepoutH / 2,
                                        back) });
+            nameBody(context, id + ("nko" ~ i), id + ("keepout" ~ i),
+                     "Keep-out — panel " ~ (i + 1) ~ " connectors");
         }
 
-        // The Matrix Portal is now mounted to the CASE, not plugged onto the
-        // panel, so its depth is set by where it is bolted rather than by the
-        // header height. A HUB75 ribbon reaches the panel instead — which is
-        // why the keep-out above got deeper, not shallower: a ribbon needs
-        // room to turn behind the connector where a board did not.
-        // (The IEC envelope used to be duplicated here. It is modelled
-        // properly in iecProxy, flange included, so this copy is gone.)
-
-        fCuboid(context, id + "board", {
-                "corner1" : vector(definition.mpX - definition.mpW / 2,
-                                   definition.mpY - definition.mpH / 2,
-                                   definition.mpZFront - definition.mpProj),
-                "corner2" : vector(definition.mpX + definition.mpW / 2,
-                                   definition.mpY + definition.mpH / 2,
-                                   definition.mpZFront) });
+        const boards = [
+            { "key" : "cl",  "name" : "Colorlight 5A-75B (placeholder)",
+              "w" : definition.clW,  "h" : definition.clH,  "t" : definition.clT,
+              "x" : definition.clX,  "y" : definition.clY },
+            { "key" : "pi",  "name" : "Raspberry Pi Zero 2 W",
+              "w" : definition.piW,  "h" : definition.piH,  "t" : definition.piT,
+              "x" : definition.piX,  "y" : definition.piY },
+            { "key" : "nic", "name" : "USB gigabit Ethernet adapter",
+              "w" : definition.nicW, "h" : definition.nicH, "t" : definition.nicT,
+              "x" : definition.nicX, "y" : definition.nicY }
+        ];
+        for (var bi = 0; bi < size(boards); bi += 1)
+        {
+            const bd = boards[bi];
+            fCuboid(context, id + bd.key, {
+                    "corner1" : vector(bd.x - bd.w / 2, bd.y - bd.h / 2, definition.coverZ),
+                    "corner2" : vector(bd.x + bd.w / 2, bd.y + bd.h / 2, definition.coverZ + bd.t) });
+            nameBody(context, id + ("n" ~ bd.key), id + bd.key, bd.name);
+        }
     });
 
 // ────────────────────────────────────────────────────────────────────────
@@ -979,11 +1039,17 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "Kerf" }
         isLength(definition.kerf, KERF_BOUNDS);
 
-        annotation { "Name" : "Panel width" }
+        annotation { "Name" : "Panel width (pitch x)" }
         isLength(definition.panelW, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Panel count" }
-        isInteger(definition.panelCount, POSITIVE_COUNT_BOUNDS);
+        annotation { "Name" : "Panel height (pitch y)" }
+        isLength(definition.panelH, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Panel columns" }
+        isInteger(definition.panelCols, POSITIVE_COUNT_BOUNDS);
+
+        annotation { "Name" : "Panel rows" }
+        isInteger(definition.panelRows, POSITIVE_COUNT_BOUNDS);
 
         annotation { "Name" : "Panel depth" }
         isLength(definition.panelDepth, LENGTH_BOUNDS);
@@ -1084,11 +1150,26 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "IEC screw diameter" }
         isLength(definition.iecScrewDia, LENGTH_BOUNDS);
 
-        annotation { "Name" : "IEC position x" }
-        isLength(definition.iecX, ANY_LENGTH_BOUNDS);
+        annotation { "Name" : "IEC position y (right wall)" }
+        isLength(definition.iecY, ANY_LENGTH_BOUNDS);
 
         annotation { "Name" : "IEC position z" }
         isLength(definition.iecZ, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Pi centre x (back cover)" }
+        isLength(definition.piX, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Pi centre y (back cover)" }
+        isLength(definition.piY, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Pi hole pattern x" }
+        isLength(definition.piHoleX, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Pi hole pattern y" }
+        isLength(definition.piHoleY, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Pi mounting hole diameter" }
+        isLength(definition.piHoleDia, LENGTH_BOUNDS);
     }
     {
         const t    = definition.thickness;
@@ -1222,8 +1303,17 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         // panel weight goes brace -> through-tenon -> wall, and the bezel
         // stays purely cosmetic.
         //
-        // The screw holes are OBROUND, running in x, so the two panels can be
-        // slid together and butted before the screws are tightened.
+        // The screw holes are OBROUND, running in x, so the panels in a row
+        // can be slid together and butted before the screws are tightened.
+        //
+        // There is a brace for every ROW of inserts: each panel row has its
+        // side inserts at rowCentre +/- braceYOffset. In a 2 x 2 the lower
+        // brace of the top row and the upper brace of the bottom row meet
+        // exactly at y = 0, so braces that touch or overlap are merged into
+        // one wider brace instead of being cut as two tenons sharing an
+        // edge. With the measured numbers that gives three: [88, 128],
+        // [-40, 40] and [-128, -88]. Each row's pins land in a brace with the
+        // same 3.5mm of wood beyond the pin hole as the 2 x 1 design had.
         // #postXOffset and #braceYOffset are measured off the P2 64x64-B.
         //
         // Location in y is NOT the screws' job. The panels carry two
@@ -1241,27 +1331,52 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
 
         const zBraceF = -definition.panelDepth;         // against the panel backs
         const zBraceB = zBraceF - t;
-        const panelSpan = definition.panelCount * definition.panelW;
+        const nCols = definition.panelCols;
+        const nRows = definition.panelRows;
 
-        for (var s = 0; s < 2; s += 1)
+        // Candidate spans, top row first and upper before lower within a
+        // row, which is already descending in y while braceYOffset is under
+        // half a pitch (44 < 64) — so merging only ever looks one back.
+        var spans = [];
+        for (var r = 0; r < nRows; r += 1)
         {
-            var yc = definition.braceYOffset;
-            if (s == 1)
+            const rc = ((nRows - 1) / 2 - r) * definition.panelH;
+            spans = append(spans, [rc + definition.braceYOffset - definition.braceW / 2,
+                                   rc + definition.braceYOffset + definition.braceW / 2]);
+            spans = append(spans, [rc - definition.braceYOffset - definition.braceW / 2,
+                                   rc - definition.braceYOffset + definition.braceW / 2]);
+        }
+        var braceSpans = [];
+        for (var k = 0; k < size(spans); k += 1)
+        {
+            const nb = size(braceSpans);
+            if (nb > 0 && spans[k][1] >= braceSpans[nb - 1][0] - 0.01 * millimeter)
             {
-                yc = -definition.braceYOffset;
+                var last = braceSpans[nb - 1];
+                if (spans[k][0] < last[0])
+                {
+                    last[0] = spans[k][0];
+                }
+                braceSpans[nb - 1] = last;
             }
+            else
+            {
+                braceSpans = append(braceSpans, spans[k]);
+            }
+        }
 
-            const tenonHalf = (definition.braceW + kerf) / 2;
+        for (var s = 0; s < size(braceSpans); s += 1)
+        {
+            const lo = braceSpans[s][0];
+            const hi = braceSpans[s][1];
 
             fCuboid(context, id + ("brace" ~ s), {
-                    "corner1" : vector(left,  yc - tenonHalf, zBraceB),
-                    "corner2" : vector(right, yc + tenonHalf, zBraceF) });
+                    "corner1" : vector(left,  lo - kerf / 2, zBraceB),
+                    "corner2" : vector(right, hi + kerf / 2, zBraceF) });
 
             // Mortise both side walls. Shrunk by kerf/2 in the wall's own
             // plane (y and z); x overshoots, which is harmless because only
             // the wall is a target.
-            const mY0 = yc - definition.braceW / 2 + kerf / 2;
-            const mY1 = yc + definition.braceW / 2 - kerf / 2;
             const mZ0 = zBraceB + kerf / 2;
             const mZ1 = zBraceF - kerf / 2;
 
@@ -1269,96 +1384,112 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             for (var w = 0; w < 2; w += 1)
             {
                 fCuboid(context, id + ("mort" ~ s ~ w), {
-                        "corner1" : vector(left - over,  mY0, mZ0),
-                        "corner2" : vector(right + over, mY1, mZ1) });
+                        "corner1" : vector(left - over,  lo + kerf / 2, mZ0),
+                        "corner2" : vector(right + over, hi - kerf / 2, mZ1) });
                 opBoolean(context, id + ("mortCut" ~ s ~ w), {
                         "tools"         : qCreatedBy(id + ("mort" ~ s ~ w), EntityType.BODY),
                         "targets"       : qCreatedBy(id + sideWalls[w], EntityType.BODY),
                         "operationType" : BooleanOperationType.SUBTRACTION });
             }
 
-            // Obround screw slots, two per panel. Oversize in BOTH axes:
-            // slotLen is the butting travel, and slotW leaves the y location
-            // to the pins rather than fighting them — a screw that also
-            // located would over-constrain the panel. Use washers under the
-            // screw heads.
-            const r = definition.slotW / 2 - kerf / 2;
+            // Obround screw slots, two per panel per insert row that falls in
+            // this brace. Oversize in BOTH axes: slotLen is the butting
+            // travel, and slotW leaves the y location to the pins rather than
+            // fighting them — a screw that also located would over-constrain
+            // the panel. Use washers under the screw heads.
+            const rs = definition.slotW / 2 - kerf / 2;
+            const pr = definition.pinHoleDia / 2 - kerf / 2;
             var slots = [];
-            for (var pi = 0; pi < definition.panelCount; pi += 1)
+            for (var r = 0; r < nRows; r += 1)
             {
-                const pc = -panelSpan / 2 + (pi + 0.5) * definition.panelW;
-                for (var k = 0; k < 2; k += 1)
+                const rc = ((nRows - 1) / 2 - r) * definition.panelH;
+                for (var pi = 0; pi < nCols; pi += 1)
                 {
-                    var px = pc + definition.postXOffset;
-                    if (k == 1)
+                    const pc = (pi - (nCols - 1) / 2) * definition.panelW;
+
+                    for (var j = 0; j < 2; j += 1)
                     {
-                        px = pc - definition.postXOffset;
-                    }
-                    const a = px - definition.slotLen / 2;
-                    const b = px + definition.slotLen / 2;
-                    const tag = "" ~ s ~ pi ~ k;
-
-                    fCylinder(context, id + ("sa" ~ tag), {
-                            "topCenter"    : vector(a, yc, zBraceF + over),
-                            "bottomCenter" : vector(a, yc, zBraceB - over),
-                            "radius"       : r });
-                    fCylinder(context, id + ("sb" ~ tag), {
-                            "topCenter"    : vector(b, yc, zBraceF + over),
-                            "bottomCenter" : vector(b, yc, zBraceB - over),
-                            "radius"       : r });
-                    fCuboid(context, id + ("sm" ~ tag), {
-                            "corner1" : vector(a, yc - r, zBraceB - over),
-                            "corner2" : vector(b, yc + r, zBraceF + over) });
-
-                    slots = append(slots, qCreatedBy(id + ("sa" ~ tag), EntityType.BODY));
-                    slots = append(slots, qCreatedBy(id + ("sb" ~ tag), EntityType.BODY));
-                    slots = append(slots, qCreatedBy(id + ("sm" ~ tag), EntityType.BODY));
-                }
-            }
-
-            // Registration pin holes, in whichever brace the pins land on.
-            // Same obround construction and kerf rule as the screw slots.
-            if (abs(definition.pinYOffset - yc) + definition.pinHoleDia / 2 < definition.braceW / 2)
-            {
-                const pr = definition.pinHoleDia / 2 - kerf / 2;
-                for (var pi = 0; pi < definition.panelCount; pi += 1)
-                {
-                    const pc = -panelSpan / 2 + (pi + 0.5) * definition.panelW;
-                    for (var k = 0; k < 2; k += 1)
-                    {
-                        var px = pc + definition.pinXOffset;
-                        if (k == 1)
+                        var py = rc + definition.braceYOffset;
+                        if (j == 1)
                         {
-                            px = pc - definition.pinXOffset;
+                            py = rc - definition.braceYOffset;
                         }
-                        const py = definition.pinYOffset;
-                        const a = px - definition.pinSlotLen / 2;
-                        const b = px + definition.pinSlotLen / 2;
-                        const tag = "" ~ s ~ pi ~ k;
+                        if (py <= lo || py >= hi)
+                        {
+                            continue;
+                        }
+                        for (var k = 0; k < 2; k += 1)
+                        {
+                            var px = pc + definition.postXOffset;
+                            if (k == 1)
+                            {
+                                px = pc - definition.postXOffset;
+                            }
+                            const tag = "" ~ s ~ r ~ pi ~ j ~ k;
+                            const a = px - definition.slotLen / 2;
+                            const b = px + definition.slotLen / 2;
 
-                        fCylinder(context, id + ("pa" ~ tag), {
-                                "topCenter"    : vector(a, py, zBraceF + over),
-                                "bottomCenter" : vector(a, py, zBraceB - over),
-                                "radius"       : pr });
-                        fCylinder(context, id + ("pb" ~ tag), {
-                                "topCenter"    : vector(b, py, zBraceF + over),
-                                "bottomCenter" : vector(b, py, zBraceB - over),
-                                "radius"       : pr });
-                        fCuboid(context, id + ("pm" ~ tag), {
-                                "corner1" : vector(a, py - pr, zBraceB - over),
-                                "corner2" : vector(b, py + pr, zBraceF + over) });
+                            fCylinder(context, id + ("sa" ~ tag), {
+                                    "topCenter"    : vector(a, py, zBraceF + over),
+                                    "bottomCenter" : vector(a, py, zBraceB - over),
+                                    "radius"       : rs });
+                            fCylinder(context, id + ("sb" ~ tag), {
+                                    "topCenter"    : vector(b, py, zBraceF + over),
+                                    "bottomCenter" : vector(b, py, zBraceB - over),
+                                    "radius"       : rs });
+                            fCuboid(context, id + ("sm" ~ tag), {
+                                    "corner1" : vector(a, py - rs, zBraceB - over),
+                                    "corner2" : vector(b, py + rs, zBraceF + over) });
 
-                        slots = append(slots, qCreatedBy(id + ("pa" ~ tag), EntityType.BODY));
-                        slots = append(slots, qCreatedBy(id + ("pb" ~ tag), EntityType.BODY));
-                        slots = append(slots, qCreatedBy(id + ("pm" ~ tag), EntityType.BODY));
+                            slots = append(slots, qCreatedBy(id + ("sa" ~ tag), EntityType.BODY));
+                            slots = append(slots, qCreatedBy(id + ("sb" ~ tag), EntityType.BODY));
+                            slots = append(slots, qCreatedBy(id + ("sm" ~ tag), EntityType.BODY));
+                        }
+                    }
+
+                    // Registration pin holes, if this row's pins land in
+                    // this brace. Same obround construction and kerf rule.
+                    const pinY = rc + definition.pinYOffset;
+                    if (pinY - definition.pinHoleDia / 2 > lo && pinY + definition.pinHoleDia / 2 < hi)
+                    {
+                        for (var k = 0; k < 2; k += 1)
+                        {
+                            var px = pc + definition.pinXOffset;
+                            if (k == 1)
+                            {
+                                px = pc - definition.pinXOffset;
+                            }
+                            const tag = "" ~ s ~ r ~ pi ~ k;
+                            const a = px - definition.pinSlotLen / 2;
+                            const b = px + definition.pinSlotLen / 2;
+
+                            fCylinder(context, id + ("pa" ~ tag), {
+                                    "topCenter"    : vector(a, pinY, zBraceF + over),
+                                    "bottomCenter" : vector(a, pinY, zBraceB - over),
+                                    "radius"       : pr });
+                            fCylinder(context, id + ("pb" ~ tag), {
+                                    "topCenter"    : vector(b, pinY, zBraceF + over),
+                                    "bottomCenter" : vector(b, pinY, zBraceB - over),
+                                    "radius"       : pr });
+                            fCuboid(context, id + ("pm" ~ tag), {
+                                    "corner1" : vector(a, pinY - pr, zBraceB - over),
+                                    "corner2" : vector(b, pinY + pr, zBraceF + over) });
+
+                            slots = append(slots, qCreatedBy(id + ("pa" ~ tag), EntityType.BODY));
+                            slots = append(slots, qCreatedBy(id + ("pb" ~ tag), EntityType.BODY));
+                            slots = append(slots, qCreatedBy(id + ("pm" ~ tag), EntityType.BODY));
+                        }
                     }
                 }
             }
 
-            opBoolean(context, id + ("slotCut" ~ s), {
-                    "tools"         : qUnion(slots),
-                    "targets"       : qCreatedBy(id + ("brace" ~ s), EntityType.BODY),
-                    "operationType" : BooleanOperationType.SUBTRACTION });
+            if (size(slots) > 0)
+            {
+                opBoolean(context, id + ("slotCut" ~ s), {
+                        "tools"         : qUnion(slots),
+                        "targets"       : qCreatedBy(id + ("brace" ~ s), EntityType.BODY),
+                        "operationType" : BooleanOperationType.SUBTRACTION });
+            }
         }
 
         // ── rear rails and the removable back cover ─────────────────────
@@ -1529,8 +1660,7 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         // clear of the knob cluster, and nowhere near either rail stack.
         //
         // 18mm deep at the rear, leaving ~33mm at the front for the I2C run
-        // from the knob cluster up to the Matrix Portal, which sits above the
-        // display centreline.
+        // from the knob cluster up to the Pi on the back cover.
 
         const braceTopY = -definition.apertureH / 2 - 0.5 * millimeter;
         const braceBotY = braceTopY - t;
@@ -1584,32 +1714,24 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 "targets"       : qCreatedBy(id + "wallB", EntityType.BODY),
                 "operationType" : BooleanOperationType.SUBTRACTION });
 
-        // ── IEC inlet, bottom wall ──────────────────────────────────────
-        // In the bottom wall, at the +x end so it lands beside the PSU's
-        // terminals and the mains run stays short — which matters more now
-        // that a barrier is not doing the containing.
-        //
-        // The bottom wall rather than the right-hand one because portrait
-        // is the orientation this lives in, and portrait rests on a +/-x
-        // wall. See the iecProxy header for the full argument.
+        // ── IEC inlet, right wall ───────────────────────────────────────
+        // In the right wall, low in the control band, beside the PSU's
+        // terminals so the mains run stays short. The 2 x 2 box stands on its
+        // bottom wall, so that wall cannot carry the inlet any more. See the
+        // iecProxy header for the clearances.
 
         var iecTools = [];
 
         fCuboid(context, id + "iecCut", {
-                "corner1" : vector(definition.iecX - definition.iecCutW / 2 + kerf / 2,
-                                   bottom - over,
+                "corner1" : vector(right - t - over,
+                                   definition.iecY - definition.iecCutW / 2 + kerf / 2,
                                    definition.iecZ - definition.iecCutH / 2 + kerf / 2),
-                "corner2" : vector(definition.iecX + definition.iecCutW / 2 - kerf / 2,
-                                   bottom + t + over,
+                "corner2" : vector(right + over,
+                                   definition.iecY + definition.iecCutW / 2 - kerf / 2,
                                    definition.iecZ + definition.iecCutH / 2 - kerf / 2) });
         iecTools = append(iecTools, qCreatedBy(id + "iecCut", EntityType.BODY));
 
-        // Flange screws, on the SHORT axis. That is what made the listing's
-        // 40mm look impossible: 40mm cannot straddle the 46.75mm cutout, but
-        // it straddles the 27.25mm one comfortably. The hole sits in the
-        // triangular lobe, so the spacing is cutH + tip if it is at the
-        // lobe's mid-height. Confirm by measuring hole centre to hole centre;
-        // it is one variable either way.
+        // Flange screws, on the SHORT axis (z), in the triangular lobes.
         for (var us = 0; us < 2; us += 1)
         {
             var uz = definition.iecZ - definition.iecScrewSpacing / 2;
@@ -1618,16 +1740,34 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 uz = definition.iecZ + definition.iecScrewSpacing / 2;
             }
             fCylinder(context, id + ("iecScrew" ~ us), {
-                    "topCenter"    : vector(definition.iecX, bottom - over,     uz),
-                    "bottomCenter" : vector(definition.iecX, bottom + t + over, uz),
+                    "topCenter"    : vector(right + over,     definition.iecY, uz),
+                    "bottomCenter" : vector(right - t - over, definition.iecY, uz),
                     "radius"       : definition.iecScrewDia / 2 - kerf / 2 });
             iecTools = append(iecTools, qCreatedBy(id + ("iecScrew" ~ us), EntityType.BODY));
         }
 
         opBoolean(context, id + "iecCutOp", {
                 "tools"         : qUnion(iecTools),
-                "targets"       : qCreatedBy(id + "wallB", EntityType.BODY),
+                "targets"       : qCreatedBy(id + "wallR", EntityType.BODY),
                 "operationType" : BooleanOperationType.SUBTRACTION });
+
+        // ── Pi Zero 2 W mounting holes, back cover ──────────────────────
+        // The electronics ride on the inside of the removable cover, so the
+        // cover carries the Pi's four M2.5 holes. The 5A-75B's holes are not
+        // cut yet: its pattern is unmeasured, and a wrong hole in the cover
+        // is worse than drilling four by hand.
+        for (var ph = 0; ph < 4; ph += 1)
+        {
+            var hx = definition.piX - definition.piHoleX / 2;
+            var hy = definition.piY - definition.piHoleY / 2;
+            if (ph % 2 == 1) { hx = definition.piX + definition.piHoleX / 2; }
+            if (ph >= 2)     { hy = definition.piY + definition.piHoleY / 2; }
+            fCylinder(context, id + ("pih" ~ ph), {
+                    "topCenter"    : vector(hx, hy, zBc1 + over),
+                    "bottomCenter" : vector(hx, hy, zBc0 - over),
+                    "radius"       : definition.piHoleDia / 2 - kerf / 2 });
+            coverHoles = append(coverHoles, qCreatedBy(id + ("pih" ~ ph), EntityType.BODY));
+        }
 
         opBoolean(context, id + "coverCut", {
                 "tools"         : qUnion(coverHoles),
@@ -1682,16 +1822,28 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         // instance list, a BOM line, or a DXF file name. Naming here rather
         // than in the document keeps the repo the source of truth — rename a
         // body in Onshape and the next push silently reverts it.
-        nameBody(context, id + "n01", id + "layer0",  "Bezel outer");
-        nameBody(context, id + "n02", id + "layer1",  "Bezel inner");
+        // layer0 is the REARMOST lamination (inset, drops inside the tube);
+        // layer(nl-1) is the full-footprint outer face. These were the other
+        // way round, so the DXF called "Bezel outer" was the inset one.
+        nameBody(context, id + "n01", id + ("layer" ~ (nl - 1)), "Bezel outer");
+        nameBody(context, id + "n02", id + "layer0",             "Bezel inner");
         nameBody(context, id + "n03", id + "wallL",   "Wall left");
-        nameBody(context, id + "n04", id + "wallR",   "Wall right");
-        nameBody(context, id + "n05", id + "wallB",   "Wall bottom (IEC)");
+        nameBody(context, id + "n04", id + "wallR",   "Wall right (IEC)");
+        nameBody(context, id + "n05", id + "wallB",   "Wall bottom");
         nameBody(context, id + "n06", id + "wallT",   "Wall top");
         nameBody(context, id + "n07", id + "backCover", "Back cover");
         nameBody(context, id + "n08", id + "stiff",   "Stiffener web");
-        nameBody(context, id + "n09", id + "brace0",  "Panel brace upper");     // +y
-        nameBody(context, id + "n10", id + "brace1",  "Panel brace lower");     // -y
+        // Braces top to bottom. brace0 and brace1 keep the ids they had in
+        // the 2 x 1 design, so existing assembly instances follow them.
+        const nBraces = size(braceSpans);
+        for (var bi = 0; bi < nBraces; bi += 1)
+        {
+            var bn = "Panel brace " ~ (bi + 1);
+            if (bi == 0)                         { bn = "Panel brace upper"; }
+            else if (bi == nBraces - 1)          { bn = "Panel brace lower"; }
+            else if (nBraces == 3)               { bn = "Panel brace middle"; }
+            nameBody(context, id + ("nbr" ~ bi), id + ("brace" ~ bi), bn);
+        }
         for (var ri = 0; ri < 2; ri += 1)
         {
             var where = "lower";
@@ -1714,11 +1866,13 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                                             vector(1, 0, 0), vector(0, 0, 1)),
                 "owner"       : qCreatedBy(id + "layer0", EntityType.BODY) });
 
-        for (var i = 0; i < definition.panelCount; i += 1)
+        // One per panel, reading order, at the panel's centre on its face.
+        for (var i = 0; i < nCols * nRows; i += 1)
         {
-            const pcx = (i - (definition.panelCount - 1) / 2) * definition.panelW;
+            const pcx = (i % nCols - (nCols - 1) / 2) * definition.panelW;
+            const pcy = ((nRows - 1) / 2 - floor(i / nCols)) * definition.panelH;
             opMateConnector(context, id + ("mcPanel" ~ i), {
-                    "coordSystem" : coordSystem(vector(pcx, 0 * millimeter, 0 * millimeter),
+                    "coordSystem" : coordSystem(vector(pcx, pcy, 0 * millimeter),
                                                 vector(1, 0, 0), vector(0, 0, 1)),
                     "owner"       : qCreatedBy(id + "layer0", EntityType.BODY) });
         }
@@ -1740,8 +1894,10 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                                             vector(-1, 0, 0), vector(0, 0, -1)),
                 "owner"       : qCreatedBy(id + "wallB", EntityType.BODY) });
 
+        // IEC datum: cutout centre on the right wall's outer face, long
+        // axis along +y, z pointing out of the box.
         opMateConnector(context, id + "mcIec", {
-                "coordSystem" : coordSystem(vector(definition.iecX, bottom, definition.iecZ),
-                                            vector(1, 0, 0), vector(0, -1, 0)),
-                "owner"       : qCreatedBy(id + "wallB", EntityType.BODY) });
+                "coordSystem" : coordSystem(vector(right, definition.iecY, definition.iecZ),
+                                            vector(0, 1, 0), vector(1, 0, 0)),
+                "owner"       : qCreatedBy(id + "wallR", EntityType.BODY) });
     });
