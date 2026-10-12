@@ -5,7 +5,7 @@ import(path : "onshape/std/geometry.fs", version : "3070.0");
 // into, in this document. The PSU proxy merges it in (Detailed on), so the
 // enclosure studio shows the real part rather than an envelope. Re-pin the
 // version if that studio ever changes.
-LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "281e12e5a99a673ee8b635ca");
+LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "ab92a44d73efc6d04d8dea52");
 
 /**
  * Patternflow desktop enclosure — parametric features.
@@ -546,9 +546,24 @@ export const psuProxy = defineFeature(function(context is Context, id is Id, def
         // far end sits 0.24 inside the envelope; the terminal end is the
         // datum and matches exactly.
         opDeleteBodies(context, id + "dropEnvelope", { "entities" : qCreatedBy(id + "psu", EntityType.BODY) });
-        const before = evaluateQuery(context, qAllModifiableSolidBodies());
+        // Everything the merge brings in is collected — Mean Well's model has
+        // surface bodies (the capacitors) as well as solids, and moving only
+        // the solids left those floating in front of the panels. Its studio's
+        // own default planes come across too; they are dropped.
+        const before = evaluateQuery(context, qEverything(EntityType.BODY));
         opMergeContexts(context, id + "lrs", { "contextFrom" : LRS50::build() });
-        const merged = evaluateQuery(context, qSubtraction(qAllModifiableSolidBodies(), qUnion(before)));
+        const arrived = qSubtraction(qEverything(EntityType.BODY), qUnion(before));
+        // (planes are sheet bodies too, so construction geometry is filtered
+        // out explicitly)
+        const keep = qConstructionFilter(qUnion([qBodyType(arrived, BodyType.SOLID),
+                                                 qBodyType(arrived, BodyType.SHEET)]),
+                                         ConstructionObject.NO);
+        const extra = qSubtraction(arrived, keep);
+        if (!isQueryEmpty(context, extra))
+        {
+            opDeleteBodies(context, id + "lrsPlanes", { "entities" : extra });
+        }
+        const merged = evaluateQuery(context, keep);
         opTransform(context, id + "lrsXf", {
                 "bodies"    : qUnion(merged),
                 "transform" : transform(vector(psuXHi, psuYLo, definition.psuZFront))
@@ -1313,11 +1328,17 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "Receiver card centre y (back cover)" }
         isLength(definition.clY, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "Spacer rings per stack (sheets)" }
+        annotation { "Name" : "Spacer rings, tray to brace (sheets)" }
         isInteger(definition.spacerRings, POSITIVE_COUNT_BOUNDS);
 
-        annotation { "Name" : "Spacer ring outer diameter" }
+        annotation { "Name" : "Spacer ring outer diameter, tray to brace" }
         isLength(definition.spacerOD, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Spacer rings, board to tray (sheets)" }
+        isInteger(definition.boardRings, POSITIVE_COUNT_BOUNDS);
+
+        annotation { "Name" : "Spacer ring outer diameter, board to tray" }
+        isLength(definition.boardRingOD, LENGTH_BOUNDS);
 
         annotation { "Name" : "Tray bottom edge y" }
         isLength(definition.trayY0, ANY_LENGTH_BOUNDS);
@@ -1543,11 +1564,12 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             }
         }
 
-        // The middle brace — the one the tray hangs from — is TWO sheets. The
-        // front one carries the tray's captive nuts in hex pockets: the panel
-        // back closes each pocket from the front and the rear sheet from
-        // behind, so a nut dropped in before the panels go on can never come
-        // out, and the panel screws clamp the two sheets together — no glue.
+        // The middle brace — the one the tray hangs from — is THREE sheets,
+        // the same nut sandwich as the cover rails: a clearance sheet against
+        // the panels, a middle sheet with the tray's four nuts in hex pockets,
+        // and a clearance sheet behind that the nuts pull against. All three
+        // are tenoned into the side walls and the panel screws clamp them
+        // together — no glue. The nuts go in before the rear sheet does.
         var trayBrace = 0;
         for (var k = 0; k < size(braceSpans); k += 1)
         {
@@ -1573,9 +1595,13 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             var braceBodies = [qCreatedBy(id + ("brace" ~ s), EntityType.BODY)];
             if (doubled)
             {
-                fCuboid(context, id + ("braceRear" ~ s), {
+                fCuboid(context, id + ("braceMid" ~ s), {
                         "corner1" : vector(left,  lo - kerf / 2, zBraceB - t),
                         "corner2" : vector(right, hi + kerf / 2, zBraceB) });
+                fCuboid(context, id + ("braceRear" ~ s), {
+                        "corner1" : vector(left,  lo - kerf / 2, zBraceB - 2 * t),
+                        "corner2" : vector(right, hi + kerf / 2, zBraceB - t) });
+                braceBodies = append(braceBodies, qCreatedBy(id + ("braceMid" ~ s), EntityType.BODY));
                 braceBodies = append(braceBodies, qCreatedBy(id + ("braceRear" ~ s), EntityType.BODY));
             }
 
@@ -1585,13 +1611,13 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             var mZ0 = zBraceB + kerf / 2;
             if (doubled)
             {
-                mZ0 = zBraceB - t + kerf / 2;
+                mZ0 = zBraceB - 2 * t + kerf / 2;
             }
             // slots and pin holes go through every sheet of this brace
             var zSlotB = zBraceB;
             if (doubled)
             {
-                zSlotB = zBraceB - t;
+                zSlotB = zBraceB - 2 * t;
             }
             const mZ1 = zBraceF - kerf / 2;
 
@@ -1707,8 +1733,8 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             }
         }
 
-        // The tray's captive nuts: hex pockets through the FRONT sheet of the
-        // middle brace, clearance through the rear sheet.
+        // The tray's captive nuts: hex pockets in the MIDDLE sheet of the
+        // middle brace, clearance through the front and rear sheets.
         const trayClrR = definition.screwDia / 2 + 0.25 * millimeter;
         var nutPockets = [];
         var nutClear = [];
@@ -1718,20 +1744,21 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             const sy = trayScrews[k][1];
             nutPockets = append(nutPockets,
                 hexPrism(context, id + ("trayNut" ~ k), sx, sy, definition.nutAcrossFlats - kerf,
-                         zBraceB - over, zBraceF + over));
+                         zBraceB - t - over, zBraceB + over));
             fCylinder(context, id + ("trayNutClr" ~ k), {
-                    "topCenter"    : vector(sx, sy, zBraceB + over),
-                    "bottomCenter" : vector(sx, sy, zBraceB - t - over),
+                    "topCenter"    : vector(sx, sy, zBraceF + over),
+                    "bottomCenter" : vector(sx, sy, zBraceB - 2 * t - over),
                     "radius"       : trayClrR });
             nutClear = append(nutClear, qCreatedBy(id + ("trayNutClr" ~ k), EntityType.BODY));
         }
         opBoolean(context, id + "trayNutCut", {
                 "tools"         : qUnion(nutPockets),
-                "targets"       : qCreatedBy(id + ("brace" ~ trayBrace), EntityType.BODY),
+                "targets"       : qCreatedBy(id + ("braceMid" ~ trayBrace), EntityType.BODY),
                 "operationType" : BooleanOperationType.SUBTRACTION });
         opBoolean(context, id + "trayNutClrCut", {
                 "tools"         : qUnion(nutClear),
-                "targets"       : qCreatedBy(id + ("braceRear" ~ trayBrace), EntityType.BODY),
+                "targets"       : qUnion([qCreatedBy(id + ("brace" ~ trayBrace), EntityType.BODY),
+                                          qCreatedBy(id + ("braceRear" ~ trayBrace), EntityType.BODY)]),
                 "operationType" : BooleanOperationType.SUBTRACTION });
 
         // ── rear rails and the removable back cover ─────────────────────
@@ -1994,33 +2021,41 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 "operationType" : BooleanOperationType.SUBTRACTION });
 
         // ── electronics tray ────────────────────────────────────────────
-        // One plate, screwed to the back of the doubled middle brace by four
-        // M3 into the captive nuts above, standing off it on spacer rings.
-        // The boards are fitted to it ON THE BENCH, where both faces are in
-        // reach, so they need nothing but M3 screws, spacer rings and plain
-        // nuts — no captive pockets, no glue:
+        // Two sheets, screwed to the back of the three-sheet middle brace by
+        // four M3 into its captive nuts, on spacer rings. The boards mount on
+        // the tray's rear face with the same nut sandwich again: the tray's
+        // FRONT sheet is the clearance layer, its REAR sheet holds the nuts in
+        // hex pockets, and a clearance ring between tray and board is the
+        // layer the nut pulls against. The screws clamp it all — no glue:
         //
-        //   brace  ║rings║ tray ║rings║ PCB     board:  M3 x 14, nut on the
-        //   front|rear                                 tray's front face
-        //     nut ◄──── M3 x 14 from behind, through tray, rings, rear sheet
+        //   panel│ C │ B │ A │ring│ A' │ B' │ C' │ board
+        //        └─ middle brace ─┘    └─ tray ─┘ ring
+        //   tray nut in B   ◄── M3 x 16 from behind, through tray, ring, A
+        //   board nut in B' ◄── M3 x 8 from the board side, through ring C'
         //
-        // Assembly: nuts into the brace pockets -> panels on -> boards onto
-        // the tray (bench) -> tray in, 4 screws -> back cover. To take a panel
-        // off: cover off, tray off, and its screws are exposed.
+        // Assembly: tray nuts into the brace's middle sheet, rear sheet on ->
+        // panels on -> on the bench, tray face down, board nuts into the
+        // tray's rear sheet, rings, boards, M3 x 8 -> tray in, 4 x M3 x 16 ->
+        // back cover. To take a panel off: cover off, tray off, its screws
+        // are exposed.
         //
         // The tray stops at |y| 47 so the HUB75 ribbons wrap round its top and
         // bottom edges to the panels' IN ports, and so it clears the panels'
         // 5 V plugs, which reach to z -33.5 at |y| >= 49.
         const sr = definition.spacerRings * t;
-        const trayF = zBraceB - t - sr;            // tray front face
-        const trayB = trayF - t;                   // tray rear face (boards side)
-        const ringR = definition.spacerOD / 2;
+        const br = definition.boardRings * t;
+        const trayF = zBraceB - 2 * t - sr;         // tray front face
+        const trayM = trayF - t;                    // between its two sheets
+        const trayB = trayF - 2 * t;                // tray rear face (boards side)
         const tx0 = left + t + definition.trayClear;
         const tx1 = right - t - definition.trayClear;
 
         fCuboid(context, id + "tray", {
-                "corner1" : vector(tx0, definition.trayY0, trayB),
+                "corner1" : vector(tx0, definition.trayY0, trayM),
                 "corner2" : vector(tx1, definition.trayY1, trayF) });
+        fCuboid(context, id + "trayRear", {
+                "corner1" : vector(tx0, definition.trayY0, trayB),
+                "corner2" : vector(tx1, definition.trayY1, trayM) });
 
         var boardSites = [];
         for (var h = 0; h < size(CL_HOLES); h += 1)
@@ -2034,46 +2069,66 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             boardSites = append(boardSites, [bp[0], bp[1], "Pi " ~ (h + 1)]);
         }
 
-        var trayCuts = [];
+        var throughCuts = [];       // both tray sheets
+        var frontCuts = [];         // front sheet only
+        var rearCuts = [];          // rear sheet only
         var ringN = 0;
-        // ring stacks: tray-to-brace (in front of the tray) and board-to-tray (behind it)
-        const stacks = [[trayScrews, trayF, "tray"], [boardSites, trayB - sr, "board"]];
-        for (var g = 0; g < size(stacks); g += 1)
+
+        const ring = function(rid is Id, sx, sy, z0, rOut, name is string)
         {
-            const sites = stacks[g][0];
-            for (var k = 0; k < size(sites); k += 1)
+            fCylinder(context, rid, {
+                    "topCenter"    : vector(sx, sy, z0 + t),
+                    "bottomCenter" : vector(sx, sy, z0),
+                    "radius"       : rOut });
+            fCylinder(context, rid + "bore", {
+                    "topCenter"    : vector(sx, sy, z0 + t + over),
+                    "bottomCenter" : vector(sx, sy, z0 - over),
+                    "radius"       : trayClrR - kerf / 2 });
+            opBoolean(context, rid + "cut", {
+                    "tools"         : qCreatedBy(rid + "bore", EntityType.BODY),
+                    "targets"       : qSubtraction(qCreatedBy(rid, EntityType.BODY),
+                                                   qCreatedBy(rid + "bore", EntityType.BODY)),
+                    "operationType" : BooleanOperationType.SUBTRACTION });
+            nameBody(context, rid + "n", rid, name);
+        };
+
+        // tray screws: clearance through both sheets; rings in front of the tray
+        for (var k = 0; k < size(trayScrews); k += 1)
+        {
+            const sx = trayScrews[k][0];
+            const sy = trayScrews[k][1];
+            fCylinder(context, id + ("trayHole" ~ k), {
+                    "topCenter"    : vector(sx, sy, trayF + over),
+                    "bottomCenter" : vector(sx, sy, trayB - over),
+                    "radius"       : trayClrR - kerf / 2 });
+            throughCuts = append(throughCuts, qCreatedBy(id + ("trayHole" ~ k), EntityType.BODY));
+            for (var L = 0; L < definition.spacerRings; L += 1)
             {
-                const sx = sites[k][0];
-                const sy = sites[k][1];
-                fCylinder(context, id + ("trayHole" ~ g ~ "n" ~ k), {
-                        "topCenter"    : vector(sx, sy, trayF + over),
-                        "bottomCenter" : vector(sx, sy, trayB - over),
-                        "radius"       : trayClrR - kerf / 2 });
-                trayCuts = append(trayCuts, qCreatedBy(id + ("trayHole" ~ g ~ "n" ~ k), EntityType.BODY));
-                for (var L = 0; L < definition.spacerRings; L += 1)
-                {
-                    const rid = id + ("ring" ~ ringN);
-                    const z0 = stacks[g][1] + L * t;
-                    fCylinder(context, rid, {
-                            "topCenter"    : vector(sx, sy, z0 + t),
-                            "bottomCenter" : vector(sx, sy, z0),
-                            "radius"       : ringR });
-                    fCylinder(context, id + ("ringBore" ~ ringN), {
-                            "topCenter"    : vector(sx, sy, z0 + t + over),
-                            "bottomCenter" : vector(sx, sy, z0 - over),
-                            "radius"       : trayClrR - kerf / 2 });
-                    opBoolean(context, id + ("ringCut" ~ ringN), {
-                            "tools"         : qCreatedBy(id + ("ringBore" ~ ringN), EntityType.BODY),
-                            "targets"       : qCreatedBy(rid, EntityType.BODY),
-                            "operationType" : BooleanOperationType.SUBTRACTION });
-                    var where = "tray to brace";
-                    if (g == 1)
-                    {
-                        where = sites[k][2];
-                    }
-                    nameBody(context, rid + "n", rid, "Spacer ring — " ~ where);
-                    ringN += 1;
-                }
+                ring(id + ("ring" ~ ringN), sx, sy, trayF + L * t, definition.spacerOD / 2,
+                     "Spacer ring — tray to brace");
+                ringN += 1;
+            }
+        }
+
+        // board screws: clearance in the front sheet, nut pocket in the rear
+        // sheet, rings between the tray and the board
+        for (var k = 0; k < size(boardSites); k += 1)
+        {
+            const sx = boardSites[k][0];
+            const sy = boardSites[k][1];
+            fCylinder(context, id + ("boardHole" ~ k), {
+                    "topCenter"    : vector(sx, sy, trayF + over),
+                    "bottomCenter" : vector(sx, sy, trayM - over),
+                    "radius"       : trayClrR - kerf / 2 });
+            frontCuts = append(frontCuts, qCreatedBy(id + ("boardHole" ~ k), EntityType.BODY));
+            rearCuts = append(rearCuts,
+                hexPrism(context, id + ("boardNut" ~ k), sx, sy, definition.nutAcrossFlats - kerf,
+                         trayB - over, trayM + over));
+            for (var L = 0; L < definition.boardRings; L += 1)
+            {
+                ring(id + ("ring" ~ ringN), sx, sy, trayB - (L + 1) * t, definition.boardRingOD / 2,
+                     "Spacer ring — " ~ boardSites[k][2]);
+                ringN += 1;
             }
         }
 
@@ -2087,13 +2142,19 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 fCuboid(context, id + ("strap" ~ k ~ j), {
                         "corner1" : vector(sxs - 3 * millimeter, sys - 1.25 * millimeter, trayB - over),
                         "corner2" : vector(sxs + 3 * millimeter, sys + 1.25 * millimeter, trayF + over) });
-                trayCuts = append(trayCuts, qCreatedBy(id + ("strap" ~ k ~ j), EntityType.BODY));
+                throughCuts = append(throughCuts, qCreatedBy(id + ("strap" ~ k ~ j), EntityType.BODY));
             }
         }
-        opBoolean(context, id + "trayCut", {
-                "tools"         : qUnion(trayCuts),
+        opBoolean(context, id + "trayCutF", {
+                "tools"         : qUnion(concatenateArrays([throughCuts, frontCuts])),
                 "targets"       : qCreatedBy(id + "tray", EntityType.BODY),
+                "operationType" : BooleanOperationType.SUBTRACTION,
+                "keepTools"     : true });
+        opBoolean(context, id + "trayCutR", {
+                "tools"         : qUnion(concatenateArrays([throughCuts, rearCuts])),
+                "targets"       : qCreatedBy(id + "trayRear", EntityType.BODY),
                 "operationType" : BooleanOperationType.SUBTRACTION });
+        opDeleteBodies(context, id + "trayCutLeft", { "entities" : qUnion(frontCuts) });
 
         opBoolean(context, id + "coverCut", {
                 "tools"         : qUnion(coverHoles),
@@ -2159,7 +2220,8 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         nameBody(context, id + "n06", id + "wallT",   "Wall top");
         nameBody(context, id + "n07", id + "backCover", "Back cover");
         nameBody(context, id + "n08", id + "stiff",   "Stiffener web");
-        nameBody(context, id + "n08t", id + "tray",   "Electronics tray");
+        nameBody(context, id + "n08t", id + "tray",   "Electronics tray, front sheet");
+        nameBody(context, id + "n08r", id + "trayRear", "Electronics tray, rear sheet (board nuts)");
         // Braces top to bottom. brace0 and brace1 keep the ids they had in
         // the 2 x 1 design, so existing assembly instances follow them.
         const nBraces = size(braceSpans);
@@ -2171,7 +2233,8 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             else if (nBraces == 3)               { bn = "Panel brace middle"; }
             nameBody(context, id + ("nbr" ~ bi), id + ("brace" ~ bi), bn);
         }
-        nameBody(context, id + "nbrR", id + ("braceRear" ~ trayBrace), "Panel brace middle, rear sheet (tray nuts)");
+        nameBody(context, id + "nbrM", id + ("braceMid" ~ trayBrace), "Panel brace middle, middle sheet (tray nuts)");
+        nameBody(context, id + "nbrR", id + ("braceRear" ~ trayBrace), "Panel brace middle, rear sheet");
         for (var ri = 0; ri < 2; ri += 1)
         {
             var where = "lower";

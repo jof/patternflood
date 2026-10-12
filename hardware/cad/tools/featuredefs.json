@@ -185,11 +185,11 @@
    ],
    [
     "mountZ",
-    "0 mm - #panelDepth - 3 * #thickness - 2 * #spacerRings * #thickness"
+    "0 mm - #panelDepth - 5 * #thickness - #spacerRings * #thickness - #boardRings * #thickness"
    ],
    [
     "braceRearZ",
-    "0 mm - #panelDepth - 3 * #thickness - #spacerRings * #thickness"
+    "0 mm - #panelDepth - 5 * #thickness - #spacerRings * #thickness"
    ],
    [
     "clX",
@@ -641,6 +641,14 @@
    [
     "nicH",
     "#nicH"
+   ],
+   [
+    "boardRings",
+    "#boardRings"
+   ],
+   [
+    "boardRingOD",
+    "#boardRingOD"
    ]
   ]
  ]

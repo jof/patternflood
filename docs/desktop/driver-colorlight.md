@@ -131,33 +131,52 @@ sees ≥ 5.0 V under load.
 
 ## 6. Where it lives in the box
 
-The electronics live on a removable **electronics tray**: a 3 mm ply plate,
+The electronics live on a removable **electronics tray**: two 3 mm ply sheets,
 286 × 94, screwed to the back of the middle panel brace, every board on its rear
 face with the component side facing **back** (enclosure model: `Enclosure
-shell` for the tray, the doubled brace and the spacer rings; `Bay obstructions`
+shell` for the tray, the brace sheets and the spacer rings; `Bay obstructions`
 for the boards). Nothing is fastened to the back cover and no cable runs to it.
 
 | | Centre (x, y) | Model | Mounting |
 |---|---|---|---|
-| 5A-75B | (55.3, 0), long axis **horizontal**, RJ45 end toward −x | **measured** — see below | 4 × M3 x 14, 2 spacer rings, nut |
+| 5A-75B | (55.3, 0), long axis **horizontal**, RJ45 end toward −x | **measured** — see below | 4 × M3 x 8 into nuts in the tray |
 | Pi Zero 2 W | (−107.5, 25), connector edge down | official drawing, 65 × 30 | the same — **open its 2.75 mm holes to 3.2**, or M2.5 for the Pi alone |
 | Gigabit adapter | (−107, −22) | envelope until one is bought | zip ties through two pairs of tray slots |
-| Tray | — | 286 × 94, y ±47 | 4 × M3 x 14 into captive nuts in the brace, 2 spacer rings each |
+| Tray | — | 2 sheets, 286 × 94, y ±47 | 4 × M3 x 16 into nuts in the middle brace |
 
-**How it goes together — no glue, every nut either captive or in reach:**
+**Every nut is a three-layer sandwich** — clearance / hex / clearance — the same
+as the back-cover rails, so no nut is ever just sitting in a pocket, and nothing
+is glued. Tightening pulls the nut toward the screw head, onto the clearance
+layer on that side; the layer on the far side stops it falling out when the
+screw is out:
 
-1. **Before the panels:** drop four M3 nuts into the hex pockets in the middle
-   brace's front sheet. The brace is two sheets now; the panel back closes the
-   pockets from the front and the rear sheet from behind, so the nuts can't fall
-   out and never need holding. The panel screws clamp the two sheets together.
-2. **Panels on**, as before.
-3. **On the bench**, fit the boards to the tray: M3 x 14 through the board, two
-   3 mm ply spacer rings, the tray, and a plain nut on the tray's front face.
-   Both faces of the tray are in reach here, so nothing needs to be captive.
+| Joint | Clearance (far side) | Hex — the nut | Clearance (pulled against) |
+|---|---|---|---|
+| Back cover → rails | rail C | rail B | rail A |
+| Tray → middle brace | brace front sheet (against the panels) | brace middle sheet | brace rear sheet |
+| Board → tray | tray front sheet | tray rear sheet | a 3 mm ply ring under the board |
+
+```
+   panel │ brace front │ brace mid │ brace rear │ring│ tray front │ tray rear │ring│ board
+         │   clear     │  HEX nut  │   clear    │    │   clear    │  HEX nut  │    │
+              tray screw  M3 x 16 ◄───────────────────────────── (from behind)
+                                                      board screw  M3 x 8 ◄──── (from the board side)
+```
+
+**How it goes together:**
+
+1. **Brace:** fit the middle brace's front and middle sheets, drop the four tray
+   nuts into the middle sheet's hex pockets, then fit the rear sheet — the nuts
+   are now trapped. All three sheets are tenoned into the side walls, and the
+   panel screws clamp them together.
+2. **Panels on**, as before (the middle brace's panel screws are 6 mm longer).
+3. **On the bench**, tray face down: board nuts into the rear sheet's hex
+   pockets, a ring over each, the board on top, M3 x 8 down through the board.
+   The front sheet under the pockets keeps the nuts from falling through.
    Zip-tie the adapter. Plug the four HUB75 ribbons into the card.
 4. **Tray in from the back:** plug each ribbon into its panel's IN, then four
-   M3 x 14 through the tray and two spacer rings into the captive nuts. (M3 x 14
-   lands 2 mm into a nut and stops short of the panel; x 16 would touch it.)
+   M3 x 16 through the tray and a ring into the brace's nuts. (M3 x 16 takes the
+   full nut and stops 2 mm short of the panel; M3 x 18 would touch it.)
 5. Power wiring, then the back cover — which carries nothing.
 
 **To take a panel off:** back cover, then the tray (four screws, unplug), and
@@ -167,7 +186,7 @@ Layout: the card sits right of centre so its RJ45 face (x −20) leaves **55 mm*
 to the Pi for the patch-cable plug, its boot and the bend. The tray stops at
 |y| 47, 2 mm clear of the panels' 5 V plugs, and the HUB75 ribbons wrap round
 its top and bottom edges to the panels' IN ports (each panel's **IN is on the
-left seen from behind**). Depth: brace 6, rings 6, tray 3, rings 6, then the
+left seen from behind**). Depth: brace 9, ring 3, tray 6, ring 3, then the
 boards — the deepest part, the card's terminal block, ends **5 mm** short of the
 back cover.
 
