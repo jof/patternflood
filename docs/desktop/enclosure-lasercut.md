@@ -403,52 +403,45 @@ measured, and the 50 mm extrapolation in the table is retired.
 #### Flatbed cross-check, 2026-10-11
 
 The back face was scanned at 600 dpi on the Epson
-([`p2-rear-scan-600dpi.jpg`](img/p2-rear-scan-600dpi.jpg), pins up) and a second
-hand-measured sheet was scanned alongside it ([`p2-dims-sheet.png`](img/p2-dims-sheet.png)).
+([`p2-rear-scan-600dpi.jpg`](img/p2-rear-scan-600dpi.jpg), back view, pins up).
+White paper was draped over the panel so the rim reads dark on light. A second
+hand-measured sheet was scanned the same day ([`p2-dims-sheet.png`](img/p2-dims-sheet.png)).
 
-**The datum is the rear outer edge.** The panel has no feature at its centre, so
-the sheet measures everything from the back edges. This scan cannot do that:
-- the dark rim sits against a dark background (grey ~40 vs ~60), so the fitted
-  top edge wanders by 2 mm;
-- the right edge ran off the platen;
-- the left edge is doubled, probably the 127 back plus the 128 front lip.
+**The datum is the rear outer edge**, because the panel has no feature at its
+centre. The scan rests on its pins and tilts, so only two edges sit on the glass:
+- **Top and left:** in focus. Line fits to them are good to about 20 µm.
+- **Bottom and right:** lifted and blurred, so they are not used.
 
-Both caliper sets are edge-referenced, so they compare directly
-([mechanical-plan](mechanical-plan.md) has the 10-03 edge figures):
+Distances to the right and bottom edges therefore assume the back is 127. Hole
+centres come from the brass rings and from circle fits to the pin tips.
 
-| From the rear edge | Calipers 10-03 | Sheet 10-11 |
-|---|---|---|
-| Side inserts, in from the side | 6.5 / 6.5 | 6.5 / **7** |
-| Side inserts, down from top | 19.5 | **20** |
-| Side inserts, up from bottom | 19.5 | not dimensioned |
-| Mid inserts, in from top / bottom | 6.5 | 6.5 |
-| Pins, in from the side | 7.75 | **in line with the side inserts** |
-| Pins, down from top | 34.5 | **34** |
-
-The scan needs no datum to measure the gap *between* holes, and that settles the
-disagreements. These are its centroids with the panel's 0.9° skew removed:
-
-| Hole to hole | 10-03 implies | Sheet implies | Scan |
+| From the rear edge | Calipers 10-03 | Sheet 10-11 | Scan |
 |---|---|---|---|
-| Side insert columns, across | 114 | 113.5 | 113.8, symmetric to 0.1 |
-| Top side-insert row to mid-top insert | 13 | 13.5 | 12.8 |
-| Top side-insert row to pins | 15 | 14 | 15.1 |
-| Pin inboard of its side-insert column | 1.25 | 0 | 0.9 – 1.2 |
-| Mid-top to mid-bottom insert | 114 | 114 | 113.3 |
+| Side inserts, down from top | 19.5 | 20 | **19.47** (19.45 / 19.49) |
+| Side inserts, up from bottom | 19.5 | not dimensioned | 19.8 (127 − 107.18) |
+| Mid inserts, in from top / bottom | 6.5 | 6.5 | **6.70** / 7.07 (127 − 119.93) |
+| Side inserts, in from left | 6.5 | 6.5 | **6.52** (6.69 top, 6.34 bottom) |
+| Side inserts, in from right | 6.5 | 7 | 6.67 (127 − 120.33) |
+| Pins, down from top | 34.5 | 34 | **34.58** (34.54 / 34.62) |
+| Pins, in from left / right | 7.75 | in line with the side inserts | **7.70** / 7.45 (127 − 119.55) |
+| Insert pattern centreline, from left | 63.5 | 63.5 | **63.43** |
 
-On every spacing where the two sheets differ, the scan sides with 10-03, so
-the model stays as it is.
+Bold is measured from an edge that was on the glass. Those figures agree with
+10-03 to 0.2 mm, so the model stays as it is. Where the sheet differs (the 7,
+the 20 and the 34), the scan sides with 10-03.
 
-The scanner's scale is uncalibrated: ~0.2 % would be ~0.25 mm over the pattern.
+Two things limit the scan:
+- **Squareness:** the insert column runs 0.35 mm out of parallel with the left
+  edge over its length. That is either the moulding or the scanner's axes, and
+  a scan cannot tell which.
+- **Scale:** it is not calibrated. Mid-to-mid inserts read 113.2 against 114
+  by calipers, which may mean the scan's top-to-bottom axis is ~0.7 % short.
+  A steel rule laid on the glass in the next scan would settle it.
 
 **Pins: Ø2.83–2.87 by calipers on the shank** (re-measured 10-11), so they are
 made for a nominal Ø3 hole, which is what the brace has. The flatbed sees only
-the tip face that touches the glass, Ø2.2–2.3, so the tips are chamfered.
-
-An edge-referenced scan needs:
-- the panel ~10 mm in from both platen edges;
-- white paper draped over it, so the rim reads dark on white;
-- the in-focus step read at 127, not the blurred shoulder of the 128 front lip.
+the tip face that touches the glass (Ø2.2–2.7 across the two scans), so the tips
+are chamfered.
 
 ### Measured: Waveshare P2.5 64×64 — a real Waveshare rear at last
 
