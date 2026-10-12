@@ -403,40 +403,60 @@ measured, and the 50 mm extrapolation in the table is retired.
 #### Flatbed cross-check, 2026-10-11
 
 The back face was scanned at 600 dpi on the Epson
-([`p2-rear-scan-600dpi.jpg`](img/p2-rear-scan-600dpi.jpg), back view, pins up).
-White paper was draped over the panel so the rim reads dark on light. A second
+([`p2-rear-scan-600dpi.jpg`](img/p2-rear-scan-600dpi.jpg), back view, pins up),
+four times in all. After the first, white paper was draped over the panel so the
+rim reads dark on light. A second
 hand-measured sheet was scanned the same day ([`p2-dims-sheet.png`](img/p2-dims-sheet.png)).
 
 **The datum is the rear outer edge**, because the panel has no feature at its
-centre. The scan rests on its pins and tilts, so only two edges sit on the glass:
-- **Top and left:** in focus. Line fits to them are good to about 20 µm.
-- **Bottom and right:** lifted and blurred, so they are not used.
+centre. The panel rests on its pins and tilts, so only some edges sit on the
+glass, and only those are used:
+- **Top:** on the glass in all three edge scans, fitting to 18–39 µm.
+- **Left:** on the glass in two of them, fitting to ~25 µm.
+- **Bottom and right:** never on the glass, so distances to them assume the
+  back is 127.
 
-Distances to the right and bottom edges therefore assume the back is 127. Hole
-centres come from the brass rings and from circle fits to the pin tips.
+Hole centres come from the brass rings and from circle fits to the pin tips.
+The third scan had a steel rule on the glass: 130 ticks over 134 mm put the
+scanner's y axis at +0.05 %. The fourth turned the panel 90° so its top-to-bottom
+axis ran along that calibrated axis. Both scanner axes then agree to 0.1–0.25 %,
+so the scale is not the problem.
 
-| From the rear edge | Calipers 10-03 | Sheet 10-11 | Scan |
+| From the rear edge | Calipers 10-03 | Sheet 10-11 | Scans (mean, range) |
 |---|---|---|---|
-| Side inserts, down from top | 19.5 | 20 | **19.47** (19.45 / 19.49) |
-| Side inserts, up from bottom | 19.5 | not dimensioned | 19.8 (127 − 107.18) |
-| Mid inserts, in from top / bottom | 6.5 | 6.5 | **6.70** / 7.07 (127 − 119.93) |
-| Side inserts, in from left | 6.5 | 6.5 | **6.52** (6.69 top, 6.34 bottom) |
-| Side inserts, in from right | 6.5 | 7 | 6.67 (127 − 120.33) |
-| Pins, down from top | 34.5 | 34 | **34.58** (34.54 / 34.62) |
-| Pins, in from left / right | 7.75 | in line with the side inserts | **7.70** / 7.45 (127 − 119.55) |
-| Insert pattern centreline, from left | 63.5 | 63.5 | **63.43** |
+| Side inserts, down from top | 19.5 | 20 | **19.45** (19.27–19.55) |
+| Side inserts, up from bottom | 19.5 | not dimensioned | 19.7 (127 − 107.3) |
+| Mid insert, down from top | 6.5 | 6.5 | **6.71** (6.70–6.74) |
+| Mid insert, up from bottom | 6.5 | 6.5 | 7.0 (127 − 120.0) |
+| Side inserts, in from left | 6.5 | 6.5 | **6.49** (6.29–6.69) |
+| Side inserts, in from right | 6.5 | 7 | 6.7 (127 − 120.3) |
+| Pins, down from top | 34.5 | 34 | **34.5** (34.20–34.66) |
+| Pins, in from left | 7.75 | in line with the side inserts | **7.6** (7.48–7.70) |
 
-Bold is measured from an edge that was on the glass. Those figures agree with
-10-03 to 0.2 mm, so the model stays as it is. Where the sheet differs (the 7,
-the 20 and the 34), the scan sides with 10-03.
+| Hole to hole | Calipers 10-03 | Scan, along scanner x | Scan, along scanner y |
+|---|---|---|---|
+| Mid-top to mid-bottom insert | 114 | 113.26 | 113.31 |
+| Side insert rows, top to bottom | 88 | 87.7 | 87.9 |
+| Side insert columns, across | 114 | 113.8 | 113.8 |
 
-Two things limit the scan:
-- **Squareness:** the insert column runs 0.35 mm out of parallel with the left
-  edge over its length. That is either the moulding or the scanner's axes, and
-  a scan cannot tell which.
-- **Scale:** it is not calibrated. Mid-to-mid inserts read 113.2 against 114
-  by calipers, which may mean the scan's top-to-bottom axis is ~0.7 % short.
-  A steel rule laid on the glass in the next scan would settle it.
+Bold is measured from an edge that was on the glass.
+
+**The 10-03 numbers hold everywhere the braces care.** The side inserts and pins
+agree to 0.2 mm, and where the 10-11 sheet differs (the 7, the 20 and the 34)
+the scans side with 10-03.
+
+The one real correction is the **mid-edge pair**:
+- They are 113.3 apart, not 114, so at (0, ±56.65) rather than (0, ±57).
+- They sit 6.7 below the top edge, not 6.5.
+- The model leaves this pair free, so nothing downstream moves.
+
+The whole pattern also sits ~0.15–0.3 mm nearer the top than the bottom.
+Because the bottom edge was never in focus, it cannot be told apart from a back
+slightly under 127.
+
+The 0.35 mm out-of-square between the left edge and the insert column did not
+survive the 90° turn. It flipped sign once that edge was off the glass, so treat
+it as edge-fit noise.
 
 **Pins: Ø2.83–2.87 by calipers on the shank** (re-measured 10-11), so they are
 made for a nominal Ø3 hole, which is what the brace has. The flatbed sees only
