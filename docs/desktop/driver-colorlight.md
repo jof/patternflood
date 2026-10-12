@@ -131,42 +131,45 @@ sees ≥ 5.0 V under load.
 
 ## 6. Where it lives in the box
 
-The electronics hang off the **rear face of the middle panel brace**, component
-side facing **back** (enclosure model, `Bay obstructions` for the boards,
-`Enclosure shell` for their bosses). Nothing is fastened to the back cover and
-no cable runs to it: it lifts off clean, and once it is off every board, port
-and the Pi's microSD are in reach.
+The electronics live on a removable **electronics tray**: a 3 mm ply plate,
+286 × 94, screwed to the back of the middle panel brace, every board on its rear
+face with the component side facing **back** (enclosure model: `Enclosure
+shell` for the tray, the doubled brace and the spacer rings; `Bay obstructions`
+for the boards). Nothing is fastened to the back cover and no cable runs to it.
 
 | | Centre (x, y) | Model | Mounting |
 |---|---|---|---|
-| 5A-75B | (30, 5.5), long axis **horizontal**, RJ45 end toward −x | **measured** — see below | 4 × M3 x 8 into plywood bosses on the brace |
-| Pi Zero 2 W | (−107, 22), connector edge down | official drawing, 65 × 30 | 4 × M3 x 8 into bosses — **open its 2.75 mm holes to 3.2**, or use M2.5 for the Pi alone |
-| Gigabit adapter | (−107, −22) | envelope until one is bought | strapped to the brace |
+| 5A-75B | (55.3, 0), long axis **horizontal**, RJ45 end toward −x | **measured** — see below | 4 × M3 x 14, 2 spacer rings, nut |
+| Pi Zero 2 W | (−107.5, 25), connector edge down | official drawing, 65 × 30 | the same — **open its 2.75 mm holes to 3.2**, or M2.5 for the Pi alone |
+| Gigabit adapter | (−107, −22) | envelope until one is bought | zip ties through two pairs of tray slots |
+| Tray | — | 286 × 94, y ±47 | 4 × M3 x 14 into captive nuts in the brace, 2 spacer rings each |
 
-Horizontal puts the card's two rows of four HUB75 headers facing the top and
-bottom panel rows. Each panel's **IN is on the left seen from behind** (+x seen
-from the front), and the nearest header to each IN is 33–45 mm away. The card
-sits right of centre so its RJ45 face (x −45.4) leaves 29 mm for the patch-cable
-plug before the Pi.
+**How it goes together — no glue, every nut either captive or in reach:**
 
-**No standoffs.** Every board mounts with the box's one fastener, an M3, into a
-nut trapped in the sheet — the same trick as the back-cover rails. Each board
-hole gets a 10 mm square stack glued to the brace: a hex-pocket layer holding the
-nut against the brace, and a clearance layer outside it that the board sits on
-and the nut pulls against. The brace has a clearance hole under each, so the
-screw tip never bottoms and never reaches the panel: M3 x 8 ends 0.3 mm into the
-brace, M3 x 10 2.3 mm. Two sheets put every board 6 mm off the brace, clear of
-its own through-hole pins (`#bossLayers`).
+1. **Before the panels:** drop four M3 nuts into the hex pockets in the middle
+   brace's front sheet. The brace is two sheets now; the panel back closes the
+   pockets from the front and the rear sheet from behind, so the nuts can't fall
+   out and never need holding. The panel screws clamp the two sheets together.
+2. **Panels on**, as before.
+3. **On the bench**, fit the boards to the tray: M3 x 14 through the board, two
+   3 mm ply spacer rings, the tray, and a plain nut on the tray's front face.
+   Both faces of the tray are in reach here, so nothing needs to be captive.
+   Zip-tie the adapter. Plug the four HUB75 ribbons into the card.
+4. **Tray in from the back:** plug each ribbon into its panel's IN, then four
+   M3 x 14 through the tray and two spacer rings into the captive nuts. (M3 x 14
+   lands 2 mm into a nut and stops short of the panel; x 16 would touch it.)
+5. Power wiring, then the back cover — which carries nothing.
 
-The middle brace grows from y [−40, 40] to [−40, 51.4] to carry the card's
-upper bosses — as far as it can go and still miss the top row's HUB75 cable
-keep-outs, by 2.5 mm. Two consequences:
+**To take a panel off:** back cover, then the tray (four screws, unplug), and
+the panel screws are exposed. The tray is the only thing that covers them.
 
-- **The boards cover two panel screws** (middle brace, y ±20 near x ±7): take
-  the boards off before taking a panel off.
-- Clearances with everything as measured: boards ≥ 3.0 mm from any panel
-  connector keep-out, bosses ≥ 2.5 mm, the back cover 17 mm behind the tallest
-  part (the card's terminal block).
+Layout: the card sits right of centre so its RJ45 face (x −20) leaves **55 mm**
+to the Pi for the patch-cable plug, its boot and the bend. The tray stops at
+|y| 47, 2 mm clear of the panels' 5 V plugs, and the HUB75 ribbons wrap round
+its top and bottom edges to the panels' IN ports (each panel's **IN is on the
+left seen from behind**). Depth: brace 6, rings 6, tray 3, rings 6, then the
+boards — the deepest part, the card's terminal block, ends **5 mm** short of the
+back cover.
 
 ### The 5A-75B, measured
 
@@ -188,5 +191,5 @@ shrouds **9**, terminal block **14.8** (the tallest), big JST **10.6**, small
 JST **6.38**. The Pi Zero's PCB is taken as 2 mm, unmeasured.
 
 Because the boards face back, each HUB75 ribbon makes a short U: out of the
-card's header toward the cover, round the card's edge, and forward into the
-panel's IN.
+card's header toward the cover, round the card's and the tray's edge, and
+forward into the panel's IN.

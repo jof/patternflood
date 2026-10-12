@@ -185,11 +185,11 @@
    ],
    [
     "mountZ",
-    "0 mm - #panelDepth - #thickness - #bossLayers * #thickness"
+    "0 mm - #panelDepth - 3 * #thickness - 2 * #spacerRings * #thickness"
    ],
    [
     "braceRearZ",
-    "0 mm - #panelDepth - #thickness"
+    "0 mm - #panelDepth - 3 * #thickness - #spacerRings * #thickness"
    ],
    [
     "clX",
@@ -595,12 +595,52 @@
     "#clY"
    ],
    [
-    "bossLayers",
-    "#bossLayers"
+    "spacerRings",
+    "#spacerRings"
    ],
    [
-    "bossSize",
-    "#bossSize"
+    "spacerOD",
+    "#spacerOD"
+   ],
+   [
+    "trayY0",
+    "#trayY0"
+   ],
+   [
+    "trayY1",
+    "#trayY1"
+   ],
+   [
+    "trayClear",
+    "#trayClear"
+   ],
+   [
+    "trayScrewX1",
+    "#trayScrewX1"
+   ],
+   [
+    "trayScrewX2",
+    "#trayScrewX2"
+   ],
+   [
+    "trayScrewY",
+    "#trayScrewY"
+   ],
+   [
+    "nicX",
+    "#nicX"
+   ],
+   [
+    "nicY",
+    "#nicY"
+   ],
+   [
+    "nicW",
+    "#nicW"
+   ],
+   [
+    "nicH",
+    "#nicH"
    ]
   ]
  ]

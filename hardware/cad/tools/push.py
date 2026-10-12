@@ -12,7 +12,7 @@ referencing those parts comes back with partId:"" - a dead instance that
 still shows its old name and renders nothing. Updating in place keeps part
 identity, so the assembly survives a push.
 """
-import json,os,subprocess,sys,tempfile,time
+import json,os,re,subprocess,sys,tempfile,time
 DID="8cfb8d4f799392c05f62f6ad"; WID="b5dfed0b24d2121a79e8b1a8"
 PS="06ba580a80083894ed24609b"; FSEID="3c1a0a201f41714feba73536"
 API="https://cad.onshape.com/api/v10"
@@ -36,11 +36,23 @@ def curl(method,url,body=None,out=None):
     r=subprocess.run(cmd,capture_output=True).stdout
     return r
 
+# Onshape re-pins document imports (`NS::import(path : "<element>", version :
+# "<microversion>")`) to the target's latest microversion on save, so compare
+# with those versions masked, then adopt the server's pin locally.
+IMPORT_PIN=re.compile(r'(::import\(path : "[0-9a-f]{24}", version : ")([0-9a-f]{24})(")')
+def unpinned(t): return IMPORT_PIN.sub(r"\1-\3",t)
+
 src=open(F).read()
 for i in range(5):
     curl("POST",f"{API}/featurestudios/d/{DID}/w/{WID}/e/{FSEID}",{"contents":src})
-    if json.loads(curl("GET",f"{API}/featurestudios/d/{DID}/w/{WID}/e/{FSEID}"))["contents"]==src:
-        print("studio matches local"); break
+    remote=json.loads(curl("GET",f"{API}/featurestudios/d/{DID}/w/{WID}/e/{FSEID}"))["contents"]
+    if unpinned(remote)==unpinned(src):
+        if remote!=src:
+            open(F,"w").write(remote)
+            print("studio matches local (import re-pinned by Onshape; local updated)")
+        else:
+            print("studio matches local")
+        break
     time.sleep(6)
 else:
     sys.exit("STUDIO DOES NOT MATCH LOCAL")

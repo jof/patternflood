@@ -1,6 +1,12 @@
 FeatureScript 3070;
 import(path : "onshape/std/geometry.fs", version : "3070.0");
 
+// Mean Well's own LRS-50-5 model: the Part Studio the vendor STEP was imported
+// into, in this document. The PSU proxy merges it in (Detailed on), so the
+// enclosure studio shows the real part rather than an envelope. Re-pin the
+// version if that studio ever changes.
+LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "281e12e5a99a673ee8b635ca");
+
 /**
  * Patternflow desktop enclosure — parametric features.
  *
@@ -88,9 +94,11 @@ const PI_TOP_PARTS = [[19.0, 8.0, 34.0, 23.0, 1.4],      // RP3A0 SiP
                       [1.5, 9.0, 12.6, 21.0, 1.4],       // microSD
                       [60.5, 7.0, 65.0, 23.0, 1.3]];     // camera FPC
 
-// Where the boards sit. Both hang off the REAR face of the middle panel
-// brace, component side facing BACK, so the back cover lifts away with no
-// cable attached to it and everything is in reach once it is off.
+// Where the boards sit. All of them mount on the ELECTRONICS TRAY, a plate
+// that screws to the back of the (doubled) middle panel brace, component side
+// facing BACK — so the back cover lifts away with nothing attached to it,
+// everything is in reach once it is off, and the tray comes out as one unit
+// when a panel needs to.
 //
 //   Colorlight: long axis horizontal, RJ45 end toward -x (the Pi side).
 //     Its frame (x_b across, y_b along, z_b out of the component side) maps
@@ -413,7 +421,12 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
 // ────────────────────────────────────────────────────────────────────────
 // PSU proxy
 // ────────────────────────────────────────────────────────────────────────
-// Mean Well LRS-50-5 — 99 x 82 x 30 mm, 210 g, 5V 10A. An envelope only.
+// Mean Well LRS-50-5 — 99 x 82 x 30 mm, 210 g, 5V 10A.
+//
+// Detailed ON (the default): Mean Well's own model, merged in from its Part
+// Studio and placed by the same STEP -> box mapping the assembly uses. Detailed
+// OFF: the measured envelope (99.24 long) with its threaded side holes, for
+// clearance work where 31 vendor bodies are noise.
 //
 // It hangs from the divider shelf's underside on its own side-face M3 holes,
 // inside the mains compartment. Laid with its 82mm dimension along y, which
@@ -525,130 +538,36 @@ export const psuProxy = defineFeature(function(context is Context, id is Id, def
             return;
         }
 
-        // ── Everything below is appearance, not clearance ──────────────
-        // The envelope above is what the box is designed around; this makes
-        // the proxy read as the part instead of as a brick. Vents are cut as
-        // 0.8mm recesses rather than through-slots deliberately: a hollow
-        // proxy would make every bounding-box check noisier for no gain.
-        //
-        // The one thing here that is NOT cosmetic is the terminal block. Its
-        // screws face +x, which is why #psuX is pushed left: the screwdriver
-        // needs a straight run at them, and that run is 90mm of empty bay.
-        const vD   = 0.8 * millimeter;
-        const zHi  = definition.psuZFront;
-        const zLo  = zHi - definition.psuT;
-        const xLo  = definition.psuX - definition.psuL / 2;
-        const yHi  = definition.psuYTop;
-        const yMid = (psuYLo + yHi) / 2;
-        const zMid = (zLo + zHi) / 2;
-
-        var vents = [];
-        var vk = 0;
-
-        // Top face: slots running across the short axis.
-        const topN = floor((definition.psuL - 42 * millimeter) / definition.ventPitch);
-        for (var i = 0; i < topN; i += 1)
+        // ── Detailed: Mean Well's model replaces the envelope ──────────
+        // STEP frame (X from the terminal end, Y from the threaded-hole face,
+        // Z up from the base) -> box: x = psuXHi - X, y = psuYLo + Y,
+        // z = psuZFront - Z, i.e. a half turn about y, then a translation.
+        // The vendor case is 99.00 long against the 99.24 measured, so its
+        // far end sits 0.24 inside the envelope; the terminal end is the
+        // datum and matches exactly.
+        opDeleteBodies(context, id + "dropEnvelope", { "entities" : qCreatedBy(id + "psu", EntityType.BODY) });
+        const before = evaluateQuery(context, qAllModifiableSolidBodies());
+        opMergeContexts(context, id + "lrs", { "contextFrom" : LRS50::build() });
+        const merged = evaluateQuery(context, qSubtraction(qAllModifiableSolidBodies(), qUnion(before)));
+        opTransform(context, id + "lrsXf", {
+                "bodies"    : qUnion(merged),
+                "transform" : transform(vector(psuXHi, psuYLo, definition.psuZFront))
+                            * rotationAround(line(vector(0, 0, 0) * millimeter, vector(0, 1, 0)), 180 * degree) });
+        for (var i = 0; i < size(merged); i += 1)
         {
-            const vx = xLo + 12 * millimeter + i * definition.ventPitch;
-            fCuboid(context, id + ("vt" ~ vk), {
-                    "corner1" : vector(vx, psuYLo + 18 * millimeter, zHi - vD),
-                    "corner2" : vector(vx + definition.ventW, yHi - 18 * millimeter,
-                                       zHi + 1 * millimeter) });
-            vents = append(vents, qCreatedBy(id + ("vt" ~ vk), EntityType.BODY));
-            vk += 1;
-        }
-
-        // Both long side faces, in a band across the middle. Slots that would
-        // land on a mounting hole are skipped rather than merged into it.
-        const hA = psuXHi - definition.psuHoleAX;
-        const hB = psuXHi - definition.psuHoleBX;
-        const sideN = floor((definition.psuL - 30 * millimeter) / definition.ventPitch);
-        for (var i = 0; i < sideN; i += 1)
-        {
-            const vx = xLo + 10 * millimeter + i * definition.ventPitch;
-            const cx = vx + definition.ventW / 2;
-            if (abs(cx - hA) < 6 * millimeter || abs(cx - hB) < 6 * millimeter)
+            const bb = evBox3d(context, { "topology" : merged[i] });
+            const ext = bb.maxCorner - bb.minCorner;
+            var nm = "LRS-50-5 internal (Mean Well STEP)";
+            if (ext[0] > 98 * millimeter && ext[1] > 81 * millimeter)
             {
-                continue;
+                nm = "LRS-50-5 case (Mean Well STEP)";
             }
-            for (var sgn = 0; sgn < 2; sgn += 1)
+            else if (ext[0] > 80 * millimeter && ext[1] > 79 * millimeter && ext[2] > 25 * millimeter)
             {
-                var y0 = psuYLo - 1 * millimeter;
-                var y1 = psuYLo + vD;
-                if (sgn == 1)
-                {
-                    y0 = yHi - vD;
-                    y1 = yHi + 1 * millimeter;
-                }
-                fCuboid(context, id + ("vt" ~ vk), {
-                        "corner1" : vector(vx, y0, zMid - 8 * millimeter),
-                        "corner2" : vector(vx + definition.ventW, y1, zMid + 8 * millimeter) });
-                vents = append(vents, qCreatedBy(id + ("vt" ~ vk), EntityType.BODY));
-                vk += 1;
+                nm = "LRS-50-5 cover (Mean Well STEP)";
             }
+            setProperty(context, { "entities" : merged[i], "propertyType" : PropertyType.NAME, "value" : nm });
         }
-
-        // The terminal end, from Mean Well's STEP (see LRS_* above). The
-        // cover stops 12 mm short of the terminal end, so that end is open
-        // across the full width down to the terminal block; the five screw
-        // heads (L, N, FG, -V, +V) and the Vadj trimmer sit in wells below
-        // it. STEP -> here: X from the terminal end -> x = psuXHi - X, Y from
-        // the threaded-hole face -> y = psuYLo + Y, Z up from the base ->
-        // z = psuZFront - Z.
-        //
-        // ⚠ THE SCREWS FACE OUT OF THE COVER, i.e. -z, toward the back cover
-        // — the only way mains gets connected, so the cover has to face
-        // something openable. Rotate this part 180 degrees about its long
-        // axis and the terminals point at the bezel. See power-plan.md.
-        const mm = millimeter;
-        const zOf = function(Z) { return definition.psuZFront - Z * mm; };
-        const xOf = function(X) { return psuXHi - X * mm; };
-        const yOf = function(Y) { return psuYLo + Y * mm; };
-
-        fCuboid(context, id + "termPk", {
-                "corner1" : vector(xOf(LRS_OPEN_X), yOf(1), zOf(definition.psuT / mm + 1)),
-                "corner2" : vector(psuXHi + 1 * mm, yOf(definition.psuW / mm - 1), zOf(LRS_BLOCK_TOP)) });
-        vents = append(vents, qCreatedBy(id + "termPk", EntityType.BODY));
-        for (var i = 0; i < size(LRS_SCREW_YS); i += 1)
-        {
-            fCylinder(context, id + ("tw" ~ i), {
-                    "topCenter"    : vector(xOf(LRS_SCREW_X), yOf(LRS_SCREW_YS[i]), zOf(LRS_BLOCK_TOP + 1)),
-                    "bottomCenter" : vector(xOf(LRS_SCREW_X), yOf(LRS_SCREW_YS[i]), zOf(LRS_SCREW_TOP)),
-                    "radius"       : (LRS_SCREW_DIA / 2 + 0.5) * mm });
-            vents = append(vents, qCreatedBy(id + ("tw" ~ i), EntityType.BODY));
-        }
-        fCylinder(context, id + "vadjWell", {
-                "topCenter"    : vector(xOf(LRS_VADJ[0]), yOf(LRS_VADJ[1]), zOf(LRS_BLOCK_TOP + 1)),
-                "bottomCenter" : vector(xOf(LRS_VADJ[0]), yOf(LRS_VADJ[1]), zOf(LRS_VADJ[2])),
-                "radius"       : 2 * mm });
-        vents = append(vents, qCreatedBy(id + "vadjWell", EntityType.BODY));
-        // threaded M3 pair in the base, unused here but real
-        for (var i = 0; i < size(LRS_BASE_HOLES); i += 1)
-        {
-            fCylinder(context, id + ("bh" ~ i), {
-                    "topCenter"    : vector(xOf(LRS_BASE_HOLES[i][0]), yOf(LRS_BASE_HOLES[i][1]), zOf(-1)),
-                    "bottomCenter" : vector(xOf(LRS_BASE_HOLES[i][0]), yOf(LRS_BASE_HOLES[i][1]), zOf(5)),
-                    "radius"       : definition.threadDia / 2 });
-            vents = append(vents, qCreatedBy(id + ("bh" ~ i), EntityType.BODY));
-        }
-        opBoolean(context, id + "ventCut", {
-                "tools"         : qUnion(vents),
-                "targets"       : qCreatedBy(id + "psu", EntityType.BODY),
-                "operationType" : BooleanOperationType.SUBTRACTION });
-
-        // The screw heads themselves, so the screwdriver's target is visible.
-        var screws = [];
-        for (var i = 0; i < size(LRS_SCREW_YS); i += 1)
-        {
-            fCylinder(context, id + ("ts" ~ i), {
-                    "topCenter"    : vector(xOf(LRS_SCREW_X), yOf(LRS_SCREW_YS[i]), zOf(LRS_SCREW_TOP)),
-                    "bottomCenter" : vector(xOf(LRS_SCREW_X), yOf(LRS_SCREW_YS[i]), zOf(LRS_SCREW_TOP - 1.5)),
-                    "radius"       : LRS_SCREW_DIA / 2 * mm });
-            screws = append(screws, qCreatedBy(id + ("ts" ~ i), EntityType.BODY));
-        }
-        opBoolean(context, id + "termJoin", {
-                "tools"         : qUnion(screws),
-                "operationType" : BooleanOperationType.UNION });
     });
 
 // ────────────────────────────────────────────────────────────────────────
@@ -1394,11 +1313,41 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "Receiver card centre y (back cover)" }
         isLength(definition.clY, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "Board boss layers (sheets)" }
-        isInteger(definition.bossLayers, POSITIVE_COUNT_BOUNDS);
+        annotation { "Name" : "Spacer rings per stack (sheets)" }
+        isInteger(definition.spacerRings, POSITIVE_COUNT_BOUNDS);
 
-        annotation { "Name" : "Board boss size" }
-        isLength(definition.bossSize, LENGTH_BOUNDS);
+        annotation { "Name" : "Spacer ring outer diameter" }
+        isLength(definition.spacerOD, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Tray bottom edge y" }
+        isLength(definition.trayY0, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Tray top edge y" }
+        isLength(definition.trayY1, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Tray clearance to the side walls" }
+        isLength(definition.trayClear, KERF_BOUNDS);
+
+        annotation { "Name" : "Tray screw x, left pair" }
+        isLength(definition.trayScrewX1, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Tray screw x, right pair" }
+        isLength(definition.trayScrewX2, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Tray screw y (both pairs, +/-)" }
+        isLength(definition.trayScrewY, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Adapter centre x" }
+        isLength(definition.nicX, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Adapter centre y" }
+        isLength(definition.nicY, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Adapter width (x)" }
+        isLength(definition.nicW, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Adapter height (y)" }
+        isLength(definition.nicH, LENGTH_BOUNDS);
     }
     {
         const t    = definition.thickness;
@@ -1594,39 +1543,23 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             }
         }
 
-        // Board bosses hang off the brace nearest each mounting hole, so
-        // that brace grows to carry them (with the measured numbers, the
-        // middle one goes from [-40, 40] to [-40, 51.3], still 2.5 mm short
-        // of the top row's HUB75 keep-outs).
-        const half = definition.bossSize / 2;
-        var bossSites = [];
-        for (var h = 0; h < size(CL_HOLES); h += 1)
+        // The middle brace — the one the tray hangs from — is TWO sheets. The
+        // front one carries the tray's captive nuts in hex pockets: the panel
+        // back closes each pocket from the front and the rear sheet from
+        // behind, so a nut dropped in before the panels go on can never come
+        // out, and the panel screws clamp the two sheets together — no glue.
+        var trayBrace = 0;
+        for (var k = 0; k < size(braceSpans); k += 1)
         {
-            const bp = clToBox(definition.clX, definition.clY, CL_HOLES[h][0], CL_HOLES[h][1]);
-            bossSites = append(bossSites, [bp[0], bp[1], "Colorlight " ~ (h + 1)]);
-        }
-        for (var h = 0; h < size(PI_HOLES); h += 1)
-        {
-            const bp = piToBox(definition.piX, definition.piY, PI_HOLES[h][0], PI_HOLES[h][1]);
-            bossSites = append(bossSites, [bp[0], bp[1], "Pi " ~ (h + 1)]);
-        }
-        for (var bs = 0; bs < size(bossSites); bs += 1)
-        {
-            const by = bossSites[bs][1];
-            var bestS = 0;
-            var bestD = 1e9 * millimeter;
-            for (var k = 0; k < size(braceSpans); k += 1)
+            if (braceSpans[k][0] <= 0 * millimeter && braceSpans[k][1] >= 0 * millimeter)
             {
-                var d = 0 * millimeter;
-                if (by < braceSpans[k][0]) { d = braceSpans[k][0] - by; }
-                if (by > braceSpans[k][1]) { d = by - braceSpans[k][1]; }
-                if (d < bestD) { bestD = d; bestS = k; }
+                trayBrace = k;
             }
-            var span = braceSpans[bestS];
-            if (by - half < span[0]) { span[0] = by - half; }
-            if (by + half > span[1]) { span[1] = by + half; }
-            braceSpans[bestS] = span;
         }
+        const trayScrews = [[definition.trayScrewX1,  definition.trayScrewY],
+                            [definition.trayScrewX1, -definition.trayScrewY],
+                            [definition.trayScrewX2,  definition.trayScrewY],
+                            [definition.trayScrewX2, -definition.trayScrewY]];
 
         for (var s = 0; s < size(braceSpans); s += 1)
         {
@@ -1636,11 +1569,30 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             fCuboid(context, id + ("brace" ~ s), {
                     "corner1" : vector(left,  lo - kerf / 2, zBraceB),
                     "corner2" : vector(right, hi + kerf / 2, zBraceF) });
+            const doubled = (s == trayBrace);
+            var braceBodies = [qCreatedBy(id + ("brace" ~ s), EntityType.BODY)];
+            if (doubled)
+            {
+                fCuboid(context, id + ("braceRear" ~ s), {
+                        "corner1" : vector(left,  lo - kerf / 2, zBraceB - t),
+                        "corner2" : vector(right, hi + kerf / 2, zBraceB) });
+                braceBodies = append(braceBodies, qCreatedBy(id + ("braceRear" ~ s), EntityType.BODY));
+            }
 
             // Mortise both side walls. Shrunk by kerf/2 in the wall's own
             // plane (y and z); x overshoots, which is harmless because only
             // the wall is a target.
-            const mZ0 = zBraceB + kerf / 2;
+            var mZ0 = zBraceB + kerf / 2;
+            if (doubled)
+            {
+                mZ0 = zBraceB - t + kerf / 2;
+            }
+            // slots and pin holes go through every sheet of this brace
+            var zSlotB = zBraceB;
+            if (doubled)
+            {
+                zSlotB = zBraceB - t;
+            }
             const mZ1 = zBraceF - kerf / 2;
 
             const sideWalls = ["wallL", "wallR"];
@@ -1694,14 +1646,14 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
 
                             fCylinder(context, id + ("sa" ~ tag), {
                                     "topCenter"    : vector(a, py, zBraceF + over),
-                                    "bottomCenter" : vector(a, py, zBraceB - over),
+                                    "bottomCenter" : vector(a, py, zSlotB - over),
                                     "radius"       : rs });
                             fCylinder(context, id + ("sb" ~ tag), {
                                     "topCenter"    : vector(b, py, zBraceF + over),
-                                    "bottomCenter" : vector(b, py, zBraceB - over),
+                                    "bottomCenter" : vector(b, py, zSlotB - over),
                                     "radius"       : rs });
                             fCuboid(context, id + ("sm" ~ tag), {
-                                    "corner1" : vector(a, py - rs, zBraceB - over),
+                                    "corner1" : vector(a, py - rs, zSlotB - over),
                                     "corner2" : vector(b, py + rs, zBraceF + over) });
 
                             slots = append(slots, qCreatedBy(id + ("sa" ~ tag), EntityType.BODY));
@@ -1728,14 +1680,14 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
 
                             fCylinder(context, id + ("pa" ~ tag), {
                                     "topCenter"    : vector(a, pinY, zBraceF + over),
-                                    "bottomCenter" : vector(a, pinY, zBraceB - over),
+                                    "bottomCenter" : vector(a, pinY, zSlotB - over),
                                     "radius"       : pr });
                             fCylinder(context, id + ("pb" ~ tag), {
                                     "topCenter"    : vector(b, pinY, zBraceF + over),
-                                    "bottomCenter" : vector(b, pinY, zBraceB - over),
+                                    "bottomCenter" : vector(b, pinY, zSlotB - over),
                                     "radius"       : pr });
                             fCuboid(context, id + ("pm" ~ tag), {
-                                    "corner1" : vector(a, pinY - pr, zBraceB - over),
+                                    "corner1" : vector(a, pinY - pr, zSlotB - over),
                                     "corner2" : vector(b, pinY + pr, zBraceF + over) });
 
                             slots = append(slots, qCreatedBy(id + ("pa" ~ tag), EntityType.BODY));
@@ -1750,10 +1702,37 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             {
                 opBoolean(context, id + ("slotCut" ~ s), {
                         "tools"         : qUnion(slots),
-                        "targets"       : qCreatedBy(id + ("brace" ~ s), EntityType.BODY),
+                        "targets"       : qUnion(braceBodies),
                         "operationType" : BooleanOperationType.SUBTRACTION });
             }
         }
+
+        // The tray's captive nuts: hex pockets through the FRONT sheet of the
+        // middle brace, clearance through the rear sheet.
+        const trayClrR = definition.screwDia / 2 + 0.25 * millimeter;
+        var nutPockets = [];
+        var nutClear = [];
+        for (var k = 0; k < size(trayScrews); k += 1)
+        {
+            const sx = trayScrews[k][0];
+            const sy = trayScrews[k][1];
+            nutPockets = append(nutPockets,
+                hexPrism(context, id + ("trayNut" ~ k), sx, sy, definition.nutAcrossFlats - kerf,
+                         zBraceB - over, zBraceF + over));
+            fCylinder(context, id + ("trayNutClr" ~ k), {
+                    "topCenter"    : vector(sx, sy, zBraceB + over),
+                    "bottomCenter" : vector(sx, sy, zBraceB - t - over),
+                    "radius"       : trayClrR });
+            nutClear = append(nutClear, qCreatedBy(id + ("trayNutClr" ~ k), EntityType.BODY));
+        }
+        opBoolean(context, id + "trayNutCut", {
+                "tools"         : qUnion(nutPockets),
+                "targets"       : qCreatedBy(id + ("brace" ~ trayBrace), EntityType.BODY),
+                "operationType" : BooleanOperationType.SUBTRACTION });
+        opBoolean(context, id + "trayNutClrCut", {
+                "tools"         : qUnion(nutClear),
+                "targets"       : qCreatedBy(id + ("braceRear" ~ trayBrace), EntityType.BODY),
+                "operationType" : BooleanOperationType.SUBTRACTION });
 
         // ── rear rails and the removable back cover ─────────────────────
         // The finger joints get glued. The back does not, so it needs a
@@ -2014,83 +1993,106 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 "targets"       : qCreatedBy(id + "wallR", EntityType.BODY),
                 "operationType" : BooleanOperationType.SUBTRACTION });
 
-        // ── board bosses: the same nut trap as the cover rails ──────────
-        // Every board mounts with the box's one fastener, an M3, and nothing
-        // that is not cut from the sheet. Each board hole gets a small square
-        // stack glued to the REAR face of the brace it hangs from (sites and
-        // brace growth above):
+        // ── electronics tray ────────────────────────────────────────────
+        // One plate, screwed to the back of the doubled middle brace by four
+        // M3 into the captive nuts above, standing off it on spacer rings.
+        // The boards are fitted to it ON THE BENCH, where both faces are in
+        // reach, so they need nothing but M3 screws, spacer rings and plain
+        // nuts — no captive pockets, no glue:
         //
-        //     z:  brace     B (hex)     C (clearance)     board
-        //         ├────────┼───────────┼─────────────────┼────
-        //         │ Ø clr  │  M3 nut   │  Ø clr          │ PCB   ◄── M3 x 8
+        //   brace  ║rings║ tray ║rings║ PCB     board:  M3 x 14, nut on the
+        //   front|rear                                 tray's front face
+        //     nut ◄──── M3 x 14 from behind, through tray, rings, rear sheet
         //
-        // Tightening pulls the nut against C and clamps the board onto C's
-        // face, so C is the bearing layer, exactly as rail A is for the
-        // cover. The brace closes the pocket, and its clearance hole takes
-        // the screw tip: M3 x 8 ends 0.3 mm into it, M3 x 10 2.3 mm — never
-        // through to the panel. bossLayers > 2 adds plain spacers next to
-        // the brace.
+        // Assembly: nuts into the brace pockets -> panels on -> boards onto
+        // the tray (bench) -> tray in, 4 screws -> back cover. To take a panel
+        // off: cover off, tray off, and its screws are exposed.
         //
-        // The Pi Zero 2 W's holes are 2.75 mm, for M2.5: open them to
-        // 3.2 mm to take the M3, or use M2.5 hardware for the Pi alone. The
-        // 5A-75B's 4.23 mm holes take M3 as they are — use a washer.
-        //
-        // The boards cover some panel screws (middle brace, y +/-20 near
-        // x +/-7): take the boards off before taking the panels off.
-        const nb = definition.bossLayers;
-        const bossClrR = definition.screwDia / 2 + 0.25 * millimeter;
-        var braceBodies = [];
-        for (var s = 0; s < size(braceSpans); s += 1)
-        {
-            braceBodies = append(braceBodies, qCreatedBy(id + ("brace" ~ s), EntityType.BODY));
-        }
-        var tipHoles = [];
-        for (var bs = 0; bs < size(bossSites); bs += 1)
-        {
-            const bx = bossSites[bs][0];
-            const by = bossSites[bs][1];
-            for (var L = 0; L < nb; L += 1)
-            {
-                // L = 0 against the brace, L = nb - 1 the one the board sits on
-                const lid = id + ("boss" ~ bs ~ "L" ~ L);
-                const z1 = zBraceB - L * t;
-                fCuboid(context, lid, {
-                        "corner1" : vector(bx - half, by - half, z1 - t),
-                        "corner2" : vector(bx + half, by + half, z1) });
-                var cutter = qNothing();
-                var role = "";
-                if (L == nb - 2)
-                {
-                    cutter = hexPrism(context, id + ("bossHex" ~ bs ~ "L" ~ L), bx, by,
-                                      definition.nutAcrossFlats - kerf, z1 - t - over, z1 + over);
-                    role = "B (nut)";
-                }
-                else
-                {
-                    fCylinder(context, id + ("bossHole" ~ bs ~ "L" ~ L), {
-                            "topCenter"    : vector(bx, by, z1 + over),
-                            "bottomCenter" : vector(bx, by, z1 - t - over),
-                            "radius"       : bossClrR });
-                    cutter = qCreatedBy(id + ("bossHole" ~ bs ~ "L" ~ L), EntityType.BODY);
-                    role = (L == nb - 1) ? "C (bearing)" : "spacer";
-                }
-                opBoolean(context, id + ("bossCut" ~ bs ~ "L" ~ L), {
-                        "tools"         : cutter,
-                        "targets"       : qCreatedBy(lid, EntityType.BODY),
-                        "operationType" : BooleanOperationType.SUBTRACTION });
-                nameBody(context, lid + "n", lid, "Board boss " ~ role ~ " — " ~ bossSites[bs][2]);
-            }
+        // The tray stops at |y| 47 so the HUB75 ribbons wrap round its top and
+        // bottom edges to the panels' IN ports, and so it clears the panels'
+        // 5 V plugs, which reach to z -33.5 at |y| >= 49.
+        const sr = definition.spacerRings * t;
+        const trayF = zBraceB - t - sr;            // tray front face
+        const trayB = trayF - t;                   // tray rear face (boards side)
+        const ringR = definition.spacerOD / 2;
+        const tx0 = left + t + definition.trayClear;
+        const tx1 = right - t - definition.trayClear;
 
-            // screw-tip clearance through the brace under every boss
-            fCylinder(context, id + ("bossTip" ~ bs), {
-                    "topCenter"    : vector(bx, by, zBraceF + over),
-                    "bottomCenter" : vector(bx, by, zBraceB - over),
-                    "radius"       : bossClrR });
-            tipHoles = append(tipHoles, qCreatedBy(id + ("bossTip" ~ bs), EntityType.BODY));
+        fCuboid(context, id + "tray", {
+                "corner1" : vector(tx0, definition.trayY0, trayB),
+                "corner2" : vector(tx1, definition.trayY1, trayF) });
+
+        var boardSites = [];
+        for (var h = 0; h < size(CL_HOLES); h += 1)
+        {
+            const bp = clToBox(definition.clX, definition.clY, CL_HOLES[h][0], CL_HOLES[h][1]);
+            boardSites = append(boardSites, [bp[0], bp[1], "Colorlight " ~ (h + 1)]);
         }
-        opBoolean(context, id + "bossTipCut", {
-                "tools"         : qUnion(tipHoles),
-                "targets"       : qUnion(braceBodies),
+        for (var h = 0; h < size(PI_HOLES); h += 1)
+        {
+            const bp = piToBox(definition.piX, definition.piY, PI_HOLES[h][0], PI_HOLES[h][1]);
+            boardSites = append(boardSites, [bp[0], bp[1], "Pi " ~ (h + 1)]);
+        }
+
+        var trayCuts = [];
+        var ringN = 0;
+        // ring stacks: tray-to-brace (in front of the tray) and board-to-tray (behind it)
+        const stacks = [[trayScrews, trayF, "tray"], [boardSites, trayB - sr, "board"]];
+        for (var g = 0; g < size(stacks); g += 1)
+        {
+            const sites = stacks[g][0];
+            for (var k = 0; k < size(sites); k += 1)
+            {
+                const sx = sites[k][0];
+                const sy = sites[k][1];
+                fCylinder(context, id + ("trayHole" ~ g ~ "n" ~ k), {
+                        "topCenter"    : vector(sx, sy, trayF + over),
+                        "bottomCenter" : vector(sx, sy, trayB - over),
+                        "radius"       : trayClrR - kerf / 2 });
+                trayCuts = append(trayCuts, qCreatedBy(id + ("trayHole" ~ g ~ "n" ~ k), EntityType.BODY));
+                for (var L = 0; L < definition.spacerRings; L += 1)
+                {
+                    const rid = id + ("ring" ~ ringN);
+                    const z0 = stacks[g][1] + L * t;
+                    fCylinder(context, rid, {
+                            "topCenter"    : vector(sx, sy, z0 + t),
+                            "bottomCenter" : vector(sx, sy, z0),
+                            "radius"       : ringR });
+                    fCylinder(context, id + ("ringBore" ~ ringN), {
+                            "topCenter"    : vector(sx, sy, z0 + t + over),
+                            "bottomCenter" : vector(sx, sy, z0 - over),
+                            "radius"       : trayClrR - kerf / 2 });
+                    opBoolean(context, id + ("ringCut" ~ ringN), {
+                            "tools"         : qCreatedBy(id + ("ringBore" ~ ringN), EntityType.BODY),
+                            "targets"       : qCreatedBy(rid, EntityType.BODY),
+                            "operationType" : BooleanOperationType.SUBTRACTION });
+                    var where = "tray to brace";
+                    if (g == 1)
+                    {
+                        where = sites[k][2];
+                    }
+                    nameBody(context, rid + "n", rid, "Spacer ring — " ~ where);
+                    ringN += 1;
+                }
+            }
+        }
+
+        // two zip-tie strap positions round the USB adapter, a slot each side
+        for (var k = 0; k < 2; k += 1)
+        {
+            const sxs = definition.nicX + (2 * k - 1) * definition.nicW / 4;
+            for (var j = 0; j < 2; j += 1)
+            {
+                const sys = definition.nicY + (2 * j - 1) * (definition.nicH / 2 + 2.5 * millimeter);
+                fCuboid(context, id + ("strap" ~ k ~ j), {
+                        "corner1" : vector(sxs - 3 * millimeter, sys - 1.25 * millimeter, trayB - over),
+                        "corner2" : vector(sxs + 3 * millimeter, sys + 1.25 * millimeter, trayF + over) });
+                trayCuts = append(trayCuts, qCreatedBy(id + ("strap" ~ k ~ j), EntityType.BODY));
+            }
+        }
+        opBoolean(context, id + "trayCut", {
+                "tools"         : qUnion(trayCuts),
+                "targets"       : qCreatedBy(id + "tray", EntityType.BODY),
                 "operationType" : BooleanOperationType.SUBTRACTION });
 
         opBoolean(context, id + "coverCut", {
@@ -2157,6 +2159,7 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         nameBody(context, id + "n06", id + "wallT",   "Wall top");
         nameBody(context, id + "n07", id + "backCover", "Back cover");
         nameBody(context, id + "n08", id + "stiff",   "Stiffener web");
+        nameBody(context, id + "n08t", id + "tray",   "Electronics tray");
         // Braces top to bottom. brace0 and brace1 keep the ids they had in
         // the 2 x 1 design, so existing assembly instances follow them.
         const nBraces = size(braceSpans);
@@ -2168,6 +2171,7 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             else if (nBraces == 3)               { bn = "Panel brace middle"; }
             nameBody(context, id + ("nbr" ~ bi), id + ("brace" ~ bi), bn);
         }
+        nameBody(context, id + "nbrR", id + ("braceRear" ~ trayBrace), "Panel brace middle, rear sheet (tray nuts)");
         for (var ri = 0; ri < 2; ri += 1)
         {
             var where = "lower";

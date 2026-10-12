@@ -188,9 +188,10 @@ its pin edge.
     ├─ [3]  Braces + connector keep-outs ........ 3 + 20 mm
     │        three cross-braces, four HUB75 ribbons turning
     │
-    ├─ [4]  Electronics, hung off the middle brace  ~ 23 mm
+    ├─ [4]  Electronics tray ..................... 6 + 3 + 6 + boards
+    │        on spacer rings behind the doubled middle brace;
     │        Colorlight 5A-75B, Pi Zero 2 W, USB gigabit adapter,
-    │        component side back; 17 mm clear of the cover
+    │        component side back; 5 mm clear of the cover
     │
     └─ [5]  Back cover + rails .................. 3 + 9 mm
              removable, carries nothing, no cables to it
@@ -326,10 +327,12 @@ aperture into a finished bezel is the one change that ruins a front panel.
   braces in all, [88, 128], [−40, 40], [−128, −88], each a through-tenon into
   both side walls. Each row's pins land in a brace with 3.5 mm of wood beyond
   the pin hole.
-- **Electronics:** on plywood M3 nut-trap bosses glued to the rear face of the
-  middle brace, component side facing back — see
-  [`driver-colorlight.md`](driver-colorlight.md) §6. The back cover carries
-  nothing and comes off completely.
+- **Electronics:** on a removable tray screwed to the back of the middle brace
+  (which is now two sheets, with four captive tray nuts), boards on spacer
+  rings, component side facing back — see
+  [`driver-colorlight.md`](driver-colorlight.md) §6 for the assembly order. No
+  glue; the back cover carries nothing; the tray comes out to reach the panel
+  screws.
 - **Mains:** the IEC inlet is in the **right wall**, low, beside the PSU
   terminals; the box stands on its bottom wall so the inlet cannot go there.
 
