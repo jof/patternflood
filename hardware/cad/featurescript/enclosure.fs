@@ -42,6 +42,52 @@ function nameBody(context is Context, id is Id, bodyId is Id, name is string)
 }
 
 // ────────────────────────────────────────────────────────────────────────
+// Board data
+// ────────────────────────────────────────────────────────────────────────
+// Fixed properties of the bought boards, in each board's own frame:
+// component side up, origin at the board's lower-left corner, mm. They are
+// constants rather than variables because they are facts about a part, not
+// design choices; where a board sits in the box is a variable.
+//
+// Colorlight 5A-75B, MEASURED 2026-10-12 off 600 dpi flatbed scans of both
+// faces (outline and holes from the back scan, which lay flat; component
+// outlines from the component-side scan, registered to it through the holes).
+// RJ45 edge at +y.
+
+const CL_W = 91.76;     // across (x)
+const CL_H = 143.67;    // along (y), RJ45 edge at the top
+const CL_PCB_HOLE = 4.23;
+const CL_HOLES = [[5.11, 139.08], [86.51, 139.35], [16.07, 3.81], [76.44, 3.96]];
+// Eight 2x8 shrouded HUB75 headers (J1..J8), centre and long-axis angle from
+// +x. They are genuinely angled on this board, +/-25 deg off vertical, and
+// mirrored left to right. Centres are the through-hole pad clusters.
+const CL_HUBS = [[11.72, 98.59, 65], [12.11, 71.88, 65], [11.84, 44.53, 65], [11.80, 16.95, 65],
+                 [80.28, 98.72, 115], [80.30, 71.53, 115], [80.39, 44.26, 115], [80.39, 17.15, 115]];
+const CL_HUB_L = 33.0;  // standard 16-way 2.54 box header
+const CL_HUB_W = 8.9;
+// [x0, y0, x1, y1] outlines, component-side scan (+/-1 mm)
+const CL_RJ45 = [29.5, 117.0, 63.5, 147.2];   // dual ganged jack, overhangs the top edge
+const CL_TERM = [66.0, 130.0, 86.5, 144.0];   // 2-way barrier terminal, 5 V in
+const CL_JSTS = [[2.5, 110.0, 9.0, 124.5], [83.5, 113.0, 91.5, 128.0]];
+
+// Raspberry Pi Zero 2 W, from the official mechanical drawing
+// (datasheets.raspberrypi.com, rpizero2 mechanical drawing). The connector
+// edge is y = 0.
+const PI_W = 65;
+const PI_H = 30;
+const PI_HOLES = [[3.5, 3.5], [61.5, 3.5], [3.5, 26.5], [61.5, 26.5]];
+const PI_HOLE = 2.75;
+// [cx, width, depth into board, overhang past y = 0, height]
+const PI_EDGE_PARTS = [[12.4, 11.2, 7.5, 0.5, 3.2],     // mini HDMI
+                       [41.4, 8.0, 5.6, 1.0, 2.6],      // micro USB, OTG (data)
+                       [54.0, 8.0, 5.6, 1.0, 2.6]];     // micro USB, power
+// [x0, y0, x1, y1, height] — low parts, from the same drawing
+const PI_TOP_PARTS = [[19.0, 8.0, 34.0, 23.0, 1.4],      // RP3A0 SiP
+                      [37.3, 9.7, 48.9, 21.2, 1.2],      // second package
+                      [1.5, 9.0, 12.6, 21.0, 1.4],       // microSD
+                      [60.5, 7.0, 65.0, 23.0, 1.3]];     // camera FPC
+
+// ────────────────────────────────────────────────────────────────────────
 // Panel proxy
 // ────────────────────────────────────────────────────────────────────────
 // Two levels of fidelity, switched by "Detailed":
@@ -104,17 +150,35 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
         annotation { "Name" : "Rear frame rail width" }
         isLength(definition.frameW, LENGTH_BOUNDS);
 
-        annotation { "Name" : "HUB75 header width" }
-        isLength(definition.hdrW, LENGTH_BOUNDS);
+        annotation { "Name" : "HUB75 shroud x from panel centre (both, +/-)" }
+        isLength(definition.hubX, LENGTH_BOUNDS);
 
-        annotation { "Name" : "HUB75 header depth" }
-        isLength(definition.hdrH, LENGTH_BOUNDS);
+        annotation { "Name" : "HUB75 shroud y from panel centre" }
+        isLength(definition.hubY, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "HUB75 header projection" }
-        isLength(definition.hdrProj, LENGTH_BOUNDS);
+        annotation { "Name" : "HUB75 shroud width (x)" }
+        isLength(definition.hubW, LENGTH_BOUNDS);
 
-        annotation { "Name" : "HUB75 header spacing" }
-        isLength(definition.hdrPitch, LENGTH_BOUNDS);
+        annotation { "Name" : "HUB75 shroud length (y)" }
+        isLength(definition.hubL, LENGTH_BOUNDS);
+
+        annotation { "Name" : "HUB75 shroud height above PCB" }
+        isLength(definition.hubH, LENGTH_BOUNDS);
+
+        annotation { "Name" : "5 V header x from panel centre" }
+        isLength(definition.pwrX, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "5 V header y from panel centre" }
+        isLength(definition.pwrY, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "5 V header width (x)" }
+        isLength(definition.pwrW, LENGTH_BOUNDS);
+
+        annotation { "Name" : "5 V header length (y)" }
+        isLength(definition.pwrL, LENGTH_BOUNDS);
+
+        annotation { "Name" : "5 V header height above PCB" }
+        isLength(definition.pwrH, LENGTH_BOUNDS);
 
         annotation { "Name" : "Mounting post diameter" }
         isLength(definition.postDia, LENGTH_BOUNDS);
@@ -269,36 +333,30 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
                 nameBody(context, pid + ("npin" ~ k), pid + ("pin" ~ k), tag ~ " — registration pin");
             }
 
-            // Row/column driver ICs on the back of the PCB. Pure cosmetics —
-            // they sit well inside every keep-out and touch nothing.
-            for (var a = 0; a < 4; a += 1)
-            {
-                for (var b = 0; b < 2; b += 1)
-                {
-                    const cxi = xc + (a - 1.5) * 22 * millimeter;
-                    const cyi = yc + (b - 0.5) * 30 * millimeter;
-                    fCuboid(context, pid + ("ic" ~ a ~ b), {
-                            "corner1" : vector(cxi - 9 * millimeter, cyi - 3 * millimeter,
-                                               zPcbB - 1.2 * millimeter),
-                            "corner2" : vector(cxi + 9 * millimeter, cyi + 3 * millimeter, zPcbB) });
-                }
-            }
-
-            // HUB75 in and out, plus the power terminals. These are what
-            // #keepoutW/H/Proj abstract, so they live inside that envelope.
+            // The connectors, MEASURED 2026-10-12 off the rule-calibrated
+            // flatbed scan (positions only — heights are calipers, not yet
+            // taken). HUB75 IN and OUT are two VERTICAL 2x8 shrouded headers,
+            // symmetric about the centre; the 5 V input is a 4-way 3.96 mm
+            // (VH-style) header just left of centre as seen from the front.
+            // (The driver ICs that were drawn here were representative and
+            // now sat inside the real shrouds, so they are gone.)
             for (var h = 0; h < 2; h += 1)
             {
-                const hx = xc + (2 * h - 1) * definition.hdrPitch / 2;
+                const hx = xc + (2 * h - 1) * definition.hubX;
                 fCuboid(context, pid + ("hdr" ~ h), {
-                        "corner1" : vector(hx - definition.hdrW / 2, yc - definition.hdrH / 2,
-                                           zPcbB - definition.hdrProj),
-                        "corner2" : vector(hx + definition.hdrW / 2, yc + definition.hdrH / 2, zPcbB) });
+                        "corner1" : vector(hx - definition.hubW / 2,
+                                           yc + definition.hubY - definition.hubL / 2,
+                                           zPcbB - definition.hubH),
+                        "corner2" : vector(hx + definition.hubW / 2,
+                                           yc + definition.hubY + definition.hubL / 2, zPcbB) });
             }
 
             fCuboid(context, pid + "pwr", {
-                    "corner1" : vector(xc - 11 * millimeter, y0 + 14 * millimeter,
-                                       zPcbB - 7 * millimeter),
-                    "corner2" : vector(xc + 11 * millimeter, y0 + 24 * millimeter, zPcbB) });
+                    "corner1" : vector(xc + definition.pwrX - definition.pwrW / 2,
+                                       yc + definition.pwrY - definition.pwrL / 2,
+                                       zPcbB - definition.pwrH),
+                    "corner2" : vector(xc + definition.pwrX + definition.pwrW / 2,
+                                       yc + definition.pwrY + definition.pwrL / 2, zPcbB) });
 
             // Named for the same reason the enclosure parts are: an assembly
             // instance list and a BOM both need to say WHICH body.
@@ -306,7 +364,7 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
             nameBody(context, pid + "nb", pid + "lit",   tag ~ " — lit area");
             nameBody(context, pid + "nc", pid + "pcb",   tag ~ " — PCB");
             nameBody(context, pid + "nd", pid + "frame", tag ~ " — rear frame");
-            nameBody(context, pid + "ne", pid + "pwr",   tag ~ " — power terminals");
+            nameBody(context, pid + "ne", pid + "pwr",   tag ~ " — 5 V header");
             for (var h = 0; h < 2; h += 1)
             {
                 nameBody(context, pid + ("nh" ~ h), pid + ("hdr" ~ h), tag ~ " — HUB75");
@@ -702,26 +760,33 @@ export const iecProxy = defineFeature(function(context is Context, id is Id, def
 // ────────────────────────────────────────────────────────────────────────
 // Bay obstructions
 // ────────────────────────────────────────────────────────────────────────
-// Proxies for everything that already occupies the bay, so anything added
-// there can be checked against them instead of assumed to fit.
+// Everything that occupies the bay, so the framing can be checked against
+// real parts instead of assumed to fit.
 //
-// Per panel, one connector KEEP-OUT covering the HUB75 IN and OUT headers
-// and the JST power connector. Positions are not published and vary, so
-// this is one generous envelope rather than individual bosses — measure it
-// off a real panel and shrink it.
+// Per panel, one KEEP-OUT per connector — both HUB75 shrouds and the 5 V
+// header — at the measured positions, grown by a margin, reaching back from
+// the panel's rear face by what a mated plug and the turn of its cable need.
+// That replaced a single 70 x 40 block per panel which, it turned out, did
+// not even cover the HUB75 shrouds (their outer edges are at x +/-40.7).
 //
-// Plus the driving electronics, which are mounted on the INSIDE of the
-// removable back cover rather than on the panels: a Colorlight 5A-75B
-// receiver card (ribbons to all four panels, so it sits in the middle), a
-// Raspberry Pi Zero 2 W, and the USB gigabit adapter between them — the
-// 5A-75B will not link at 100 Mbit, and the Zero has no Ethernet of its
-// own. Each is an envelope standing off the cover's inner face, heights
-// INCLUDING standoffs, so the check that matters is simple: the front of
-// every board must stay behind the panel keep-outs.
-//
-// The 5A-75B outline and hole pattern are PLACEHOLDERS — there is no
-// published drawing; caliper one. The Pi Zero 2 W is the documented
-// 65 x 30 board with M2.5 holes on a 58 x 23 pattern.
+// Then the driving electronics, on plywood bosses off the INSIDE of the
+// removable back cover (the bosses are cut in the shell, with the other
+// sheet parts), component side facing forward toward the panels:
+//   - Colorlight 5A-75B, measured (see Board data), long axis vertical so its
+//     two columns of HUB75 headers face the left and right panel pairs;
+//   - Raspberry Pi Zero 2 W, from the official drawing, connector edge down;
+//   - the USB gigabit adapter, still an envelope (model not chosen yet).
+// Component HEIGHTS are placeholders until calipered; positions are not.
+
+// Board-frame box -> a body: [x0, y0, x1, y1] in the board's own frame,
+// placed with its lower-left at (ox, oy) and standing from z0 by h.
+function boardBox(context is Context, id is Id, ox, oy, r is array, z0, h, name is string)
+{
+    fCuboid(context, id, {
+            "corner1" : vector(ox + r[0] * millimeter, oy + r[1] * millimeter, z0),
+            "corner2" : vector(ox + r[2] * millimeter, oy + r[3] * millimeter, z0 + h) });
+    nameBody(context, id + "n", id, name);
+}
 
 annotation { "Feature Type Name" : "Bay obstructions" }
 export const bayObstructions = defineFeature(function(context is Context, id is Id, definition is map)
@@ -742,32 +807,41 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
         annotation { "Name" : "Panel depth" }
         isLength(definition.panelDepth, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Keep-out width" }
-        isLength(definition.keepoutW, LENGTH_BOUNDS);
+        annotation { "Name" : "HUB75 shroud x from panel centre (both, +/-)" }
+        isLength(definition.hubX, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Keep-out height" }
-        isLength(definition.keepoutH, LENGTH_BOUNDS);
+        annotation { "Name" : "HUB75 shroud y from panel centre" }
+        isLength(definition.hubY, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "Keep-out projection" }
-        isLength(definition.keepoutProj, LENGTH_BOUNDS);
+        annotation { "Name" : "HUB75 shroud width (x)" }
+        isLength(definition.hubW, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Keep-out offset x" }
-        isLength(definition.keepoutX, ANY_LENGTH_BOUNDS);
+        annotation { "Name" : "HUB75 shroud length (y)" }
+        isLength(definition.hubL, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Keep-out offset y" }
-        isLength(definition.keepoutY, ANY_LENGTH_BOUNDS);
+        annotation { "Name" : "5 V header x from panel centre" }
+        isLength(definition.pwrX, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "5 V header y from panel centre" }
+        isLength(definition.pwrY, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "5 V header width (x)" }
+        isLength(definition.pwrW, LENGTH_BOUNDS);
+
+        annotation { "Name" : "5 V header length (y)" }
+        isLength(definition.pwrL, LENGTH_BOUNDS);
+
+        annotation { "Name" : "HUB75 plug + ribbon turn, behind panel back" }
+        isLength(definition.plugProj, LENGTH_BOUNDS);
+
+        annotation { "Name" : "5 V plug + wire turn, behind panel back" }
+        isLength(definition.pwrPlugProj, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Keep-out margin around connectors" }
+        isLength(definition.connMargin, LENGTH_BOUNDS);
 
         annotation { "Name" : "Back cover inner face z" }
         isLength(definition.coverZ, ANY_LENGTH_BOUNDS);
-
-        annotation { "Name" : "Receiver card width (x)" }
-        isLength(definition.clW, LENGTH_BOUNDS);
-
-        annotation { "Name" : "Receiver card height (y)" }
-        isLength(definition.clH, LENGTH_BOUNDS);
-
-        annotation { "Name" : "Receiver card height off cover" }
-        isLength(definition.clT, LENGTH_BOUNDS);
 
         annotation { "Name" : "Receiver card centre x" }
         isLength(definition.clX, ANY_LENGTH_BOUNDS);
@@ -775,20 +849,35 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
         annotation { "Name" : "Receiver card centre y" }
         isLength(definition.clY, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "Pi width (x)" }
-        isLength(definition.piW, LENGTH_BOUNDS);
+        annotation { "Name" : "Receiver card height off cover (boss stack)" }
+        isLength(definition.clStandoff, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Pi height (y)" }
-        isLength(definition.piH, LENGTH_BOUNDS);
+        annotation { "Name" : "Receiver card PCB thickness" }
+        isLength(definition.clPcbT, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Pi height off cover" }
-        isLength(definition.piT, LENGTH_BOUNDS);
+        annotation { "Name" : "Receiver card HUB75 shroud height" }
+        isLength(definition.clHubH, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Receiver card RJ45 height" }
+        isLength(definition.clRjH, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Receiver card terminal height" }
+        isLength(definition.clTermH, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Receiver card JST height" }
+        isLength(definition.clJstH, LENGTH_BOUNDS);
 
         annotation { "Name" : "Pi centre x" }
         isLength(definition.piX, ANY_LENGTH_BOUNDS);
 
         annotation { "Name" : "Pi centre y" }
         isLength(definition.piY, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Pi height off cover (boss stack)" }
+        isLength(definition.piStandoff, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Pi PCB thickness" }
+        isLength(definition.piPcbT, LENGTH_BOUNDS);
 
         annotation { "Name" : "Ethernet adapter width (x)" }
         isLength(definition.nicW, LENGTH_BOUNDS);
@@ -809,42 +898,125 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
         const back = -definition.panelDepth;
         const nc = definition.panelCols;
         const nr = definition.panelRows;
+        const m  = definition.connMargin;
 
+        // ── panel connector keep-outs ───────────────────────────────────
         for (var i = 0; i < nc * nr; i += 1)
         {
-            const xc = (i % nc - (nc - 1) / 2) * definition.panelW + definition.keepoutX;
-            const yc = ((nr - 1) / 2 - floor(i / nc)) * definition.panelH + definition.keepoutY;
-
-            fCuboid(context, id + ("keepout" ~ i), {
-                    "corner1" : vector(xc - definition.keepoutW / 2,
-                                       yc - definition.keepoutH / 2,
-                                       back - definition.keepoutProj),
-                    "corner2" : vector(xc + definition.keepoutW / 2,
-                                       yc + definition.keepoutH / 2,
-                                       back) });
-            nameBody(context, id + ("nko" ~ i), id + ("keepout" ~ i),
-                     "Keep-out — panel " ~ (i + 1) ~ " connectors");
+            const xc = (i % nc - (nc - 1) / 2) * definition.panelW;
+            const yc = ((nr - 1) / 2 - floor(i / nc)) * definition.panelH;
+            // [cx, cy, w, l, projection, label]
+            const conns = [
+                [xc - definition.hubX, yc + definition.hubY, definition.hubW, definition.hubL,
+                 definition.plugProj, "HUB75 (left)"],
+                [xc + definition.hubX, yc + definition.hubY, definition.hubW, definition.hubL,
+                 definition.plugProj, "HUB75 (right)"],
+                [xc + definition.pwrX, yc + definition.pwrY, definition.pwrW, definition.pwrL,
+                 definition.pwrPlugProj, "5 V"]
+            ];
+            for (var k = 0; k < size(conns); k += 1)
+            {
+                const c = conns[k];
+                const kid = id + ("ko" ~ i ~ k);
+                fCuboid(context, kid, {
+                        "corner1" : vector(c[0] - c[2] / 2 - m, c[1] - c[3] / 2 - m, back - c[4]),
+                        "corner2" : vector(c[0] + c[2] / 2 + m, c[1] + c[3] / 2 + m, back + 1 * millimeter) });
+                nameBody(context, kid + "n", kid, "Keep-out — panel " ~ (i + 1) ~ " " ~ c[5]);
+            }
         }
 
-        const boards = [
-            { "key" : "cl",  "name" : "Colorlight 5A-75B (placeholder)",
-              "w" : definition.clW,  "h" : definition.clH,  "t" : definition.clT,
-              "x" : definition.clX,  "y" : definition.clY },
-            { "key" : "pi",  "name" : "Raspberry Pi Zero 2 W",
-              "w" : definition.piW,  "h" : definition.piH,  "t" : definition.piT,
-              "x" : definition.piX,  "y" : definition.piY },
-            { "key" : "nic", "name" : "USB gigabit Ethernet adapter",
-              "w" : definition.nicW, "h" : definition.nicH, "t" : definition.nicT,
-              "x" : definition.nicX, "y" : definition.nicY }
-        ];
-        for (var bi = 0; bi < size(boards); bi += 1)
+        // ── Colorlight 5A-75B ───────────────────────────────────────────
+        const cox = definition.clX - CL_W / 2 * millimeter;
+        const coy = definition.clY - CL_H / 2 * millimeter;
+        const cz0 = definition.coverZ + definition.clStandoff;      // PCB back
+        const cz1 = cz0 + definition.clPcbT;                         // component side
+
+        fCuboid(context, id + "clPcb", {
+                "corner1" : vector(cox, coy, cz0),
+                "corner2" : vector(cox + CL_W * millimeter, coy + CL_H * millimeter, cz1) });
+        var clHoles = [];
+        for (var h = 0; h < size(CL_HOLES); h += 1)
         {
-            const bd = boards[bi];
-            fCuboid(context, id + bd.key, {
-                    "corner1" : vector(bd.x - bd.w / 2, bd.y - bd.h / 2, definition.coverZ),
-                    "corner2" : vector(bd.x + bd.w / 2, bd.y + bd.h / 2, definition.coverZ + bd.t) });
-            nameBody(context, id + ("n" ~ bd.key), id + bd.key, bd.name);
+            const hp = vector(cox + CL_HOLES[h][0] * millimeter, coy + CL_HOLES[h][1] * millimeter);
+            fCylinder(context, id + ("clHole" ~ h), {
+                    "topCenter"    : vector(hp[0], hp[1], cz1 + 1 * millimeter),
+                    "bottomCenter" : vector(hp[0], hp[1], cz0 - 1 * millimeter),
+                    "radius"       : CL_PCB_HOLE / 2 * millimeter });
+            clHoles = append(clHoles, qCreatedBy(id + ("clHole" ~ h), EntityType.BODY));
         }
+        opBoolean(context, id + "clDrill", {
+                "tools"         : qUnion(clHoles),
+                "targets"       : qCreatedBy(id + "clPcb", EntityType.BODY),
+                "operationType" : BooleanOperationType.SUBTRACTION });
+        nameBody(context, id + "clPcbN", id + "clPcb", "Colorlight 5A-75B — PCB");
+
+        for (var j = 0; j < size(CL_HUBS); j += 1)
+        {
+            const hb = CL_HUBS[j];
+            const hid = id + ("clHub" ~ j);
+            fCuboid(context, hid, {
+                    "corner1" : vector(-CL_HUB_L / 2 * millimeter, -CL_HUB_W / 2 * millimeter, cz1),
+                    "corner2" : vector( CL_HUB_L / 2 * millimeter,  CL_HUB_W / 2 * millimeter, cz1 + definition.clHubH) });
+            opTransform(context, hid + "xf", {
+                    "bodies"    : qCreatedBy(hid, EntityType.BODY),
+                    "transform" : transform(vector(cox + hb[0] * millimeter, coy + hb[1] * millimeter, 0 * millimeter))
+                                * rotationAround(line(vector(0, 0, 0) * millimeter, vector(0, 0, 1)), hb[2] * degree) });
+            nameBody(context, hid + "n", hid, "Colorlight HUB75 J" ~ (j + 1));
+        }
+        boardBox(context, id + "clRj", cox, coy, CL_RJ45, cz1, definition.clRjH, "Colorlight RJ45 (dual)");
+        boardBox(context, id + "clTerm", cox, coy, CL_TERM, cz1, definition.clTermH, "Colorlight 5 V terminal");
+        for (var j = 0; j < size(CL_JSTS); j += 1)
+        {
+            boardBox(context, id + ("clJst" ~ j), cox, coy, CL_JSTS[j], cz1, definition.clJstH, "Colorlight JST");
+        }
+
+        // ── Raspberry Pi Zero 2 W ───────────────────────────────────────
+        const pox = definition.piX - PI_W / 2 * millimeter;
+        const poy = definition.piY - PI_H / 2 * millimeter;
+        const pz0 = definition.coverZ + definition.piStandoff;
+        const pz1 = pz0 + definition.piPcbT;
+
+        fCuboid(context, id + "piPcb", {
+                "corner1" : vector(pox, poy, pz0),
+                "corner2" : vector(pox + PI_W * millimeter, poy + PI_H * millimeter, pz1) });
+        var piHoles = [];
+        for (var h = 0; h < size(PI_HOLES); h += 1)
+        {
+            const hp = vector(pox + PI_HOLES[h][0] * millimeter, poy + PI_HOLES[h][1] * millimeter);
+            fCylinder(context, id + ("piHole" ~ h), {
+                    "topCenter"    : vector(hp[0], hp[1], pz1 + 1 * millimeter),
+                    "bottomCenter" : vector(hp[0], hp[1], pz0 - 1 * millimeter),
+                    "radius"       : PI_HOLE / 2 * millimeter });
+            piHoles = append(piHoles, qCreatedBy(id + ("piHole" ~ h), EntityType.BODY));
+        }
+        opBoolean(context, id + "piDrill", {
+                "tools"         : qUnion(piHoles),
+                "targets"       : qCreatedBy(id + "piPcb", EntityType.BODY),
+                "operationType" : BooleanOperationType.SUBTRACTION });
+        nameBody(context, id + "piPcbN", id + "piPcb", "Raspberry Pi Zero 2 W — PCB");
+
+        const edgeNames = ["Pi mini HDMI", "Pi micro USB (OTG)", "Pi micro USB (power)"];
+        for (var j = 0; j < size(PI_EDGE_PARTS); j += 1)
+        {
+            const e = PI_EDGE_PARTS[j];
+            boardBox(context, id + ("piEdge" ~ j), pox, poy,
+                     [e[0] - e[1] / 2, -e[3], e[0] + e[1] / 2, e[2] - e[3]],
+                     pz1, e[4] * millimeter, edgeNames[j]);
+        }
+        for (var j = 0; j < size(PI_TOP_PARTS); j += 1)
+        {
+            const t = PI_TOP_PARTS[j];
+            boardBox(context, id + ("piTop" ~ j), pox, poy, [t[0], t[1], t[2], t[3]],
+                     pz1, t[4] * millimeter, "Pi Zero 2 W component");
+        }
+
+        // ── USB gigabit adapter (envelope until one is chosen) ──────────
+        fCuboid(context, id + "nic", {
+                "corner1" : vector(definition.nicX - definition.nicW / 2,
+                                   definition.nicY - definition.nicH / 2, definition.coverZ),
+                "corner2" : vector(definition.nicX + definition.nicW / 2,
+                                   definition.nicY + definition.nicH / 2, definition.coverZ + definition.nicT) });
+        nameBody(context, id + "nicN", id + "nic", "USB gigabit Ethernet adapter");
     });
 
 // ────────────────────────────────────────────────────────────────────────
@@ -1162,14 +1334,17 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "Pi centre y (back cover)" }
         isLength(definition.piY, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "Pi hole pattern x" }
-        isLength(definition.piHoleX, LENGTH_BOUNDS);
+        annotation { "Name" : "Receiver card centre x (back cover)" }
+        isLength(definition.clX, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "Pi hole pattern y" }
-        isLength(definition.piHoleY, LENGTH_BOUNDS);
+        annotation { "Name" : "Receiver card centre y (back cover)" }
+        isLength(definition.clY, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "Pi mounting hole diameter" }
-        isLength(definition.piHoleDia, LENGTH_BOUNDS);
+        annotation { "Name" : "Board boss layers (sheets)" }
+        isInteger(definition.bossLayers, POSITIVE_COUNT_BOUNDS);
+
+        annotation { "Name" : "Board boss size" }
+        isLength(definition.bossSize, LENGTH_BOUNDS);
     }
     {
         const t    = definition.thickness;
@@ -1751,22 +1926,80 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 "targets"       : qCreatedBy(id + "wallR", EntityType.BODY),
                 "operationType" : BooleanOperationType.SUBTRACTION });
 
-        // ── Pi Zero 2 W mounting holes, back cover ──────────────────────
-        // The electronics ride on the inside of the removable cover, so the
-        // cover carries the Pi's four M2.5 holes. The 5A-75B's holes are not
-        // cut yet: its pattern is unmeasured, and a wrong hole in the cover
-        // is worse than drilling four by hand.
-        for (var ph = 0; ph < 4; ph += 1)
+        // ── board bosses: the same nut trap as the cover rails ──────────
+        // Every board mounts with the box's one fastener, an M3, and nothing
+        // that is not cut from the sheet. Each board hole gets a small square
+        // stack glued to the inside of the back cover:
+        //
+        //     z:  cover     B (hex)     C (clearance)     board
+        //         ├────────┼───────────┼─────────────────┼────
+        //         │ Ø clr  │  M3 nut   │  Ø clr          │ PCB   ◄── M3 x 8
+        //
+        // Tightening pulls the nut up against C's underside and clamps the
+        // board onto C's top — so C is the bearing face, exactly as rail A
+        // is for the cover. The cover itself closes the pocket, and its
+        // clearance hole takes the screw tip, so M3 x 8 and M3 x 10 both work
+        // without bottoming. bossLayers > 2 adds plain spacers under B.
+        //
+        // The Pi Zero 2 W's holes are 2.75 mm, for M2.5: open them to
+        // 3.2 mm to take the M3, or use M2.5 hardware for the Pi alone. The
+        // 5A-75B's 4.23 mm holes take M3 as they are — use a washer.
+        var bossSites = [];
+        for (var h = 0; h < size(CL_HOLES); h += 1)
         {
-            var hx = definition.piX - definition.piHoleX / 2;
-            var hy = definition.piY - definition.piHoleY / 2;
-            if (ph % 2 == 1) { hx = definition.piX + definition.piHoleX / 2; }
-            if (ph >= 2)     { hy = definition.piY + definition.piHoleY / 2; }
-            fCylinder(context, id + ("pih" ~ ph), {
-                    "topCenter"    : vector(hx, hy, zBc1 + over),
-                    "bottomCenter" : vector(hx, hy, zBc0 - over),
-                    "radius"       : definition.piHoleDia / 2 - kerf / 2 });
-            coverHoles = append(coverHoles, qCreatedBy(id + ("pih" ~ ph), EntityType.BODY));
+            bossSites = append(bossSites, [definition.clX - CL_W / 2 * millimeter + CL_HOLES[h][0] * millimeter,
+                                           definition.clY - CL_H / 2 * millimeter + CL_HOLES[h][1] * millimeter,
+                                           "Colorlight " ~ (h + 1)]);
+        }
+        for (var h = 0; h < size(PI_HOLES); h += 1)
+        {
+            bossSites = append(bossSites, [definition.piX - PI_W / 2 * millimeter + PI_HOLES[h][0] * millimeter,
+                                           definition.piY - PI_H / 2 * millimeter + PI_HOLES[h][1] * millimeter,
+                                           "Pi " ~ (h + 1)]);
+        }
+        const nb = definition.bossLayers;
+        const half = definition.bossSize / 2;
+        for (var bs = 0; bs < size(bossSites); bs += 1)
+        {
+            const bx = bossSites[bs][0];
+            const by = bossSites[bs][1];
+            for (var L = 0; L < nb; L += 1)
+            {
+                const lid = id + ("boss" ~ bs ~ "L" ~ L);
+                const z0 = zBc1 + L * t;
+                fCuboid(context, lid, {
+                        "corner1" : vector(bx - half, by - half, z0),
+                        "corner2" : vector(bx + half, by + half, z0 + t) });
+                var cutter = qNothing();
+                var role = "";
+                if (L == nb - 2)
+                {
+                    cutter = hexPrism(context, id + ("bossHex" ~ bs ~ "L" ~ L), bx, by, definition.nutAcrossFlats - kerf,
+                                      z0 - over, z0 + t + over);
+                    role = "B (nut)";
+                }
+                else
+                {
+                    fCylinder(context, id + ("bossHole" ~ bs ~ "L" ~ L), {
+                            "topCenter"    : vector(bx, by, z0 + t + over),
+                            "bottomCenter" : vector(bx, by, z0 - over),
+                            "radius"       : clrR });
+                    cutter = qCreatedBy(id + ("bossHole" ~ bs ~ "L" ~ L), EntityType.BODY);
+                    role = (L == nb - 1) ? "C (bearing)" : "spacer";
+                }
+                opBoolean(context, id + ("bossCut" ~ bs ~ "L" ~ L), {
+                        "tools"         : cutter,
+                        "targets"       : qCreatedBy(lid, EntityType.BODY),
+                        "operationType" : BooleanOperationType.SUBTRACTION });
+                nameBody(context, lid + "n", lid, "Board boss " ~ role ~ " — " ~ bossSites[bs][2]);
+            }
+
+            // screw-tip clearance through the cover under every boss
+            fCylinder(context, id + ("bossClr" ~ bs), {
+                    "topCenter"    : vector(bx, by, zBc1 + over),
+                    "bottomCenter" : vector(bx, by, zBc0 - over),
+                    "radius"       : clrR });
+            coverHoles = append(coverHoles, qCreatedBy(id + ("bossClr" ~ bs), EntityType.BODY));
         }
 
         opBoolean(context, id + "coverCut", {

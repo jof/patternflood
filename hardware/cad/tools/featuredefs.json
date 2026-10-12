@@ -43,20 +43,44 @@
     "#panelFrameW"
    ],
    [
-    "hdrW",
-    "#hdrW"
+    "hubX",
+    "#hubX"
    ],
    [
-    "hdrH",
-    "#hdrH"
+    "hubY",
+    "#hubY"
    ],
    [
-    "hdrProj",
-    "#hdrProj"
+    "hubW",
+    "#hubW"
    ],
    [
-    "hdrPitch",
-    "#hdrPitch"
+    "hubL",
+    "#hubL"
+   ],
+   [
+    "hubH",
+    "#hubH"
+   ],
+   [
+    "pwrX",
+    "#pwrX"
+   ],
+   [
+    "pwrY",
+    "#pwrY"
+   ],
+   [
+    "pwrW",
+    "#pwrW"
+   ],
+   [
+    "pwrL",
+    "#pwrL"
+   ],
+   [
+    "pwrH",
+    "#pwrH"
    ],
    [
     "postDia",
@@ -116,40 +140,52 @@
     "#panelDepth"
    ],
    [
-    "keepoutW",
-    "#keepoutW"
+    "hubX",
+    "#hubX"
    ],
    [
-    "keepoutH",
-    "#keepoutH"
+    "hubY",
+    "#hubY"
    ],
    [
-    "keepoutProj",
-    "#keepoutProj"
+    "hubW",
+    "#hubW"
    ],
    [
-    "keepoutX",
-    "#keepoutX"
+    "hubL",
+    "#hubL"
    ],
    [
-    "keepoutY",
-    "#keepoutY"
+    "pwrX",
+    "#pwrX"
+   ],
+   [
+    "pwrY",
+    "#pwrY"
+   ],
+   [
+    "pwrW",
+    "#pwrW"
+   ],
+   [
+    "pwrL",
+    "#pwrL"
+   ],
+   [
+    "plugProj",
+    "#plugProj"
+   ],
+   [
+    "pwrPlugProj",
+    "#pwrPlugProj"
+   ],
+   [
+    "connMargin",
+    "#connMargin"
    ],
    [
     "coverZ",
     "0 mm - #panelDepth - #bayDepth + #thickness"
-   ],
-   [
-    "clW",
-    "#clW"
-   ],
-   [
-    "clH",
-    "#clH"
-   ],
-   [
-    "clT",
-    "#clT"
    ],
    [
     "clX",
@@ -160,16 +196,28 @@
     "#clY"
    ],
    [
-    "piW",
-    "#piW"
+    "clStandoff",
+    "#bossLayers * #thickness"
    ],
    [
-    "piH",
-    "#piH"
+    "clPcbT",
+    "#clPcbT"
    ],
    [
-    "piT",
-    "#piT"
+    "clHubH",
+    "#clHubH"
+   ],
+   [
+    "clRjH",
+    "#clRjH"
+   ],
+   [
+    "clTermH",
+    "#clTermH"
+   ],
+   [
+    "clJstH",
+    "#clJstH"
    ],
    [
     "piX",
@@ -178,6 +226,14 @@
    [
     "piY",
     "#piY"
+   ],
+   [
+    "piStandoff",
+    "#bossLayers * #thickness"
+   ],
+   [
+    "piPcbT",
+    "#piPcbT"
    ],
    [
     "nicW",
@@ -543,16 +599,20 @@
     "#piY"
    ],
    [
-    "piHoleX",
-    "#piHoleX"
+    "clX",
+    "#clX"
    ],
    [
-    "piHoleY",
-    "#piHoleY"
+    "clY",
+    "#clY"
    ],
    [
-    "piHoleDia",
-    "#piHoleDia"
+    "bossLayers",
+    "#bossLayers"
+   ],
+   [
+    "bossSize",
+    "#bossSize"
    ]
   ]
  ]

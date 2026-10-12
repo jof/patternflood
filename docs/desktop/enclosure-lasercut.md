@@ -552,7 +552,7 @@ adds to the stack.
 
 ---
 
-## 13. Material — and why the 30 W laser is not the constraint
+## 13. Material — and why the laser is not the constraint
 
 Basswood was picked in [`mechanical-plan.md`](mechanical-plan.md) §3 without much
 argument, and three things have happened since that make it worth revisiting:
@@ -563,22 +563,30 @@ against basswood" — is a material property, not a geometry one.
 
 ### 13.1 The laser barely narrows the field
 
-**At 3 mm, a 30 W CO₂ cuts every candidate here.** Denser stock needs a slower
-feed or a second pass, but nothing in the list below is out of reach:
+> 🔁 **Corrected 2026-10-12: the laser is an xTool P2 — 55 W CO₂, 600 × 305 mm
+> cutting area.** This section was written assuming a 30 W machine, and that
+> under-sold it. At 55 W every candidate below is one pass at 3 mm, and 6 mm
+> birch or hard maple is comfortably within reach too.
 
-| Stock | 30 W, 3 mm | Notes |
+| Stock | 55 W, 3 mm | Notes |
 |---|---|---|
 | Basswood | 1 pass, fast | the easy baseline |
 | Poplar / "craft" ply | 1 pass | voids are the problem, not power |
-| **Baltic birch ply** | **1 pass, slower — or 2** | glue lines cut slower than the wood |
-| Cherry, walnut | 1–2 passes | best-looking char |
-| Hard maple | 2 passes | slow, and it chars dark |
-| Bamboo ply | 2–3 passes, heavy char | **marginal — skip it** |
-| **Any 6 mm** | **3+ passes, taper, heavy char** | **this is where 30 W actually runs out** |
+| **Baltic birch ply** | **1 pass** | glue lines cut a little slower than the wood |
+| Cherry, walnut | 1 pass | best-looking char |
+| Hard maple | 1 pass, slower | chars dark |
+| Bamboo ply | 1–2 passes, heavy char | **marginal — skip it** |
+| Any 6 mm | 1–2 passes, some taper | possible on the P2; still not needed |
 
-So the constraint bites at **thickness, not species.** The design never asks the
-laser for 6 mm — the 6 mm at the knob bores is two 3 mm laminations (§3) — so the
-laser is not choosing the material. Properties are.
+So the laser does not choose the material at all. The design never asks for
+6 mm anyway — the 6 mm at the knob bores is two 3 mm laminations (§3) — so
+properties decide it.
+
+**What the P2 *does* constrain is part width.** Its cutting area is 600 × 305
+mm, so every part's narrow dimension must fit across 305 with margin to place
+the sheet. The 2 × 2 box's widest part is the outer bezel; at a 20 mm side
+margin it was 297 wide — under 4 mm a side — so `#marginSide` went to 18 and
+the bezel is now **293 × 373**, ~6 mm a side.
 
 ### 13.2 What the properties actually buy
 
@@ -663,6 +671,28 @@ sold honestly, and it is worth the premium for a one-box build.
 
 **Never laser:** MDF (fastener bearing crumbles, and the bores would wallow worse
 than basswood), hardboard, and anything with PVC or vinyl content.
+
+#### Buying it: 12"-wide sheets only
+
+Baltic birch is priced by area up to 12" wide and then jumps: at one retailer
+(Woodpeckers, 1/8" B/BB, 2026-10) 12 × 12, 12 × 16 and 12 × 24 all work out at
+~$0.0086/in², while 24 × 24 is ~$0.021/in² — 2.4× — and nothing in this box
+needs it. Every part fits a 12"-wide sheet, which also matches the P2's 305 mm
+axis:
+
+| Part | Narrow × long (mm) |
+|---|---|
+| Bezel outer | 293 × 373 |
+| Bezel inner | 287 × 367 |
+| Back cover | 286 × 366 |
+| Side walls ×2 | 60 × 373 |
+| Top / bottom walls, braces, rails, stiffener | ≤ 293 long |
+
+Nested on **12 × 24** sheets that is four sheets: (1) bezel outer + top/bottom
+walls + the 80 mm brace + a rail; (2) bezel inner + the 40 mm braces + rails +
+stiffener; (3) back cover; (4) the two 373 mm side walls + the test comb. **Buy
+six** — the comb and a recut. Calipering the sheet width on arrival is still
+worth it: "12 × 24" is sometimes cut a hair under 12".
 
 ### 13.6 What changes in the model
 

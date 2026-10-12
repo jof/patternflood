@@ -15,7 +15,7 @@ ESP32 `.pfm` patterns do not run here as binaries
 | Input | **4 × Adafruit 4991 seesaw encoders** on the Pi's I²C |
 | Power | **IEC mains → Mean Well LRS-50-5**, panel load capped per frame — [`driver-colorlight.md`](driver-colorlight.md) §4 |
 | Software | A Pi-side renderer streaming to the card; FPP for first pixels |
-| Enclosure | **Laser-cut 3 mm Baltic birch ply**, finger-jointed, 297 × 373 × 60 mm, stands upright |
+| Enclosure | **Laser-cut 3 mm Baltic birch ply**, finger-jointed, 293 × 373 × 60 mm, stands upright; cut on an xTool P2 from 12 × 24" sheets |
 
 ## Plans
 

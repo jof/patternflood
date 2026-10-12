@@ -132,13 +132,41 @@ sees ≥ 5.0 V under load.
 ## 6. Where it lives in the box
 
 The electronics ride on the **inside of the removable back cover**, in the clear
-zone behind the display (enclosure model, `Bay obstructions` feature):
+zone behind the display, component side facing the panels (enclosure model,
+`Bay obstructions` feature for the boards, `Enclosure shell` for their bosses):
 
-| | Centre (x, y) | Off cover | Notes |
+| | Centre (x, y) | Model | Mounting |
 |---|---|---|---|
-| 5A-75B | (0, 0) | ≤ 20 mm incl. standoffs | **placeholder outline** 145 × 92 — caliper it; its front must stay behind the panel keep-outs, 2.5 mm to spare at 20 |
-| Pi Zero 2 W | (−110, 60) | 12 mm | M2.5 holes on 58 × 23 are **cut in the cover** |
-| Gigabit adapter | (−110, 15) | 20 mm | strap or bracket |
+| 5A-75B | (0, 0), long axis vertical | **measured** — see below | 4 × M3 x 8 into plywood bosses |
+| Pi Zero 2 W | (−107, 60), connector edge down | official drawing, 65 × 30 | 4 × M3 x 8 into plywood bosses — **open its 2.75 mm holes to 3.2**, or use M2.5 for the Pi alone |
+| Gigabit adapter | (−107, 15) | envelope until one is bought | strap |
+
+**No standoffs.** Every board mounts with the box's one fastener, an M3, into a
+nut trapped in the sheet — the same trick as the back-cover rails. Each board
+hole gets a 10 mm square stack glued to the cover: a hex-pocket layer holding the
+nut, and a clearance layer on top that the board sits on and the nut pulls up
+against. The cover under it has a clearance hole too, so the screw tip never
+bottoms: M3 x 8 and M3 x 10 both work. Two sheets put every board 6 mm off the
+cover, clear of its own through-hole pins (`#bossLayers`).
+
+### The 5A-75B, measured
+
+From 600 dpi scans of both faces, 2026-10-12 — outline and holes off the back,
+which lay flat; component outlines off the front, registered through the holes.
+
+![5A-75B, back](img/colorlight-5a-75b-back.jpg)
+
+| | Component side up, origin lower-left, RJ45 edge at top (mm) |
+|---|---|
+| PCB | **91.76 × 143.67** |
+| Mounting holes | Ø4.23 plated, at (5.11, 139.08), (86.51, 139.35), (16.07, 3.81), (76.44, 3.96) — the bottom pair is inset ~16 mm |
+| HUB75 J1–J8 | 2 × 8 shrouded, in two columns at x ≈ 11.9 and 80.3, rows at y ≈ 98.6, 71.8, 44.4, 17.1; **angled ±25° off vertical**, mirrored |
+| RJ45 | dual, ganged, x 29.5–63.5, overhangs the top edge by ~3.5 |
+| 5 V in | 2-way barrier terminal, x 66–86.5 at the top edge (silk: D5V / GND); also a 4-pin header, right edge (GND GND D5V D5V) |
+
+Heights are the open item: `#clRjH`, `#clHubH`, `#clTermH`, `#clJstH`,
+`#clPcbT` are placeholders. With them as assumed the card's front is at
+z −35.9, 9 mm behind the panels' HUB75 keep-outs.
 
 Mounting to the cover means the four HUB75 ribbons, the Cat6 patch and the 5 V
 leads need enough slack for the cover to come off and lie flat beside the box.

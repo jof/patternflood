@@ -83,9 +83,11 @@ Four Waveshare 64×64 GOB panels in a 2 × 2 grid: 128 × 128 px, 256 × 256 mm.
 > It was built at P2.5 from 2026-09-12 because a measured vendor model existed
 > for that pitch and P2 was four guesses. Every number below is now calipers.
 
-Current external size is **297 wide × 373 tall × 60 deep**, standing upright on
+Current external size is **293 wide × 373 tall × 60 deep**, standing upright on
 its bottom wall: display on top, the knob and PSU band below. (The 2 × 1 box
-was 297 × 245 × 60 and lived on its side.)
+was 297 × 245 × 60 and lived on its side. The side margin went 20 → 18 mm on
+2026-10-12 so the widest part fits the laser and 12"-wide stock with room to
+spare — [`enclosure-lasercut.md`](enclosure-lasercut.md) §13.)
 
 ![The 2 x 2 box](img/box-2x2.png)
 
@@ -109,6 +111,13 @@ the top-left corner, converted here to panel-centre coordinates (+y up):
 | Threaded inserts, sides | M3; 6.5 in, 19.5 from top & bottom | (±57, ±44) | `#postXOffset`, `#braceYOffset` |
 | Threaded inserts, mid-edge | M3; 6.5 in by calipers — 6.7 in, 113.3 apart by flatbed scan (enclosure-lasercut §Flatbed cross-check) | (0, ±56.65) | `#midPostYOffset` |
 | Registration pins | Ø2.83–2.87 (nominal Ø3 hole), 7.75 in, 34.5 down | (±55.75, +29) | `#pinXOffset`, `#pinYOffset`, `#pinDia` |
+| HUB75 IN / OUT | two **vertical** 2 × 8 shrouds, 8.8 × 29.5, scan 2026-10-12 | (±35.9, +5.6) | `#hubX`, `#hubY`, `#hubW`, `#hubL`; height `#hubH` ⚠ |
+| 5 V input | 4-pin 3.96 mm (VH-style), 7.5 × 17.5 | (−10.1, +5.3) | `#pwrX`, `#pwrY`, `#pwrW`, `#pwrL`; height `#pwrH` ⚠ |
+
+The connectors' keep-outs (the mated plug and the turn of its cable, behind the
+panel's rear face — `#plugProj`, `#pwrPlugProj`) clear the braces by 2.55 mm
+(HUB75) and 8.85 mm (5 V) in y. Those depths are placeholders until a plugged
+connector is calipered.
 
 ![Rear of one panel proxy, seen from behind](img/panel-p2-rear.png)
 
@@ -352,7 +361,8 @@ dimensions don't carry over.
 Ordered by how expensive they are to get wrong:
 
 1. **EC11 bushing thread length** → sets max bezel thickness. Blocks bezel stock choice.
-1a. **Colorlight 5A-75B outline, hole pattern and tallest part** → `#clW`, `#clH`, `#clT` are placeholders. At over 22.5 mm off the cover it hits the panel keep-outs; its holes are not cut in the cover until measured.
+1a. ~~Colorlight 5A-75B outline and holes~~ → ✅ measured off scans, 2026-10-12 ([`driver-colorlight.md`](driver-colorlight.md) §6). **Still to caliper: component heights** — RJ45, HUB75 shrouds, terminal, JSTs, PCB.
+1b. **Panel connector heights** → HUB75 shroud and 5 V header top relative to the frame's rear face, and how far a *plugged* ribbon and power lead reach behind it (`#hubH`, `#pwrH`, `#plugProj`, `#pwrPlugProj`).
 2. ~~**Actual two-panel butted width**~~ → ✅ 256 × 128, zero seam (§2.1).
 3. ~~**Panel body depth incl. connectors**~~ → ✅ 14.5, 17.8 over the pins (§2.1).
 4. **4991 breakout outline** → confirms 45 mm knob pitch has no collision.
