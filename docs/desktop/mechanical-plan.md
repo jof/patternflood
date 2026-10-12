@@ -111,8 +111,10 @@ the top-left corner, converted here to panel-centre coordinates (+y up):
 | Threaded inserts, sides | M3; 6.5 in, 19.5 from top & bottom | (±57, ±44) | `#postXOffset`, `#braceYOffset` |
 | Threaded inserts, mid-edge | M3; 6.5 in by calipers — 6.7 in, 113.3 apart by flatbed scan (enclosure-lasercut §Flatbed cross-check) | (0, ±56.65) | `#midPostYOffset` |
 | Registration pins | Ø2.83–2.87 (nominal Ø3 hole), 7.75 in, 34.5 down | (±55.75, +29) | `#pinXOffset`, `#pinYOffset`, `#pinDia` |
-| HUB75 IN / OUT | two **vertical** 2 × 8 shrouds, 8.8 × 29.5, scan 2026-10-12 | (±35.9, +5.6) | `#hubX`, `#hubY`, `#hubW`, `#hubL`; height `#hubH` ⚠ |
-| 5 V input | 4-pin 3.96 mm (VH-style), 7.5 × 17.5 | (−10.1, +5.3) | `#pwrX`, `#pwrY`, `#pwrW`, `#pwrL`; height `#pwrH` ⚠ |
+| HUB75 IN / OUT | two **vertical** 2 × 8 shrouds, 8.8 × 29.5, scan 2026-10-12. **IN is on the left seen from behind** | IN (+35.9, +5.6), OUT (−35.9, +5.6) | `#hubX`, `#hubY`, `#hubW`, `#hubL` |
+| 5 V input | 4-pin 3.96 mm (VH-style), 7.5 × 17.5 | (−10.1, +5.3) | `#pwrX`, `#pwrY`, `#pwrW`, `#pwrL` |
+| Plugged HUB75 cable | 7 proud of the rear face | — | `#plugProj` |
+| Plugged 5 V cable | 19 proud of the rear face | — | `#pwrPlugProj` |
 
 The connectors' keep-outs (the mated plug and the turn of its cable, behind the
 panel's rear face — `#plugProj`, `#pwrPlugProj`) clear the braces by 2.55 mm
@@ -186,12 +188,12 @@ its pin edge.
     ├─ [3]  Braces + connector keep-outs ........ 3 + 20 mm
     │        three cross-braces, four HUB75 ribbons turning
     │
-    ├─ [4]  Electronics on the back cover ....... ≤ 20 mm
-    │        Colorlight 5A-75B, Pi Zero 2 W, USB gigabit adapter
-    │        (the PSU is in the control band below, not here)
+    ├─ [4]  Electronics, hung off the middle brace  ~ 23 mm
+    │        Colorlight 5A-75B, Pi Zero 2 W, USB gigabit adapter,
+    │        component side back; 17 mm clear of the cover
     │
     └─ [5]  Back cover + rails .................. 3 + 9 mm
-             removable, carries the boards
+             removable, carries nothing, no cables to it
 
    Total depth 60 mm external, set by the PSU stack in the control band.
 ```
@@ -324,9 +326,10 @@ aperture into a finished bezel is the one change that ruins a front panel.
   braces in all, [88, 128], [−40, 40], [−128, −88], each a through-tenon into
   both side walls. Each row's pins land in a brace with 3.5 mm of wood beyond
   the pin hole.
-- **Electronics:** on standoffs off the inside of the back cover — see
-  [`driver-colorlight.md`](driver-colorlight.md) §6. Leave enough slack in the
-  four ribbons, the Cat6 patch and the 5 V leads for the cover to come off.
+- **Electronics:** on plywood M3 nut-trap bosses glued to the rear face of the
+  middle brace, component side facing back — see
+  [`driver-colorlight.md`](driver-colorlight.md) §6. The back cover carries
+  nothing and comes off completely.
 - **Mains:** the IEC inlet is in the **right wall**, low, beside the PSU
   terminals; the box stands on its bottom wall so the inlet cannot go there.
 
@@ -361,8 +364,8 @@ dimensions don't carry over.
 Ordered by how expensive they are to get wrong:
 
 1. **EC11 bushing thread length** → sets max bezel thickness. Blocks bezel stock choice.
-1a. ~~Colorlight 5A-75B outline and holes~~ → ✅ measured off scans, 2026-10-12 ([`driver-colorlight.md`](driver-colorlight.md) §6). **Still to caliper: component heights** — RJ45, HUB75 shrouds, terminal, JSTs, PCB.
-1b. **Panel connector heights** → HUB75 shroud and 5 V header top relative to the frame's rear face, and how far a *plugged* ribbon and power lead reach behind it (`#hubH`, `#pwrH`, `#plugProj`, `#pwrPlugProj`).
+1a. ~~Colorlight 5A-75B outline, holes and heights~~ → ✅ scans and calipers, 2026-10-12 ([`driver-colorlight.md`](driver-colorlight.md) §6). Pi Zero PCB thickness still assumed (2 mm).
+1b. ~~Panel connector heights~~ → ✅ plugged HUB75 cable 7 mm, 5 V 19 mm proud of the rear face (2026-10-12).
 2. ~~**Actual two-panel butted width**~~ → ✅ 256 × 128, zero seam (§2.1).
 3. ~~**Panel body depth incl. connectors**~~ → ✅ 14.5, 17.8 over the pins (§2.1).
 4. **4991 breakout outline** → confirms 45 mm knob pitch has no collision.

@@ -131,23 +131,42 @@ sees ≥ 5.0 V under load.
 
 ## 6. Where it lives in the box
 
-The electronics ride on the **inside of the removable back cover**, in the clear
-zone behind the display, component side facing the panels (enclosure model,
-`Bay obstructions` feature for the boards, `Enclosure shell` for their bosses):
+The electronics hang off the **rear face of the middle panel brace**, component
+side facing **back** (enclosure model, `Bay obstructions` for the boards,
+`Enclosure shell` for their bosses). Nothing is fastened to the back cover and
+no cable runs to it: it lifts off clean, and once it is off every board, port
+and the Pi's microSD are in reach.
 
 | | Centre (x, y) | Model | Mounting |
 |---|---|---|---|
-| 5A-75B | (0, 0), long axis vertical | **measured** — see below | 4 × M3 x 8 into plywood bosses |
-| Pi Zero 2 W | (−107, 60), connector edge down | official drawing, 65 × 30 | 4 × M3 x 8 into plywood bosses — **open its 2.75 mm holes to 3.2**, or use M2.5 for the Pi alone |
-| Gigabit adapter | (−107, 15) | envelope until one is bought | strap |
+| 5A-75B | (30, 5.5), long axis **horizontal**, RJ45 end toward −x | **measured** — see below | 4 × M3 x 8 into plywood bosses on the brace |
+| Pi Zero 2 W | (−107, 22), connector edge down | official drawing, 65 × 30 | 4 × M3 x 8 into bosses — **open its 2.75 mm holes to 3.2**, or use M2.5 for the Pi alone |
+| Gigabit adapter | (−107, −22) | envelope until one is bought | strapped to the brace |
+
+Horizontal puts the card's two rows of four HUB75 headers facing the top and
+bottom panel rows. Each panel's **IN is on the left seen from behind** (+x seen
+from the front), and the nearest header to each IN is 33–45 mm away. The card
+sits right of centre so its RJ45 face (x −45.4) leaves 29 mm for the patch-cable
+plug before the Pi.
 
 **No standoffs.** Every board mounts with the box's one fastener, an M3, into a
 nut trapped in the sheet — the same trick as the back-cover rails. Each board
-hole gets a 10 mm square stack glued to the cover: a hex-pocket layer holding the
-nut, and a clearance layer on top that the board sits on and the nut pulls up
-against. The cover under it has a clearance hole too, so the screw tip never
-bottoms: M3 x 8 and M3 x 10 both work. Two sheets put every board 6 mm off the
-cover, clear of its own through-hole pins (`#bossLayers`).
+hole gets a 10 mm square stack glued to the brace: a hex-pocket layer holding the
+nut against the brace, and a clearance layer outside it that the board sits on
+and the nut pulls against. The brace has a clearance hole under each, so the
+screw tip never bottoms and never reaches the panel: M3 x 8 ends 0.3 mm into the
+brace, M3 x 10 2.3 mm. Two sheets put every board 6 mm off the brace, clear of
+its own through-hole pins (`#bossLayers`).
+
+The middle brace grows from y [−40, 40] to [−40, 51.4] to carry the card's
+upper bosses — as far as it can go and still miss the top row's HUB75 cable
+keep-outs, by 2.5 mm. Two consequences:
+
+- **The boards cover two panel screws** (middle brace, y ±20 near x ±7): take
+  the boards off before taking a panel off.
+- Clearances with everything as measured: boards ≥ 3.0 mm from any panel
+  connector keep-out, bosses ≥ 2.5 mm, the back cover 17 mm behind the tallest
+  part (the card's terminal block).
 
 ### The 5A-75B, measured
 
@@ -164,9 +183,10 @@ which lay flat; component outlines off the front, registered through the holes.
 | RJ45 | dual, ganged, x 29.5–63.5, overhangs the top edge by ~3.5 |
 | 5 V in | 2-way barrier terminal, x 66–86.5 at the top edge (silk: D5V / GND); also a 4-pin header, right edge (GND GND D5V D5V) |
 
-Heights are the open item: `#clRjH`, `#clHubH`, `#clTermH`, `#clJstH`,
-`#clPcbT` are placeholders. With them as assumed the card's front is at
-z −35.9, 9 mm behind the panels' HUB75 keep-outs.
+Heights, calipered 2026-10-12: PCB **1.7**; above it RJ45 **13.8**, HUB75
+shrouds **9**, terminal block **14.8** (the tallest), big JST **10.6**, small
+JST **6.38**. The Pi Zero's PCB is taken as 2 mm, unmeasured.
 
-Mounting to the cover means the four HUB75 ribbons, the Cat6 patch and the 5 V
-leads need enough slack for the cover to come off and lie flat beside the box.
+Because the boards face back, each HUB75 ribbon makes a short U: out of the
+card's header toward the cover, round the card's edge, and forward into the
+panel's IN.

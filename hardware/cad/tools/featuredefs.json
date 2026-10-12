@@ -184,8 +184,12 @@
     "#connMargin"
    ],
    [
-    "coverZ",
-    "0 mm - #panelDepth - #bayDepth + #thickness"
+    "mountZ",
+    "0 mm - #panelDepth - #thickness - #bossLayers * #thickness"
+   ],
+   [
+    "braceRearZ",
+    "0 mm - #panelDepth - #thickness"
    ],
    [
     "clX",
@@ -194,10 +198,6 @@
    [
     "clY",
     "#clY"
-   ],
-   [
-    "clStandoff",
-    "#bossLayers * #thickness"
    ],
    [
     "clPcbT",
@@ -216,8 +216,12 @@
     "#clTermH"
    ],
    [
-    "clJstH",
-    "#clJstH"
+    "clJstBigH",
+    "#clJstBigH"
+   ],
+   [
+    "clJstSmallH",
+    "#clJstSmallH"
    ],
    [
     "piX",
@@ -226,10 +230,6 @@
    [
     "piY",
     "#piY"
-   ],
-   [
-    "piStandoff",
-    "#bossLayers * #thickness"
    ],
    [
     "piPcbT",
@@ -315,18 +315,6 @@
    [
     "ventPitch",
     "#psuVentPitch"
-   ],
-   [
-    "termDepth",
-    "#psuTermDepth"
-   ],
-   [
-    "termPitch",
-    "#psuTermPitch"
-   ],
-   [
-    "termCount",
-    "#psuTermCount"
    ]
   ]
  ],

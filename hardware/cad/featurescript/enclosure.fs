@@ -68,7 +68,8 @@ const CL_HUB_W = 8.9;
 // [x0, y0, x1, y1] outlines, component-side scan (+/-1 mm)
 const CL_RJ45 = [29.5, 117.0, 63.5, 147.2];   // dual ganged jack, overhangs the top edge
 const CL_TERM = [66.0, 130.0, 86.5, 144.0];   // 2-way barrier terminal, 5 V in
-const CL_JSTS = [[2.5, 110.0, 9.0, 124.5], [83.5, 113.0, 91.5, 128.0]];
+const CL_JST_SMALL = [2.5, 110.0, 9.0, 124.5];    // white 4-pin, signal
+const CL_JST_BIG   = [83.5, 113.0, 91.5, 128.0];  // 4-pin power header, GND GND D5V D5V
 
 // Raspberry Pi Zero 2 W, from the official mechanical drawing
 // (datasheets.raspberrypi.com, rpizero2 mechanical drawing). The connector
@@ -86,6 +87,43 @@ const PI_TOP_PARTS = [[19.0, 8.0, 34.0, 23.0, 1.4],      // RP3A0 SiP
                       [37.3, 9.7, 48.9, 21.2, 1.2],      // second package
                       [1.5, 9.0, 12.6, 21.0, 1.4],       // microSD
                       [60.5, 7.0, 65.0, 23.0, 1.3]];     // camera FPC
+
+// Where the boards sit. Both hang off the REAR face of the middle panel
+// brace, component side facing BACK, so the back cover lifts away with no
+// cable attached to it and everything is in reach once it is off.
+//
+//   Colorlight: long axis horizontal, RJ45 end toward -x (the Pi side).
+//     Its frame (x_b across, y_b along, z_b out of the component side) maps
+//     to box -y, -x, -z:  box = (clX + CL_H/2 - y_b,  clY + CL_W/2 - x_b).
+//   Pi Zero 2 W: long axis horizontal, connector edge DOWN.
+//     Its frame (x_p along, y_p across, z_p out) maps to box -x, +y, -z:
+//     box = (piX + PI_W/2 - x_p,  piY - PI_H/2 + y_p).
+function clToBox(clX, clY, xb is number, yb is number) returns Vector
+{
+    return vector(clX + (CL_H / 2 - yb) * millimeter, clY + (CL_W / 2 - xb) * millimeter);
+}
+
+function piToBox(piX, piY, xp is number, yp is number) returns Vector
+{
+    return vector(piX + (PI_W / 2 - xp) * millimeter, piY + (yp - PI_H / 2) * millimeter);
+}
+
+// Mean Well LRS-50-5, off the vendor STEP (the "LRS-50-5" assembly in the
+// Onshape document). STEP frame: X along the length from the TERMINAL end,
+// Y across from the face with the threaded side holes, Z up from the base.
+// The perforated cover only spans X 12..95, so the terminal end is open over
+// the full width for 12 mm; the terminal block's top is 5.5 below the cover
+// plane, and the screw heads and the Vadj trimmer sit lower still, all
+// reached from the cover side.
+const LRS_OPEN_X      = 12.0;     // cover starts here
+const LRS_BLOCK       = [1.0, 24.04, 18.15, 72.5];   // terminal block footprint [X0, Y0, X1, Y1]
+const LRS_BLOCK_TOP   = 24.49;    // Z
+const LRS_SCREW_X     = 8.575;
+const LRS_SCREW_YS    = [29.75, 39.08, 48.41, 57.75, 67.08];   // L, N, FG, -V, +V
+const LRS_SCREW_TOP   = 20.44;    // Z of the screw heads
+const LRS_SCREW_DIA   = 6.5;
+const LRS_VADJ        = [6.2, 17.0, 16.9];          // X, Y, Z of its top
+const LRS_BASE_HOLES  = [[20.5, 40.5], [75.5, 40.5]]; // threaded M3 in the base (Z = 0 face)
 
 // ────────────────────────────────────────────────────────────────────────
 // Panel proxy
@@ -365,10 +403,10 @@ export const panelProxy = defineFeature(function(context is Context, id is Id, d
             nameBody(context, pid + "nc", pid + "pcb",   tag ~ " — PCB");
             nameBody(context, pid + "nd", pid + "frame", tag ~ " — rear frame");
             nameBody(context, pid + "ne", pid + "pwr",   tag ~ " — 5 V header");
-            for (var h = 0; h < 2; h += 1)
-            {
-                nameBody(context, pid + ("nh" ~ h), pid + ("hdr" ~ h), tag ~ " — HUB75");
-            }
+            // IN is on the LEFT seen from behind, i.e. at +x seen from the
+            // front (confirmed on the panels, 2026-10-12).
+            nameBody(context, pid + "nh0", pid + "hdr0", tag ~ " — HUB75 OUT");
+            nameBody(context, pid + "nh1", pid + "hdr1", tag ~ " — HUB75 IN");
         }
     });
 
@@ -432,14 +470,6 @@ export const psuProxy = defineFeature(function(context is Context, id is Id, def
         annotation { "Name" : "Vent slot pitch" }
         isLength(definition.ventPitch, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Terminal block depth" }
-        isLength(definition.termDepth, LENGTH_BOUNDS);
-
-        annotation { "Name" : "Terminal pitch" }
-        isLength(definition.termPitch, LENGTH_BOUNDS);
-
-        annotation { "Name" : "Terminal count" }
-        isInteger(definition.termCount, POSITIVE_COUNT_BOUNDS);
     }
     {
         fCuboid(context, id + "psu", {
@@ -558,56 +588,62 @@ export const psuProxy = defineFeature(function(context is Context, id is Id, def
             }
         }
 
-        // Terminal block, in a step recessed into the PSU's TOP COVER at the
-        // terminal end. Measured off Mean Well's own STEP (see
-        // hardware/cad/vendor/meanwell-lrs-50-5.step): five ways — L, N, FG,
-        // -V, +V — at 9.3mm pitch, Ø6.5 screw heads sunk ~10mm below the
-        // cover plane, and the screws face OUT OF THE COVER.
+        // The terminal end, from Mean Well's STEP (see LRS_* above). The
+        // cover stops 12 mm short of the terminal end, so that end is open
+        // across the full width down to the terminal block; the five screw
+        // heads (L, N, FG, -V, +V) and the Vadj trimmer sit in wells below
+        // it. STEP -> here: X from the terminal end -> x = psuXHi - X, Y from
+        // the threaded-hole face -> y = psuYLo + Y, Z up from the base ->
+        // z = psuZFront - Z.
         //
-        // ⚠ THAT DIRECTION IS A DESIGN CONSTRAINT, not decoration. The screws
-        // are the only way mains gets connected, so the cover has to face
-        // something openable. Here it faces -z, the back cover. Rotate this
-        // part 180 degrees about its long axis and the terminals point at the
-        // bezel, which is glued shut — see power-plan.md.
-        const zTop = zLo;                       // cover face, toward the back
-        fCuboid(context, id + "termPk", {
-                "corner1" : vector(psuXHi - definition.termDepth, psuYLo + 4 * millimeter,
-                                   zTop - 1 * millimeter),
-                "corner2" : vector(psuXHi + 1 * millimeter, yHi - 4 * millimeter,
-                                   zTop + 10 * millimeter) });
-        vents = append(vents, qCreatedBy(id + "termPk", EntityType.BODY));
+        // ⚠ THE SCREWS FACE OUT OF THE COVER, i.e. -z, toward the back cover
+        // — the only way mains gets connected, so the cover has to face
+        // something openable. Rotate this part 180 degrees about its long
+        // axis and the terminals point at the bezel. See power-plan.md.
+        const mm = millimeter;
+        const zOf = function(Z) { return definition.psuZFront - Z * mm; };
+        const xOf = function(X) { return psuXHi - X * mm; };
+        const yOf = function(Y) { return psuYLo + Y * mm; };
 
+        fCuboid(context, id + "termPk", {
+                "corner1" : vector(xOf(LRS_OPEN_X), yOf(1), zOf(definition.psuT / mm + 1)),
+                "corner2" : vector(psuXHi + 1 * mm, yOf(definition.psuW / mm - 1), zOf(LRS_BLOCK_TOP)) });
+        vents = append(vents, qCreatedBy(id + "termPk", EntityType.BODY));
+        for (var i = 0; i < size(LRS_SCREW_YS); i += 1)
+        {
+            fCylinder(context, id + ("tw" ~ i), {
+                    "topCenter"    : vector(xOf(LRS_SCREW_X), yOf(LRS_SCREW_YS[i]), zOf(LRS_BLOCK_TOP + 1)),
+                    "bottomCenter" : vector(xOf(LRS_SCREW_X), yOf(LRS_SCREW_YS[i]), zOf(LRS_SCREW_TOP)),
+                    "radius"       : (LRS_SCREW_DIA / 2 + 0.5) * mm });
+            vents = append(vents, qCreatedBy(id + ("tw" ~ i), EntityType.BODY));
+        }
+        fCylinder(context, id + "vadjWell", {
+                "topCenter"    : vector(xOf(LRS_VADJ[0]), yOf(LRS_VADJ[1]), zOf(LRS_BLOCK_TOP + 1)),
+                "bottomCenter" : vector(xOf(LRS_VADJ[0]), yOf(LRS_VADJ[1]), zOf(LRS_VADJ[2])),
+                "radius"       : 2 * mm });
+        vents = append(vents, qCreatedBy(id + "vadjWell", EntityType.BODY));
+        // threaded M3 pair in the base, unused here but real
+        for (var i = 0; i < size(LRS_BASE_HOLES); i += 1)
+        {
+            fCylinder(context, id + ("bh" ~ i), {
+                    "topCenter"    : vector(xOf(LRS_BASE_HOLES[i][0]), yOf(LRS_BASE_HOLES[i][1]), zOf(-1)),
+                    "bottomCenter" : vector(xOf(LRS_BASE_HOLES[i][0]), yOf(LRS_BASE_HOLES[i][1]), zOf(5)),
+                    "radius"       : definition.threadDia / 2 });
+            vents = append(vents, qCreatedBy(id + ("bh" ~ i), EntityType.BODY));
+        }
         opBoolean(context, id + "ventCut", {
                 "tools"         : qUnion(vents),
                 "targets"       : qCreatedBy(id + "psu", EntityType.BODY),
                 "operationType" : BooleanOperationType.SUBTRACTION });
 
-        // Vadj trimmer, on the cover near the DC end.
-        fCylinder(context, id + "vadj", {
-                "topCenter"    : vector(psuXHi - 30 * millimeter, psuYLo + 16 * millimeter,
-                                        zHi - 1.6 * millimeter),
-                "bottomCenter" : vector(psuXHi - 30 * millimeter, psuYLo + 16 * millimeter,
-                                        zHi + 2 * millimeter),
-                "radius"       : 3.5 * millimeter });
-        opBoolean(context, id + "vadjCut", {
-                "tools"         : qCreatedBy(id + "vadj", EntityType.BODY),
-                "targets"       : qCreatedBy(id + "psu", EntityType.BODY),
-                "operationType" : BooleanOperationType.SUBTRACTION });
-
-        fCuboid(context, id + "term", {
-                "corner1" : vector(psuXHi - definition.termDepth, psuYLo + 4 * millimeter,
-                                   zTop + 1 * millimeter),
-                "corner2" : vector(psuXHi, yHi - 4 * millimeter, zTop + 10 * millimeter) });
-        var screws = [qCreatedBy(id + "term", EntityType.BODY)];
-        for (var i = 0; i < definition.termCount; i += 1)
+        // The screw heads themselves, so the screwdriver's target is visible.
+        var screws = [];
+        for (var i = 0; i < size(LRS_SCREW_YS); i += 1)
         {
-            const ty = yMid + (i - (definition.termCount - 1) / 2) * definition.termPitch;
             fCylinder(context, id + ("ts" ~ i), {
-                    "topCenter"    : vector(psuXHi - definition.termDepth / 2, ty,
-                                            zTop + 0.8 * millimeter),
-                    "bottomCenter" : vector(psuXHi - definition.termDepth / 2, ty,
-                                            zTop + 4 * millimeter),
-                    "radius"       : 3.25 * millimeter });
+                    "topCenter"    : vector(xOf(LRS_SCREW_X), yOf(LRS_SCREW_YS[i]), zOf(LRS_SCREW_TOP)),
+                    "bottomCenter" : vector(xOf(LRS_SCREW_X), yOf(LRS_SCREW_YS[i]), zOf(LRS_SCREW_TOP - 1.5)),
+                    "radius"       : LRS_SCREW_DIA / 2 * mm });
             screws = append(screws, qCreatedBy(id + ("ts" ~ i), EntityType.BODY));
         }
         opBoolean(context, id + "termJoin", {
@@ -769,14 +805,15 @@ export const iecProxy = defineFeature(function(context is Context, id is Id, def
 // That replaced a single 70 x 40 block per panel which, it turned out, did
 // not even cover the HUB75 shrouds (their outer edges are at x +/-40.7).
 //
-// Then the driving electronics, on plywood bosses off the INSIDE of the
-// removable back cover (the bosses are cut in the shell, with the other
-// sheet parts), component side facing forward toward the panels:
-//   - Colorlight 5A-75B, measured (see Board data), long axis vertical so its
-//     two columns of HUB75 headers face the left and right panel pairs;
+// Then the driving electronics, on plywood bosses glued to the REAR face of
+// the middle panel brace (the bosses are cut in the shell, with the other
+// sheet parts), component side facing BACK — the back cover comes off
+// clean, with nothing tethered to it:
+//   - Colorlight 5A-75B, measured (see Board data), long axis horizontal so
+//     its two rows of four HUB75 headers face the top and bottom panel rows;
 //   - Raspberry Pi Zero 2 W, from the official drawing, connector edge down;
 //   - the USB gigabit adapter, still an envelope (model not chosen yet).
-// Component HEIGHTS are placeholders until calipered; positions are not.
+// Heights calipered 2026-10-12, except the Pi PCB (2 mm assumed).
 
 // Board-frame box -> a body: [x0, y0, x1, y1] in the board's own frame,
 // placed with its lower-left at (ox, oy) and standing from z0 by h.
@@ -840,8 +877,11 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
         annotation { "Name" : "Keep-out margin around connectors" }
         isLength(definition.connMargin, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Back cover inner face z" }
-        isLength(definition.coverZ, ANY_LENGTH_BOUNDS);
+        annotation { "Name" : "Board mounting face z (boss tops)" }
+        isLength(definition.mountZ, ANY_LENGTH_BOUNDS);
+
+        annotation { "Name" : "Middle brace rear face z" }
+        isLength(definition.braceRearZ, ANY_LENGTH_BOUNDS);
 
         annotation { "Name" : "Receiver card centre x" }
         isLength(definition.clX, ANY_LENGTH_BOUNDS);
@@ -849,8 +889,6 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
         annotation { "Name" : "Receiver card centre y" }
         isLength(definition.clY, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "Receiver card height off cover (boss stack)" }
-        isLength(definition.clStandoff, LENGTH_BOUNDS);
 
         annotation { "Name" : "Receiver card PCB thickness" }
         isLength(definition.clPcbT, LENGTH_BOUNDS);
@@ -864,8 +902,11 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
         annotation { "Name" : "Receiver card terminal height" }
         isLength(definition.clTermH, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Receiver card JST height" }
-        isLength(definition.clJstH, LENGTH_BOUNDS);
+        annotation { "Name" : "Receiver card big JST height" }
+        isLength(definition.clJstBigH, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Receiver card small JST height" }
+        isLength(definition.clJstSmallH, LENGTH_BOUNDS);
 
         annotation { "Name" : "Pi centre x" }
         isLength(definition.piX, ANY_LENGTH_BOUNDS);
@@ -873,8 +914,6 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
         annotation { "Name" : "Pi centre y" }
         isLength(definition.piY, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "Pi height off cover (boss stack)" }
-        isLength(definition.piStandoff, LENGTH_BOUNDS);
 
         annotation { "Name" : "Pi PCB thickness" }
         isLength(definition.piPcbT, LENGTH_BOUNDS);
@@ -885,7 +924,7 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
         annotation { "Name" : "Ethernet adapter height (y)" }
         isLength(definition.nicH, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Ethernet adapter height off cover" }
+        annotation { "Name" : "Ethernet adapter height off the brace" }
         isLength(definition.nicT, LENGTH_BOUNDS);
 
         annotation { "Name" : "Ethernet adapter centre x" }
@@ -908,9 +947,9 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
             // [cx, cy, w, l, projection, label]
             const conns = [
                 [xc - definition.hubX, yc + definition.hubY, definition.hubW, definition.hubL,
-                 definition.plugProj, "HUB75 (left)"],
+                 definition.plugProj, "HUB75 OUT"],
                 [xc + definition.hubX, yc + definition.hubY, definition.hubW, definition.hubL,
-                 definition.plugProj, "HUB75 (right)"],
+                 definition.plugProj, "HUB75 IN"],
                 [xc + definition.pwrX, yc + definition.pwrY, definition.pwrW, definition.pwrL,
                  definition.pwrPlugProj, "5 V"]
             ];
@@ -926,96 +965,111 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
         }
 
         // ── Colorlight 5A-75B ───────────────────────────────────────────
-        const cox = definition.clX - CL_W / 2 * millimeter;
-        const coy = definition.clY - CL_H / 2 * millimeter;
-        const cz0 = definition.coverZ + definition.clStandoff;      // PCB back
-        const cz1 = cz0 + definition.clPcbT;                         // component side
+        // Hung behind the middle brace, component side facing back: the PCB
+        // occupies [mountZ - pcbT, mountZ] and every part grows toward -z.
+        const mm = millimeter;
+        const clX = definition.clX;
+        const clY = definition.clY;
+        const cTop = definition.mountZ;                    // solder side, on the bosses
+        const cComp = cTop - definition.clPcbT;            // component side
 
-        fCuboid(context, id + "clPcb", {
-                "corner1" : vector(cox, coy, cz0),
-                "corner2" : vector(cox + CL_W * millimeter, coy + CL_H * millimeter, cz1) });
+        // a board-frame rectangle -> a box-frame cuboid hanging back from zFace
+        const clPart = function(pid is Id, r is array, zFace, h, name is string)
+        {
+            const a = clToBox(clX, clY, r[0], r[1]);
+            const b = clToBox(clX, clY, r[2], r[3]);
+            fCuboid(context, pid, {
+                    "corner1" : vector(min(a[0], b[0]), min(a[1], b[1]), zFace - h),
+                    "corner2" : vector(max(a[0], b[0]), max(a[1], b[1]), zFace) });
+            nameBody(context, pid + "n", pid, name);
+        };
+
+        clPart(id + "clPcb", [0, 0, CL_W, CL_H], cTop, definition.clPcbT, "Colorlight 5A-75B — PCB");
         var clHoles = [];
         for (var h = 0; h < size(CL_HOLES); h += 1)
         {
-            const hp = vector(cox + CL_HOLES[h][0] * millimeter, coy + CL_HOLES[h][1] * millimeter);
+            const hp = clToBox(clX, clY, CL_HOLES[h][0], CL_HOLES[h][1]);
             fCylinder(context, id + ("clHole" ~ h), {
-                    "topCenter"    : vector(hp[0], hp[1], cz1 + 1 * millimeter),
-                    "bottomCenter" : vector(hp[0], hp[1], cz0 - 1 * millimeter),
-                    "radius"       : CL_PCB_HOLE / 2 * millimeter });
+                    "topCenter"    : vector(hp[0], hp[1], cTop + 1 * mm),
+                    "bottomCenter" : vector(hp[0], hp[1], cComp - 1 * mm),
+                    "radius"       : CL_PCB_HOLE / 2 * mm });
             clHoles = append(clHoles, qCreatedBy(id + ("clHole" ~ h), EntityType.BODY));
         }
         opBoolean(context, id + "clDrill", {
                 "tools"         : qUnion(clHoles),
                 "targets"       : qCreatedBy(id + "clPcb", EntityType.BODY),
                 "operationType" : BooleanOperationType.SUBTRACTION });
-        nameBody(context, id + "clPcbN", id + "clPcb", "Colorlight 5A-75B — PCB");
 
         for (var j = 0; j < size(CL_HUBS); j += 1)
         {
             const hb = CL_HUBS[j];
+            const hc = clToBox(clX, clY, hb[0], hb[1]);
+            const ang = atan2(-cos(hb[2] * degree), -sin(hb[2] * degree));   // board axis -> box axis
             const hid = id + ("clHub" ~ j);
             fCuboid(context, hid, {
-                    "corner1" : vector(-CL_HUB_L / 2 * millimeter, -CL_HUB_W / 2 * millimeter, cz1),
-                    "corner2" : vector( CL_HUB_L / 2 * millimeter,  CL_HUB_W / 2 * millimeter, cz1 + definition.clHubH) });
+                    "corner1" : vector(-CL_HUB_L / 2 * mm, -CL_HUB_W / 2 * mm, cComp - definition.clHubH),
+                    "corner2" : vector( CL_HUB_L / 2 * mm,  CL_HUB_W / 2 * mm, cComp) });
             opTransform(context, hid + "xf", {
                     "bodies"    : qCreatedBy(hid, EntityType.BODY),
-                    "transform" : transform(vector(cox + hb[0] * millimeter, coy + hb[1] * millimeter, 0 * millimeter))
-                                * rotationAround(line(vector(0, 0, 0) * millimeter, vector(0, 0, 1)), hb[2] * degree) });
+                    "transform" : transform(vector(hc[0], hc[1], 0 * mm))
+                                * rotationAround(line(vector(0, 0, 0) * mm, vector(0, 0, 1)), ang) });
             nameBody(context, hid + "n", hid, "Colorlight HUB75 J" ~ (j + 1));
         }
-        boardBox(context, id + "clRj", cox, coy, CL_RJ45, cz1, definition.clRjH, "Colorlight RJ45 (dual)");
-        boardBox(context, id + "clTerm", cox, coy, CL_TERM, cz1, definition.clTermH, "Colorlight 5 V terminal");
-        for (var j = 0; j < size(CL_JSTS); j += 1)
-        {
-            boardBox(context, id + ("clJst" ~ j), cox, coy, CL_JSTS[j], cz1, definition.clJstH, "Colorlight JST");
-        }
+        clPart(id + "clRj",   CL_RJ45,      cComp, definition.clRjH,      "Colorlight RJ45 (dual)");
+        clPart(id + "clTerm", CL_TERM,      cComp, definition.clTermH,    "Colorlight 5 V terminal");
+        clPart(id + "clJstB", CL_JST_BIG,   cComp, definition.clJstBigH,  "Colorlight 5 V header (big JST)");
+        clPart(id + "clJstS", CL_JST_SMALL, cComp, definition.clJstSmallH, "Colorlight JST (small)");
 
         // ── Raspberry Pi Zero 2 W ───────────────────────────────────────
-        const pox = definition.piX - PI_W / 2 * millimeter;
-        const poy = definition.piY - PI_H / 2 * millimeter;
-        const pz0 = definition.coverZ + definition.piStandoff;
-        const pz1 = pz0 + definition.piPcbT;
+        const piX = definition.piX;
+        const piY = definition.piY;
+        const pComp = cTop - definition.piPcbT;
+        const piPart = function(pid is Id, r is array, zFace, h, name is string)
+        {
+            const a = piToBox(piX, piY, r[0], r[1]);
+            const b = piToBox(piX, piY, r[2], r[3]);
+            fCuboid(context, pid, {
+                    "corner1" : vector(min(a[0], b[0]), min(a[1], b[1]), zFace - h),
+                    "corner2" : vector(max(a[0], b[0]), max(a[1], b[1]), zFace) });
+            nameBody(context, pid + "n", pid, name);
+        };
 
-        fCuboid(context, id + "piPcb", {
-                "corner1" : vector(pox, poy, pz0),
-                "corner2" : vector(pox + PI_W * millimeter, poy + PI_H * millimeter, pz1) });
+        piPart(id + "piPcb", [0, 0, PI_W, PI_H], cTop, definition.piPcbT, "Raspberry Pi Zero 2 W — PCB");
         var piHoles = [];
         for (var h = 0; h < size(PI_HOLES); h += 1)
         {
-            const hp = vector(pox + PI_HOLES[h][0] * millimeter, poy + PI_HOLES[h][1] * millimeter);
+            const hp = piToBox(piX, piY, PI_HOLES[h][0], PI_HOLES[h][1]);
             fCylinder(context, id + ("piHole" ~ h), {
-                    "topCenter"    : vector(hp[0], hp[1], pz1 + 1 * millimeter),
-                    "bottomCenter" : vector(hp[0], hp[1], pz0 - 1 * millimeter),
-                    "radius"       : PI_HOLE / 2 * millimeter });
+                    "topCenter"    : vector(hp[0], hp[1], cTop + 1 * mm),
+                    "bottomCenter" : vector(hp[0], hp[1], pComp - 1 * mm),
+                    "radius"       : PI_HOLE / 2 * mm });
             piHoles = append(piHoles, qCreatedBy(id + ("piHole" ~ h), EntityType.BODY));
         }
         opBoolean(context, id + "piDrill", {
                 "tools"         : qUnion(piHoles),
                 "targets"       : qCreatedBy(id + "piPcb", EntityType.BODY),
                 "operationType" : BooleanOperationType.SUBTRACTION });
-        nameBody(context, id + "piPcbN", id + "piPcb", "Raspberry Pi Zero 2 W — PCB");
 
         const edgeNames = ["Pi mini HDMI", "Pi micro USB (OTG)", "Pi micro USB (power)"];
         for (var j = 0; j < size(PI_EDGE_PARTS); j += 1)
         {
             const e = PI_EDGE_PARTS[j];
-            boardBox(context, id + ("piEdge" ~ j), pox, poy,
-                     [e[0] - e[1] / 2, -e[3], e[0] + e[1] / 2, e[2] - e[3]],
-                     pz1, e[4] * millimeter, edgeNames[j]);
+            piPart(id + ("piEdge" ~ j), [e[0] - e[1] / 2, -e[3], e[0] + e[1] / 2, e[2] - e[3]],
+                   pComp, e[4] * mm, edgeNames[j]);
         }
         for (var j = 0; j < size(PI_TOP_PARTS); j += 1)
         {
             const t = PI_TOP_PARTS[j];
-            boardBox(context, id + ("piTop" ~ j), pox, poy, [t[0], t[1], t[2], t[3]],
-                     pz1, t[4] * millimeter, "Pi Zero 2 W component");
+            piPart(id + ("piTop" ~ j), [t[0], t[1], t[2], t[3]], pComp, t[4] * mm, "Pi Zero 2 W component");
         }
 
         // ── USB gigabit adapter (envelope until one is chosen) ──────────
+        // Strapped to the same brace, under the Pi.
         fCuboid(context, id + "nic", {
                 "corner1" : vector(definition.nicX - definition.nicW / 2,
-                                   definition.nicY - definition.nicH / 2, definition.coverZ),
+                                   definition.nicY - definition.nicH / 2, definition.braceRearZ - definition.nicT),
                 "corner2" : vector(definition.nicX + definition.nicW / 2,
-                                   definition.nicY + definition.nicH / 2, definition.coverZ + definition.nicT) });
+                                   definition.nicY + definition.nicH / 2, definition.braceRearZ) });
         nameBody(context, id + "nicN", id + "nic", "USB gigabit Ethernet adapter");
     });
 
@@ -1540,6 +1594,40 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             }
         }
 
+        // Board bosses hang off the brace nearest each mounting hole, so
+        // that brace grows to carry them (with the measured numbers, the
+        // middle one goes from [-40, 40] to [-40, 51.3], still 2.5 mm short
+        // of the top row's HUB75 keep-outs).
+        const half = definition.bossSize / 2;
+        var bossSites = [];
+        for (var h = 0; h < size(CL_HOLES); h += 1)
+        {
+            const bp = clToBox(definition.clX, definition.clY, CL_HOLES[h][0], CL_HOLES[h][1]);
+            bossSites = append(bossSites, [bp[0], bp[1], "Colorlight " ~ (h + 1)]);
+        }
+        for (var h = 0; h < size(PI_HOLES); h += 1)
+        {
+            const bp = piToBox(definition.piX, definition.piY, PI_HOLES[h][0], PI_HOLES[h][1]);
+            bossSites = append(bossSites, [bp[0], bp[1], "Pi " ~ (h + 1)]);
+        }
+        for (var bs = 0; bs < size(bossSites); bs += 1)
+        {
+            const by = bossSites[bs][1];
+            var bestS = 0;
+            var bestD = 1e9 * millimeter;
+            for (var k = 0; k < size(braceSpans); k += 1)
+            {
+                var d = 0 * millimeter;
+                if (by < braceSpans[k][0]) { d = braceSpans[k][0] - by; }
+                if (by > braceSpans[k][1]) { d = by - braceSpans[k][1]; }
+                if (d < bestD) { bestD = d; bestS = k; }
+            }
+            var span = braceSpans[bestS];
+            if (by - half < span[0]) { span[0] = by - half; }
+            if (by + half > span[1]) { span[1] = by + half; }
+            braceSpans[bestS] = span;
+        }
+
         for (var s = 0; s < size(braceSpans); s += 1)
         {
             const lo = braceSpans[s][0];
@@ -1929,61 +2017,60 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         // ── board bosses: the same nut trap as the cover rails ──────────
         // Every board mounts with the box's one fastener, an M3, and nothing
         // that is not cut from the sheet. Each board hole gets a small square
-        // stack glued to the inside of the back cover:
+        // stack glued to the REAR face of the brace it hangs from (sites and
+        // brace growth above):
         //
-        //     z:  cover     B (hex)     C (clearance)     board
+        //     z:  brace     B (hex)     C (clearance)     board
         //         ├────────┼───────────┼─────────────────┼────
         //         │ Ø clr  │  M3 nut   │  Ø clr          │ PCB   ◄── M3 x 8
         //
-        // Tightening pulls the nut up against C's underside and clamps the
-        // board onto C's top — so C is the bearing face, exactly as rail A
-        // is for the cover. The cover itself closes the pocket, and its
-        // clearance hole takes the screw tip, so M3 x 8 and M3 x 10 both work
-        // without bottoming. bossLayers > 2 adds plain spacers under B.
+        // Tightening pulls the nut against C and clamps the board onto C's
+        // face, so C is the bearing layer, exactly as rail A is for the
+        // cover. The brace closes the pocket, and its clearance hole takes
+        // the screw tip: M3 x 8 ends 0.3 mm into it, M3 x 10 2.3 mm — never
+        // through to the panel. bossLayers > 2 adds plain spacers next to
+        // the brace.
         //
         // The Pi Zero 2 W's holes are 2.75 mm, for M2.5: open them to
         // 3.2 mm to take the M3, or use M2.5 hardware for the Pi alone. The
         // 5A-75B's 4.23 mm holes take M3 as they are — use a washer.
-        var bossSites = [];
-        for (var h = 0; h < size(CL_HOLES); h += 1)
-        {
-            bossSites = append(bossSites, [definition.clX - CL_W / 2 * millimeter + CL_HOLES[h][0] * millimeter,
-                                           definition.clY - CL_H / 2 * millimeter + CL_HOLES[h][1] * millimeter,
-                                           "Colorlight " ~ (h + 1)]);
-        }
-        for (var h = 0; h < size(PI_HOLES); h += 1)
-        {
-            bossSites = append(bossSites, [definition.piX - PI_W / 2 * millimeter + PI_HOLES[h][0] * millimeter,
-                                           definition.piY - PI_H / 2 * millimeter + PI_HOLES[h][1] * millimeter,
-                                           "Pi " ~ (h + 1)]);
-        }
+        //
+        // The boards cover some panel screws (middle brace, y +/-20 near
+        // x +/-7): take the boards off before taking the panels off.
         const nb = definition.bossLayers;
-        const half = definition.bossSize / 2;
+        const bossClrR = definition.screwDia / 2 + 0.25 * millimeter;
+        var braceBodies = [];
+        for (var s = 0; s < size(braceSpans); s += 1)
+        {
+            braceBodies = append(braceBodies, qCreatedBy(id + ("brace" ~ s), EntityType.BODY));
+        }
+        var tipHoles = [];
         for (var bs = 0; bs < size(bossSites); bs += 1)
         {
             const bx = bossSites[bs][0];
             const by = bossSites[bs][1];
             for (var L = 0; L < nb; L += 1)
             {
+                // L = 0 against the brace, L = nb - 1 the one the board sits on
                 const lid = id + ("boss" ~ bs ~ "L" ~ L);
-                const z0 = zBc1 + L * t;
+                const z1 = zBraceB - L * t;
                 fCuboid(context, lid, {
-                        "corner1" : vector(bx - half, by - half, z0),
-                        "corner2" : vector(bx + half, by + half, z0 + t) });
+                        "corner1" : vector(bx - half, by - half, z1 - t),
+                        "corner2" : vector(bx + half, by + half, z1) });
                 var cutter = qNothing();
                 var role = "";
                 if (L == nb - 2)
                 {
-                    cutter = hexPrism(context, id + ("bossHex" ~ bs ~ "L" ~ L), bx, by, definition.nutAcrossFlats - kerf,
-                                      z0 - over, z0 + t + over);
+                    cutter = hexPrism(context, id + ("bossHex" ~ bs ~ "L" ~ L), bx, by,
+                                      definition.nutAcrossFlats - kerf, z1 - t - over, z1 + over);
                     role = "B (nut)";
                 }
                 else
                 {
                     fCylinder(context, id + ("bossHole" ~ bs ~ "L" ~ L), {
-                            "topCenter"    : vector(bx, by, z0 + t + over),
-                            "bottomCenter" : vector(bx, by, z0 - over),
-                            "radius"       : clrR });
+                            "topCenter"    : vector(bx, by, z1 + over),
+                            "bottomCenter" : vector(bx, by, z1 - t - over),
+                            "radius"       : bossClrR });
                     cutter = qCreatedBy(id + ("bossHole" ~ bs ~ "L" ~ L), EntityType.BODY);
                     role = (L == nb - 1) ? "C (bearing)" : "spacer";
                 }
@@ -1994,13 +2081,17 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 nameBody(context, lid + "n", lid, "Board boss " ~ role ~ " — " ~ bossSites[bs][2]);
             }
 
-            // screw-tip clearance through the cover under every boss
-            fCylinder(context, id + ("bossClr" ~ bs), {
-                    "topCenter"    : vector(bx, by, zBc1 + over),
-                    "bottomCenter" : vector(bx, by, zBc0 - over),
-                    "radius"       : clrR });
-            coverHoles = append(coverHoles, qCreatedBy(id + ("bossClr" ~ bs), EntityType.BODY));
+            // screw-tip clearance through the brace under every boss
+            fCylinder(context, id + ("bossTip" ~ bs), {
+                    "topCenter"    : vector(bx, by, zBraceF + over),
+                    "bottomCenter" : vector(bx, by, zBraceB - over),
+                    "radius"       : bossClrR });
+            tipHoles = append(tipHoles, qCreatedBy(id + ("bossTip" ~ bs), EntityType.BODY));
         }
+        opBoolean(context, id + "bossTipCut", {
+                "tools"         : qUnion(tipHoles),
+                "targets"       : qUnion(braceBodies),
+                "operationType" : BooleanOperationType.SUBTRACTION });
 
         opBoolean(context, id + "coverCut", {
                 "tools"         : qUnion(coverHoles),
