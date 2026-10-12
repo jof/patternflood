@@ -390,7 +390,7 @@ centre:
 | | |
 |---|---|
 | Body | **128 × 128 × 14.5 mm** front face; 127 × 127 at the back |
-| Inserts | **6 × M3**: (±57, ±44) down the sides, (0, ±57) mid top and bottom |
+| Inserts | **6 × M3**: (±57, ±44) down the sides, (0, ±57) mid top and bottom — mid pair corrected to (0, ±56.65) by the 10-11 scans |
 | Inset | **6.5 mm** for every insert |
 | Registration pins | **2 × Ø2.83–2.87** (nominal Ø3 hole), 3.3 proud, at (±55.75, +29) |
 
@@ -448,7 +448,7 @@ the scans side with 10-03.
 The one real correction is the **mid-edge pair**:
 - They are 113.3 apart, not 114, so at (0, ±56.65) rather than (0, ±57).
 - They sit 6.7 below the top edge, not 6.5.
-- The model leaves this pair free, so nothing downstream moves.
+- `#midPostYOffset` is now 56.65 (was 57). Nothing screws into this pair, so only the proxy moves.
 
 The whole pattern also sits ~0.15–0.3 mm nearer the top than the bottom.
 Because the bottom edge was never in focus, it cannot be told apart from a back
