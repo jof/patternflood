@@ -6,7 +6,7 @@ Everything below fits one 12 × 12" sheet (`all-test-cuts.dxf`, 300 × 257.26 mm
 
 **Order:** caliper the sheet's thickness first, then tests 1–2 to settle **#kerf** (everything else is compensated by it), set the variables, re-run this script, and cut the rest.
 
-Values used for this cut: `#kerf` 0.2, `#thickness` 3.18, `#screwDia` 3.2, `#nutAcrossFlats` 5.5, `#boreDia` 7, `#pinHoleDia` 3, `#psuHoleDia` 4.5.
+Values used for this cut: `#kerf` 0.15, `#thickness` 3.18, `#screwDia` 3.05, `#nutAcrossFlats` 5.5, `#boreDia` 7, `#pinHoleDia` 2.95, `#psuHoleDia` 4.45.
 
 ![Test sheet](preview.png)
 
@@ -28,7 +28,7 @@ Values used for this cut: `#kerf` 0.2, `#thickness` 3.18, `#screwDia` 3.2, `#nut
 
 ## 3. Captive nut: hex pocket sweep — `03-hex-nut-pockets.dxf`
 
-**Cut:** Six hex pockets drawn at 5.1, 5.2, 5.3, 5.4, 5.5, 5.6 mm across flats. The model cuts 5.3 (#nutAcrossFlats 5.5 − kerf).
+**Cut:** Six hex pockets drawn at 5.1, 5.2, 5.3, 5.4, 5.5, 5.6 mm across flats. The model cuts 5.35 (#nutAcrossFlats 5.5 − kerf).
 
 **Read:** Drop an M3 nut into each. You want the smallest pocket it still drops into by hand and in which it can't turn. Set #nutAcrossFlats so that #nutAcrossFlats − #kerf equals that label.
 
@@ -36,7 +36,7 @@ Values used for this cut: `#kerf` 0.2, `#thickness` 3.18, `#screwDia` 3.2, `#nut
 
 ## 4. Captive nut: the three-layer sandwich — `04-captive-nut-sandwich.dxf`
 
-**Cut:** Three 16 mm squares: 1 clearance Ø3.7, 2 hex 5.3 AF, 3 clearance — the stack every nut in the box sits in (rails, middle brace, tray).
+**Cut:** Three 16 mm squares: 1 clearance Ø3.55, 2 hex 5.35 AF, 3 clearance — the stack every nut in the box sits in (rails, middle brace, tray).
 
 **Read:** Stack 1-2-3 with a nut in 2, drive an M3 x 8 through 3. The nut should not spin, should pull up tight against 1, and should stay put when the screw is backed out.
 
@@ -46,7 +46,7 @@ Values used for this cut: `#kerf` 0.2, `#thickness` 3.18, `#screwDia` 3.2, `#nut
 
 **Cut:** Row 1: M3 clearance. Row 2: panel registration pin (Ø2.83–2.87). Row 3: EC11 encoder bushing (the knob bore). Row 4: PSU side-screw clearance. Each hole is engraved with the diameter drawn; the cut comes out about one kerf bigger.
 
-**Read:** Row 1: the smallest an M3 passes freely — the model draws 3 for the back cover and 3.7 in the rails and braces. Row 2: the one the pin drops into with no play — the model draws 2.8. Row 3: the encoder bushing should pass and not wobble — the model draws 7. Row 4: the model draws 4.3, deliberately loose (±0.75 mm for the PSU's hole tolerance).
+**Read:** Row 1: the smallest an M3 passes freely — the model draws 2.9 for the back cover and 3.55 in the rails and braces. Row 2: the one the pin drops into with no play — the model draws 2.8. Row 3: the encoder bushing should pass and not wobble — the model draws 7. Row 4: the model draws 4.3, deliberately loose (±0.75 mm for the PSU's hole tolerance).
 
 **Sets:** #screwDia, #pinHoleDia, #boreDia, #psuHoleDia
 
@@ -76,7 +76,7 @@ Values used for this cut: `#kerf` 0.2, `#thickness` 3.18, `#screwDia` 3.2, `#nut
 
 ## 9. IEC inlet cutout — `09-iec-cutout.dxf`
 
-**Cut:** The 46.75 × 27.25 cutout and its two flange screw holes 40 apart, as cut in the right wall.
+**Cut:** The 47.1 × 27.6 cutout and its two flange screw holes 40 apart, as cut in the right wall.
 
 **Read:** The inlet body should pass with a slight drag and the flange sit flat around it; M3 screws through both lobes. Mains part — do not skip this one.
 

@@ -366,7 +366,7 @@ dimensions don't carry over.
 
 Ordered by how expensive they are to get wrong:
 
-1. **EC11 bushing thread length** → sets max bezel thickness. Blocks bezel stock choice.
+1. ~~**EC11 bushing thread length**~~ → ✅ 5.5 mm of thread, 2.3 mm jam nut (2026-10-18): it clamps **one** 3.18 sheet, so the bezel's inner lamination is pocketed 15 mm square round each knob (`#knobPocket`). Skip the washer or use a thin one. Still to check: the bore fit (test-cut row 3) and the encoder's anti-rotation tab.
 1a. ~~Colorlight 5A-75B outline, holes and heights~~ → ✅ scans and calipers, 2026-10-12 ([`driver-colorlight.md`](driver-colorlight.md) §6). Pi Zero PCB thickness still assumed (2 mm).
 1b. ~~Panel connector heights~~ → ✅ plugged HUB75 cable 7 mm, 5 V 19 mm proud of the rear face (2026-10-12).
 2. ~~**Actual two-panel butted width**~~ → ✅ 256 × 128, zero seam (§2.1).

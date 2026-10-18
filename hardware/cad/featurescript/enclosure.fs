@@ -5,7 +5,7 @@ import(path : "onshape/std/geometry.fs", version : "3070.0");
 // into, in this document. The PSU proxy merges it in (Detailed on), so the
 // enclosure studio shows the real part rather than an envelope. Re-pin the
 // version if that studio ever changes.
-LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "52fad8e707348baea79775bb");
+LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "a0b848cc9425eb6e4af1ad41");
 
 /**
  * Patternflow desktop enclosure — parametric features.
@@ -1157,6 +1157,9 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "Bore diameter" }
         isLength(definition.boreDia, LENGTH_BOUNDS);
 
+        annotation { "Name" : "Knob pocket in the inner laminations (square)" }
+        isLength(definition.knobPocket, LENGTH_BOUNDS);
+
         annotation { "Name" : "Sheet thickness" }
         isLength(definition.thickness, LENGTH_BOUNDS);
 
@@ -2154,6 +2157,7 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         // match its own documentation.
         const kCols = definition.knobCols;
         const kRows = floor((definition.knobCount + kCols - 1) / kCols);
+        var pockets = [];
 
         for (var i = 0; i < definition.knobCount; i += 1)
         {
@@ -2168,12 +2172,30 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                     "bottomCenter" : vector(knobX, knobY, zBezB - over),
                     "radius"       : definition.boreDia / 2 });
             tools = append(tools, qCreatedBy(id + ("bore" ~ i), EntityType.BODY));
+
+            // The EC11's bushing has 5.5 mm of thread and its jam nut is
+            // 2.3 mm: it can only clamp ONE sheet (measured 2026-10-18). So
+            // every lamination behind the outer one is pocketed round the
+            // knob, square and clear of the encoder body, and the encoder's
+            // mounting face sits against the outer sheet's back.
+            const hp = definition.knobPocket / 2;
+            fCuboid(context, id + ("kpocket" ~ i), {
+                    "corner1" : vector(knobX - hp, knobY - hp, zBezB - over),
+                    "corner2" : vector(knobX + hp, knobY + hp, zOut0) });
+            pockets = append(pockets, qCreatedBy(id + ("kpocket" ~ i), EntityType.BODY));
         }
 
         opBoolean(context, id + "cut", {
                 "tools"         : qUnion(tools),
                 "targets"       : qUnion(plates),
                 "operationType" : BooleanOperationType.SUBTRACTION });
+        if (nl > 1)
+        {
+            opBoolean(context, id + "kpocketCut", {
+                    "tools"         : qUnion(pockets),
+                    "targets"       : qSubtraction(qUnion(plates), outerPlate),
+                    "operationType" : BooleanOperationType.SUBTRACTION });
+        }
 
         // ── Part identity ──────────────────────────────────────────────
         // Until now every body was anonymous, which was fine while the only
