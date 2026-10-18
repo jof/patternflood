@@ -16,7 +16,10 @@ model's own:
                    and the knob bores (boreDia), which are drawn uncompensated
 
 Where a test sweeps a value, each variant is engraved with it (layer SCORE,
-blue); the cut paths are on layer CUT (red). One DXF per piece, plus
+blue); the cut paths are on layer CUT (red). Nothing but holes, outlines and
+those labels is drawn, so every path is safe to cut even where the laser
+software ignores layers — closed label digits just drop out as small holes.
+One DXF per piece, plus
 all-test-cuts.dxf with everything laid out on one 12 x 12" sheet, plus a
 preview and a README saying what each piece is for and which variable it sets.
 """
@@ -266,17 +269,19 @@ def piece_panel_jig(v):
         # jig a round hole of the slot's width checks the insert just as well
         ents += circle(sx * v["postXOffset"], v["braceYOffset"], 2 * sr)
     ents += circle(0, v["midPostYOffset"], 3.5)                   # mid-edge insert, a sight hole
-    ents += poly([(-40, y1 - 2), (-32, y1 - 2), (-36, y1 - 6)], SCORE)   # this edge to the pin (top) edge
+    ents += poly([(-40, y1 - 7), (-32, y1 - 7), (-36, y1 - 3)])         # points at the pin (top) edge
     ents += text("6", 0, y0 + 3)
     return ents
 
 
-def piece_board(W, H, holes, d, extras):
+def piece_board(W, H, holes, d, label, lab_at, lab_h):
+    """Board footprint + 4 mm, its mounting holes, its number. Nothing else:
+    the holes alone locate the board, and anything more would be cut."""
     m = 4.0
-    ents = rect(-m, -m, W + m, H + m) + rect(0, 0, W, H, SCORE)
+    ents = rect(-m, -m, W + m, H + m)
     for hx, hy in holes:
         ents += circle(hx, hy, d)
-    return ents + extras
+    return ents + text(label, lab_at[0], lab_at[1], h=lab_h)
 
 
 def piece_iec(v):
@@ -289,8 +294,6 @@ def piece_iec(v):
     ents += rect(cx - (w - k) / 2, cy - (h - k) / 2, cx + (w - k) / 2, cy + (h - k) / 2)
     for s in (-1, 1):
         ents += circle(cx, cy + s * v["iecScrewSpacing"] / 2, v["iecScrewDia"] - k)
-    ents += poly([(cx - hl, cy - hs), (cx, cy - tp), (cx + hl, cy - hs), (cx + hl, cy + hs),
-                  (cx, cy + tp), (cx - hl, cy + hs)], SCORE)        # flange, for registration
     ents += text("9", 5, 2)
     return ents
 
@@ -300,7 +303,7 @@ def piece_psu(v):
     ents = rect(0, 0, 100, 16)
     for hx in (v["psuHoleAX"], v["psuHoleBX"]):
         ents += circle(hx, 8, d)
-    ents += line((0.8, 2), (0.8, 14), SCORE)                         # the terminal end
+    ents += poly([(2.5, 8), (6, 5.5), (6, 10.5)])                    # points at the terminal end
     ents += text("10", 50, 5)
     return ents
 
@@ -417,14 +420,6 @@ def main():
     afs = [5.1, 5.2, 5.3, 5.4, 5.5, 5.6]
     board_hole = v["screwDia"] + 0.5 - k        # trayClrR*2 - kerf: the tray's board holes
 
-    cl_extra = rect(*C["CL_RJ45"], layer=SCORE)
-    for hx, hy, ang in C["CL_HUBS"]:
-        cl_extra += rotated_rect(hx, hy, C["CL_HUB_L"], C["CL_HUB_W"], ang, SCORE)
-    cl_extra += text("7", C["CL_W"] / 2, 60, h=6)
-    pi_extra = []
-    for cx, w, depth, over, _h in C["PI_EDGE_PARTS"]:
-        pi_extra += rect(cx - w / 2, -over, cx + w / 2, depth - over, SCORE)
-    pi_extra += text("8", C["PI_W"] / 2, 14)
 
     pieces = [
         dict(id=1, file="01-kerf-finger-comb.dxf", ents=piece_comb(v, kerfs),
@@ -479,39 +474,41 @@ def main():
              test="The upper brace's footprint on one panel: 127 wide, the panel's rear width. Registration pin "
                   f"holes at (±{fmt(v['pinXOffset'])}, {fmt(v['pinYOffset'])}), screw slots at "
                   f"(±{fmt(v['postXOffset'])}, {fmt(v['braceYOffset'])}), and a sight hole over the mid-edge "
-                  f"insert at (0, {fmt(v['midPostYOffset'])}). The arrow marks the pin (top) edge.",
+                  f"insert at (0, {fmt(v['midPostYOffset'])}). The triangle points at the pin (top) edge.",
              read="Lay it on a panel's back, flush with the rear top and side edges. Both pins should drop into "
                   "their holes with no rocking, both inserts should sit inside their slots (M3 screws go in "
                   "square), and the insert should be centred in the sight hole.",
              var="#pinXOffset, #pinYOffset, #postXOffset, #braceYOffset, #midPostYOffset"),
         dict(id=7, file="07-colorlight-template.dxf",
-             ents=piece_board(C["CL_W"], C["CL_H"], C["CL_HOLES"], board_hole, cl_extra),
+             ents=piece_board(C["CL_W"], C["CL_H"], C["CL_HOLES"], board_hole, "7", (C["CL_W"] / 2, 60), 6),
              title="Colorlight 5A-75B template",
-             test="The card's outline, RJ45 and HUB75 headers scored; its four mounting holes cut at the "
-                  "positions measured off the scans, at the tray's hole size.",
+             test="The card's footprint plus 4 mm, with its four mounting holes at the positions measured off "
+                  "the scans, at the tray's hole size. The RJ45 end is the end with the two holes 5 mm in from "
+                  "the corners.",
              read="Set the card on it component side up. All four M3 screws should go through card and template "
                   "together. If one doesn't, the scan is off at that hole — measure it and correct CL_HOLES in "
                   "enclosure.fs.",
              var="CL_HOLES (enclosure.fs)"),
         dict(id=8, file="08-pi-zero-template.dxf",
-             ents=piece_board(C["PI_W"], C["PI_H"], C["PI_HOLES"], board_hole, pi_extra),
+             ents=piece_board(C["PI_W"], C["PI_H"], C["PI_HOLES"], board_hole, "8", (C["PI_W"] / 2, 14), 3),
              title="Pi Zero 2 W template",
-             test="Outline and connector edge scored, the four 58 × 23 mounting holes cut at the tray's hole size.",
+             test="The board's footprint plus 4 mm, with the four 58 × 23 mounting holes at the tray's hole size.",
              read="With the Pi's holes opened to 3.2, an M3 should go through all four. (Or check the pattern with "
                   "M2.5 before drilling.)",
              var="PI_HOLES (enclosure.fs)"),
         dict(id=9, file="09-iec-cutout.dxf", ents=piece_iec(v),
              title="IEC inlet cutout",
              test=f"The {fmt(v['iecCutW'])} × {fmt(v['iecCutH'])} cutout and its two flange screw holes "
-                  f"{fmt(v['iecScrewSpacing'])} apart, as cut in the right wall; the flange outline scored.",
-             read="The inlet body should pass with a slight drag and the flange sit flat on the scored outline; "
+                  f"{fmt(v['iecScrewSpacing'])} apart, as cut in the right wall.",
+             read="The inlet body should pass with a slight drag and the flange sit flat around it; "
                   "M3 screws through both lobes. Mains part — do not skip this one.",
              var="#iecCutW, #iecCutH, #iecScrewSpacing, #iecScrewDia"),
         dict(id=10, file="10-psu-side-holes.dxf", ents=piece_psu(v),
              title="PSU side-screw holes",
              test=f"A strip with the two holes {fmt(v['psuHoleBX'] - v['psuHoleAX'])} apart, at "
-                  f"{fmt(v['psuHoleAX'])} and {fmt(v['psuHoleBX'])} from the scored end — the PSU's terminal end.",
-             read="Hold it on the PSU's threaded side face, scored end flush with the terminal end: two M3 x 12 "
+                  f"{fmt(v['psuHoleAX'])} and {fmt(v['psuHoleBX'])} from the end the triangle points at — the "
+                  "PSU's terminal end.",
+             read="Hold it on the PSU's threaded side face, that end flush with the terminal end: two M3 x 12 "
                   "should thread in square.",
              var="#psuHoleAX, #psuHoleBX, #psuHoleDia"),
     ]
@@ -537,9 +534,11 @@ def main():
           "Generated by `hardware/cad/tools/test_cuts.py` from the live Variable Studio and the board data "
           "in `enclosure.fs`; re-run after changing either.", "",
           f"Everything below fits one 12 × 12\" sheet (`all-test-cuts.dxf`, {fmt(SHEET)} × {fmt(used)} mm), "
-          "or cut the pieces singly. Layer **CUT** (red) is cut; layer **SCORE** (blue) is a light engrave — "
-          "labels and outlines only. Cut them in the same 3 mm Baltic birch as the box, with the same laser "
-          "settings you'll use for the real parts, or the numbers mean nothing.", "",
+          "or cut the pieces singly. Every path is safe to cut: outlines and holes on layer **CUT** (red), the "
+          "engraved numbers on layer **SCORE** (blue) — set blue to a light engrave if your laser software maps "
+          "by colour; if it cuts everything, the digits just come out as small slots and holes. Cut them in the "
+          "same 3 mm Baltic birch as the box, with the same laser settings you'll use for the real parts, or "
+          "the numbers mean nothing.", "",
           "**Order:** caliper the sheet's thickness first, then tests 1–2 to settle **#kerf** (everything "
           "else is compensated by it), set the variables, re-run this script, and cut the rest.", "",
           "Values used for this cut: " + ", ".join(f"`#{n}` {fmt(v[n])}" for n in
