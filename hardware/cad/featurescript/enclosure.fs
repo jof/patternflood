@@ -5,7 +5,7 @@ import(path : "onshape/std/geometry.fs", version : "3070.0");
 // into, in this document. The PSU proxy merges it in (Detailed on), so the
 // enclosure studio shows the real part rather than an envelope. Re-pin the
 // version if that studio ever changes.
-LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "ab92a44d73efc6d04d8dea52");
+LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "52fad8e707348baea79775bb");
 
 /**
  * Patternflow desktop enclosure — parametric features.
@@ -115,23 +115,6 @@ function piToBox(piX, piY, xp is number, yp is number) returns Vector
 {
     return vector(piX + (PI_W / 2 - xp) * millimeter, piY + (yp - PI_H / 2) * millimeter);
 }
-
-// Mean Well LRS-50-5, off the vendor STEP (the "LRS-50-5" assembly in the
-// Onshape document). STEP frame: X along the length from the TERMINAL end,
-// Y across from the face with the threaded side holes, Z up from the base.
-// The perforated cover only spans X 12..95, so the terminal end is open over
-// the full width for 12 mm; the terminal block's top is 5.5 below the cover
-// plane, and the screw heads and the Vadj trimmer sit lower still, all
-// reached from the cover side.
-const LRS_OPEN_X      = 12.0;     // cover starts here
-const LRS_BLOCK       = [1.0, 24.04, 18.15, 72.5];   // terminal block footprint [X0, Y0, X1, Y1]
-const LRS_BLOCK_TOP   = 24.49;    // Z
-const LRS_SCREW_X     = 8.575;
-const LRS_SCREW_YS    = [29.75, 39.08, 48.41, 57.75, 67.08];   // L, N, FG, -V, +V
-const LRS_SCREW_TOP   = 20.44;    // Z of the screw heads
-const LRS_SCREW_DIA   = 6.5;
-const LRS_VADJ        = [6.2, 17.0, 16.9];          // X, Y, Z of its top
-const LRS_BASE_HOLES  = [[20.5, 40.5], [75.5, 40.5]]; // threaded M3 in the base (Z = 0 face)
 
 // ────────────────────────────────────────────────────────────────────────
 // Panel proxy
@@ -748,16 +731,6 @@ export const iecProxy = defineFeature(function(context is Context, id is Id, def
 //   - Raspberry Pi Zero 2 W, from the official drawing, connector edge down;
 //   - the USB gigabit adapter, still an envelope (model not chosen yet).
 // Heights calipered 2026-10-12, except the Pi PCB (2 mm assumed).
-
-// Board-frame box -> a body: [x0, y0, x1, y1] in the board's own frame,
-// placed with its lower-left at (ox, oy) and standing from z0 by h.
-function boardBox(context is Context, id is Id, ox, oy, r is array, z0, h, name is string)
-{
-    fCuboid(context, id, {
-            "corner1" : vector(ox + r[0] * millimeter, oy + r[1] * millimeter, z0),
-            "corner2" : vector(ox + r[2] * millimeter, oy + r[3] * millimeter, z0 + h) });
-    nameBody(context, id + "n", id, name);
-}
 
 annotation { "Feature Type Name" : "Bay obstructions" }
 export const bayObstructions = defineFeature(function(context is Context, id is Id, definition is map)

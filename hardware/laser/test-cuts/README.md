@@ -6,7 +6,7 @@ Everything below fits one 12 × 12" sheet (`all-test-cuts.dxf`, 300 × 257.26 mm
 
 **Order:** caliper the sheet's thickness first, then tests 1–2 to settle **#kerf** (everything else is compensated by it), set the variables, re-run this script, and cut the rest.
 
-Values used for this cut: `#kerf` 0.2, `#thickness` 3, `#screwDia` 3.2, `#nutAcrossFlats` 5.5, `#boreDia` 7, `#pinHoleDia` 3, `#psuHoleDia` 4.5.
+Values used for this cut: `#kerf` 0.2, `#thickness` 3.18, `#screwDia` 3.2, `#nutAcrossFlats` 5.5, `#boreDia` 7, `#pinHoleDia` 3, `#psuHoleDia` 4.5.
 
 ![Test sheet](preview.png)
 
@@ -14,7 +14,7 @@ Values used for this cut: `#kerf` 0.2, `#thickness` 3, `#screwDia` 3.2, `#nutAcr
 
 **Cut:** Six pairs of finger plates, compensated exactly as the box corners are, one pair per kerf value (0, 0.1, 0.15, 0.2, 0.25, 0.3 mm, engraved on both plates). Push each pair's finger edges together, in plane and then at 90° like a box corner.
 
-**Read:** The pair that goes together with a firm hand press and holds without glue is your kerf. Loose → the kerf is bigger than that label; won't go in → smaller. The finger depth is #thickness (3): at 90° the tabs should finish flush — proud or short means the sheet isn't that thickness.
+**Read:** The pair that goes together with a firm hand press and holds without glue is your kerf. Loose → the kerf is bigger than that label; won't go in → smaller. The finger depth is #thickness (3.18): at 90° the tabs should finish flush — proud or short means the sheet isn't that thickness.
 
 **Sets:** #kerf (and #thickness)
 

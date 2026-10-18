@@ -83,7 +83,7 @@ Four Waveshare 64×64 GOB panels in a 2 × 2 grid: 128 × 128 px, 256 × 256 mm.
 > It was built at P2.5 from 2026-09-12 because a measured vendor model existed
 > for that pitch and P2 was four guesses. Every number below is now calipers.
 
-Current external size is **293 wide × 373 tall × 60 deep**, standing upright on
+Current external size is **293 wide × 373 tall × 60.7 deep** (at the measured 3.18 mm sheet), standing upright on
 its bottom wall: display on top, the knob and PSU band below. (The 2 × 1 box
 was 297 × 245 × 60 and lived on its side. The side margin went 20 → 18 mm on
 2026-10-12 so the widest part fits the laser and 12"-wide stock with room to
