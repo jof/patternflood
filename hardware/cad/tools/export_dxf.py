@@ -21,6 +21,7 @@ comb, set both variables, then re-run this — never edit the DXFs by hand.
 import json
 import math
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -108,19 +109,55 @@ def plain(v):
     return v.get("value")
 
 
-def project(part):
-    """-> (name, thickness, entities) with entities in part-local 2D mm, min corner at 0,0."""
+# The parts whose outer face is on show.
+SKIN = r"^(Bezel.*|Wall.*|Back cover)$"
+
+# Which way each 2-D frame looks at its part: the frame's normal (u x v), along
+# the thin axis. (z, y) and (x, z) look from the negative side; (x, y) from +z.
+FRAME_NORMAL = {0: -1, 1: -1, 2: 1}
+
+
+def box_centre(parts):
+    """Centre of everything exported, from the cut-face edge points."""
+    lo, hi = [1e9] * 3, [-1e9] * 3
+    for _, _, _, edges in parts:
+        for e in edges:
+            for q in (e[3] if e[0] == "C" else e[1]):
+                for k in range(3):
+                    lo[k], hi[k] = min(lo[k], q[k]), max(hi[k], q[k])
+    return [(a + b) / 2 for a, b in zip(lo, hi)]
+
+
+def project(part, centre):
+    """-> (name, thickness, entities) with entities in part-local 2D mm, min corner at 0,0.
+
+    Every part is drawn as seen from OUTSIDE the box (from the side of it that
+    faces away from the box's centre), so the face that is up on the laser bed
+    is the face that ends up on the outside: the bezel's front, each wall's
+    outer face, the back of the back cover. A through-cut part is the same part
+    either way up, so this changes which face is seen, never the fit; but cut
+    as drawn and nothing shows its bed-marked side. Where FRAME looks from the
+    inside, u is mirrored. Only the box's skin (SKIN) is turned: inner parts
+    keep FRAME's view, so the sheets of one stack (the tray, a brace) are all
+    drawn from the same side and visibly line up on paper.
+    """
     name, ax, thick, edges = part
-    i, j = FRAME[int(ax)]
+    ax = int(ax)
+    i, j = FRAME[ax]
+    pts0 = [q for e in edges for q in (e[3] if e[0] == "C" else e[1])]
+    face = sum(q[ax] for q in pts0) / len(pts0)
+    outward = 1 if face >= centre[ax] else -1
+    su = 1 if FRAME_NORMAL[ax] == outward or not re.match(SKIN, name) else -1
+    P = lambda q: (su * q[i], q[j])
     ents = []
     for e in edges:
         if e[0] == "L":
             a, b = e[1][0], e[1][2]
-            ents.append(["L", (a[i], a[j]), (b[i], b[j])])
+            ents.append(["L", P(a), P(b)])
         elif e[0] == "C":
             c, r, pts = e[1], e[2], e[3]
-            cc = (c[i], c[j])
-            s, m, t = [(p[i], p[j]) for p in pts]
+            cc = P(c)
+            s, m, t = [P(p) for p in pts]
             if math.dist(s, t) < 1e-6:
                 ents.append(["CIRCLE", cc, r])
             else:
@@ -128,7 +165,7 @@ def project(part):
                 ccw = (ang[1] - ang[0]) % 360 < (ang[2] - ang[0]) % 360
                 ents.append(["ARC", cc, r, ang[0], ang[2]] if ccw else ["ARC", cc, r, ang[2], ang[0]])
         else:
-            pts = [(p[i], p[j]) for p in e[1]]
+            pts = [P(p) for p in e[1]]
             for a, b in zip(pts, pts[1:]):
                 ents.append(["L", a, b])
     xs, ys = [], []
@@ -230,7 +267,9 @@ def main():
     d = curl("POST", f"{API}/partstudios/d/{DID}/w/{WID}/e/{PS}/featurescript", {"script": SCRIPT, "queries": {}})
     if d.get("notices"):
         sys.exit(json.dumps(d["notices"], indent=1)[:3000])
-    parts = [project(p) for p in plain(d["result"])]
+    raw = plain(d["result"])
+    centre = box_centre(raw)
+    parts = [project(p, centre) for p in raw]
 
     groups = {}
     for name, thick, ents, size in parts:
@@ -263,12 +302,16 @@ def main():
         f"- **{total} parts, {len(groups)} files.** DXF R12, millimetres, one closed cut path per",
         "  outline/hole on layer `CUT`. Every part is a through-cut of one sheet.",
         f"- Cut with **#thickness = {v.get('thickness')}** and **#kerf = {v.get('kerf')}** baked in: tabs and",
-        "  holes are already compensated. **Both are placeholders** until the real sheet is",
-        "  measured and the test comb is cut — set them, then re-run this export.",
+        "  holes are already compensated. Both come from the test cuts; re-measure for new stock,",
+        "  set them, then re-run this export.",
+        "- **Drawn as seen from outside the box.** Cut each part as drawn and the face that",
+        "  was up on the bed is its outside face — the bezel's front, the walls' outer faces.",
+        "- **To cut the whole box, use [`sheets/`](sheets/README.md)**: every part nested on",
+        "  three 12 × 24\" sheets (`nest_sheets.py`).",
         "- **Cut [`test-cuts/`](test-cuts/README.md) first** — kerf, nut pockets, hole sizes, the",
         "  panel jig and the board templates, all on one 12 × 12\" sheet.",
         "- Material: 3 mm Baltic birch, B/BB (enclosure-lasercut.md §13). Everything fits",
-        "  a 12 × 24\" sheet across the xTool P2's 305 mm axis.",
+        "  across the xTool P2's 305 mm axis.",
         "",
         "| File | Qty | Size (mm) | Parts |",
         "|---|---|---|---|",

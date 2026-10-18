@@ -1,0 +1,387 @@
+#!/usr/bin/env python3
+"""Nest the enclosure's part DXFs onto 12 x 24" sheets for the xTool P2.
+
+    hardware/cad/tools/nest_sheets.py            (reads and writes hardware/laser/)
+
+Reads the per-part DXFs that export_dxf.py wrote, and the quantities in its
+MANIFEST.md, and lays every part out on three sheets, one DXF per sheet in
+hardware/laser/sheets/, with a preview PNG each and a README cut list.
+
+The layout is written down by hand below rather than searched for: it is
+small, it changes rarely, and a person loading the laser wants the same part
+in the same place every time. What the script does guarantee, and refuses to
+write otherwise:
+
+  * every part in MANIFEST.md is placed exactly as many times as its quantity;
+  * every part lies inside the P2's 600 x 305 mm cut area with MARGIN to spare,
+    and inside the 304.8 mm width of a real 12" sheet;
+  * no two parts' bounding boxes come closer than GAP.
+
+The sheet DXFs hold cut paths only — no sheet outline, no labels — because
+the laser cuts every path it is given. The labels are in the PNGs and README.
+
+Re-run after export_dxf.py whenever the model changes. If a part has grown and
+no longer fits, this fails loudly; fix the layout below.
+"""
+import math
+import os
+import re
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+LASER = os.path.join(HERE, "..", "..", "laser")
+OUT = os.path.join(LASER, "sheets")
+
+CUT_L, CUT_W = 600.0, 305.0      # xTool P2 cut area, mm
+SHEET_L, SHEET_W = 609.6, 304.8  # 12 x 24" sheet; only 600 of its length is cuttable
+MARGIN = 3.0                     # from the cut-area edge
+GAP = 3.0                        # between parts
+USE_W = min(CUT_W, SHEET_W)
+
+
+# ── DXF in ────────────────────────────────────────────────────────────────
+def read_dxf(path):
+    toks = open(path).read().split("\n")
+    ents, cur = [], None
+    for c, v in zip(toks[0::2], toks[1::2]):
+        c, v = c.strip(), v.strip()
+        if c == "0":
+            if cur:
+                ents.append(cur)
+            cur = {"type": v} if v in ("LINE", "ARC", "CIRCLE") else None
+        elif cur is not None and c in ("10", "20", "11", "21", "40", "50", "51"):
+            cur[c] = float(v)
+    out = []
+    for e in ents:
+        if e["type"] == "LINE":
+            out.append(("L", (e["10"], e["20"]), (e["11"], e["21"])))
+        elif e["type"] == "CIRCLE":
+            out.append(("C", (e["10"], e["20"]), e["40"]))
+        else:
+            out.append(("A", (e["10"], e["20"]), e["40"], e["50"], e["51"]))
+    return out
+
+
+def manifest():
+    """{file: qty} from the table export_dxf.py writes."""
+    q = {}
+    for line in open(os.path.join(LASER, "MANIFEST.md")):
+        m = re.match(r"\|\s*`([^`]+\.dxf)`\s*\|\s*(\d+)\s*\|", line)
+        if m:
+            q[m.group(1)] = int(m.group(2))
+    return q
+
+
+# ── geometry ──────────────────────────────────────────────────────────────
+def rot90(ents):
+    """Quarter turn anticlockwise about the origin."""
+    R = lambda p: (-p[1], p[0])
+    out = []
+    for e in ents:
+        if e[0] == "L":
+            out.append(("L", R(e[1]), R(e[2])))
+        elif e[0] == "C":
+            out.append(("C", R(e[1]), e[2]))
+        else:
+            out.append(("A", R(e[1]), e[2], (e[3] + 90) % 360, (e[4] + 90) % 360))
+    return out
+
+
+def move(ents, dx, dy):
+    T = lambda p: (p[0] + dx, p[1] + dy)
+    return [(e[0], T(e[1]), T(e[2])) if e[0] == "L" else (e[0], T(e[1]), *e[2:]) for e in ents]
+
+
+def bbox(ents):
+    xs, ys = [], []
+    for e in ents:
+        if e[0] == "L":
+            xs += [e[1][0], e[2][0]]
+            ys += [e[1][1], e[2][1]]
+            continue
+        (cx, cy), r = e[1], e[2]
+        if e[0] == "C":
+            angs = [0, 90, 180, 270]
+        else:
+            a0, a1 = e[3] % 360, e[4] % 360
+            sweep = (a1 - a0) % 360 or 360
+            angs = [a0, a1] + [a for a in (0, 90, 180, 270) if (a - a0) % 360 <= sweep]
+        for a in angs:
+            xs.append(cx + r * math.cos(math.radians(a)))
+            ys.append(cy + r * math.sin(math.radians(a)))
+    return min(xs), min(ys), max(xs), max(ys)
+
+
+# ── layout ────────────────────────────────────────────────────────────────
+# Sheet x runs along the 600 mm cut length, y across the 305 mm axis.
+# "across" parts are turned so their long side runs across the sheet; they
+# are stacked along x and centred in y. Every long part is <= 293 mm, which is
+# what makes this the only orientation that works for most of them.
+LAYOUT = [
+    {"title": "Sheet 1 — bezel",
+     "along": [("bezel.dxf", True),
+               ("electronics-tray-rear-sheet-board-nuts.dxf", True),
+               ("panel-brace-middle.dxf", True),
+               ("rail-c-tenoned.dxf", True)]},
+    {"title": "Sheet 2 — back cover",
+     "along": [("back-cover.dxf", True),
+               ("electronics-tray-front-sheet.dxf", True),
+               ("panel-brace-middle-middle-sheet-tray-nuts.dxf", True),
+               ("panel-brace-upper.dxf", True)]},
+    {"title": "Sheet 3 — walls",
+     # the two 373 mm side walls lie along the sheet, one above the other...
+     "walls": ["wall-left.dxf", "wall-right-iec.dxf"],
+     # ...with the short strips stacked beside them, also lying along...
+     "beside": ["panel-brace-lower.dxf", "rail-c-tenoned.dxf",
+                "rail-a-screw-clearance.dxf", "rail-a-screw-clearance.dxf",
+                "rail-b-lower-hex-pocket.dxf", "rail-b-upper-hex-pocket.dxf",
+                "stiffener-web.dxf"],
+     # ...the spacer rings in the corner the shorter strips leave free...
+     "rings": ["spacer-ring-tray-to-brace.dxf"] * 4 + ["spacer-ring-board.dxf"] * 8,
+     # plus spares: the 7 mm board ring is only 1.8 mm of wood round its hole
+     "spares": ["spacer-ring-tray-to-brace.dxf"] * 2 + ["spacer-ring-board.dxf"] * 4,
+     # ...and the rest across the far end.
+     "along_after_walls": [("panel-brace-middle.dxf", True),
+                           ("wall-top.dxf", True),
+                           ("wall-bottom.dxf", True)]},
+]
+
+
+def load(name, turn):
+    ents = read_dxf(os.path.join(LASER, name))
+    if turn:
+        ents = rot90(ents)
+    x0, y0, _, _ = bbox(ents)
+    return move(ents, -x0, -y0)
+
+
+def size(ents):
+    x0, y0, x1, y1 = bbox(ents)
+    return x1 - x0, y1 - y0
+
+
+def build(spec):
+    placed = []                       # (name, ents) in sheet coordinates
+
+    def put(name, ents, x, y):
+        placed.append((name, move(ents, x, y)))
+
+    x = MARGIN
+    if "along" in spec:
+        for name, turn in spec["along"]:
+            e = load(name, turn)
+            w, h = size(e)
+            put(name, e, x, (USE_W - h) / 2)
+            x += w + GAP
+        return placed
+
+    # Sheet 3
+    y = MARGIN
+    wall_len = 0
+    for name in spec["walls"]:
+        e = load(name, True)
+        w, h = size(e)
+        put(name, e, x, y)
+        y += h + GAP
+        wall_len = max(wall_len, w)
+    strip_len = 0
+    for name in spec["beside"]:
+        e = load(name, False)
+        w, h = size(e)
+        put(name, e, x, y)
+        y += h + GAP
+        strip_len = max(strip_len, w)
+    # rings: a grid in the corner past the strips' ends, above the walls
+    walls_top = MARGIN + sum(size(load(n, True))[1] + GAP for n in spec["walls"])
+    rx0, rx1 = MARGIN + strip_len + GAP, MARGIN + wall_len
+    rx, ry, rowh = rx0, walls_top, 0
+    for name in spec["rings"] + spec.get("spares", []):
+        e = load(name, False)
+        w, h = size(e)
+        if rx + w > rx1:
+            rx, ry, rowh = rx0, ry + rowh + GAP, 0
+        put(name, e, rx, ry)
+        rx += w + GAP
+        rowh = max(rowh, h)
+    x = MARGIN + wall_len + GAP
+    for name, turn in spec["along_after_walls"]:
+        e = load(name, turn)
+        w, h = size(e)
+        put(name, e, x, (USE_W - h) / 2)
+        x += w + GAP
+    return placed
+
+
+# ── checks ────────────────────────────────────────────────────────────────
+def check(sheets, qty):
+    errs = []
+    spare = {}
+    for s in LAYOUT:
+        for n in s.get("spares", []):
+            spare[n] = spare.get(n, 0) + 1
+    used = {}
+    for si, placed in enumerate(sheets, 1):
+        boxes = []
+        for name, ents in placed:
+            used[name] = used.get(name, 0) + 1
+            b = bbox(ents)
+            boxes.append((name, b))
+            if b[0] < MARGIN - 1e-6 or b[1] < MARGIN - 1e-6 or b[2] > CUT_L - MARGIN + 1e-6 or b[3] > USE_W - MARGIN + 1e-6:
+                errs.append(f"sheet {si}: {name} outside the cut area: {[round(v, 1) for v in b]}")
+        for i in range(len(boxes)):
+            for j in range(i + 1, len(boxes)):
+                a, b = boxes[i][1], boxes[j][1]
+                sep = max(b[0] - a[2], a[0] - b[2], b[1] - a[3], a[1] - b[3])
+                if sep < GAP - 1e-6:
+                    errs.append(f"sheet {si}: {boxes[i][0]} and {boxes[j][0]} {sep:.2f} mm apart")
+    for name, n in qty.items():
+        if used.get(name, 0) != n + spare.get(name, 0):
+            errs.append(f"{name}: placed {used.get(name, 0)}, manifest says {n} + {spare.get(name, 0)} spare")
+    for name in used:
+        if name not in qty:
+            errs.append(f"{name}: placed but not in MANIFEST.md")
+    return errs
+
+
+# ── out ───────────────────────────────────────────────────────────────────
+def write_dxf(path, ents):
+    L = ["0", "SECTION", "2", "HEADER", "9", "$ACADVER", "1", "AC1009", "0", "ENDSEC",
+         "0", "SECTION", "2", "TABLES", "0", "TABLE", "2", "LAYER", "70", "1",
+         "0", "LAYER", "2", "CUT", "70", "0", "62", "1", "6", "CONTINUOUS",
+         "0", "ENDTAB", "0", "ENDSEC", "0", "SECTION", "2", "ENTITIES"]
+    f = lambda v: f"{v:.4f}"
+    for e in ents:
+        if e[0] == "L":
+            L += ["0", "LINE", "8", "CUT", "10", f(e[1][0]), "20", f(e[1][1]), "30", "0.0",
+                  "11", f(e[2][0]), "21", f(e[2][1]), "31", "0.0"]
+        elif e[0] == "C":
+            L += ["0", "CIRCLE", "8", "CUT", "10", f(e[1][0]), "20", f(e[1][1]), "30", "0.0", "40", f(e[2])]
+        else:
+            L += ["0", "ARC", "8", "CUT", "10", f(e[1][0]), "20", f(e[1][1]), "30", "0.0", "40", f(e[2]),
+                  "50", f(e[3]), "51", f(e[4])]
+    L += ["0", "ENDSEC", "0", "EOF"]
+    with open(path, "w") as fh:
+        fh.write("\n".join(L) + "\n")
+
+
+def preview(path, title, placed, labels):
+    try:
+        from PIL import Image, ImageDraw
+    except ImportError:
+        return
+    k, pad = 2.0, 20
+    W, H = int(SHEET_L * k) + 2 * pad, int(SHEET_W * k) + 2 * pad + 24
+    im = Image.new("RGB", (W, H), "white")
+    d = ImageDraw.Draw(im)
+    T = lambda p: (pad + p[0] * k, 24 + pad + (SHEET_W - p[1]) * k)
+    d.rectangle([T((0, SHEET_W)), T((SHEET_L, 0))], outline=(190, 190, 190))       # the sheet
+    d.rectangle([T((0, CUT_W)), T((CUT_L, 0))], outline=(120, 170, 255))           # the cut area
+    d.text((pad, 4), title.replace("—", "-") + "   (grey: 12 x 24 sheet, blue: P2 cut area 600 x 305)", fill=(0, 0, 0))
+    for (name, ents), lab in zip(placed, labels):
+        for e in ents:
+            if e[0] == "L":
+                d.line([T(e[1]), T(e[2])], fill="black")
+            else:
+                c, r = e[1], e[2]
+                box = [T((c[0] - r, c[1] + r)), T((c[0] + r, c[1] - r))]
+                if e[0] == "C":
+                    d.ellipse(box, outline="red")
+                else:
+                    d.arc(box, -e[4], -e[3], fill="red")
+        if lab:
+            x0, y0, x1, y1 = bbox(ents)
+            d.text(T(((x0 + x1) / 2 - 3, (y0 + y1) / 2 + 2)), lab, fill=(0, 0, 200))
+    im.save(path)
+
+
+PART = {  # file -> what to call it on the cut sheet
+    "bezel.dxf": "Bezel",
+    "back-cover.dxf": "Back cover",
+    "electronics-tray-front-sheet.dxf": "Electronics tray, front sheet",
+    "electronics-tray-rear-sheet-board-nuts.dxf": "Electronics tray, rear sheet (board nuts)",
+    "panel-brace-middle.dxf": "Panel brace middle (front or rear sheet; identical)",
+    "panel-brace-middle-middle-sheet-tray-nuts.dxf": "Panel brace middle, middle sheet (tray nuts)",
+    "panel-brace-upper.dxf": "Panel brace upper",
+    "panel-brace-lower.dxf": "Panel brace lower",
+    "wall-left.dxf": "Wall left",
+    "wall-right-iec.dxf": "Wall right (IEC cutout)",
+    "wall-top.dxf": "Wall top",
+    "wall-bottom.dxf": "Wall bottom",
+    "rail-c-tenoned.dxf": "Rail C, tenoned (upper or lower; identical)",
+    "rail-a-screw-clearance.dxf": "Rail A, screw clearance (upper or lower; identical)",
+    "rail-b-lower-hex-pocket.dxf": "Rail B lower, hex pockets",
+    "rail-b-upper-hex-pocket.dxf": "Rail B upper, hex pockets",
+    "stiffener-web.dxf": "Stiffener web",
+    "spacer-ring-tray-to-brace.dxf": "Spacer ring, tray to brace (8 mm)",
+    "spacer-ring-board.dxf": "Spacer ring, board (7 mm)",
+}
+
+
+def main():
+    qty = manifest()
+    sheets = [build(s) for s in LAYOUT]
+    errs = check(sheets, qty)
+    if errs:
+        print("\n".join(errs))
+        sys.exit("layout does not fit — nothing written")
+    os.makedirs(OUT, exist_ok=True)
+    md = ["# Cut sheets — the enclosure on three 12 × 24\" sheets", "",
+          "Generated by `hardware/cad/tools/nest_sheets.py` from the part DXFs one level up — "
+          "do not edit by hand; re-run `export_dxf.py` and then this after any model change.", "",
+          f"- **Material:** 3 mm Baltic birch, B/BB, 12 × 24\" (304.8 × 609.6 mm). Caliper it: the "
+          f"model is cut for `#thickness` 3.18 and `#kerf` 0.15, as set from the test cuts.",
+          f"- **Placement:** the P2 cuts {CUT_L:.0f} × {CUT_W:.0f} mm, so a 24\" sheet overhangs the "
+          f"cut area by {SHEET_L - CUT_L:.1f} mm at one end. Every part is at least {MARGIN:.0f} mm inside "
+          f"the cut area and {GAP:.0f} mm from its neighbours. Each DXF's origin is the corner of the "
+          "cut area; put the sheet's corner there.",
+          "- **Cut paths only.** No sheet outline or labels in the DXFs — the laser would cut them. "
+          "Use the pictures below to tell the parts apart as they come off.",
+          "- **Cut the test sheet first** ([`../test-cuts/`](../test-cuts/README.md), a 12 × 12) if you "
+          "haven't, or after any change of stock.",
+          "- **Good face up, and don't mirror anything.** Every part is drawn as seen from outside the "
+          "box, so the face that is up on the bed becomes the outside: the bezel's front, each wall's "
+          "outer face, the back of the back cover. Mask that face (transfer tape) against smoke marks; "
+          "the face against the honeycomb, with its flash-back marks, ends up inside.",
+          "- **Buy five:** three for the box, one 12 × 12 for the test cuts, one spare for a recut.", ""]
+    for si, (spec, placed) in enumerate(zip(LAYOUT, sheets), 1):
+        all_ents = [e for _, ents in placed for e in ents]
+        dxf = f"sheet-{si}.dxf"
+        write_dxf(os.path.join(OUT, dxf), all_ents)
+        counts, order = {}, []
+        for name, _ in placed:
+            if name not in counts:
+                order.append(name)
+            counts[name] = counts.get(name, 0) + 1
+        num = {n: i + 1 for i, n in enumerate(x for x in order if not x.startswith("spacer-ring"))}
+        labels = [str(num[n]) if not n.startswith("spacer-ring") else "" for n, _ in placed]
+        png = f"sheet-{si}.png"
+        preview(os.path.join(OUT, png), spec["title"], placed, labels)
+        x1 = max(bbox(e)[2] for _, e in placed)
+        y0 = min(bbox(e)[1] for _, e in placed)
+        y1 = max(bbox(e)[3] for _, e in placed)
+        md += [f"## {spec['title']} — `{dxf}`", "",
+               f"Parts span {x1 - MARGIN:.1f} × {y1 - y0:.1f} mm.", "",
+               f"![{spec['title']}]({png})", "", "| # | Part | Qty | From |", "|---|---|---|---|"]
+        for n in order:
+            md.append(f"| {num[n] if not n.startswith('spacer-ring') else '—'} | {PART.get(n, n)} | "
+                      f"{counts[n]} | `{n}` |")
+        md.append("")
+        print(f"{dxf}: {len(placed)} parts, {len(all_ents)} entities, span {x1:.1f} x {y1 - y0:.1f}")
+    md += ["## Totals", "", "| Part | Qty | Sheet |", "|---|---|---|"]
+    where = {}
+    for si, placed in enumerate(sheets, 1):
+        for name, _ in placed:
+            where.setdefault(name, [])
+            if si not in where[name]:
+                where[name].append(si)
+    for name, n in qty.items():
+        md.append(f"| {PART.get(name, name)} | {n} | {', '.join(map(str, where[name]))} |")
+    nsp = sum(len(s.get("spares", [])) for s in LAYOUT)
+    md += ["", f"**{sum(qty.values())} parts on 3 sheets**, plus {nsp} spare spacer rings on sheet 3 "
+           "(the 7 mm board ring is only 1.8 mm of wood round its hole).", ""]
+    with open(os.path.join(OUT, "README.md"), "w") as fh:
+        fh.write("\n".join(md))
+
+
+if __name__ == "__main__":
+    main()
