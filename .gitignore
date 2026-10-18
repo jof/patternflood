@@ -3,3 +3,4 @@
 #   git clone https://github.com/engmung/patternflow upstream
 #   git -C upstream checkout 87700bd
 upstream/
+__pycache__/

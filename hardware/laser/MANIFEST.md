@@ -8,6 +8,8 @@ do not edit by hand; change the model and re-run.
 - Cut with **#thickness = 3 mm** and **#kerf = 0.2 mm** baked in: tabs and
   holes are already compensated. **Both are placeholders** until the real sheet is
   measured and the test comb is cut — set them, then re-run this export.
+- **Cut [`test-cuts/`](test-cuts/README.md) first** — kerf, nut pockets, hole sizes, the
+  panel jig and the board templates, all on one 12 × 12" sheet.
 - Material: 3 mm Baltic birch, B/BB (enclosure-lasercut.md §13). Everything fits
   a 12 × 24" sheet across the xTool P2's 305 mm axis.
 
