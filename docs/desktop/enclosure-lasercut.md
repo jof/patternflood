@@ -56,38 +56,38 @@ Doubling the front is the important one and it pays twice: it gets you to
 
 ---
 
-## 3. Encoder bores — the reason 6 mm is right
+## 3. Encoder bores — one sheet clamped, one pocketed
 
-Soft basswood plus knob torque will wallow a 3 mm bore out over time. The
-doubled front fixes it, and 6 mm happens to suit the part:
+The doubled front stiffens the face, but the EC11 can only clamp one 3.18 mm
+sheet, so at the knobs the inner sheet steps out of the way:
 
 ```
    knob (20 mm or 1")
         ▼
    ┌─────────┐
    │  ╭───╮  │   ← set screw
-   ═══╡███╞═══   nut + washer
-   ▓▓▓│███│▓▓▓   ← L0 outer  3 mm ─┐
-   ▓▓▓│███│▓▓▓   ← L1 doubler 3 mm ─┴ 6 mm total, grain crossed
-      │███│      ← EC11 bushing, thread ~7 mm  ⚠ MEASURE
-      └─┬─┘
-    ┌───┴────┐
-    │  4991  │  breakout hangs off the encoder body
-    └────────┘
+   ═══╡███╞═══      jam nut 2.3 mm (washer optional, thin)
+   ▓▓▓▓│███│▓▓▓▓    ← L0 outer 3.18 mm, Ø7 bore: the only sheet clamped
+   ▓▓┃  └─┬─┘  ┃▓▓    ← L1 inner 3.18 mm, 35 mm square pocket
+     ┃ ┌──┴───┐ ┃      encoder body (15 mm) + 4991 breakout (~26 mm)
+     ┃ │ 4991 │ ┃      and its STEMMA QT plugs
+       └──────┘        box interior: clear ~41 mm back to the rails
 ```
 
-- **Bore Ø7 mm** through both layers. Cut both layers in the same operation if
-  you can, or cut them together after lamination — concentricity matters more
-  than either hole's absolute position.
-- **Washer under the nut.** Spreads the clamp load; without it the nut crushes
-  a ring into the basswood and goes loose.
+**Measured 2026-10-18:** the bushing has 5.5 mm of thread and the jam nut is
+2.3 mm, so the encoder clamps **one** sheet. The inner lamination is pocketed
+35 mm square round each knob (`#knobPocket`) for the encoder and its breakout,
+so 6 mm of bezel stays everywhere except at the knobs.
+
+- **Bore Ø7 mm** through the outer layer only. The inner layer's pocket is
+  14 mm wider than the encoder body, so it doesn't need registering to the bore.
+- **Washer under the nut** only if it is thin: 3.18 mm of wood leaves 2.32 mm
+  of thread for a 2.3 mm nut.
 - **Anti-rotation nub.** Many EC11s have a small locating boss beside the
   bushing. Check the PID 377 and add the relief hole if it's there — otherwise
   the body rotates and the wiring twists.
-- **Bushing thread length caps total panel thickness.** ~7 mm is typical, which
-  leaves 6 mm of wood plus a nut comfortably. **Measure before committing** —
-  this is measurement #1 in [`build-prep.md`](build-prep.md) §B, and it's the
-  one that decides whether 6 mm is viable at all.
+- **Bushing thread length caps the clamped thickness.** Measured 5.5 mm
+  (measurement #1 in [`build-prep.md`](build-prep.md) §B), hence one sheet.
 
 ---
 

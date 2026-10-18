@@ -5,7 +5,7 @@ import(path : "onshape/std/geometry.fs", version : "3070.0");
 // into, in this document. The PSU proxy merges it in (Detailed on), so the
 // enclosure studio shows the real part rather than an envelope. Re-pin the
 // version if that studio ever changes.
-LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "a0b848cc9425eb6e4af1ad41");
+LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "2366f6cc2b6f7f82cd8dca33");
 
 /**
  * Patternflow desktop enclosure — parametric features.
@@ -1157,7 +1157,7 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "Bore diameter" }
         isLength(definition.boreDia, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Knob pocket in the inner laminations (square)" }
+        annotation { "Name" : "Knob pocket in the inner laminations (square, clears the encoder breakout)" }
         isLength(definition.knobPocket, LENGTH_BOUNDS);
 
         annotation { "Name" : "Sheet thickness" }
@@ -2176,8 +2176,10 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             // The EC11's bushing has 5.5 mm of thread and its jam nut is
             // 2.3 mm: it can only clamp ONE sheet (measured 2026-10-18). So
             // every lamination behind the outer one is pocketed round the
-            // knob, square and clear of the encoder body, and the encoder's
-            // mounting face sits against the outer sheet's back.
+            // knob and the encoder's mounting face sits against the outer
+            // sheet's back. The pocket is sized for the Adafruit 4991 QT
+            // breakout right behind the encoder body (~26 mm board, 35 mm
+            // square with its STEMMA QT plugs), not just the 15 mm body.
             const hp = definition.knobPocket / 2;
             fCuboid(context, id + ("kpocket" ~ i), {
                     "corner1" : vector(knobX - hp, knobY - hp, zBezB - over),

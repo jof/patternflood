@@ -551,7 +551,9 @@ def main():
     md += ["## Not cuttable — measure", "",
            "- **Sheet thickness** — calipers, several places on the sheet you'll cut. Finger depth and every "
            "mortise follow `#thickness`.",
-           "- **EC11 bushing thread length** — caps the bezel's 6 mm (two sheets) at the knobs.", ""]
+           "- **EC11 bushing thread length** — measured 5.5 mm (2026-10-18): it clamps one sheet, so the "
+           "inner bezel lamination is pocketed 35 mm square (`#knobPocket`) for the encoder and its 4991 "
+           "breakout.", ""]
     with open(os.path.join(OUT, "README.md"), "w") as fh:
         fh.write("\n".join(md))
     for p in pieces:
