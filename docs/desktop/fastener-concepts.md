@@ -238,6 +238,9 @@ that cannot be bolted is solved by a joint that does not need to be.
 Easy to forget: **"no glue" also outlaws the doublers.** The design currently
 face-glues laminations in four places, and each needs a mechanical answer:
 
+> ✅ **Front face resolved 2026-10-18 by deleting the lamination:** the bezel is
+> one sheet. The encoder clamps only one 3.18 mm sheet anyway (5.5 mm thread).
+
 | Lamination | Layers | Mechanical fix | Free? |
 |---|---|---|---|
 | Front face | 2 | **4 encoder bushing nuts already clamp it** at the knob cluster, plus 4 × M3 in the bezel margin | mostly |

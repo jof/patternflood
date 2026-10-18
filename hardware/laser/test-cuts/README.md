@@ -93,4 +93,4 @@ Values used for this cut: `#kerf` 0.15, `#thickness` 3.18, `#screwDia` 3.05, `#n
 ## Not cuttable — measure
 
 - **Sheet thickness** — calipers, several places on the sheet you'll cut. Finger depth and every mortise follow `#thickness`.
-- **EC11 bushing thread length** — measured 5.5 mm (2026-10-18): it clamps one sheet, so the inner bezel lamination is pocketed 35 mm square (`#knobPocket`) for the encoder and its 4991 breakout.
+- **EC11 bushing thread length** — measured 5.5 mm (2026-10-18): it clamps one sheet, so the bezel is one sheet.

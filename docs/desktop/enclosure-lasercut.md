@@ -3,7 +3,7 @@
 Supersedes the fabrication section of [`mechanical-plan.md`](mechanical-plan.md) §3.
 Geometry, stackup and clearances there still hold; this is the how.
 
-**Material:** 3 mm Baltic birch ply, finger-jointed, doubled selectively.
+**Material:** 3 mm Baltic birch ply, finger-jointed. The bezel is a single sheet (§2).
 *(Switched from basswood 2026-09-12 — the reasoning is in §13.)*
 **CAD:** Onshape. **Cut:** CO₂ laser.
 
@@ -42,24 +42,25 @@ whole design and it costs nothing but sheet orientation.
 
 ## 2. Where doubling is actually needed
 
+> ✅ **2026-10-18: the bezel is ONE sheet.** The EC11 clamps only one 3.18 mm sheet (5.5 mm thread, 2.3 mm jam nut), Baltic birch needs no cross-grain doubler, and with no glue nothing would hold a second sheet in place. The outer sheet already carries every finger joint, the aperture and the knob bores. `#frontLayers` = 1.
+
 | Location | Doubled? | Why |
 |---|---|---|
-| **Front face** | ✅ full, cross-grain | Narrow rails around the aperture; encoder bore strength; stops the face racking |
+| **Front face** | ❌ single *(was ✅ full, cross-grain)* | Finger-jointed on all four edges, which stops the face racking; ply has no grain to split; the encoder clamps one sheet |
 | **Panel cross-braces** | ✅ cross-grain | Carries ~0.8 kg of panel into the side walls |
 | **Wall-mount points** | ✅ local pads | Soft wood strips out under a keyhole |
 | Side walls | ❌ single | Finger joints work fine in 3 mm shear |
 | Back cover | ❌ single | Removable, carries nothing |
 | Top / bottom | ❌ single | Unless the top carries a handle |
 
-Doubling the front is the important one and it pays twice: it gets you to
-**6 mm at the knob positions**, which is the right thickness for an EC11.
+*(Was: "doubling the front gets you to 6 mm at the knob positions, the right
+thickness for an EC11." The measured bushing says otherwise: one sheet.)*
 
 ---
 
-## 3. Encoder bores — one sheet clamped, one pocketed
+## 3. Encoder bores — one sheet
 
-The doubled front stiffens the face, but the EC11 can only clamp one 3.18 mm
-sheet, so at the knobs the inner sheet steps out of the way:
+The EC11 clamps one 3.18 mm sheet, which is the whole bezel:
 
 ```
    knob (20 mm or 1")
@@ -67,20 +68,19 @@ sheet, so at the knobs the inner sheet steps out of the way:
    ┌─────────┐
    │  ╭───╮  │   ← set screw
    ═══╡███╞═══      jam nut 2.3 mm (washer optional, thin)
-   ▓▓▓▓│███│▓▓▓▓    ← L0 outer 3.18 mm, Ø7 bore: the only sheet clamped
-   ▓▓┃  └─┬─┘  ┃▓▓    ← L1 inner 3.18 mm, 35 mm square pocket
-     ┃ ┌──┴───┐ ┃      encoder body (15 mm) + 4991 breakout (~26 mm)
-     ┃ │ 4991 │ ┃      and its STEMMA QT plugs
-       └──────┘        box interior: clear ~41 mm back to the rails
+   ▓▓▓▓│███│▓▓▓▓    ← bezel 3.18 mm, Ø7 bore
+        └─┬─┘          encoder body (15 mm square)
+       ┌──┴───┐        4991 breakout (~26 mm) + STEMMA QT plugs:
+       │ 4991 │        35 mm square kept clear (#knobPocket)
+       └──────┘        box interior: clear ~44 mm back to the rails
 ```
 
 **Measured 2026-10-18:** the bushing has 5.5 mm of thread and the jam nut is
-2.3 mm, so the encoder clamps **one** sheet. The inner lamination is pocketed
-35 mm square round each knob (`#knobPocket`) for the encoder and its breakout,
-so 6 mm of bezel stays everywhere except at the knobs.
+2.3 mm, so the encoder clamps **one** sheet, and the bezel is that one sheet.
+`#knobPocket` (35 mm square) is still in the model: it only cuts if
+`#frontLayers` goes above 1, and it is the space the breakout needs.
 
-- **Bore Ø7 mm** through the outer layer only. The inner layer's pocket is
-  14 mm wider than the encoder body, so it doesn't need registering to the bore.
+- **Bore Ø7 mm** through the bezel.
 - **Washer under the nut** only if it is thin: 3.18 mm of wood leaves 2.32 mm
   of thread for a 2.3 mm nut.
 - **Anti-rotation nub.** Many EC11s have a small locating boss beside the
@@ -171,7 +171,7 @@ Mains-first (no battery bay), from [`mechanical-plan.md`](mechanical-plan.md) §
 
 | Layer | Depth |
 |---|---|
-| Front face, doubled | 6 mm |
+| Front face (one sheet) | 3.2 mm |
 | Panel bodies | 14.5 mm ✅ measured |
 | Electronics bay — Colorlight + Pi on the back cover, HUB75 ribbons, encoders, wiring | 15–20 mm |
 | Back cover | 3 mm |
@@ -196,7 +196,8 @@ and it left with the lidar.
 4. **Sketch the apertures and bores** on the relevant faces: display aperture,
    4 × Ø7 encoder bores at 45 mm pitch, barrel jack, vent slots, wall-mount
    keyholes.
-5. **Doublers as separate parts**, inset ≥3 mm from any jointed edge.
+5. **Doublers as separate parts**, inset ≥3 mm from any jointed edge
+   *(none left: the bezel is one sheet)*.
 6. **Export DXF per face.**
 
 Community FeatureScripts cover steps 2–3 — the Laser Joint feature is the
@@ -296,7 +297,7 @@ how plywood works.
 - **Ventilation is free.** The PSU and panels both make heat; cut slots in the
   back cover and low on the side walls. Pattern them — it's a laser, the vents
   can be the decoration.
-- **Glue.** Ordinary PVA on the doublers, clamped flat. Cross-graining no
+- **Glue.** *(No doublers left — the bezel is one sheet.)* Ordinary PVA on the doublers, clamped flat. Cross-graining no
   longer matters (§13.3), so orientation is free. Watch for cupping on a
   300 mm face — clamp between something rigid while it dries. *(Whether there is
   any glue at all is an open question — see
@@ -311,8 +312,8 @@ how plywood works.
 1. **Measure** — stock thickness, kerf, and items #1–#4 from
    [`build-prep.md`](build-prep.md) §B.
 2. **Cut a test comb + one encoder bore** in scrap. Confirm the joint fit and
-   that a nut clamps 6 mm of doubled basswood without crushing it.
-3. **Cut the front face first**, doubled, and dry-fit the panels and encoders
+   that the jam nut clamps one sheet (✅ done: `hardware/laser/test-cuts/`).
+3. **Cut the front face first** and dry-fit the panels and encoders
    against it before cutting anything else. It carries every critical dimension.
 4. Cut the rest, dry-assemble unglued, check the panel and board fit.
 5. Finish flat, then glue.
@@ -579,7 +580,7 @@ against basswood" — is a material property, not a geometry one.
 | Any 6 mm | 1–2 passes, some taper | possible on the P2; still not needed |
 
 So the laser does not choose the material at all. The design never asks for
-6 mm anyway — the 6 mm at the knob bores is two 3 mm laminations (§3) — so
+6 mm anyway — the bezel is one 3 mm sheet (§3) — so
 properties decide it.
 
 **What the P2 *does* constrain is part width.** Its cutting area is 600 × 305
@@ -682,16 +683,24 @@ axis:
 
 | Part | Narrow × long (mm) |
 |---|---|
-| Bezel outer | 293 × 373 |
-| Bezel inner | 287 × 367 |
+| Bezel | 293 × 373 |
 | Back cover | 286 × 366 |
 | Side walls ×2 | 60 × 373 |
 | Top / bottom walls, braces, rails, stiffener | ≤ 293 long |
 
-Nested on **12 × 24** sheets that is four sheets: (1) bezel outer + top/bottom
-walls + the 80 mm brace + a rail; (2) bezel inner + the 40 mm braces + rails +
-stiffener; (3) back cover; (4) the two 373 mm side walls + the test comb. **Buy
-six** — the comb and a recut. Calipering the sheet width on arrival is still
+Nested on **12 × 24** (305 × 610) sheets that is **three** sheets, at 3 mm
+between parts and 5 mm from the sheet edge:
+
+1. bezel + top and bottom walls + one 80 mm middle brace;
+2. back cover + the other two 80 mm middle-brace sheets + the 40 mm upper
+   brace + one rail;
+3. the two 373 mm side walls side by side along the sheet, with the 40 mm
+   lower brace, four rails and the stiffener running alongside them, then
+   both tray sheets and the last rail across the end.
+
+The spacer rings drop into the bezel's aperture offcut. **Buy five:** three for
+the box, one for the test cuts (they fit 12 × 12), and one for a recut. (It was
+four sheets while the bezel had a second, 287 × 367 lamination.) Calipering the sheet width on arrival is still
 worth it: "12 × 24" is sometimes cut a hair under 12".
 
 ### 13.6 What changes in the model

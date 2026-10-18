@@ -264,10 +264,9 @@ at 3–6 mm. If you go thicker (a 10 mm hardwood face, say), you must counterbor
 from the back. **Measure the bushing thread length before choosing bezel stock.**
 
 The 4991 breakout hangs off the encoder body — it is not separately mounted.
-It sits in the bezel's inner lamination, in a 35 mm square pocket (`#knobPocket`)
-that leaves room for the STEMMA QT plugs. At 45 mm pitch the four pockets keep a
-10 mm web between them; at 40 mm they would be 5 mm, which is the specific
-reason to prefer 45 mm.
+It sits just behind the one-sheet bezel and needs 35 mm square (`#knobPocket`)
+with its STEMMA QT plugs. At 45 mm pitch that leaves 10 mm between neighbours;
+at 40 mm it would be 5 mm, which is the specific reason to prefer 45 mm.
 
 ### 2.4 Sensor mounting
 
@@ -341,8 +340,8 @@ aperture into a finished bezel is the one change that ruins a front panel.
 
 ## 3. Fabrication
 
-> ✅ **Decided: laser-cut 3 mm Baltic birch ply, finger-jointed, doubled where
-> it matters.** (Basswood originally; changed 2026-09-12 — the material survey
+> ✅ **Decided: laser-cut 3 mm Baltic birch ply, finger-jointed; the bezel is
+> one sheet (2026-10-18).** (Basswood originally; changed 2026-09-12 — the material survey
 > is [`enclosure-lasercut.md`](enclosure-lasercut.md) §13.) The full design is in
 > [`enclosure-lasercut.md`](enclosure-lasercut.md). The survey below is kept for
 > the reasoning; note that the "hybrid" row is essentially what was chosen, with
@@ -367,7 +366,7 @@ dimensions don't carry over.
 
 Ordered by how expensive they are to get wrong:
 
-1. ~~**EC11 bushing thread length**~~ → ✅ 5.5 mm of thread, 2.3 mm jam nut (2026-10-18): it clamps **one** 3.18 sheet, so the bezel's inner lamination is pocketed round each knob (`#knobPocket`, 35 mm square). That clears the 15 mm encoder body and the 4991 breakout behind it (~26 mm board plus its STEMMA QT plugs); a 10 mm web stays between pockets at the 45 mm pitch, and the box is clear for ~41 mm behind the bezel there, down to the lower rail stack. Skip the washer or use a thin one. Still to check: the bore fit (test-cut row 3) and the encoder's anti-rotation tab.
+1. ~~**EC11 bushing thread length**~~ → ✅ 5.5 mm of thread, 2.3 mm jam nut (2026-10-18): it clamps **one** 3.18 sheet, so the bezel is **one sheet** (`#frontLayers` = 1; the second lamination had nothing holding it without glue). The 15 mm encoder body and the 4991 breakout behind it (~26 mm board plus its STEMMA QT plugs, 35 mm square, `#knobPocket`) sit in free space, clear for ~44 mm back to the lower rail stack; 10 mm stays between neighbours at the 45 mm pitch. Skip the washer or use a thin one. Still to check: the bore fit (test-cut row 3) and the encoder's anti-rotation tab.
 1a. ~~Colorlight 5A-75B outline, holes and heights~~ → ✅ scans and calipers, 2026-10-12 ([`driver-colorlight.md`](driver-colorlight.md) §6). Pi Zero PCB thickness still assumed (2 mm).
 1b. ~~Panel connector heights~~ → ✅ plugged HUB75 cable 7 mm, 5 V 19 mm proud of the rear face (2026-10-12).
 2. ~~**Actual two-panel butted width**~~ → ✅ 256 × 128, zero seam (§2.1).

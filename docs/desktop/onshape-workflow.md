@@ -137,7 +137,8 @@ that run is 90 mm of empty bay.
 
 The **bushing thread length** is measurement #1 in
 [`build-prep.md`](build-prep.md) §B, and it decides whether a 6 mm doubled front
-is viable. Model it from calipers, not the datasheet.
+is viable. Model it from calipers, not the datasheet. *(Measured 2026-10-18:
+5.5 mm, so it is not — the bezel is one sheet, `#frontLayers` = 1.)*
 
 **Knobs** — a revolve each, Ø20 and Ø25.4. You only need them to check finger
 clearance at `#knobPitch` and to see the front in the render.

@@ -25,8 +25,10 @@ LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "2366f6cc2b6f7f82cd8d
  *
  * Drive every parameter from the Variables studio. Placeholders that MUST be
  * measured before cutting: #thickness, #kerf. (#panelDepth was measured on the
- * P2 64x64-B, 2026-10-03.) The EC11 bushing
- * thread length caps #frontThickness — measure it first.
+ * P2 64x64-B, 2026-10-03.) The EC11 bushing has 5.5 mm of thread
+ * (measured 2026-10-18), so it clamps one sheet: the bezel is ONE lamination
+ * (#frontLayers = 1). More laminations still work; the extra ones are pocketed
+ * at the knobs, but nothing fastens them without glue.
  *
  * Source of truth for this file is the repo, not the Onshape document:
  *   hardware/cad/featurescript/enclosure.fs
@@ -2209,8 +2211,16 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         // layer0 is the REARMOST lamination (inset, drops inside the tube);
         // layer(nl-1) is the full-footprint outer face. These were the other
         // way round, so the DXF called "Bezel outer" was the inset one.
-        nameBody(context, id + "n01", id + ("layer" ~ (nl - 1)), "Bezel outer");
-        nameBody(context, id + "n02", id + "layer0",             "Bezel inner");
+        // With one lamination layer0 IS the outer face, so it is just "Bezel".
+        if (nl == 1)
+        {
+            nameBody(context, id + "n01", id + "layer0", "Bezel");
+        }
+        else
+        {
+            nameBody(context, id + "n01", id + ("layer" ~ (nl - 1)), "Bezel outer");
+            nameBody(context, id + "n02", id + "layer0",             "Bezel inner");
+        }
         nameBody(context, id + "n03", id + "wallL",   "Wall left");
         nameBody(context, id + "n04", id + "wallR",   "Wall right (IEC)");
         nameBody(context, id + "n05", id + "wallB",   "Wall bottom");
