@@ -24,6 +24,11 @@ write otherwise:
 The sheet DXFs hold cut paths only — no sheet outline, no labels — because
 the laser cuts every path it is given. The labels are in the PNGs and README.
 
+If art.py has written etch art for a part (art/<part>.etch.dxf), it rides
+along with that part, turned and moved exactly as the part is, into
+sheet-N.svg: cut paths red, score lines blue, engraved dots filled black —
+one file, so the art cannot drift off its part. The DXFs stay cut-only.
+
 Re-run after export_dxf.py whenever the model changes. If a part has grown and
 no longer fits, this fails loudly; fix the layout below.
 """
@@ -199,12 +204,51 @@ LAYOUT = [
 ]
 
 
+ART_DIR = os.path.join(LASER, "art")
+ART_OF = {}        # id(part entities as loaded) -> its art, in the same frame
+SHEET_ART = {}     # sheet title -> {placed index: art in sheet coordinates}
+
+
+def read_art(path):
+    """Etch entities with their layer: ("L", p, q, layer) / ("C", c, r, layer)."""
+    if not os.path.exists(path):
+        return []
+    toks = open(path).read().split("\n")
+    ents, cur = [], None
+    for c, v in zip(toks[0::2], toks[1::2]):
+        c, v = c.strip(), v.strip()
+        if c == "0":
+            if cur:
+                ents.append(cur)
+            cur = {"type": v} if v in ("LINE", "CIRCLE") else None
+        elif cur is not None:
+            cur[c] = v if c == "8" else float(v) if c in ("10", "20", "11", "21", "40") else v
+    out = []
+    for e in ents:
+        if e["type"] == "LINE":
+            out.append(("L", (e["10"], e["20"]), (e["11"], e["21"]), e["8"]))
+        else:
+            out.append(("C", (e["10"], e["20"]), e["40"], e["8"]))
+    return out
+
+
+def art_xform(art, fn):
+    """Apply a point transform to art entities, keeping radius and layer."""
+    return [("L", fn(e[1]), fn(e[2]), e[3]) if e[0] == "L" else ("C", fn(e[1]), e[2], e[3]) for e in art]
+
+
 def load(name, turn):
     ents = read_dxf(os.path.join(LASER, name))
+    art = read_art(os.path.join(ART_DIR, name[:-4] + ".etch.dxf"))
     if turn:
         ents = rot90(ents)
+        art = art_xform(art, lambda q: (-q[1], q[0]))
     x0, y0, _, _ = bbox(ents)
-    return move(ents, -x0, -y0)
+    moved = move(ents, -x0, -y0)
+    if art:
+        # keep the list itself too: it pins the id, and put() checks it is the same object
+        ART_OF[id(moved)] = (moved, art_xform(art, lambda q: (q[0] - x0, q[1] - y0)))
+    return moved
 
 
 def size(ents):
@@ -214,9 +258,13 @@ def size(ents):
 
 def build(spec):
     placed = []                       # (name, ents) in sheet coordinates
+    SHEET_ART[spec["title"]] = {}
 
     def put(name, ents, x, y):
         placed.append((name, move(ents, x, y)))
+        own, art = ART_OF.get(id(ents), (None, None))
+        if own is ents and art:
+            SHEET_ART[spec["title"]][len(placed) - 1] = art_xform(art, lambda q: (q[0] + x, q[1] + y))
 
     x = MARGIN
     if "along" in spec:
@@ -336,7 +384,14 @@ def write_dxf(path, ents):
         fh.write("\n".join(L) + "\n")
 
 
-def preview(path, title, placed, labels):
+def write_sheet_svg(path, ents, arts):
+    from art import svg_body, write_svg       # art.py imports this module; import late
+    score = [e[:3] for a in arts for e in a if e[3] == "SCORE"]
+    engrave = [e[:3] for a in arts for e in a if e[3] == "ENGRAVE"]
+    write_svg(path, SHEET_L, SHEET_W, svg_body(ents, score, engrave))
+
+
+def preview(path, title, placed, labels, arts=None):
     try:
         from PIL import Image, ImageDraw
     except ImportError:
@@ -349,6 +404,16 @@ def preview(path, title, placed, labels):
     d.rectangle([T((0, SHEET_W)), T((SHEET_L, 0))], outline=(190, 190, 190))       # the sheet
     d.rectangle([T((0, CUT_W)), T((CUT_L, 0))], outline=(120, 170, 255))           # the cut area
     d.text((pad, 4), title.replace("—", "-") + "   (grey: 12 x 24 sheet, blue: P2 cut area 600 x 305)", fill=(0, 0, 0))
+    for a in (arts or {}).values():
+        for e in a:
+            if e[0] == "L":
+                d.line([T(e[1]), T(e[2])], fill=(150, 110, 60))
+            elif e[3] == "ENGRAVE":
+                c, r = e[1], max(e[2], 0.5)
+                d.ellipse([T((c[0] - r, c[1] + r)), T((c[0] + r, c[1] - r))], fill=(150, 110, 60))
+            else:
+                c, r = e[1], e[2]
+                d.ellipse([T((c[0] - r, c[1] + r)), T((c[0] + r, c[1] - r))], outline=(150, 110, 60))
     for (name, ents), lab in zip(placed, labels):
         for e in ents:
             if e[0] == "L":
@@ -422,6 +487,14 @@ def main():
           "keep it that way, or the aperture drops out with the ribs still in it.",
           "- **Cut paths only.** No sheet outline or labels in the DXFs — the laser would cut them. "
           "Use the pictures below to tell the parts apart as they come off.",
+          "- **Etched art (sheets 1–3).** The outer faces — bezel, side walls, top wall, back cover — "
+          "carry a circuit-board pattern from `art.py`. To etch, load **`sheet-N.svg`** instead of the "
+          "DXF: one file, so the art stays on its part. In xTool Creative Space assign processing **by "
+          "colour**: **red = Cut**, **blue = Score** (traces, rings, chip outlines), **black = Engrave** "
+          "(pads and vias). Make sure the score and engrave run **before** the cut, so nothing has "
+          "moved when the art goes on; check the order in the processing list. Try the score and "
+          "engrave settings on an offcut of the same stock first. The art faces up on the bed, which "
+          "is the outside face. Skip it by loading the DXF instead: same cuts.",
           "- **Cut the test sheet first** ([`../test-cuts/`](../test-cuts/README.md), a 12 × 12) if you "
           "haven't, or after any change of stock.",
           "- **Good face up, and don't mirror anything.** Every part is drawn as seen from outside the "
@@ -436,6 +509,8 @@ def main():
         all_ents = [e for _, ents in placed for e in ents]
         dxf = f"sheet-{si}.dxf"
         write_dxf(os.path.join(OUT, dxf), all_ents)
+        arts = SHEET_ART.get(spec["title"], {})
+        write_sheet_svg(os.path.join(OUT, f"sheet-{si}.svg"), all_ents, list(arts.values()))
         counts, order = {}, []
         for name, _ in placed:
             if name not in counts:
@@ -444,7 +519,7 @@ def main():
         num = {n: i + 1 for i, n in enumerate(x for x in order if not x.startswith("spacer-ring"))}
         labels = [str(num[n]) if not n.startswith("spacer-ring") else "" for n, _ in placed]
         png = f"sheet-{si}.png"
-        preview(os.path.join(OUT, png), spec["title"], placed, labels)
+        preview(os.path.join(OUT, png), spec["title"], placed, labels, arts)
         x1 = max(bbox(e)[2] for _, e in placed)
         y0 = min(bbox(e)[1] for _, e in placed)
         y1 = max(bbox(e)[3] for _, e in placed)

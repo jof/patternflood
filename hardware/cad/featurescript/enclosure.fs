@@ -5,7 +5,7 @@ import(path : "onshape/std/geometry.fs", version : "3070.0");
 // into, in this document. The PSU proxy merges it in (Detailed on), so the
 // enclosure studio shows the real part rather than an envelope. Re-pin the
 // version if that studio ever changes.
-LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "923976c047c424580a194041");
+LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "3563081840add21068427123");
 
 /**
  * Patternflow desktop enclosure — parametric features.
@@ -1332,6 +1332,18 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "Pi screw diameter (M2.5)" }
         isLength(definition.piScrewDia, LENGTH_BOUNDS);
 
+        annotation { "Name" : "Vent slot width" }
+        isLength(definition.ventSlotW, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Vent slot pitch" }
+        isLength(definition.ventPitch, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Vent slot max length" }
+        isLength(definition.ventMaxLen, LENGTH_BOUNDS);
+
+        annotation { "Name" : "Vent bridge between slots in a row" }
+        isLength(definition.ventBridge, LENGTH_BOUNDS);
+
         annotation { "Name" : "Pi nut across flats (M2.5)" }
         isLength(definition.piNutAF, LENGTH_BOUNDS);
     }
@@ -2283,6 +2295,68 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 "targets"       : qCreatedBy(id + "trayRear", EntityType.BODY),
                 "operationType" : BooleanOperationType.SUBTRACTION });
         opDeleteBodies(context, id + "trayCutLeft", { "entities" : qUnion(frontCuts) });
+
+        // ── ventilation grilles in the back cover (rev 2) ───────────────
+        // The box is closed and stands upright, with a 50 W PSU, a Pi 5 and
+        // the Colorlight inside, so it breathes like a chimney: in low, out
+        // high, all through the back cover — it carries nothing, and nothing
+        // shows from the front. Three fields of horizontal obround slots:
+        //   1. over the PSU, low: intake, and the LRS-50's vented cover faces
+        //      the back cover (see psuProxy);
+        //   2. over the Pi 5: the Active Cooler's fan draws from this side;
+        //   3. across the top, between the tray and the upper rail stack:
+        //      exhaust, behind the top panel row.
+        // Each field stays clear of the rails (which the cover lies on) and
+        // their screws. Rows longer than ventMaxLen split with ventBridge
+        // between, so the cover keeps some stiffness across the slots.
+        // Drawn uncompensated: a vent's exact width does not matter.
+        {
+            const vW = definition.ventSlotW;
+            const vP = definition.ventPitch;
+            const vMax = definition.ventMaxLen;
+            const vB = definition.ventBridge;
+            const ventFields = [
+                    [definition.psuX - 45 * millimeter, railY0[0] + railW + 6 * millimeter,
+                     definition.psuX + 45 * millimeter, -definition.apertureH / 2 - 12 * millimeter],
+                    [definition.piX - 24 * millimeter, definition.piY - 36 * millimeter,
+                     definition.piX + 24 * millimeter, definition.piY + 36 * millimeter],
+                    [left + 30 * millimeter, definition.trayY1 + 8 * millimeter,
+                     right - 30 * millimeter, railY0[1] - 6 * millimeter]];
+            var ventN = 0;
+            for (var f in ventFields)
+            {
+                const fw = f[2] - f[0];
+                const fh = f[3] - f[1];
+                const nRows = floor((fh - vW) / vP) + 1;
+                const yS = f[1] + (fh - ((nRows - 1) * vP + vW)) / 2 + vW / 2;
+                const nSeg = ceil((fw + vB) / (vMax + vB));
+                const segL = (fw - (nSeg - 1) * vB) / nSeg;
+                for (var r = 0; r < nRows; r += 1)
+                {
+                    const yc = yS + r * vP;
+                    for (var sg = 0; sg < nSeg; sg += 1)
+                    {
+                        const xa = f[0] + sg * (segL + vB) + vW / 2;   // end-cap centres
+                        const xb = xa + segL - vW;
+                        const vid = id + ("vent" ~ ventN);
+                        fCuboid(context, vid, {
+                                "corner1" : vector(xa, yc - vW / 2, zBc0 - over),
+                                "corner2" : vector(xb, yc + vW / 2, zBc1 + over) });
+                        fCylinder(context, vid + "a", {
+                                "topCenter"    : vector(xa, yc, zBc1 + over),
+                                "bottomCenter" : vector(xa, yc, zBc0 - over),
+                                "radius"       : vW / 2 });
+                        fCylinder(context, vid + "b", {
+                                "topCenter"    : vector(xb, yc, zBc1 + over),
+                                "bottomCenter" : vector(xb, yc, zBc0 - over),
+                                "radius"       : vW / 2 });
+                        coverHoles = concatenateArrays([coverHoles, [qCreatedBy(vid, EntityType.BODY),
+                                qCreatedBy(vid + "a", EntityType.BODY), qCreatedBy(vid + "b", EntityType.BODY)]]);
+                        ventN += 1;
+                    }
+                }
+            }
+        }
 
         opBoolean(context, id + "coverCut", {
                 "tools"         : qUnion(coverHoles),
