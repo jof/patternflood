@@ -3,7 +3,7 @@
 **Status: enclosure modelled; driver bring-up next.** Redesigned 2026-10-12.
 
 A Patternflow-inspired instrument: four knobs and a **2 × 2 array of P2 GOB
-panels**, driven by a **Colorlight 5A-75B** with a **Raspberry Pi Zero 2 W**
+panels**, driven by a **Colorlight 5A-75B** with a **Raspberry Pi 5**
 rendering the frames. That trades upstream compatibility for panel count — the
 ESP32 `.pfm` patterns do not run here as binaries
 ([`driver-colorlight.md`](driver-colorlight.md) §1).
@@ -11,7 +11,7 @@ ESP32 `.pfm` patterns do not run here as binaries
 | | |
 |---|---|
 | Panels | **4 × Waveshare RGB-Matrix-P2-64x64-B (GOB), 2 × 2** → 128 × 128 px, 256 × 256 mm, **measured** and modelled — see [`mechanical-plan.md`](mechanical-plan.md) §2.1. Six owned, two spare |
-| Controller | **Colorlight 5A-75B** (one panel per HUB75 output) + **Pi Zero 2 W** via a **USB gigabit adapter** — [`driver-colorlight.md`](driver-colorlight.md) |
+| Controller | **Colorlight 5A-75B** (one panel per HUB75 output) + **Raspberry Pi 5** (on-board gigabit Ethernet) — [`driver-colorlight.md`](driver-colorlight.md) |
 | Input | **4 × Adafruit 4991 seesaw encoders** on the Pi's I²C |
 | Power | **IEC mains → Mean Well LRS-50-5**, panel load capped per frame — [`driver-colorlight.md`](driver-colorlight.md) §4 |
 | Software | A Pi-side renderer streaming to the card; FPP for first pixels |

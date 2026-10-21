@@ -25,7 +25,8 @@ floats.
 | Bezel back to two sheets, the inner one **glued** behind the outer | `#frontLayers` 2 | The knobs push on it. Still pocketed 35 mm square at each knob, so the encoder clamps only the outer sheet |
 | A **glued** doubler inside every wall | `#wallLayers` 2 (new) | Rev 1 flexed. Glued, wall + doubler bend as one 6.4 mm section, ~8× a single sheet |
 | PSU in the corner: on the bottom doubler, against the bezel | `#psuStandoff` 0, `#psuZFront` −6.36 | Rev 1 floated on spacers off a single wall |
-| Pi and USB adapter 3.5 mm right | `#piX`, `#nicX` −104 | The doublers narrowed the tray 3.18 a side |
+| ~~Pi and USB adapter 3.5 mm right~~ | — | superseded by the Pi 5 below |
+| **Raspberry Pi 5** replaces the Pi Zero 2 W + USB gigabit adapter | `#piX` −108, `#piY` 0, `#piScrewDia` 2.55, `#piNutAF` 5 (new); `#nic*` deleted | Gigabit Ethernet on board; headroom for JS patterns. It stands on end at the tray's left, Ethernet jack pointing down past the tray edge, so the patch cable has room |
 | Rail clearance 10 → 11.64 | `#psuRailClear` | Keeps the box depth at 60.72 now the PSU sits 1.64 further forward, so nothing behind it moves |
 | Stiffener web carried forward to the bezel over the knobs: the **stiffener shelf** | — | Rev 1's knob band was supported on three sides; its top edge, the bottom of the display aperture, was free, and the top knob row is 25 mm from it. The shelf props that edge |
 | Two **knob ribs**, bottom doubler to shelf, at x −95 (between the knob columns) and −50 (between the knobs and the PSU) | — | Each knob sits in a ~45 × 86 mm cell supported on all four sides |
@@ -60,6 +61,8 @@ The tray is 6.36 narrower (279.3).
 | IEC flange, front screw (through wall + doubler) | M3 × 12 | **M3 × 16** + washer + nut |
 | IEC flange, rear screw (wall only, behind the doubler) | M3 × 12 | M3 × 12 + washer + nut |
 | Glue | finger joints, rail stacks | **plus** inner bezel and four doublers — PVA, clamped flat |
+| Pi mounting | 4 × M3 x 8 through drilled-out Zero holes | **4 × M2.5 x 8 + 4 M2.5 nuts** (Pi 5 holes are 2.7 mm) |
+| Pi power and network | micro-USB lead, OTG adapter, USB gigabit adapter, zip ties | **5 V → USB-C pigtail**; a ~20 cm flat Cat6 patch cable; Active Cooler |
 
 ### Gluing order
 
@@ -80,5 +83,9 @@ The tray is 6.36 narrower (279.3).
 
 - The IEC's front screw hole leaves 2.4 mm of doubler to its front edge
   (glued, so it should be fine).
-- The USB adapter is still an envelope (`#nicW/H/T`); it sits 4.1 mm off the
-  left doubler.
+- The Pi 5's ports and Active Cooler are envelopes from the drawing: check
+  them against the real board (the stacked USB is the tallest, 3.2 mm short of
+  the back cover). Test piece 8 is now a Pi 5 template with three M2.5 nut
+  pockets to settle `#piNutAF`.
+- Power budget: the Pi 5 takes ~1 A more than the Zero did, so the panels'
+  share drops to ~1.4 A each (`driver-colorlight.md` §4).

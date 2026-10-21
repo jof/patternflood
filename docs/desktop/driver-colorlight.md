@@ -1,4 +1,7 @@
-# Driving the Panels: Colorlight 5A-75B + Pi Zero 2 W
+# Driving the Panels: Colorlight 5A-75B + Raspberry Pi 5
+
+> 🔁 **2026-10-21: the Pi Zero 2 W + USB gigabit adapter became a Raspberry Pi 5**, which has gigabit
+> Ethernet on board. The Zero's reasoning is kept below where it still explains a choice.
 
 Decided 2026-10-11/12. This replaces the Adafruit Matrix Portal S3 as the
 desktop build's controller, and with it the 2 × 1 landscape layout. The display
@@ -51,32 +54,31 @@ chip that cannot be driven.
 ```
    mains ─► IEC (right wall) ─► LRS-50-5 ─┬─ 5 V ─► 4 × panel power (star)
                                           ├─ 5 V ─► Colorlight 5A-75B
-                                          └─ 5 V ─► Pi Zero 2 W (own leads)
+                                          └─ 5 V ─► Pi 5 (own leads, USB-C pigtail)
 
-   Pi Zero 2 W ─ micro-USB OTG ─► USB gigabit adapter ─ Cat6 ─► 5A-75B
-                                                        HUB75 ×4 (J1–J4)
-                                                          one panel each
-   Pi Zero 2 W ─ I²C (STEMMA QT) ─► 4 × Adafruit 4991 encoders
-   Pi Zero 2 W ─ Wi-Fi ─► your network
+   Pi 5 ─ on-board gigabit Ethernet ─ Cat6 ─► 5A-75B
+                                              HUB75 ×4 (J1–J4)
+                                                one panel each
+   Pi 5 ─ I²C (STEMMA QT) ─► 4 × Adafruit 4991 encoders
+   Pi 5 ─ Wi-Fi ─► your network
 ```
 
 - **Colorlight 5A-75B** — Lattice ECP5, two gigabit PHYs, eight HUB75 outputs.
   **One panel per output**, J1–J4: no chain mapping, short equal ribbons, and
   J5–J8 left for the two spare panels.
-- **Raspberry Pi Zero 2 W** — the cheapest board that does the job, and its
-  512 MB is soldered on, so DRAM pricing does not touch it. It has **no
-  Ethernet**, and that is the one trap:
-- **USB gigabit adapter (RTL8153 or AX88179 class)** — the 5A-75B **will not
-  link at 100 Mbit**
+- **Raspberry Pi 5** — gigabit Ethernet on board, which the 5A-75B needs, and
+  the headroom to render 16 384 px a frame in JavaScript without budgeting.
+  It replaced a Pi Zero 2 W, which needed a USB gigabit adapter because the
+  5A-75B **will not link at 100 Mbit**
   ([FPP forum](https://falconchristmas.com/forum/index.php?topic=6871.0)), so
   the common 100 Mbit dongles fail. A gigabit adapter on the Zero's USB 2.0
   links at 1000 and moves ~300 Mbit, against the ~24 Mbit/s that 16 384 px at
   60 fps needs. A Zero 2 W driving a 192 × 128 matrix (1.5 × this one) through a
   5A-75B is reported working
   ([FPP forum](https://falconchristmas.com/forum/index.php?topic=15657.0)).
-- **Fallback if the Zero falls short:** a Pi 3B+, whose built-in Ethernet is
-  gigabit behind USB 2.0. The board envelope is variables (`#piW`, `#piH`, …),
-  so the swap is a variable change.
+- **Cooling:** fit the Pi 5 **Active Cooler**. The box is closed, and the
+  cooler's top is ~5 mm from the back cover (`Bay obstructions` carries an
+  envelope for it). Vent slots in the cover over the Pi are an open item.
 
 ---
 
@@ -86,8 +88,8 @@ chip that cannot be driven.
 |---|---|
 | LRS-50-5 rating | 10 A; plan on **8 A continuous** |
 | Colorlight 5A-75B | ~0.8 A (the two PHYs are the hungry part) |
-| Pi Zero 2 W + adapter | ~0.6 A |
-| **Left for the panels** | **~6.6 A ≈ 1.65 A per panel** |
+| Raspberry Pi 5 + Active Cooler | plan **1.6 A** (~0.6 A idle, bursts toward 2 A rendering; no USB devices) |
+| **Left for the panels** | **~5.6 A ≈ 1.4 A per panel** (was 1.65 with the Zero) |
 | Panel at full white | 2.4 A measured (upstream, on an ESP32 driver); 3 A Waveshare supply rating |
 | Typical generative pattern | ~0.8 A per panel |
 
@@ -104,8 +106,10 @@ So the panels need a cap, but it rarely engages:
 
 The Pi takes its 5 V from its own pair off the PSU terminals, not through a
 panel's harness — the same arrangement as Adafruit's RGB matrix bonnet, which
-back-powers the Pi from the panel supply. Set the LRS trim to ~5.15 V so the Zero
-sees ≥ 5.0 V under load.
+back-powers the Pi from the panel supply. Set the LRS trim to ~5.15 V so the Pi
+sees ≥ 5.0 V under load. The Pi 5 is fed through a **5 V → USB-C pigtail**, which
+does no USB-PD, so it assumes a 3 A supply and warns. The LRS can deliver more,
+so set `PSU_MAX_CURRENT=5000` in the bootloader config (`rpi-eeprom-config -e`).
 
 ---
 
@@ -116,14 +120,14 @@ sees ≥ 5.0 V under load.
    decoding — and *save to receiver* on both the screen-parameter and mapping
    tabs.
 2. **First pixels from the Pi:** Falcon Player (FPP) supports Colorlight
-   receivers over Ethernet on a Pi. That proves the Zero + adapter + card chain
-   before anything is written.
+   receivers over Ethernet on a Pi. That proves the Pi + card chain before
+   anything is written.
 3. **The instrument:** a renderer on the Pi that reads the four encoders over
    I²C, runs patterns, applies the per-frame cap, and streams frames to the card
    — through FPP, or directly once the protocol is in hand. Whether the Live
    Editor's **JavaScript** patterns can run here (QuickJS) is the question that
-   decides how much of the community library comes along; on a Zero, budget
-   carefully for 16 384 px a frame.
+   decides how much of the community library comes along. (On the Zero this
+   needed careful budgeting; on the Pi 5 it should not.)
 4. **Read-only rootfs** before the box is closed — it will be switched off at
    the wall.
 
@@ -140,8 +144,7 @@ for the boards). Nothing is fastened to the back cover and no cable runs to it.
 | | Centre (x, y) | Model | Mounting |
 |---|---|---|---|
 | 5A-75B | (55.3, 0), long axis **horizontal**, RJ45 end toward −x | **measured** — see below | 4 × M3 x 8 into nuts in the tray |
-| Pi Zero 2 W | (−104, 25), connector edge down (rev 2; rev 1 −107.5) | official drawing, 65 × 30 | the same — **open its 2.75 mm holes to 3.2**, or M2.5 for the Pi alone |
-| Gigabit adapter | (−104, −22) (rev 2) | envelope until one is bought | zip ties through two pairs of tray slots |
+| Raspberry Pi 5 | (−108, 0), **on end**: USB/Ethernet edge down, USB-C edge toward the card | official drawing, 85 × 56, holes 58 × 49; ports and Active Cooler as envelopes | **4 × M2.5 x 8** into M2.5 nuts in the tray (`#piScrewDia`, `#piNutAF`) — its holes are 2.7 mm |
 | Tray | — | 2 sheets, 279.3 × 94 (rev 2; rev 1 285.6), y ±47 | 4 × M3 x 16 into nuts in the middle brace |
 
 **Every nut is a three-layer sandwich** — clearance / hex / clearance — the same
@@ -171,9 +174,10 @@ screw is out:
    panel screws clamp them together.
 2. **Panels on**, as before (the middle brace's panel screws are 6 mm longer).
 3. **On the bench**, tray face down: board nuts into the rear sheet's hex
-   pockets, a ring over each, the board on top, M3 x 8 down through the board.
-   The front sheet under the pockets keeps the nuts from falling through.
-   Zip-tie the adapter. Plug the four HUB75 ribbons into the card.
+   pockets, a ring over each, the board on top, M3 x 8 down through the
+   Colorlight and M2.5 x 8 through the Pi (its rings are bored for M2.5). The
+   front sheet under the pockets keeps the nuts from falling through. Plug the
+   four HUB75 ribbons into the card.
 4. **Tray in from the back:** plug each ribbon into its panel's IN, then four
    M3 x 16 through the tray and a ring into the brace's nuts. (M3 x 16 takes the
    full nut and stops 2 mm short of the panel; M3 x 18 would touch it.)
@@ -182,13 +186,17 @@ screw is out:
 **To take a panel off:** back cover, then the tray (four screws, unplug), and
 the panel screws are exposed. The tray is the only thing that covers them.
 
-Layout: the card sits right of centre so its RJ45 face (x −20) leaves **55 mm**
-to the Pi for the patch-cable plug, its boot and the bend. The tray stops at
+Layout: the card sits right of centre, RJ45 face at x −20. The Pi 5 stands on
+end at the left: lying flat, its Ethernet jack would face the card's only ~30 mm
+away, with no room for two plugs. On end, its jack points **down** past the
+tray's bottom edge, and a short (~20 cm) flat patch cable loops round to the
+card. Its USB-C power plug points into the gap toward the card (~31 mm to the
+tray screw). The tray stops at
 |y| 47, 2 mm clear of the panels' 5 V plugs, and the HUB75 ribbons wrap round
 its top and bottom edges to the panels' IN ports (each panel's **IN is on the
 left seen from behind**). Depth: brace 9, ring 3, tray 6, ring 3, then the
-boards — the deepest part, the card's terminal block, ends **5 mm** short of the
-back cover.
+boards — the deepest part, the Pi 5's stacked USB, ends **3.2 mm** short of the
+back cover (the card's terminal block, 5 mm).
 
 ### The 5A-75B, measured
 
@@ -207,7 +215,8 @@ which lay flat; component outlines off the front, registered through the holes.
 
 Heights, calipered 2026-10-12: PCB **1.7**; above it RJ45 **13.8**, HUB75
 shrouds **9**, terminal block **14.8** (the tallest), big JST **10.6**, small
-JST **6.38**. The Pi Zero's PCB is taken as 2 mm, unmeasured.
+JST **6.38**. The Pi 5's PCB is taken as 1.6 mm, unmeasured; its port heights are the
+drawing's, as one envelope over the whole USB/Ethernet edge.
 
 Because the boards face back, each HUB75 ribbon makes a short U: out of the
 card's header toward the cover, round the card's and the tray's edge, and

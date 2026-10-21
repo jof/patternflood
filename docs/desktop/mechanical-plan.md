@@ -190,8 +190,8 @@ its pin edge.
     │
     ├─ [4]  Electronics tray ..................... 3 + 6 + 3 + boards
     │        on a ring behind the 3-sheet middle brace (9 mm);
-    │        Colorlight 5A-75B, Pi Zero 2 W, USB gigabit adapter,
-    │        component side back; 5 mm clear of the cover
+    │        Colorlight 5A-75B, Raspberry Pi 5 (on end),
+    │        component side back; 3.2 mm clear of the cover
     │
     └─ [5]  Back cover + rails .................. 3 + 9 mm
              removable, carries nothing, no cables to it
@@ -367,7 +367,7 @@ dimensions don't carry over.
 Ordered by how expensive they are to get wrong:
 
 1. ~~**EC11 bushing thread length**~~ → ✅ 5.5 mm of thread, 2.3 mm jam nut (2026-10-18): it clamps **one** 3.18 sheet, so only the bezel's outer sheet is clamped. Rev 2 glues a second sheet behind it (`#frontLayers` 2), pocketed 35 mm square at each knob; rev 1's single sheet flexed when the knobs were pushed. The 15 mm encoder body and the 4991 breakout behind it (~26 mm board plus its STEMMA QT plugs, 35 mm square, `#knobPocket`) sit in free space, clear for ~44 mm back to the lower rail stack; 10 mm stays between neighbours at the 45 mm pitch. Skip the washer or use a thin one. Still to check: the bore fit (test-cut row 3) and the encoder's anti-rotation tab.
-1a. ~~Colorlight 5A-75B outline, holes and heights~~ → ✅ scans and calipers, 2026-10-12 ([`driver-colorlight.md`](driver-colorlight.md) §6). Pi Zero PCB thickness still assumed (2 mm).
+1a. ~~Colorlight 5A-75B outline, holes and heights~~ → ✅ scans and calipers, 2026-10-12 ([`driver-colorlight.md`](driver-colorlight.md) §6). Pi 5 PCB thickness still assumed (1.6 mm).
 1b. ~~Panel connector heights~~ → ✅ plugged HUB75 cable 7 mm, 5 V 19 mm proud of the rear face (2026-10-12).
 2. ~~**Actual two-panel butted width**~~ → ✅ 256 × 128, zero seam (§2.1).
 3. ~~**Panel body depth incl. connectors**~~ → ✅ 14.5, 17.8 over the pins (§2.1).
@@ -375,7 +375,8 @@ Ordered by how expensive they are to get wrong:
 5. ~~**Chosen power bank dimensions**~~ → no bank: mains through the LRS-50-5.
 6. **Stability** → 373 tall on 60 deep. Feet or a rear kickstand, before it
    lives on a desk.
-7. **USB gigabit adapter envelope** → `#nicW/H/T` are typical; measure the one
-   bought.
+7. ~~USB gigabit adapter envelope~~ → gone: the Pi 5 has Ethernet on board.
+   Instead, **check the Pi 5's port and Active Cooler heights** against the
+   envelopes in `Bay obstructions` (USB stack 16, cooler 14).
 
 Items 1, 1a, 4 and 7 are calipers on parts in hand. Item 6 is a design choice.

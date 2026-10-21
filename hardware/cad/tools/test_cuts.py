@@ -41,7 +41,7 @@ GAP = 3.0
 VARS = ["kerf", "thickness", "screwDia", "nutAcrossFlats", "boreDia", "pinHoleDia", "pinSlotLen",
         "pinXOffset", "pinYOffset", "postXOffset", "braceYOffset", "midPostYOffset", "slotW", "slotLen",
         "psuHoleDia", "psuHoleAX", "psuHoleBX", "iecCutW", "iecCutH", "iecScrewSpacing", "iecScrewDia",
-        "iecFlangeEnd", "iecFlangeTip", "fingerLen", "railW", "pinDia"]
+        "iecFlangeEnd", "iecFlangeTip", "fingerLen", "railW", "pinDia", "piScrewDia", "piNutAF"]
 
 
 def fetch_vars():
@@ -414,11 +414,13 @@ def main():
     v = fetch_vars()
     src = open(FS).read()
     C = {n: fs_const(src, n) for n in ("CL_W", "CL_H", "CL_HOLES", "CL_HUBS", "CL_HUB_L", "CL_HUB_W",
-                                         "CL_RJ45", "PI_W", "PI_H", "PI_HOLES", "PI_EDGE_PARTS")}
+                                         "CL_RJ45", "PI_W", "PI_H", "PI_HOLES")}
     k = v["kerf"]
     kerfs = [0.0, 0.1, 0.15, 0.2, 0.25, 0.3]
     afs = [5.1, 5.2, 5.3, 5.4, 5.5, 5.6]
     board_hole = v["screwDia"] + 0.5 - k        # trayClrR*2 - kerf: the tray's board holes
+    pi_hole = v["piScrewDia"] + 0.5 - k         # the tray's M2.5 holes for the Pi 5
+    pi_afs = [round(v["piNutAF"] - k + d, 2) for d in (-0.1, 0.0, 0.1)]
 
 
     pieces = [
@@ -489,13 +491,18 @@ def main():
                   "together. If one doesn't, the scan is off at that hole — measure it and correct CL_HOLES in "
                   "enclosure.fs.",
              var="CL_HOLES (enclosure.fs)"),
-        dict(id=8, file="08-pi-zero-template.dxf",
-             ents=piece_board(C["PI_W"], C["PI_H"], C["PI_HOLES"], board_hole, "8", (C["PI_W"] / 2, 14), 3),
-             title="Pi Zero 2 W template",
-             test="The board's footprint plus 4 mm, with the four 58 × 23 mounting holes at the tray's hole size.",
-             read="With the Pi's holes opened to 3.2, an M3 should go through all four. (Or check the pattern with "
-                  "M2.5 before drilling.)",
-             var="PI_HOLES (enclosure.fs)"),
+        dict(id=8, file="08-pi-5-template.dxf",
+             ents=piece_board(C["PI_W"], C["PI_H"], C["PI_HOLES"], pi_hole, "8", (C["PI_W"] / 2, 42), 3)
+                  + [e for i, af in enumerate(pi_afs) for e in hexagon(30 + 12.5 * i, 26, af)]
+                  + [e for i, af in enumerate(pi_afs) for e in text(fmt(af), 30 + 12.5 * i, 17, h=2.6)],
+             title="Raspberry Pi 5 template + M2.5 nut pockets",
+             test=f"The board's footprint plus 4 mm, with the four 58 × 49 mounting holes at the tray's M2.5 hole "
+                  f"size ({fmt(pi_hole)}), and three M2.5 hex pockets in the middle: "
+                  f"{', '.join(fmt(a) for a in pi_afs)} across flats, the middle one being what the tray draws.",
+             read="Set the Pi on it: an M2.5 screw should go through every hole of Pi and template together. Then "
+                  "push an M2.5 nut into each pocket — you want the one that holds the nut like the M3 pockets did "
+                  "(5.3–5.4 for M3). If it isn't the middle one, move #piNutAF by the difference.",
+             var="PI_HOLES (enclosure.fs), #piScrewDia, #piNutAF"),
         dict(id=9, file="09-iec-cutout.dxf", ents=piece_iec(v),
              title="IEC inlet cutout",
              test=f"The {fmt(v['iecCutW'])} × {fmt(v['iecCutH'])} cutout and its two flange screw holes "

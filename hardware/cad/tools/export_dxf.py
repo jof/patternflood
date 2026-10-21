@@ -284,7 +284,10 @@ def main():
     for g in groups:
         base = slug(g["names"][0])
         if len(g["names"]) > 1 and g["names"][0].startswith("Spacer ring"):
-            base = "spacer-ring-" + ("tray-to-brace" if "tray to brace" in g["names"][0] else "board")
+            n0 = g["names"][0]
+            # the Pi's rings are bored for M2.5, the Colorlight's for M3: different parts
+            base = "spacer-ring-" + ("tray-to-brace" if "tray to brace" in n0
+                                     else "pi-m2.5" if " Pi " in n0 else "colorlight")
         elif len(g["names"]) > 1:
             base = base.replace("-lower", "").replace("-upper", "")
         g["file"] = base + ".dxf"

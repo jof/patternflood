@@ -10,7 +10,7 @@ They started as one build. They're separate because they want opposite things.
 | | Patternflow-inspired, four knobs | Room-interactive LED wall |
 | Display | 128 × 128 px, 256 × 256 mm (2 × 2 P2) | 192 × 192 px, 576 × 576 mm |
 | Input | four seesaw encoders | VL53L9CX lidar, contactless |
-| Compute | Pi Zero 2 W + Colorlight 5A-75B | Pi + RP2350 front-end |
+| Compute | Raspberry Pi 5 + Colorlight 5A-75B | Pi + RP2350 front-end |
 | Power | mains, LRS-50-5, panel load capped | mains, ~200 W peak |
 | Enclosure | laser-cut birch ply box | frame + wall mount |
 | Code | Pi renderer (left upstream 2026-10-12) | new codebase |

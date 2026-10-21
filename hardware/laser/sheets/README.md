@@ -52,7 +52,8 @@ Parts span 583.6 × 295.9 mm.
 | 5 | Panel brace lower | 1 | `panel-brace-lower.dxf` |
 | 6 | Rail C, tenoned (upper or lower; identical) | 1 | `rail-c-tenoned.dxf` |
 | — | Spacer ring, tray to brace (8 mm) | 6 | `spacer-ring-tray-to-brace.dxf` |
-| — | Spacer ring, board (7 mm) | 12 | `spacer-ring-board.dxf` |
+| — | Spacer ring, Colorlight (7 mm, M3 bore) | 6 | `spacer-ring-colorlight.dxf` |
+| — | Spacer ring, Pi 5 (7 mm, M2.5 bore) | 6 | `spacer-ring-pi-m2.5.dxf` |
 | 7 | Panel brace middle (front or rear sheet; identical) | 1 | `panel-brace-middle.dxf` |
 | 8 | Wall top | 1 | `wall-top.dxf` |
 | 9 | Wall bottom | 1 | `wall-bottom.dxf` |
@@ -104,6 +105,7 @@ Parts span 586.7 × 293.0 mm.
 | Knob rib 1, between the knob columns (cable holes) | 1 | 4 |
 | Knob rib 2, between the knobs and the PSU | 1 | 4 |
 | Spacer ring, tray to brace (8 mm) | 4 | 3 |
-| Spacer ring, board (7 mm) | 8 | 3 |
+| Spacer ring, Colorlight (7 mm, M3 bore) | 4 | 3 |
+| Spacer ring, Pi 5 (7 mm, M2.5 bore) | 4 | 3 |
 
 **39 parts on 4 sheets**, plus 6 spare spacer rings on sheet 3 (the 7 mm board ring is only 1.8 mm of wood round its hole).

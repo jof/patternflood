@@ -188,10 +188,6 @@
     "0 mm - #panelDepth - 5 * #thickness - #spacerRings * #thickness - #boardRings * #thickness"
    ],
    [
-    "braceRearZ",
-    "0 mm - #panelDepth - 5 * #thickness - #spacerRings * #thickness"
-   ],
-   [
     "clX",
     "#clX"
    ],
@@ -234,26 +230,6 @@
    [
     "piPcbT",
     "#piPcbT"
-   ],
-   [
-    "nicW",
-    "#nicW"
-   ],
-   [
-    "nicH",
-    "#nicH"
-   ],
-   [
-    "nicT",
-    "#nicT"
-   ],
-   [
-    "nicX",
-    "#nicX"
-   ],
-   [
-    "nicY",
-    "#nicY"
    ]
   ]
  ],
@@ -639,28 +615,20 @@
     "#trayScrewY"
    ],
    [
-    "nicX",
-    "#nicX"
-   ],
-   [
-    "nicY",
-    "#nicY"
-   ],
-   [
-    "nicW",
-    "#nicW"
-   ],
-   [
-    "nicH",
-    "#nicH"
-   ],
-   [
     "boardRings",
     "#boardRings"
    ],
    [
     "boardRingOD",
     "#boardRingOD"
+   ],
+   [
+    "piScrewDia",
+    "#piScrewDia"
+   ],
+   [
+    "piNutAF",
+    "#piNutAF"
    ]
   ]
  ]

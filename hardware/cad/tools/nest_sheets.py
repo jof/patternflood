@@ -176,9 +176,11 @@ LAYOUT = [
      # ...with the short strips stacked beside them, also lying along...
      "beside": ["panel-brace-lower.dxf", "rail-c-tenoned.dxf"],
      # ...the spacer rings in the corner the shorter strips leave free...
-     "rings": ["spacer-ring-tray-to-brace.dxf"] * 4 + ["spacer-ring-board.dxf"] * 8,
+     "rings": ["spacer-ring-tray-to-brace.dxf"] * 4 + ["spacer-ring-colorlight.dxf"] * 4
+              + ["spacer-ring-pi-m2.5.dxf"] * 4,
      # plus spares: the 7 mm board ring is only 1.8 mm of wood round its hole
-     "spares": ["spacer-ring-tray-to-brace.dxf"] * 2 + ["spacer-ring-board.dxf"] * 4,
+     "spares": ["spacer-ring-tray-to-brace.dxf"] * 2 + ["spacer-ring-colorlight.dxf"] * 2
+               + ["spacer-ring-pi-m2.5.dxf"] * 2,
      # ...and the rest across the far end.
      "along_after_walls": [("panel-brace-middle.dxf", True),
                            ("wall-top.dxf", True),
@@ -393,6 +395,8 @@ PART = {  # file -> what to call it on the cut sheet
     "knob-rib-2.dxf": "Knob rib 2, between the knobs and the PSU",
     "spacer-ring-tray-to-brace.dxf": "Spacer ring, tray to brace (8 mm)",
     "spacer-ring-board.dxf": "Spacer ring, board (7 mm)",
+    "spacer-ring-colorlight.dxf": "Spacer ring, Colorlight (7 mm, M3 bore)",
+    "spacer-ring-pi-m2.5.dxf": "Spacer ring, Pi 5 (7 mm, M2.5 bore)",
 }
 
 

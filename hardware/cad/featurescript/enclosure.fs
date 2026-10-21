@@ -5,13 +5,13 @@ import(path : "onshape/std/geometry.fs", version : "3070.0");
 // into, in this document. The PSU proxy merges it in (Detailed on), so the
 // enclosure studio shows the real part rather than an envelope. Re-pin the
 // version if that studio ever changes.
-LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "5e69b82e80990a48d9cbbd79");
+LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "923976c047c424580a194041");
 
 /**
  * Patternflow desktop enclosure — parametric features.
  *
  * Laser-cut 3 mm finger-joint box, a 2 x 2 array of Waveshare P2 64x64 GOB
- * panels driven by a Colorlight 5A-75B receiver card and a Raspberry Pi Zero 2 W,
+ * panels driven by a Colorlight 5A-75B receiver card and a Raspberry Pi 5,
  * 4 x Adafruit 4991 seesaw encoders.
  *
  * DATUM CONVENTION — every part depends on this:
@@ -89,22 +89,27 @@ const CL_TERM = [66.0, 130.0, 86.5, 144.0];   // 2-way barrier terminal, 5 V in
 const CL_JST_SMALL = [2.5, 110.0, 9.0, 124.5];    // white 4-pin, signal
 const CL_JST_BIG   = [83.5, 113.0, 91.5, 128.0];  // 4-pin power header, GND GND D5V D5V
 
-// Raspberry Pi Zero 2 W, from the official mechanical drawing
-// (datasheets.raspberrypi.com, rpizero2 mechanical drawing). The connector
-// edge is y = 0.
-const PI_W = 65;
-const PI_H = 30;
-const PI_HOLES = [[3.5, 3.5], [61.5, 3.5], [3.5, 26.5], [61.5, 26.5]];
-const PI_HOLE = 2.75;
-// [cx, width, depth into board, overhang past y = 0, height]
-const PI_EDGE_PARTS = [[12.4, 11.2, 7.5, 0.5, 3.2],     // mini HDMI
-                       [41.4, 8.0, 5.6, 1.0, 2.6],      // micro USB, OTG (data)
-                       [54.0, 8.0, 5.6, 1.0, 2.6]];     // micro USB, power
-// [x0, y0, x1, y1, height] — low parts, from the same drawing
-const PI_TOP_PARTS = [[19.0, 8.0, 34.0, 23.0, 1.4],      // RP3A0 SiP
-                      [37.3, 9.7, 48.9, 21.2, 1.2],      // second package
-                      [1.5, 9.0, 12.6, 21.0, 1.4],       // microSD
-                      [60.5, 7.0, 65.0, 23.0, 1.3]];     // camera FPC
+// Raspberry Pi 5, from the official mechanical drawing (85 x 56, the same
+// 58 x 49 hole pattern as every full-size Pi since the B+). Board frame:
+// component side up, origin at the corner by the first hole, x along the
+// 85 mm edge, GPIO header along the TOP edge (y = 56), USB and Ethernet on
+// the RIGHT edge (x = 85), USB-C and the two micro HDMI on the BOTTOM edge
+// (y = 0). The holes are M2.5 (2.7 mm), so the Pi takes its own M2.5
+// screws and nuts (#piScrewDia, #piNutAF) rather than drilled-out M3.
+// Replaces the Pi Zero 2 W + USB gigabit adapter of rev 1: the Pi 5 has
+// gigabit Ethernet on board.
+const PI_W = 85;
+const PI_H = 56;
+const PI_HOLES = [[3.5, 3.5], [61.5, 3.5], [3.5, 52.5], [61.5, 52.5]];
+const PI_HOLE = 2.7;
+// [x0, y0, x1, y1, height above the component face, name] — ENVELOPES.
+// The port block is one box over the whole right edge at the height of the
+// tallest jack (the stacked USB), so it holds whichever order the jacks are
+// in; it overhangs the board edge like the real ports do.
+const PI_PARTS = [[64.0, 1.5, 87.5, 54.5, 16.0, "Pi 5 USB + Ethernet (envelope)"],
+                  [6.0, -1.5, 48.0, 7.5, 3.6,  "Pi 5 USB-C + 2 x micro HDMI (envelope)"],
+                  [7.0, 50.0, 58.0, 55.0, 8.5,  "Pi 5 GPIO header"],
+                  [3.0, 4.0, 61.0, 52.0, 14.0,  "Pi 5 Active Cooler (envelope, VERIFY)"]];
 
 // Where the boards sit. All of them mount on the ELECTRONICS TRAY, a plate
 // that screws to the back of the (doubled) middle panel brace, component side
@@ -115,9 +120,13 @@ const PI_TOP_PARTS = [[19.0, 8.0, 34.0, 23.0, 1.4],      // RP3A0 SiP
 //   Colorlight: long axis horizontal, RJ45 end toward -x (the Pi side).
 //     Its frame (x_b across, y_b along, z_b out of the component side) maps
 //     to box -y, -x, -z:  box = (clX + CL_H/2 - y_b,  clY + CL_W/2 - x_b).
-//   Pi Zero 2 W: long axis horizontal, connector edge DOWN.
-//     Its frame (x_p along, y_p across, z_p out) maps to box -x, +y, -z:
-//     box = (piX + PI_W/2 - x_p,  piY - PI_H/2 + y_p).
+//   Pi 5: long axis VERTICAL, USB/Ethernet edge DOWN, USB-C edge toward +x.
+//     Lying flat it would put its Ethernet jack ~30 mm from the card's,
+//     facing it: no room for two plugs. On end, the jack points down past
+//     the tray edge and the patch cable loops round to the card, and the
+//     USB-C power plug points into the cable gap.
+//     Its frame (x_p along, y_p across, z_p out) maps to box -y, -x, -z:
+//     box = (piX + PI_H/2 - y_p,  piY + PI_W/2 - x_p).
 function clToBox(clX, clY, xb is number, yb is number) returns Vector
 {
     return vector(clX + (CL_H / 2 - yb) * millimeter, clY + (CL_W / 2 - xb) * millimeter);
@@ -125,7 +134,7 @@ function clToBox(clX, clY, xb is number, yb is number) returns Vector
 
 function piToBox(piX, piY, xp is number, yp is number) returns Vector
 {
-    return vector(piX + (PI_W / 2 - xp) * millimeter, piY + (yp - PI_H / 2) * millimeter);
+    return vector(piX + (PI_H / 2 - yp) * millimeter, piY + (PI_W / 2 - xp) * millimeter);
 }
 
 // ────────────────────────────────────────────────────────────────────────
@@ -740,9 +749,9 @@ export const iecProxy = defineFeature(function(context is Context, id is Id, def
 // clean, with nothing tethered to it:
 //   - Colorlight 5A-75B, measured (see Board data), long axis horizontal so
 //     its two rows of four HUB75 headers face the top and bottom panel rows;
-//   - Raspberry Pi Zero 2 W, from the official drawing, connector edge down;
-//   - the USB gigabit adapter, still an envelope (model not chosen yet).
-// Heights calipered 2026-10-12, except the Pi PCB (2 mm assumed).
+//   - Raspberry Pi 5, from the official drawing, on end, ports down; its
+//     ports and the Active Cooler are envelopes.
+// Heights calipered 2026-10-12, except the Pi's (drawing / assumed).
 
 annotation { "Feature Type Name" : "Bay obstructions" }
 export const bayObstructions = defineFeature(function(context is Context, id is Id, definition is map)
@@ -799,9 +808,6 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
         annotation { "Name" : "Board mounting face z (boss tops)" }
         isLength(definition.mountZ, ANY_LENGTH_BOUNDS);
 
-        annotation { "Name" : "Middle brace rear face z" }
-        isLength(definition.braceRearZ, ANY_LENGTH_BOUNDS);
-
         annotation { "Name" : "Receiver card centre x" }
         isLength(definition.clX, ANY_LENGTH_BOUNDS);
 
@@ -837,20 +843,6 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
         annotation { "Name" : "Pi PCB thickness" }
         isLength(definition.piPcbT, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Ethernet adapter width (x)" }
-        isLength(definition.nicW, LENGTH_BOUNDS);
-
-        annotation { "Name" : "Ethernet adapter height (y)" }
-        isLength(definition.nicH, LENGTH_BOUNDS);
-
-        annotation { "Name" : "Ethernet adapter height off the brace" }
-        isLength(definition.nicT, LENGTH_BOUNDS);
-
-        annotation { "Name" : "Ethernet adapter centre x" }
-        isLength(definition.nicX, ANY_LENGTH_BOUNDS);
-
-        annotation { "Name" : "Ethernet adapter centre y" }
-        isLength(definition.nicY, ANY_LENGTH_BOUNDS);
     }
     {
         const back = -definition.panelDepth;
@@ -939,7 +931,7 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
         clPart(id + "clJstB", CL_JST_BIG,   cComp, definition.clJstBigH,  "Colorlight 5 V header (big JST)");
         clPart(id + "clJstS", CL_JST_SMALL, cComp, definition.clJstSmallH, "Colorlight JST (small)");
 
-        // ── Raspberry Pi Zero 2 W ───────────────────────────────────────
+        // ── Raspberry Pi 5 ──────────────────────────────────────────────
         const piX = definition.piX;
         const piY = definition.piY;
         const pComp = cTop - definition.piPcbT;
@@ -953,7 +945,7 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
             nameBody(context, pid + "n", pid, name);
         };
 
-        piPart(id + "piPcb", [0, 0, PI_W, PI_H], cTop, definition.piPcbT, "Raspberry Pi Zero 2 W — PCB");
+        piPart(id + "piPcb", [0, 0, PI_W, PI_H], cTop, definition.piPcbT, "Raspberry Pi 5 — PCB");
         var piHoles = [];
         for (var h = 0; h < size(PI_HOLES); h += 1)
         {
@@ -969,27 +961,11 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
                 "targets"       : qCreatedBy(id + "piPcb", EntityType.BODY),
                 "operationType" : BooleanOperationType.SUBTRACTION });
 
-        const edgeNames = ["Pi mini HDMI", "Pi micro USB (OTG)", "Pi micro USB (power)"];
-        for (var j = 0; j < size(PI_EDGE_PARTS); j += 1)
+        for (var j = 0; j < size(PI_PARTS); j += 1)
         {
-            const e = PI_EDGE_PARTS[j];
-            piPart(id + ("piEdge" ~ j), [e[0] - e[1] / 2, -e[3], e[0] + e[1] / 2, e[2] - e[3]],
-                   pComp, e[4] * mm, edgeNames[j]);
+            const q = PI_PARTS[j];
+            piPart(id + ("piPart" ~ j), [q[0], q[1], q[2], q[3]], pComp, q[4] * mm, q[5]);
         }
-        for (var j = 0; j < size(PI_TOP_PARTS); j += 1)
-        {
-            const t = PI_TOP_PARTS[j];
-            piPart(id + ("piTop" ~ j), [t[0], t[1], t[2], t[3]], pComp, t[4] * mm, "Pi Zero 2 W component");
-        }
-
-        // ── USB gigabit adapter (envelope until one is chosen) ──────────
-        // Strapped to the same brace, under the Pi.
-        fCuboid(context, id + "nic", {
-                "corner1" : vector(definition.nicX - definition.nicW / 2,
-                                   definition.nicY - definition.nicH / 2, definition.braceRearZ - definition.nicT),
-                "corner2" : vector(definition.nicX + definition.nicW / 2,
-                                   definition.nicY + definition.nicH / 2, definition.braceRearZ) });
-        nameBody(context, id + "nicN", id + "nic", "USB gigabit Ethernet adapter");
     });
 
 // ────────────────────────────────────────────────────────────────────────
@@ -1353,17 +1329,11 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "Tray screw y (both pairs, +/-)" }
         isLength(definition.trayScrewY, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Adapter centre x" }
-        isLength(definition.nicX, ANY_LENGTH_BOUNDS);
+        annotation { "Name" : "Pi screw diameter (M2.5)" }
+        isLength(definition.piScrewDia, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Adapter centre y" }
-        isLength(definition.nicY, ANY_LENGTH_BOUNDS);
-
-        annotation { "Name" : "Adapter width (x)" }
-        isLength(definition.nicW, LENGTH_BOUNDS);
-
-        annotation { "Name" : "Adapter height (y)" }
-        isLength(definition.nicH, LENGTH_BOUNDS);
+        annotation { "Name" : "Pi nut across flats (M2.5)" }
+        isLength(definition.piNutAF, LENGTH_BOUNDS);
     }
     {
         const t    = definition.thickness;
@@ -2224,16 +2194,19 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 "corner1" : vector(tx0, definition.trayY0, trayB),
                 "corner2" : vector(tx1, definition.trayY1, trayM) });
 
+        // [x, y, name, clearance radius, nut across flats]: M3 for the
+        // Colorlight, M2.5 for the Pi 5 (its holes are 2.7 mm)
+        const piClrR = definition.piScrewDia / 2 + 0.25 * millimeter;
         var boardSites = [];
         for (var h = 0; h < size(CL_HOLES); h += 1)
         {
             const bp = clToBox(definition.clX, definition.clY, CL_HOLES[h][0], CL_HOLES[h][1]);
-            boardSites = append(boardSites, [bp[0], bp[1], "Colorlight " ~ (h + 1)]);
+            boardSites = append(boardSites, [bp[0], bp[1], "Colorlight " ~ (h + 1), trayClrR, definition.nutAcrossFlats]);
         }
         for (var h = 0; h < size(PI_HOLES); h += 1)
         {
             const bp = piToBox(definition.piX, definition.piY, PI_HOLES[h][0], PI_HOLES[h][1]);
-            boardSites = append(boardSites, [bp[0], bp[1], "Pi " ~ (h + 1)]);
+            boardSites = append(boardSites, [bp[0], bp[1], "Pi " ~ (h + 1), piClrR, definition.piNutAF]);
         }
 
         var throughCuts = [];       // both tray sheets
@@ -2241,7 +2214,7 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         var rearCuts = [];          // rear sheet only
         var ringN = 0;
 
-        const ring = function(rid is Id, sx, sy, z0, rOut, name is string)
+        const ring = function(rid is Id, sx, sy, z0, rOut, rIn, name is string)
         {
             fCylinder(context, rid, {
                     "topCenter"    : vector(sx, sy, z0 + t),
@@ -2250,7 +2223,7 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             fCylinder(context, rid + "bore", {
                     "topCenter"    : vector(sx, sy, z0 + t + over),
                     "bottomCenter" : vector(sx, sy, z0 - over),
-                    "radius"       : trayClrR - kerf / 2 });
+                    "radius"       : rIn - kerf / 2 });
             opBoolean(context, rid + "cut", {
                     "tools"         : qCreatedBy(rid + "bore", EntityType.BODY),
                     "targets"       : qSubtraction(qCreatedBy(rid, EntityType.BODY),
@@ -2271,7 +2244,7 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             throughCuts = append(throughCuts, qCreatedBy(id + ("trayHole" ~ k), EntityType.BODY));
             for (var L = 0; L < definition.spacerRings; L += 1)
             {
-                ring(id + ("ring" ~ ringN), sx, sy, trayF + L * t, definition.spacerOD / 2,
+                ring(id + ("ring" ~ ringN), sx, sy, trayF + L * t, definition.spacerOD / 2, trayClrR,
                      "Spacer ring — tray to brace");
                 ringN += 1;
             }
@@ -2283,35 +2256,23 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         {
             const sx = boardSites[k][0];
             const sy = boardSites[k][1];
+            const clr = boardSites[k][3];
             fCylinder(context, id + ("boardHole" ~ k), {
                     "topCenter"    : vector(sx, sy, trayF + over),
                     "bottomCenter" : vector(sx, sy, trayM - over),
-                    "radius"       : trayClrR - kerf / 2 });
+                    "radius"       : clr - kerf / 2 });
             frontCuts = append(frontCuts, qCreatedBy(id + ("boardHole" ~ k), EntityType.BODY));
             rearCuts = append(rearCuts,
-                hexPrism(context, id + ("boardNut" ~ k), sx, sy, definition.nutAcrossFlats - kerf,
+                hexPrism(context, id + ("boardNut" ~ k), sx, sy, boardSites[k][4] - kerf,
                          trayB - over, trayM + over));
             for (var L = 0; L < definition.boardRings; L += 1)
             {
-                ring(id + ("ring" ~ ringN), sx, sy, trayB - (L + 1) * t, definition.boardRingOD / 2,
+                ring(id + ("ring" ~ ringN), sx, sy, trayB - (L + 1) * t, definition.boardRingOD / 2, clr,
                      "Spacer ring — " ~ boardSites[k][2]);
                 ringN += 1;
             }
         }
 
-        // two zip-tie strap positions round the USB adapter, a slot each side
-        for (var k = 0; k < 2; k += 1)
-        {
-            const sxs = definition.nicX + (2 * k - 1) * definition.nicW / 4;
-            for (var j = 0; j < 2; j += 1)
-            {
-                const sys = definition.nicY + (2 * j - 1) * (definition.nicH / 2 + 2.5 * millimeter);
-                fCuboid(context, id + ("strap" ~ k ~ j), {
-                        "corner1" : vector(sxs - 3 * millimeter, sys - 1.25 * millimeter, trayB - over),
-                        "corner2" : vector(sxs + 3 * millimeter, sys + 1.25 * millimeter, trayF + over) });
-                throughCuts = append(throughCuts, qCreatedBy(id + ("strap" ~ k ~ j), EntityType.BODY));
-            }
-        }
         opBoolean(context, id + "trayCutF", {
                 "tools"         : qUnion(concatenateArrays([throughCuts, frontCuts])),
                 "targets"       : qCreatedBy(id + "tray", EntityType.BODY),
