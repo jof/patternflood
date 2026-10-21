@@ -637,14 +637,6 @@
    [
     "ventPitch",
     "#ventPitch"
-   ],
-   [
-    "ventMaxLen",
-    "#ventMaxLen"
-   ],
-   [
-    "ventBridge",
-    "#ventBridge"
    ]
   ]
  ]

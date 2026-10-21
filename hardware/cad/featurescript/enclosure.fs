@@ -1,11 +1,22 @@
 FeatureScript 3070;
 import(path : "onshape/std/geometry.fs", version : "3070.0");
+import(path : "onshape/std/decalUtils.fs", version : "3070.0");
 
 // Mean Well's own LRS-50-5 model: the Part Studio the vendor STEP was imported
 // into, in this document. The PSU proxy merges it in (Detailed on), so the
 // enclosure studio shows the real part rather than an envelope. Re-pin the
 // version if that studio ever changes.
-LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "3563081840add21068427123");
+LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "cc40456c8213d35e9d399f28");
+
+// The etched art, as images for decals on the outer faces (tools/art.py
+// renders them, tools/decals.py uploads them and rewrites this block).
+// ART IMPORTS BEGIN — written by tools/decals.py
+ArtBezelOuter::import(path : "669f5ff90ec051aa8533859d", version : "62c29ae40626862af6d48606");
+ArtWallLeft::import(path : "6770a70595bb6770e346f98b", version : "d67509cefea89b201fded756");
+ArtWallRight::import(path : "f594dee1c28d8c4c2048360d", version : "74f7d413a8cb776c0475e159");
+ArtWallTop::import(path : "d58d302d5216cc1a0cdf491c", version : "dea8ea35f3f749765a417e21");
+ArtBackCover::import(path : "7d8f74de8d66542a9f28ae5b", version : "5c4d96966bf1d1d53c39cc78");
+// ART IMPORTS END
 
 /**
  * Patternflow desktop enclosure — parametric features.
@@ -1338,12 +1349,6 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "Vent slot pitch" }
         isLength(definition.ventPitch, LENGTH_BOUNDS);
 
-        annotation { "Name" : "Vent slot max length" }
-        isLength(definition.ventMaxLen, LENGTH_BOUNDS);
-
-        annotation { "Name" : "Vent bridge between slots in a row" }
-        isLength(definition.ventBridge, LENGTH_BOUNDS);
-
         annotation { "Name" : "Pi nut across flats (M2.5)" }
         isLength(definition.piNutAF, LENGTH_BOUNDS);
     }
@@ -2296,64 +2301,104 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 "operationType" : BooleanOperationType.SUBTRACTION });
         opDeleteBodies(context, id + "trayCutLeft", { "entities" : qUnion(frontCuts) });
 
-        // ── ventilation grilles in the back cover (rev 2) ───────────────
-        // The box is closed and stands upright, with a 50 W PSU, a Pi 5 and
-        // the Colorlight inside, so it breathes like a chimney: in low, out
-        // high, all through the back cover — it carries nothing, and nothing
-        // shows from the front. Three fields of horizontal obround slots:
-        //   1. over the PSU, low: intake, and the LRS-50's vented cover faces
-        //      the back cover (see psuProxy);
-        //   2. over the Pi 5: the Active Cooler's fan draws from this side;
-        //   3. across the top, between the tray and the upper rail stack:
-        //      exhaust, behind the top panel row.
-        // Each field stays clear of the rails (which the cover lies on) and
-        // their screws. Rows longer than ventMaxLen split with ventBridge
-        // between, so the cover keeps some stiffness across the slots.
+        // ── ventilation (rev 2): in through the bottom, out high on the sides ──
+        // The box is closed, with a 50 W PSU, a Pi 5 and the card inside, and
+        // it breathes like a chimney: in low, out high. Not through the back
+        // cover: the box sometimes stands against a wall. So:
+        //   * INTAKE through the bottom wall and its doubler, slots running
+        //     front to back, wherever the bottom is open inside: between the
+        //     knob ribs (whose feet are glued there) and right of the PSU (which
+        //     sits flat on it). Stand the box on feet >= 8 mm so air gets in.
+        //   * EXHAUST high on both side walls, wall and doubler, from the tray's
+        //     top edge up to the top doubler, behind the upper brace's mortise
+        //     and in front of rail C's.
         // Drawn uncompensated: a vent's exact width does not matter.
         {
             const vW = definition.ventSlotW;
             const vP = definition.ventPitch;
-            const vMax = definition.ventMaxLen;
-            const vB = definition.ventBridge;
-            const ventFields = [
-                    [definition.psuX - 45 * millimeter, railY0[0] + railW + 6 * millimeter,
-                     definition.psuX + 45 * millimeter, -definition.apertureH / 2 - 12 * millimeter],
-                    [definition.piX - 24 * millimeter, definition.piY - 36 * millimeter,
-                     definition.piX + 24 * millimeter, definition.piY + 36 * millimeter],
-                    [left + 30 * millimeter, definition.trayY1 + 8 * millimeter,
-                     right - 30 * millimeter, railY0[1] - 6 * millimeter]];
+            const h = vW / 2;
             var ventN = 0;
-            for (var f in ventFields)
-            {
-                const fw = f[2] - f[0];
-                const fh = f[3] - f[1];
-                const nRows = floor((fh - vW) / vP) + 1;
-                const yS = f[1] + (fh - ((nRows - 1) * vP + vW)) / 2 + vW / 2;
-                const nSeg = ceil((fw + vB) / (vMax + vB));
-                const segL = (fw - (nSeg - 1) * vB) / nSeg;
-                for (var r = 0; r < nRows; r += 1)
+            var vents = { "wallL" : [], "wallR" : [], "wallB" : [] };
+
+            // an obround slot running along z, from za to zb, at `at` across the
+            // wall; c0..c1 spans the wall's thickness (x for a side wall, y for
+            // the bottom)
+            const zSlot = function(vid is Id, side is boolean, c0, c1, at, za, zb) returns array
                 {
-                    const yc = yS + r * vP;
-                    for (var sg = 0; sg < nSeg; sg += 1)
+                    if (side)
                     {
-                        const xa = f[0] + sg * (segL + vB) + vW / 2;   // end-cap centres
-                        const xb = xa + segL - vW;
-                        const vid = id + ("vent" ~ ventN);
-                        fCuboid(context, vid, {
-                                "corner1" : vector(xa, yc - vW / 2, zBc0 - over),
-                                "corner2" : vector(xb, yc + vW / 2, zBc1 + over) });
-                        fCylinder(context, vid + "a", {
-                                "topCenter"    : vector(xa, yc, zBc1 + over),
-                                "bottomCenter" : vector(xa, yc, zBc0 - over),
-                                "radius"       : vW / 2 });
-                        fCylinder(context, vid + "b", {
-                                "topCenter"    : vector(xb, yc, zBc1 + over),
-                                "bottomCenter" : vector(xb, yc, zBc0 - over),
-                                "radius"       : vW / 2 });
-                        coverHoles = concatenateArrays([coverHoles, [qCreatedBy(vid, EntityType.BODY),
-                                qCreatedBy(vid + "a", EntityType.BODY), qCreatedBy(vid + "b", EntityType.BODY)]]);
-                        ventN += 1;
+                        fCuboid(context, vid, { "corner1" : vector(c0, at - h, za + h), "corner2" : vector(c1, at + h, zb - h) });
+                        fCylinder(context, vid + "a", { "topCenter" : vector(c1, at, za + h), "bottomCenter" : vector(c0, at, za + h), "radius" : h });
+                        fCylinder(context, vid + "b", { "topCenter" : vector(c1, at, zb - h), "bottomCenter" : vector(c0, at, zb - h), "radius" : h });
                     }
+                    else
+                    {
+                        fCuboid(context, vid, { "corner1" : vector(at - h, c0, za + h), "corner2" : vector(at + h, c1, zb - h) });
+                        fCylinder(context, vid + "a", { "topCenter" : vector(at, c1, za + h), "bottomCenter" : vector(at, c0, za + h), "radius" : h });
+                        fCylinder(context, vid + "b", { "topCenter" : vector(at, c1, zb - h), "bottomCenter" : vector(at, c0, zb - h), "radius" : h });
+                    }
+                    return [qCreatedBy(vid, EntityType.BODY), qCreatedBy(vid + "a", EntityType.BODY),
+                            qCreatedBy(vid + "b", EntityType.BODY)];
+                };
+            // centres of as many slots as fit in [a, b] at the pitch, centred
+            const rowsIn = function(a, b) returns array
+                {
+                    if (b - a < vW) { return []; }
+                    const n = floor((b - a - vW) / vP) + 1;
+                    const s0 = a + (b - a - (n - 1) * vP) / 2;
+                    var out = [];
+                    for (var k = 0; k < n; k += 1) { out = append(out, s0 + k * vP); }
+                    return out;
+                };
+
+            // intake: the bottom's open stretches, between ribs and beside the PSU
+            const vCols = definition.knobCols;
+            var spans = [[left + tw + 6 * millimeter, right - tw - 6 * millimeter]];
+            var blocks = [[definition.psuX - definition.psuL / 2 - 3 * millimeter,
+                           definition.psuX + definition.psuL / 2 + 3 * millimeter]];
+            for (var c = 1; c <= vCols; c += 1)
+            {
+                const rx = definition.knobXCentre + (c - vCols / 2) * definition.knobPitch;
+                blocks = append(blocks, [rx - t / 2 - 3 * millimeter, rx + t / 2 + 3 * millimeter]);
+            }
+            for (var b in blocks)
+            {
+                var nxt = [];
+                for (var iv in spans)
+                {
+                    if (b[1] <= iv[0] || b[0] >= iv[1]) { nxt = append(nxt, iv); continue; }
+                    if (b[0] > iv[0]) { nxt = append(nxt, [iv[0], b[0]]); }
+                    if (b[1] < iv[1]) { nxt = append(nxt, [b[1], iv[1]]); }
+                }
+                spans = nxt;
+            }
+            for (var iv in spans)
+            {
+                for (var xc in rowsIn(iv[0], iv[1]))
+                {
+                    vents.wallB = concatenateArrays([vents.wallB, zSlot(id + ("vent" ~ ventN), false,
+                            bottom - over, bottom + tw + over, xc, dz1 + 3 * millimeter, zBezB - 4 * millimeter)]);
+                    ventN += 1;
+                }
+            }
+
+            // exhaust: high on both side walls
+            for (var yc in rowsIn(definition.trayY1 + 8 * millimeter, top - tw - 6 * millimeter))
+            {
+                vents.wallL = concatenateArrays([vents.wallL, zSlot(id + ("vent" ~ ventN), true,
+                        left - over, left + tw + over, yc, dz1 + 3 * millimeter, zBraceB - 3 * millimeter)]);
+                vents.wallR = concatenateArrays([vents.wallR, zSlot(id + ("vent" ~ (ventN + 1)), true,
+                        right - tw - over, right + over, yc, dz1 + 3 * millimeter, zBraceB - 3 * millimeter)]);
+                ventN += 2;
+            }
+            for (var w in ["wallL", "wallR", "wallB"])
+            {
+                if (size(vents[w]) > 0)
+                {
+                    opBoolean(context, id + ("ventCut" ~ w), {
+                            "tools"         : qUnion(vents[w]),
+                            "targets"       : wallStack(w),
+                            "operationType" : BooleanOperationType.SUBTRACTION });
                 }
             }
         }
@@ -2523,6 +2568,66 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                                                    definition.psuZFront),
                                             vector(-1, 0, 0), vector(0, 0, -1)),
                 "owner"       : qCreatedBy(id + "wallB", EntityType.BODY) });
+
+        // Art datums: where the etched art's Decal sits on each outer face.
+        // Centre of the face, X = the art image's "right" and Z = out of the
+        // box: the same frame export_dxf.py draws the part in (seen from
+        // outside), so a PNG rendered over that part's DXF lands exactly on
+        // its cut features. tools/decals.py anchors one Decal on each.
+        const yMid = (top + bottom) / 2;
+        const artDatums = [
+                ["Bezel outer", qCreatedBy(id + ("layer" ~ (nl - 1)), EntityType.BODY),
+                 vector(0 * meter, yMid, 0 * meter), vector(1, 0, 0), vector(0, 0, 1), ArtBezelOuter::BLOB_DATA],
+                ["Wall left", qCreatedBy(id + "wallL", EntityType.BODY),
+                 vector(left, yMid, zBack / 2), vector(0, 0, 1), vector(-1, 0, 0), ArtWallLeft::BLOB_DATA],
+                ["Wall right (IEC)", qCreatedBy(id + "wallR", EntityType.BODY),
+                 vector(right, yMid, zBack / 2), vector(0, 0, -1), vector(1, 0, 0), ArtWallRight::BLOB_DATA],
+                ["Wall top", qCreatedBy(id + "wallT", EntityType.BODY),
+                 vector(0 * meter, top, zBack / 2), vector(-1, 0, 0), vector(0, 1, 0), ArtWallTop::BLOB_DATA],
+                ["Back cover", qCreatedBy(id + "backCover", EntityType.BODY),
+                 vector(0 * meter, yMid, zBack), vector(-1, 0, 0), vector(0, 0, -1), ArtBackCover::BLOB_DATA]];
+        for (var k = 0; k < size(artDatums); k += 1)
+        {
+            const a = artDatums[k];
+            opMateConnector(context, id + ("mcArt" ~ k), {
+                    "coordSystem" : coordSystem(a[2], a[3], a[4]),
+                    "owner"       : a[1] });
+            setProperty(context, {
+                    "entities"     : qCreatedBy(id + ("mcArt" ~ k), EntityType.BODY),
+                    "propertyType" : PropertyType.NAME,
+                    "value"        : "Art origin — " ~ a[0] });
+
+            // The art itself, as a decal on that outer face: visual only, the
+            // same picture the laser etches. The image covers the part's tight
+            // extent in this frame — which is exactly the DXF frame the art
+            // was drawn in — so its lower-left corner goes there.
+            var step = "frame";
+            try
+            {
+                const cs = coordSystem(a[2], a[3], a[4]);
+                step = "box";
+                const bb = evBox3d(context, { "topology" : a[1], "cSys" : cs, "tight" : true });
+                const corner = toWorld(cs, vector(bb.minCorner[0], bb.minCorner[1], 0 * meter));
+                step = "faces";
+                const faces = qCoincidesWithPlane(qOwnedByBody(a[1], EntityType.FACE), plane(a[2], a[4]));
+                step = "uv";
+                const uv = createUvTransform(bb.maxCorner[0] - bb.minCorner[0], false,
+                                             bb.maxCorner[1] - bb.minCorner[1], false, 0 * degree);
+                step = "data";
+                const dd = createPlanarDecal(id + ("artDecal" ~ k), a[5] as ImageData, coordSystem(corner, a[3], a[4]), uv);
+                step = "attach (" ~ size(evaluateQuery(context, faces)) ~ " faces)";
+                associateDecalAttribute(context, faces, dd);
+            }
+            catch (e)
+            {
+                // a decal is decoration: never let it fail the box. Say why on the datum.
+                setProperty(context, {
+                        "entities"     : qCreatedBy(id + ("mcArt" ~ k), EntityType.BODY),
+                        "propertyType" : PropertyType.NAME,
+                        "value"        : "Art origin — " ~ a[0] ~ " (decal failed at " ~ step ~ ": " ~ toString(e)
+                                         ~ ")" });
+            }
+        }
 
         // IEC datum: cutout centre on the right wall's outer face, long
         // axis along +y, z pointing out of the box.

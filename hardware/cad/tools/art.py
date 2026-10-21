@@ -19,6 +19,9 @@ Outputs, per part, in the part's own frame:
                         as circles), for reference
   art/<part>.svg        cut (red) + score (blue) + engrave (black fill) — what you'd
                         load to cut that part alone
+  art/<part>.decal.png  the art alone, transparent, over exactly the part's DXF frame —
+                        tools/decals.py uploads these, and the Enclosure shell shows them
+                        as decals on the outer faces in Onshape
 and art/preview.png. nest_sheets.py picks the etch files up and puts the art on
 the sheets, in sheets/sheet-N.svg.
 
@@ -311,6 +314,35 @@ def preview(path, results):
     im.save(path)
 
 
+DECAL_PX = 8.0                      # px per mm in the Onshape decal images
+BURN = (52, 32, 14, 235)            # what a laser score/engrave on birch looks like, roughly
+
+
+def decal_png(path, ents, score, engrave):
+    """The art alone, transparent, covering exactly the part's DXF frame
+    (0..W, 0..H), for an Onshape Decal anchored at the face centre."""
+    from PIL import Image, ImageDraw
+    xs = [p[0] for e in ents for p in sampled(e)]
+    ys = [p[1] for e in ents for p in sampled(e)]
+    W, H = max(xs), max(ys)
+    k = DECAL_PX
+    im = Image.new("RGBA", (round(W * k), round(H * k)), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    Tr = lambda p: (p[0] * k, (H - p[1]) * k)
+    lw = max(2, round(0.35 * k))
+    for e in score:
+        if e[0] == "L":
+            d.line([Tr(e[1]), Tr(e[2])], fill=BURN, width=lw)
+        else:
+            c, r = e[1], e[2]
+            d.ellipse([Tr((c[0] - r, c[1] + r)), Tr((c[0] + r, c[1] - r))], outline=BURN, width=lw)
+    for e in engrave:
+        c, r = e[1], e[2]
+        d.ellipse([Tr((c[0] - r, c[1] + r)), Tr((c[0] + r, c[1] - r))], fill=BURN)
+    im.save(path, optimize=True)
+    return W, H
+
+
 def check(name, ents, allowed, score, engrave):
     """Every etch mark inside the allowed area (with its own half-width)."""
     bad = 0
@@ -345,6 +377,7 @@ def main():
         xs = [p[0] for e in ents for p in sampled(e)]
         ys = [p[1] for e in ents for p in sampled(e)]
         write_svg(os.path.join(OUT, stem + ".svg"), max(xs), max(ys), svg_body(ents, score, engrave))
+        decal_png(os.path.join(OUT, stem + ".decal.png"), ents, score, engrave)
         bad, near = check(name, ents, allowed, score, engrave)
         problems += bad + near
         print(f"{name:22s} score {len(score):5d}  engrave {len(engrave):4d}  outside-area {bad}  "
