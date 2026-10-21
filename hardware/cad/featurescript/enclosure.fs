@@ -5,7 +5,7 @@ import(path : "onshape/std/geometry.fs", version : "3070.0");
 // into, in this document. The PSU proxy merges it in (Detailed on), so the
 // enclosure studio shows the real part rather than an envelope. Re-pin the
 // version if that studio ever changes.
-LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "5b1529cd4cbcb08adbe2ac1b");
+LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "5e69b82e80990a48d9cbbd79");
 
 /**
  * Patternflow desktop enclosure — parametric features.
@@ -45,6 +45,16 @@ function nameBody(context is Context, id is Id, bodyId is Id, name is string)
 {
     setProperty(context, {
             "entities"     : qCreatedBy(bodyId, EntityType.BODY),
+            "propertyType" : PropertyType.NAME,
+            "value"        : name });
+}
+
+// Name the solid that contains a point — for bodies made by a union, whose
+// creating feature id is not a dependable handle.
+function nameBodyAt(context is Context, point is Vector, name is string)
+{
+    setProperty(context, {
+            "entities"     : qContainsPoint(qBodyType(qEverything(EntityType.BODY), BodyType.SOLID), point),
             "propertyType" : PropertyType.NAME,
             "value"        : name });
 }
@@ -1986,6 +1996,130 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                     "operationType" : BooleanOperationType.SUBTRACTION });
         }
 
+        // ── knob ribs and control shelf (rev 2) ─────────────────────────
+        // Rev 1's knob band flexed like a diving board: supported by the
+        // bottom and side walls, but its top edge — the bottom of the display
+        // aperture — was free, and the top knob row is 25 mm from it. So:
+        //
+        //  * the stiffener web is carried forward to the bezel over the knob
+        //    cluster, a SHELF right under the aperture that props that free
+        //    edge. It is still located by the web's tenons in the side walls;
+        //    its front edge butts the inner bezel and is glued. It stops just
+        //    past the last rib so the PSU's wiring still runs up on the right.
+        //  * a vertical RIB on every knob-column boundary, bottom doubler to
+        //    shelf, bezel back to just short of rail C. Each knob then sits in
+        //    a cell supported on all four sides.
+        //
+        // Joints: each rib has hidden tabs into slots in the INNER bezel only
+        // (blind against the outer sheet, so nothing shows from the front);
+        // its top and bottom edges are glued to the shelf and the doubler.
+        // Tabs into those two would need the rib to slide in along y, and in
+        // the face-down glue-up everything drops in along z.
+        //
+        // Assembly: bezel face down, ribs into their slots, then the walls,
+        // shelf, braces and rails as before. Interior ribs get a cable hole
+        // per knob row for the STEMMA chain; the shelf gets one over the last
+        // column for the lead from the Pi.
+        {
+            const rkCols = definition.knobCols;
+            const rkRows = floor((definition.knobCount + rkCols - 1) / rkCols);
+            const ribTab = 12 * millimeter;            // tab length along y
+            const ribFit = 0.1 * millimeter;           // glue gap, top and bottom
+            const tabShort = 0.3 * millimeter;         // tab stops short of the outer sheet
+            const ribY0 = bottom + tw + ribFit;
+            const ribY1 = braceBotY - kerf / 2 - ribFit;
+            var ribXs = [];
+            for (var c = 1; c <= rkCols; c += 1)
+            {
+                ribXs = append(ribXs, definition.knobXCentre + (c - rkCols / 2) * definition.knobPitch);
+            }
+            var rowYs = [];
+            for (var r = 0; r < rkRows; r += 1)
+            {
+                rowYs = append(rowYs, definition.knobYCentre - (r - (rkRows - 1) / 2) * definition.knobPitch);
+            }
+
+            // the shelf: forward part of the web, over the knob cluster
+            const shelfX1 = ribXs[size(ribXs) - 1] + t / 2 + 4 * millimeter;
+            fCuboid(context, id + "shelfFwd", {
+                    "corner1" : vector(left + tw + dc, braceBotY - kerf / 2, stiffZ1 - over),
+                    "corner2" : vector(shelfX1,        braceTopY + kerf / 2, zBezB) });
+            opBoolean(context, id + "shelfJoin", {
+                    "tools"         : qUnion([qCreatedBy(id + "stiff", EntityType.BODY),
+                                              qCreatedBy(id + "shelfFwd", EntityType.BODY)]),
+                    "operationType" : BooleanOperationType.UNION });
+            const shelfQ = qContainsPoint(qBodyType(qEverything(EntityType.BODY), BodyType.SOLID),
+                                          vector(0 * meter, (braceBotY + braceTopY) / 2, (stiffZ0 + stiffZ1) / 2));
+            const holeX = definition.knobXCentre + (rkCols - 1) / 2 * definition.knobPitch;
+            const holeZ = (stiffZ1 + zBezB) / 2;
+            fCuboid(context, id + "shelfHole", {
+                    "corner1" : vector(holeX - 10 * millimeter, braceBotY - over, holeZ - 4.5 * millimeter),
+                    "corner2" : vector(holeX + 10 * millimeter, braceTopY + over, holeZ + 4.5 * millimeter) });
+            opBoolean(context, id + "shelfHoleCut", {
+                    "tools"         : qCreatedBy(id + "shelfHole", EntityType.BODY),
+                    "targets"       : shelfQ,
+                    "operationType" : BooleanOperationType.SUBTRACTION });
+
+            var ribSlots = [];
+            for (var c = 0; c < size(ribXs); c += 1)
+            {
+                const rx = ribXs[c];
+                fCuboid(context, id + ("rib" ~ c), {
+                        "corner1" : vector(rx - t / 2, ribY0, dz1),
+                        "corner2" : vector(rx + t / 2, ribY1, zBezB) });
+                var parts = [qCreatedBy(id + ("rib" ~ c), EntityType.BODY)];
+                var holes = [];
+                for (var r = 0; r < size(rowYs); r += 1)
+                {
+                    const yc = rowYs[r];
+                    if (nl > 1)
+                    {
+                        // tab grown kerf/2 a side, slot shrunk kerf/2: the comb's press fit
+                        fCuboid(context, id + ("ribTab" ~ c ~ "_" ~ r), {
+                                "corner1" : vector(rx - t / 2, yc - ribTab / 2 - kerf / 2, zBezB - over),
+                                "corner2" : vector(rx + t / 2, yc + ribTab / 2 + kerf / 2, zBezB + t - tabShort) });
+                        parts = append(parts, qCreatedBy(id + ("ribTab" ~ c ~ "_" ~ r), EntityType.BODY));
+                        fCuboid(context, id + ("ribSlot" ~ c ~ "_" ~ r), {
+                                "corner1" : vector(rx - t / 2 + kerf / 2, yc - ribTab / 2 + kerf / 2, zBezB - over),
+                                "corner2" : vector(rx + t / 2 - kerf / 2, yc + ribTab / 2 - kerf / 2, zBezB + t + over) });
+                        ribSlots = append(ribSlots, qCreatedBy(id + ("ribSlot" ~ c ~ "_" ~ r), EntityType.BODY));
+                    }
+                    if (c < size(ribXs) - 1)
+                    {
+                        fCuboid(context, id + ("ribHole" ~ c ~ "_" ~ r), {
+                                "corner1" : vector(rx - t / 2 - over, yc - 7 * millimeter, zBezB - 18 * millimeter),
+                                "corner2" : vector(rx + t / 2 + over, yc + 7 * millimeter, zBezB - 6 * millimeter) });
+                        holes = append(holes, qCreatedBy(id + ("ribHole" ~ c ~ "_" ~ r), EntityType.BODY));
+                    }
+                }
+                if (size(parts) > 1)
+                {
+                    opBoolean(context, id + ("ribJoin" ~ c), {
+                            "tools"         : qUnion(parts),
+                            "operationType" : BooleanOperationType.UNION });
+                }
+                const ribPt = vector(rx, (ribY0 + ribY1) / 2, dz1 + 2 * millimeter);
+                const ribQ = qContainsPoint(qBodyType(qEverything(EntityType.BODY), BodyType.SOLID), ribPt);
+                if (size(holes) > 0)
+                {
+                    opBoolean(context, id + ("ribHoleCut" ~ c), {
+                            "tools"         : qUnion(holes),
+                            "targets"       : ribQ,
+                            "operationType" : BooleanOperationType.SUBTRACTION });
+                }
+                nameBodyAt(context, ribPt, "Knob rib " ~ (c + 1));
+            }
+            if (size(ribSlots) > 0)
+            {
+                opBoolean(context, id + "ribSlotCut", {
+                        "tools"         : qUnion(ribSlots),
+                        "targets"       : qCreatedBy(id + ("layer" ~ (nl - 2)), EntityType.BODY),
+                        "operationType" : BooleanOperationType.SUBTRACTION });
+            }
+            nameBodyAt(context, vector(0 * meter, (braceBotY + braceTopY) / 2, (stiffZ0 + stiffZ1) / 2),
+                       "Stiffener shelf");
+        }
+
         // PSU mounting clearance through the BOTTOM wall and its doubler. Its
         // side-face holes are 10 and 84 from one end of a 99.24mm case —
         // 2.5mm off centre, so these are not symmetric either. Rev 2 seats the
@@ -2290,7 +2424,6 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             nameBody(context, id + ("n06t" ~ k), id + ("dblT" ~ k), "Wall top" ~ sfx);
         }
         nameBody(context, id + "n07", id + "backCover", "Back cover");
-        nameBody(context, id + "n08", id + "stiff",   "Stiffener web");
         nameBody(context, id + "n08t", id + "tray",   "Electronics tray, front sheet");
         nameBody(context, id + "n08r", id + "trayRear", "Electronics tray, rear sheet (board nuts)");
         // Braces top to bottom. brace0 and brace1 keep the ids they had in

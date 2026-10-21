@@ -33,7 +33,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "..", "laser")
 
 # Parts that are cut from sheet. Everything else in the studio is a proxy.
-PATTERN = r"^(Bezel.*|Wall.*|Back cover|Rail.*|Stiffener web|Panel brace.*|Electronics tray.*|Spacer ring.*)$"
+PATTERN = r"^(Bezel.*|Wall.*|Back cover|Rail.*|Stiffener.*|Knob rib.*|Panel brace.*|Electronics tray.*|Spacer ring.*)$"
 
 SCRIPT = r'''
 function(context is Context, queries)

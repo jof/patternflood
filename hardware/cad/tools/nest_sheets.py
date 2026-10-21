@@ -15,7 +15,11 @@ write otherwise:
   * every part in MANIFEST.md is placed exactly as many times as its quantity;
   * every part lies inside the P2's 600 x 305 mm cut area with MARGIN to spare,
     and inside the 304.8 mm width of a real 12" sheet;
-  * no two parts' bounding boxes come closer than GAP.
+  * no two parts' bounding boxes come closer than GAP;
+  * a part nested INSIDE another's hole (the ribs, in the inner bezel's
+    display aperture, which is waste anyway) sits at least GAP inside that
+    hole. Those need the laser to cut inner shapes first, xTool Creative
+    Space's default; the README says so.
 
 The sheet DXFs hold cut paths only — no sheet outline, no labels — because
 the laser cuts every path it is given. The labels are in the PNGs and README.
@@ -112,6 +116,43 @@ def bbox(ents):
     return min(xs), min(ys), max(xs), max(ys)
 
 
+def ends(e):
+    if e[0] == "L":
+        return [e[1], e[2]]
+    if e[0] == "C":
+        return []
+    (cx, cy), r = e[1], e[2]
+    return [(cx + r * math.cos(math.radians(a)), cy + r * math.sin(math.radians(a))) for a in (e[3], e[4])]
+
+
+def holes(ents):
+    """Bounding boxes of a part's closed loops other than its outline, largest first."""
+    par = list(range(len(ents)))
+
+    def f(i):
+        while par[i] != i:
+            par[i] = par[par[i]]
+            i = par[i]
+        return i
+    seen = {}
+    for i, e in enumerate(ents):
+        for q in ends(e):
+            k = (round(q[0], 3), round(q[1], 3))
+            if k in seen:
+                par[f(i)] = f(seen[k])
+            else:
+                seen[k] = i
+    loops = {}
+    for i, e in enumerate(ents):
+        loops.setdefault(f(i), []).append(e)
+    boxes = sorted((bbox(l) for l in loops.values()), key=lambda b: -(b[2] - b[0]) * (b[3] - b[1]))
+    return boxes[1:]
+
+
+# Parts nested in another part's hole, per sheet title: {index: (host index, hole box)}
+INSIDE = {}
+
+
 # ── layout ────────────────────────────────────────────────────────────────
 # Sheet x runs along the 600 mm cut length, y across the 305 mm axis.
 # "across" parts are turned so their long side runs across the sheet; they
@@ -150,7 +191,9 @@ LAYOUT = [
                ("rail-a-screw-clearance.dxf", True),
                ("rail-b-lower-hex-pocket.dxf", True),
                ("rail-b-upper-hex-pocket.dxf", True),
-               ("stiffener-web.dxf", True)]},
+               ("stiffener-shelf.dxf", True)],
+     # the knob ribs, in the inner bezel's display aperture
+     "inside": [("knob-rib-1.dxf", False), ("knob-rib-2.dxf", False)]},
 ]
 
 
@@ -180,6 +223,19 @@ def build(spec):
             w, h = size(e)
             put(name, e, x, (USE_W - h) / 2)
             x += w + GAP
+        if "inside" in spec:
+            ap = holes(placed[0][1])[0]          # the host's biggest hole
+            INSIDE[spec["title"]] = {}
+            ix, iy, rowh = ap[0] + GAP, ap[1] + GAP, 0
+            for name, turn in spec["inside"]:
+                e = load(name, turn)
+                w, h = size(e)
+                if ix + w > ap[2] - GAP:
+                    ix, iy, rowh = ap[0] + GAP, iy + rowh + GAP, 0
+                INSIDE[spec["title"]][len(placed)] = (0, ap)
+                put(name, e, ix, iy)
+                ix += w + GAP
+                rowh = max(rowh, h)
         return placed
 
     # Sheet 3
@@ -228,6 +284,11 @@ def check(sheets, qty):
             spare[n] = spare.get(n, 0) + 1
     used = {}
     for si, placed in enumerate(sheets, 1):
+        nested = INSIDE.get(LAYOUT[si - 1]["title"], {})
+        for i, (host, ap) in nested.items():
+            b = bbox(placed[i][1])
+            if b[0] < ap[0] + GAP - 1e-6 or b[1] < ap[1] + GAP - 1e-6 or b[2] > ap[2] - GAP + 1e-6 or b[3] > ap[3] - GAP + 1e-6:
+                errs.append(f"sheet {si}: {placed[i][0]} not {GAP} mm inside the hole in {placed[host][0]}")
         boxes = []
         for name, ents in placed:
             used[name] = used.get(name, 0) + 1
@@ -237,6 +298,8 @@ def check(sheets, qty):
                 errs.append(f"sheet {si}: {name} outside the cut area: {[round(v, 1) for v in b]}")
         for i in range(len(boxes)):
             for j in range(i + 1, len(boxes)):
+                if nested.get(j, (None,))[0] == i or nested.get(i, (None,))[0] == j:
+                    continue                     # nested in the other's hole; checked above
                 a, b = boxes[i][1], boxes[j][1]
                 sep = max(b[0] - a[2], a[0] - b[2], b[1] - a[3], a[1] - b[3])
                 if sep < GAP - 1e-6:
@@ -325,6 +388,9 @@ PART = {  # file -> what to call it on the cut sheet
     "rail-b-lower-hex-pocket.dxf": "Rail B lower, hex pockets",
     "rail-b-upper-hex-pocket.dxf": "Rail B upper, hex pockets",
     "stiffener-web.dxf": "Stiffener web",
+    "stiffener-shelf.dxf": "Stiffener shelf (props the knob band under the aperture)",
+    "knob-rib-1.dxf": "Knob rib 1, between the knob columns (cable holes)",
+    "knob-rib-2.dxf": "Knob rib 2, between the knobs and the PSU",
     "spacer-ring-tray-to-brace.dxf": "Spacer ring, tray to brace (8 mm)",
     "spacer-ring-board.dxf": "Spacer ring, board (7 mm)",
 }
@@ -347,6 +413,9 @@ def main():
           f"cut area by {SHEET_L - CUT_L:.1f} mm at one end. Every part is at least {MARGIN:.0f} mm inside "
           f"the cut area and {GAP:.0f} mm from its neighbours. Each DXF's origin is the corner of the "
           "cut area; put the sheet's corner there.",
+          "- **Inner shapes first.** The knob ribs are nested inside the inner bezel's display "
+          "aperture on sheet 4. xTool Creative Space cuts inner shapes before outer ones by default; "
+          "keep it that way, or the aperture drops out with the ribs still in it.",
           "- **Cut paths only.** No sheet outline or labels in the DXFs — the laser would cut them. "
           "Use the pictures below to tell the parts apart as they come off.",
           "- **Cut the test sheet first** ([`../test-cuts/`](../test-cuts/README.md), a 12 × 12) if you "

@@ -27,6 +27,8 @@ floats.
 | PSU in the corner: on the bottom doubler, against the bezel | `#psuStandoff` 0, `#psuZFront` −6.36 | Rev 1 floated on spacers off a single wall |
 | Pi and USB adapter 3.5 mm right | `#piX`, `#nicX` −104 | The doublers narrowed the tray 3.18 a side |
 | Rail clearance 10 → 11.64 | `#psuRailClear` | Keeps the box depth at 60.72 now the PSU sits 1.64 further forward, so nothing behind it moves |
+| Stiffener web carried forward to the bezel over the knobs: the **stiffener shelf** | — | Rev 1's knob band was supported on three sides; its top edge, the bottom of the display aperture, was free, and the top knob row is 25 mm from it. The shelf props that edge |
+| Two **knob ribs**, bottom doubler to shelf, at x −95 (between the knob columns) and −50 (between the knobs and the PSU) | — | Each knob sits in a ~45 × 86 mm cell supported on all four sides |
 
 **The doublers.** Each runs from the bezel's rear face (its front edge butts
 the inner bezel, so a push on the face goes straight into the walls) back to
@@ -35,6 +37,17 @@ unchanged. The side doublers span the full inside height; the top and bottom one
 fit between them. Brace and stiffener mortises, the PSU holes and the IEC
 cutout go through wall and doubler alike. The stiffener's mortise reaches past
 the side doublers' rear edge, so there it is an open notch, not a slot.
+
+**The shelf and ribs.** The shelf is the old stiffener web extended forward to
+the inner bezel, over the knob cluster only (x −140 to −44), so the PSU's
+wiring still runs up past it on the right. It keeps the web's tenons through
+the side walls, which locate it; its front edge butts the inner bezel. Each rib
+has two hidden tabs into slots cut in the **inner** bezel only (blind against
+the outer sheet, so nothing shows); its top and bottom edges are glued to the
+shelf and the bottom doubler. Rib 1 has a cable hole per knob row for the
+STEMMA chain; the shelf has one over the right knob column for the lead from
+the Pi. On the cut sheets the ribs are nested inside the inner bezel's display
+aperture — cut inner shapes first.
 
 **Unchanged:** box outside, depth, braces, rails, back cover, panels, Colorlight.
 The tray is 6.36 narrower (279.3).
@@ -58,7 +71,10 @@ The tray is 6.36 narrower (279.3).
    offcut is the gauge). Bottom doubler: line up its PSU holes with the wall's
    using two M3 screws. Top doubler: centred, same 6.36 setback. Keep glue out
    of the mortises and holes.
-3. Then the box goes together exactly as rev 1, with the doubled walls.
+3. **Box glue-up, bezel face down:** glue the knob ribs into their slots in
+   the inner bezel first, standing up. Then the walls, the shelf (glue its front
+   edge and where the ribs' top edges meet it), braces and rails, exactly as rev
+   1. Glue the ribs' bottom edges to the bottom doubler as that wall goes on.
 
 ### Still to check before cutting
 
