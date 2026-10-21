@@ -366,7 +366,7 @@ dimensions don't carry over.
 
 Ordered by how expensive they are to get wrong:
 
-1. ~~**EC11 bushing thread length**~~ → ✅ 5.5 mm of thread, 2.3 mm jam nut (2026-10-18): it clamps **one** 3.18 sheet, so the bezel is **one sheet** (`#frontLayers` = 1; the second lamination had nothing holding it without glue). The 15 mm encoder body and the 4991 breakout behind it (~26 mm board plus its STEMMA QT plugs, 35 mm square, `#knobPocket`) sit in free space, clear for ~44 mm back to the lower rail stack; 10 mm stays between neighbours at the 45 mm pitch. Skip the washer or use a thin one. Still to check: the bore fit (test-cut row 3) and the encoder's anti-rotation tab.
+1. ~~**EC11 bushing thread length**~~ → ✅ 5.5 mm of thread, 2.3 mm jam nut (2026-10-18): it clamps **one** 3.18 sheet, so only the bezel's outer sheet is clamped. Rev 2 glues a second sheet behind it (`#frontLayers` 2), pocketed 35 mm square at each knob; rev 1's single sheet flexed when the knobs were pushed. The 15 mm encoder body and the 4991 breakout behind it (~26 mm board plus its STEMMA QT plugs, 35 mm square, `#knobPocket`) sit in free space, clear for ~44 mm back to the lower rail stack; 10 mm stays between neighbours at the 45 mm pitch. Skip the washer or use a thin one. Still to check: the bore fit (test-cut row 3) and the encoder's anti-rotation tab.
 1a. ~~Colorlight 5A-75B outline, holes and heights~~ → ✅ scans and calipers, 2026-10-12 ([`driver-colorlight.md`](driver-colorlight.md) §6). Pi Zero PCB thickness still assumed (2 mm).
 1b. ~~Panel connector heights~~ → ✅ plugged HUB75 cable 7 mm, 5 V 19 mm proud of the rear face (2026-10-12).
 2. ~~**Actual two-panel butted width**~~ → ✅ 256 × 128, zero seam (§2.1).

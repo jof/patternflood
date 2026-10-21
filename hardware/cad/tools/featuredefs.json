@@ -278,7 +278,7 @@
    ],
    [
     "psuYTop",
-    "0 mm - #apertureH / 2 - #controlH + #thickness + #psuStandoff + #psuW"
+    "0 mm - #apertureH / 2 - #controlH + #wallLayers * #thickness + #psuStandoff + #psuW"
    ],
    [
     "psuZFront",
@@ -413,6 +413,14 @@
    [
     "layers",
     "#frontLayers"
+   ],
+   [
+    "wallLayers",
+    "#wallLayers"
+   ],
+   [
+    "doublerClear",
+    "#doublerClear"
    ],
    [
     "depth",

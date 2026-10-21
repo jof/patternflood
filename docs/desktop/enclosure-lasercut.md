@@ -3,7 +3,7 @@
 Supersedes the fabrication section of [`mechanical-plan.md`](mechanical-plan.md) §3.
 Geometry, stackup and clearances there still hold; this is the how.
 
-**Material:** 3 mm Baltic birch ply, finger-jointed. The bezel is a single sheet (§2).
+**Material:** 3 mm Baltic birch ply, finger-jointed. Rev 2: the bezel and every wall are two sheets, glued (§2).
 *(Switched from basswood 2026-09-12 — the reasoning is in §13.)*
 **CAD:** Onshape. **Cut:** CO₂ laser.
 
@@ -42,25 +42,26 @@ whole design and it costs nothing but sheet orientation.
 
 ## 2. Where doubling is actually needed
 
-> ✅ **2026-10-18: the bezel is ONE sheet.** The EC11 clamps only one 3.18 mm sheet (5.5 mm thread, 2.3 mm jam nut), Baltic birch needs no cross-grain doubler, and with no glue nothing would hold a second sheet in place. The outer sheet already carries every finger joint, the aperture and the knob bores. `#frontLayers` = 1.
+> ✅ **Rev 2 (2026-10-20): the bezel and all four walls are doubled, glued.**
+> Rev 1 (git tag `rev-1`) went single-sheet everywhere and was built: it works,
+> but it flexes to the touch and pushing a knob visibly deforms the box. Glued,
+> a doubled 3 mm wall bends as one 6.4 mm section, ~8× as stiff; loose, only
+> 2×. So the doublers are **glued**, PVA, clamped flat. See
+> [`../../hardware/REVISIONS.md`](../../hardware/REVISIONS.md).
 
 | Location | Doubled? | Why |
 |---|---|---|
-| **Front face** | ❌ single *(was ✅ full, cross-grain)* | Finger-jointed on all four edges, which stops the face racking; ply has no grain to split; the encoder clamps one sheet |
-| **Panel cross-braces** | ✅ cross-grain | Carries ~0.8 kg of panel into the side walls |
-| **Wall-mount points** | ✅ local pads | Soft wood strips out under a keyhole |
-| Side walls | ❌ single | Finger joints work fine in 3 mm shear |
+| **Front face** | ✅ glued (`#frontLayers` 2) | The knobs push on it. The inner sheet is pocketed 35 mm square at the knobs, so the encoder still clamps the outer sheet alone |
+| **Side, top and bottom walls** | ✅ glued (`#wallLayers` 2) | Rev 1 flexed. Each doubler runs from the back of the bezel (it butts against it) to just short of rail C; mortises, the PSU holes and the IEC cutout go through it |
+| **Panel cross-braces** | ✅ (middle brace: three sheets) | Carries ~0.8 kg of panel into the side walls |
 | Back cover | ❌ single | Removable, carries nothing |
-| Top / bottom | ❌ single | Unless the top carries a handle |
-
-*(Was: "doubling the front gets you to 6 mm at the knob positions, the right
-thickness for an EC11." The measured bushing says otherwise: one sheet.)*
 
 ---
 
-## 3. Encoder bores — one sheet
+## 3. Encoder bores — outer sheet clamped, inner sheet pocketed
 
-The EC11 clamps one 3.18 mm sheet, which is the whole bezel:
+The EC11 clamps one 3.18 mm sheet, so the bezel's glued inner sheet is pocketed
+35 mm square round each knob:
 
 ```
    knob (20 mm or 1")
@@ -68,19 +69,17 @@ The EC11 clamps one 3.18 mm sheet, which is the whole bezel:
    ┌─────────┐
    │  ╭───╮  │   ← set screw
    ═══╡███╞═══      jam nut 2.3 mm (washer optional, thin)
-   ▓▓▓▓│███│▓▓▓▓    ← bezel 3.18 mm, Ø7 bore
-        └─┬─┘          encoder body (15 mm square)
-       ┌──┴───┐        4991 breakout (~26 mm) + STEMMA QT plugs:
-       │ 4991 │        35 mm square kept clear (#knobPocket)
-       └──────┘        box interior: clear ~44 mm back to the rails
+   ▓▓▓▓│███│▓▓▓▓    ← bezel outer 3.18 mm, Ø7 bore: the only sheet clamped
+   ▓▓┃  └─┬─┘  ┃▓▓    ← bezel inner 3.18 mm, 35 mm square pocket (#knobPocket)
+     ┃ ┌──┴───┐ ┃      encoder body (15 mm) + 4991 breakout (~26 mm)
+       │ 4991 │        and its STEMMA QT plugs
+       └──────┘        box interior behind
 ```
 
 **Measured 2026-10-18:** the bushing has 5.5 mm of thread and the jam nut is
-2.3 mm, so the encoder clamps **one** sheet, and the bezel is that one sheet.
-`#knobPocket` (35 mm square) is still in the model: it only cuts if
-`#frontLayers` goes above 1, and it is the space the breakout needs.
+2.3 mm, so the encoder clamps **one** sheet — the outer one.
 
-- **Bore Ø7 mm** through the bezel.
+- **Bore Ø7 mm** through the outer sheet.
 - **Washer under the nut** only if it is thin: 3.18 mm of wood leaves 2.32 mm
   of thread for a 2.3 mm nut.
 - **Anti-rotation nub.** Many EC11s have a small locating boss beside the
@@ -683,26 +682,30 @@ axis:
 
 | Part | Narrow × long (mm) |
 |---|---|
-| Bezel | 293 × 373 |
+| Bezel outer | 293 × 373 |
+| Bezel inner | 287 × 367 |
+| Side-wall doublers ×2 | 41 × 366 |
 | Back cover | 286 × 366 |
 | Side walls ×2 | 60 × 373 |
 | Top / bottom walls, braces, rails, stiffener | ≤ 293 long |
 
-Nested on **12 × 24** sheets that is **three** sheets — laid out, checked and
+Nested on **12 × 24** sheets that is **four** sheets (rev 2) — laid out, checked and
 ready to cut in [`hardware/laser/sheets/`](../../hardware/laser/sheets/README.md)
 (`nest_sheets.py`). The P2 cuts only 600 of a 24" sheet's 609.6 mm, and every
 part sits 3 mm inside that and 3 mm from its neighbours:
 
-1. bezel + electronics tray rear sheet + one middle-brace sheet + a rail C;
+1. bezel outer + electronics tray rear sheet + one middle-brace sheet + a rail C;
 2. back cover + tray front sheet + the middle brace's middle sheet + the upper
    brace;
-3. both side walls along the sheet, the lower brace, four rails and the
-   stiffener beside them, the spacer rings (with spares) in the corner, and the
-   last middle-brace sheet and the top and bottom walls across the end.
+3. both side walls and both side-wall doublers along the sheet, the lower brace
+   and a rail C beside them, the spacer rings (with spares) in the corner, and
+   the last middle-brace sheet and the top and bottom walls across the end;
+4. bezel inner + the top and bottom doublers, the four A/B rails and the
+   stiffener.
 
-**Buy five:** three for the box, one 12 × 12 for the test cuts, and one for a
-recut. (It was four sheets while the bezel had a second, 287 × 367 lamination.) Calipering the sheet width on arrival is still
-worth it: "12 × 24" is sometimes cut a hair under 12".
+**Buy six:** four for the box, one 12 × 12 for the test cuts, and one for a
+recut. (Rev 1, single-sheet, was three.) Calipering the sheet width on arrival
+is still worth it: "12 × 24" is sometimes cut a hair under 12".
 
 ### 13.6 What changes in the model
 

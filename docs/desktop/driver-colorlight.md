@@ -140,9 +140,9 @@ for the boards). Nothing is fastened to the back cover and no cable runs to it.
 | | Centre (x, y) | Model | Mounting |
 |---|---|---|---|
 | 5A-75B | (55.3, 0), long axis **horizontal**, RJ45 end toward −x | **measured** — see below | 4 × M3 x 8 into nuts in the tray |
-| Pi Zero 2 W | (−107.5, 25), connector edge down | official drawing, 65 × 30 | the same — **open its 2.75 mm holes to 3.2**, or M2.5 for the Pi alone |
-| Gigabit adapter | (−107, −22) | envelope until one is bought | zip ties through two pairs of tray slots |
-| Tray | — | 2 sheets, 286 × 94, y ±47 | 4 × M3 x 16 into nuts in the middle brace |
+| Pi Zero 2 W | (−104, 25), connector edge down (rev 2; rev 1 −107.5) | official drawing, 65 × 30 | the same — **open its 2.75 mm holes to 3.2**, or M2.5 for the Pi alone |
+| Gigabit adapter | (−104, −22) (rev 2) | envelope until one is bought | zip ties through two pairs of tray slots |
+| Tray | — | 2 sheets, 279.3 × 94 (rev 2; rev 1 285.6), y ±47 | 4 × M3 x 16 into nuts in the middle brace |
 
 **Every nut is a three-layer sandwich** — clearance / hex / clearance — the same
 as the back-cover rails, so no nut is ever just sitting in a pocket, and nothing

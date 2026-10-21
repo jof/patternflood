@@ -5,7 +5,7 @@ import(path : "onshape/std/geometry.fs", version : "3070.0");
 // into, in this document. The PSU proxy merges it in (Detailed on), so the
 // enclosure studio shows the real part rather than an envelope. Re-pin the
 // version if that studio ever changes.
-LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "2366f6cc2b6f7f82cd8dca33");
+LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "5b1529cd4cbcb08adbe2ac1b");
 
 /**
  * Patternflow desktop enclosure — parametric features.
@@ -1004,6 +1004,7 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
 
 const ANY_LENGTH_BOUNDS = { (millimeter) : [-2000, 0, 2000] } as LengthBoundSpec;
 const KERF_BOUNDS       = { (millimeter) : [0, 0.2, 5] } as LengthBoundSpec;
+const GAP_BOUNDS        = { (millimeter) : [0, 0.5, 50] } as LengthBoundSpec;
 
 function fingerCount(extent is ValueWithUnits, target is ValueWithUnits) returns number
 {
@@ -1168,6 +1169,12 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         annotation { "Name" : "Bezel laminations" }
         isInteger(definition.layers, POSITIVE_COUNT_BOUNDS);
 
+        annotation { "Name" : "Wall laminations (wall + doublers)" }
+        isInteger(definition.wallLayers, POSITIVE_COUNT_BOUNDS);
+
+        annotation { "Name" : "Doubler clearance at loose edges" }
+        isLength(definition.doublerClear, GAP_BOUNDS);
+
         annotation { "Name" : "Internal depth" }
         isLength(definition.depth, LENGTH_BOUNDS);
 
@@ -1250,7 +1257,7 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         isLength(definition.knobYCentre, ANY_LENGTH_BOUNDS);
 
         annotation { "Name" : "PSU standoff from bottom wall" }
-        isLength(definition.psuStandoff, LENGTH_BOUNDS);
+        isLength(definition.psuStandoff, GAP_BOUNDS);
 
         annotation { "Name" : "Stiffening web depth" }
         isLength(definition.webDepth, LENGTH_BOUNDS);
@@ -1445,6 +1452,52 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         }
         const outerPlate = qCreatedBy(id + ("layer" ~ (nl - 1)), EntityType.BODY);
 
+        // ── wall doublers (rev 2) ───────────────────────────────────────
+        // Rev 1 had single 3 mm walls and a single-sheet bezel, and pushing a
+        // knob visibly flexed the box. Each wall now carries wallLayers - 1
+        // doublers GLUED to its inside face, each one more thickness in. They
+        // run from the back of the bezel stack — which they butt against, so
+        // a push on the bezel is carried straight into the walls — to just
+        // short of the rear rail C, so the rail stacks and the back cover are
+        // exactly as in rev 1. Side doublers span the full inside height; the
+        // top and bottom ones fit between them. Every brace and stiffener
+        // mortise, the PSU holes and the IEC cutout pass through them as
+        // through the wall, so the tenons get twice the bearing.
+        //
+        // Glued, not screwed: bonded, wall + doubler bend as one 6.4 mm
+        // section, ~8x a single sheet's stiffness; loose, it would be 2x.
+        const nw = definition.wallLayers;
+        const tw = nw * t;                                  // wall + doublers
+        const dc = definition.doublerClear;
+        const dz0 = zBezB;                                  // against the bezel stack
+        const dz1 = zBack + 4 * t + dc;                     // short of rail C's front face
+        var dbl = { "wallL" : [], "wallR" : [], "wallB" : [], "wallT" : [] };
+        for (var k = 1; k < nw; k += 1)
+        {
+            const a = k * t;
+            fCuboid(context, id + ("dblL" ~ k), {
+                    "corner1" : vector(left + a,      bottom + t + dc, dz1),
+                    "corner2" : vector(left + a + t,  top - t - dc,    dz0) });
+            fCuboid(context, id + ("dblR" ~ k), {
+                    "corner1" : vector(right - a - t, bottom + t + dc, dz1),
+                    "corner2" : vector(right - a,     top - t - dc,    dz0) });
+            fCuboid(context, id + ("dblB" ~ k), {
+                    "corner1" : vector(left + tw + dc,  bottom + a,     dz1),
+                    "corner2" : vector(right - tw - dc, bottom + a + t, dz0) });
+            fCuboid(context, id + ("dblT" ~ k), {
+                    "corner1" : vector(left + tw + dc,  top - a - t,    dz1),
+                    "corner2" : vector(right - tw - dc, top - a,        dz0) });
+            dbl.wallL = append(dbl.wallL, qCreatedBy(id + ("dblL" ~ k), EntityType.BODY));
+            dbl.wallR = append(dbl.wallR, qCreatedBy(id + ("dblR" ~ k), EntityType.BODY));
+            dbl.wallB = append(dbl.wallB, qCreatedBy(id + ("dblB" ~ k), EntityType.BODY));
+            dbl.wallT = append(dbl.wallT, qCreatedBy(id + ("dblT" ~ k), EntityType.BODY));
+        }
+        // a wall and its doublers, as one cutting target
+        const wallStack = function(w is string) returns Query
+            {
+                return qUnion(append(dbl[w], qCreatedBy(id + w, EntityType.BODY)));
+            };
+
         // ── family 2: front-edge joints ─────────────────────────────────
         // Restricted to between the corners so family 1 and family 3 stay
         // untouched.
@@ -1607,7 +1660,7 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                         "corner2" : vector(right + over, hi - kerf / 2, mZ1) });
                 opBoolean(context, id + ("mortCut" ~ s ~ w), {
                         "tools"         : qCreatedBy(id + ("mort" ~ s ~ w), EntityType.BODY),
-                        "targets"       : qCreatedBy(id + sideWalls[w], EntityType.BODY),
+                        "targets"       : wallStack(sideWalls[w]),
                         "operationType" : BooleanOperationType.SUBTRACTION });
             }
 
@@ -1929,14 +1982,16 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                     "corner2" : vector(right + over, braceTopY - kerf / 2, stiffZ1 - kerf / 2) });
             opBoolean(context, id + ("stmortCut" ~ w), {
                     "tools"         : qCreatedBy(id + ("stmort" ~ w), EntityType.BODY),
-                    "targets"       : qCreatedBy(id + stiffSides[w], EntityType.BODY),
+                    "targets"       : wallStack(stiffSides[w]),
                     "operationType" : BooleanOperationType.SUBTRACTION });
         }
 
-        // PSU mounting clearance through the BOTTOM wall. Its side-face holes
-        // are 10 and 84 from one end of a 99.24mm case — 2.5mm off centre, so
-        // these are not symmetric either. Screw path is 3mm wall + a
-        // psuStandoff spacer + up to 5mm of thread, i.e. M3x12.
+        // PSU mounting clearance through the BOTTOM wall and its doubler. Its
+        // side-face holes are 10 and 84 from one end of a 99.24mm case —
+        // 2.5mm off centre, so these are not symmetric either. Rev 2 seats the
+        // PSU straight on the doubler (psuStandoff 0) and against the bezel
+        // stack, in the corner: screw path is 2 sheets + a washer + up to 5mm
+        // of thread, i.e. M3 x 10.
         // Datum is the TERMINAL end. Both views on the spec sheet dimension
         // from it, and the terminals have to face +x toward the IEC inlet or
         // the mains run crosses the whole box — so these come off the HIGH-x
@@ -1951,14 +2006,14 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         for (var ph = 0; ph < 2; ph += 1)
         {
             fCylinder(context, id + ("psuh" ~ ph), {
-                    "topCenter"    : vector(psuHoleXs[ph], bottom + t + over, definition.psuZFront - definition.psuHoleZ),
+                    "topCenter"    : vector(psuHoleXs[ph], bottom + tw + over, definition.psuZFront - definition.psuHoleZ),
                     "bottomCenter" : vector(psuHoleXs[ph], bottom - over,     definition.psuZFront - definition.psuHoleZ),
                     "radius"       : definition.psuHoleDia / 2 - kerf / 2 });
             psuHoles = append(psuHoles, qCreatedBy(id + ("psuh" ~ ph), EntityType.BODY));
         }
         opBoolean(context, id + "psuHoleCut", {
                 "tools"         : qUnion(psuHoles),
-                "targets"       : qCreatedBy(id + "wallB", EntityType.BODY),
+                "targets"       : wallStack("wallB"),
                 "operationType" : BooleanOperationType.SUBTRACTION });
 
         // ── IEC inlet, right wall ───────────────────────────────────────
@@ -1970,7 +2025,7 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         var iecTools = [];
 
         fCuboid(context, id + "iecCut", {
-                "corner1" : vector(right - t - over,
+                "corner1" : vector(right - tw - over,
                                    definition.iecY - definition.iecCutW / 2 + kerf / 2,
                                    definition.iecZ - definition.iecCutH / 2 + kerf / 2),
                 "corner2" : vector(right + over,
@@ -1988,14 +2043,14 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             }
             fCylinder(context, id + ("iecScrew" ~ us), {
                     "topCenter"    : vector(right + over,     definition.iecY, uz),
-                    "bottomCenter" : vector(right - t - over, definition.iecY, uz),
+                    "bottomCenter" : vector(right - tw - over, definition.iecY, uz),
                     "radius"       : definition.iecScrewDia / 2 - kerf / 2 });
             iecTools = append(iecTools, qCreatedBy(id + ("iecScrew" ~ us), EntityType.BODY));
         }
 
         opBoolean(context, id + "iecCutOp", {
                 "tools"         : qUnion(iecTools),
-                "targets"       : qCreatedBy(id + "wallR", EntityType.BODY),
+                "targets"       : wallStack("wallR"),
                 "operationType" : BooleanOperationType.SUBTRACTION });
 
         // ── electronics tray ────────────────────────────────────────────
@@ -2025,8 +2080,8 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         const trayF = zBraceB - 2 * t - sr;         // tray front face
         const trayM = trayF - t;                    // between its two sheets
         const trayB = trayF - 2 * t;                // tray rear face (boards side)
-        const tx0 = left + t + definition.trayClear;
-        const tx1 = right - t - definition.trayClear;
+        const tx0 = left + tw + definition.trayClear;      // clear of the doublers
+        const tx1 = right - tw - definition.trayClear;
 
         fCuboid(context, id + "tray", {
                 "corner1" : vector(tx0, definition.trayY0, trayM),
@@ -2225,6 +2280,15 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         nameBody(context, id + "n04", id + "wallR",   "Wall right (IEC)");
         nameBody(context, id + "n05", id + "wallB",   "Wall bottom");
         nameBody(context, id + "n06", id + "wallT",   "Wall top");
+        for (var k = 1; k < nw; k += 1)
+        {
+            var sfx = " doubler";
+            if (nw > 2) { sfx = " doubler " ~ k; }
+            nameBody(context, id + ("n06l" ~ k), id + ("dblL" ~ k), "Wall left" ~ sfx);
+            nameBody(context, id + ("n06r" ~ k), id + ("dblR" ~ k), "Wall right" ~ sfx ~ " (IEC)");
+            nameBody(context, id + ("n06b" ~ k), id + ("dblB" ~ k), "Wall bottom" ~ sfx ~ " (PSU)");
+            nameBody(context, id + ("n06t" ~ k), id + ("dblT" ~ k), "Wall top" ~ sfx);
+        }
         nameBody(context, id + "n07", id + "backCover", "Back cover");
         nameBody(context, id + "n08", id + "stiff",   "Stiffener web");
         nameBody(context, id + "n08t", id + "tray",   "Electronics tray, front sheet");
@@ -2287,7 +2351,7 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         // orientation cannot be got wrong by hand.
         opMateConnector(context, id + "mcPsu", {
                 "coordSystem" : coordSystem(vector(definition.psuX + definition.psuL / 2,
-                                                   bottom + t + definition.psuStandoff,
+                                                   bottom + tw + definition.psuStandoff,
                                                    definition.psuZFront),
                                             vector(-1, 0, 0), vector(0, 0, -1)),
                 "owner"       : qCreatedBy(id + "wallB", EntityType.BODY) });
