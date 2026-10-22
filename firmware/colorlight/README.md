@@ -45,6 +45,22 @@ Reads that hold TDI high are unaffected. The flash backup is one; it was checked
 by two identical passes plus an openFPGALoader cross-read. Check the J32/J30 pads
 and jumpers for a bridge before loading anything.
 
+Re-seating the jumpers cut the failures to about one TDI-low read in three. The
+bad reads are the IDCODE shifted by one bit, which points to TCK double-clocking
+on the long leads rather than a short. A ground run alongside TCK, or shorter
+leads, should cure it.
+
+## receiver75: working, 2026-10-21
+
+- Built as `--revision 8.0` against 2021 LiteX (see the memory and build notes).
+- Loaded into SRAM with `svf_play.py`, with DONE set.
+- Answers ARP at 192.168.75.39 as `10:e2:d5:00:00:00`. It has no ICMP, so ping
+  doesn't work.
+- A dim solid frame via `tools/sender75.py` lit all four P2 panels evenly,
+  with no flicker: the 1/32 scan works.
+- `r75_slot_ids.py` draws each of the 16 slots' numbers, to map slots to panel
+  positions and orientation.
+
 ## Loading a bitstream into SRAM
 
 ```sh
