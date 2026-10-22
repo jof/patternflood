@@ -18,7 +18,10 @@ three 12 × 24" sheets. Built and working.
 visibly deforms the box. The PSU hangs on two screws through one 3 mm wall and
 floats.
 
-## Rev 2 — stiffened (in progress)
+## Rev 2 — stiffened, Pi 5, vents, etched art (2026-10-21)
+
+Git tag **`rev-2`**. Onshape version **"Rev 2"** — to be created from the main
+workspace, which holds exactly this revision. Designed, not yet built.
 
 | Change | Variable | Why |
 |---|---|---|
