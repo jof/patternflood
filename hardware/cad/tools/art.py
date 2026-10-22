@@ -12,7 +12,7 @@ crystals, test points, fiducials, spiral inductors, Hilbert meanders,
 length-matched serpentines, wide power traces, parallel buses, silkscreen
 designators in a single-stroke font (artfont.py), and the leftover space
 filled with hatch, cross-hatch, topographic contours or stipple — or left empty
-on purpose. Hidden in it: a data matrix that really encodes a message, a space
+on purpose. Hidden in it: a real QR code per part (it scans; see QR_MESSAGES), a space
 invader, a Lissajous figure, and tiny words in some of the empty spaces. On the
 bezel each knob gets a real dial: a 270-degree scale 0-10 with fine ticks,
 numerals, and the knob's name.
@@ -33,6 +33,8 @@ and art/preview.png. nest_sheets.py picks the etch files up and puts the art on
 the sheets, in sheets/sheet-N.svg.
 
 Seeded per part: re-running gives the same art. Change SEED to re-roll.
+Needs shapely, Pillow and segno (QR encoding); zxing-cpp, if installed, checks
+that every QR code decodes from the score lines actually drawn.
 """
 import math
 import os
@@ -142,6 +144,7 @@ class Board:
         self.score, self.engrave = [], []
         self.geoms = []                       # what the pours must keep clear of
         self.refs = {}
+        self.qrs = []                         # (message, box) of each QR code, to verify
 
     # ── primitives ──
     def xy(self, n):
@@ -547,29 +550,43 @@ class Board:
         if self.label_fits(r, lx, ly, 0.8):
             self.label(r, lx, ly, 0.8)
 
-    def data_matrix(self, message):
-        bits = [int(b) for ch in message for b in format(ord(ch), "08b")]
-        k = 14
-        mod = 0.55
-        cells = math.ceil(k * mod / G) + 1
-        at = self.spot(cells, cells, margin=2)
+    def qr(self, message, module=0.8, quiet=4):
+        """A real, scannable QR code (segno, error correction M). Dark modules
+        are filled solid with horizontal score lines a little closer than the
+        beam is wide; the quiet zone round it is kept clear of every other mark."""
+        import segno
+        mat = [list(row) for row in segno.make(message, error="m", micro=False).matrix]
+        n = len(mat)
+        side = (n + 2 * quiet) * module
+        cells = math.ceil(side / G) + 1
+        at = self.spot(cells, cells, margin=1, tries=4000)
         if not at:
+            print(f"  (no room for the QR code '{message[:24]}...')")
             return
         i, j = at
         self.reserve(i - 1, j - 1, i + cells + 1, j + cells + 1)
         x0, y0 = self.xy((i, j))
-        bi = 0
-        for a in range(k):
-            for b in range(k):
-                if a == 0 or b == 0:
-                    on = True
-                elif a == k - 1 or b == k - 1:
-                    on = (a + b) % 2 == 0
-                else:
-                    on = bits[bi % len(bits)] == 1
-                    bi += 1
-                if on:
-                    self.dot((x0 + (a + 0.5) * mod, y0 + (b + 0.5) * mod), mod * 0.42)
+        self.geoms.append(box(x0, y0, x0 + side, y0 + side))       # quiet zone: pours keep out
+        ox, oy = x0 + quiet * module, y0 + quiet * module
+        pitch = QR_FILL
+        lines_per = max(1, round(module / pitch))
+        inset = BEAM / 2
+        for r, row in enumerate(mat):
+            top = oy + (n - r) * module
+            c = 0
+            while c < n:
+                if not row[c]:
+                    c += 1
+                    continue
+                c1 = c
+                while c1 + 1 < n and row[c1 + 1]:
+                    c1 += 1
+                xa, xb = ox + c * module + inset, ox + (c1 + 1) * module - inset
+                for k in range(lines_per):
+                    y = top - inset - k * (module - 2 * inset) / max(1, lines_per - 1)
+                    self.score.append(("L", (xa, y), (xb, y)))
+                c = c1 + 1
+        self.qrs.append((message, (x0, y0, x0 + side, y0 + side)))
 
     def invader(self):
         sprite = ["..X.....X..", "...X...X...", "..XXXXXXX..", ".XX.XXX.XX.", "XXXXXXXXXXX",
@@ -629,21 +646,17 @@ class Board:
 
 
 def dial(board, c, name):
-    """A knob's dial: rings, a 270-degree scale 0-10 with fine ticks, numerals, the knob's name."""
+    """A knob's dial: rings and a 270-degree scale with fine ticks. Unlabelled on
+    purpose — no numerals, no names (`name` is kept for the caller's sake)."""
     board.ring(c, DIAL_R)
     board.ring(c, DIAL_R - 1.0)
-    a_lo, a_hi = 225.0, -45.0                     # clockwise from 0 at lower-left to 10 at lower-right
+    a_lo, a_hi = 225.0, -45.0                     # clockwise from lower-left to lower-right
     for k in range(101):
         a = math.radians(a_lo + (a_hi - a_lo) * k / 100)
         ln = 2.6 if k % 10 == 0 else 1.6 if k % 5 == 0 else 0.9
         p = (c[0] + DIAL_R * math.cos(a), c[1] + DIAL_R * math.sin(a))
         q = (c[0] + (DIAL_R + ln) * math.cos(a), c[1] + (DIAL_R + ln) * math.sin(a))
         board.seg(p, q)
-        if k % 10 == 0:
-            r = DIAL_R + 4.4
-            board.label(str(k // 10), c[0] + r * math.cos(a), c[1] + r * math.sin(a), 1.3, anchor="center")
-    # the name in the gap at the bottom of the scale
-    board.label(name, c[0], c[1] - DIAL_R + 2.2, 1.2, anchor="center")
     # an arc of fine dots just inside, like a gauge
     for k in range(0, 61):
         a = math.radians(a_lo + (a_hi - a_lo) * k / 60)
@@ -752,6 +765,8 @@ def generate(name, seed):
                        "LRS-50-5  5V 10A", "BIRCH 3.18  KERF 0.15"])
     if name.startswith("bezel"):
         b.lissajous(11)
+    msg, mod = QR_MESSAGES.get(name, ("PATTERNFLOW", 0.8))
+    b.qr(msg, module=mod)
     big = A > 20000
     for _ in range(max(1 if big else 0, int(A / 16000))):
         b.qfp(rng.randint(9, 15))
@@ -769,7 +784,6 @@ def generate(name, seed):
         b.meander(rng.choice([3, 4]))
     for _ in range(int(A / 9000)):
         b.serpentine()
-    b.data_matrix("PATTERNFLOW " + name[:-4].upper())
     if rng.random() < 0.7 or name.startswith("back"):
         b.invader()
     for _ in range(3):
@@ -790,10 +804,43 @@ def generate(name, seed):
             b.commit(path, start=rng.choice(["pad", "via", "ring"]), end=rng.choice(["via", "pad"]),
                      power=rng.random() < 0.05)
     pours(b, list(EGGS))
+    QR_FOUND[name] = b.qrs
     return ents, allowed, b.score + vector_dots(b.engrave), []
 
 
 BEAM = 0.15          # what one scored line burns, roughly
+QR_FILL = 0.12       # QR dark-module fill pitch: a little under BEAM, so it burns in solid
+QR_FOUND = {}        # part -> [(message, box)], filled by generate(), checked by verify_qr()
+# one real QR code per part: (text, module size mm). Phone cameras read 0.8 mm modules fine.
+QR_MESSAGES = {
+    "back-cover.dxf": ("PATTERNFLOW DESKTOP / REV 2 / 2026 - 128x128 P2 GOB - RASPBERRY PI 5 + COLORLIGHT 5A-75B "
+                       "- LRS-50-5 - BALTIC BIRCH 3.18 - IF YOU CAN READ THIS, YOU LOOKED CLOSE ENOUGH", 1.0),
+    "bezel-outer.dxf": ("TURN THE KNOBS", 0.8),
+    "wall-left.dxf": ("LOOK CLOSER", 0.8),
+    "wall-right-iec.dxf": ("IN LOW, OUT HIGH", 0.8),
+    "wall-top.dxf": ("SEE YOU IN THE GRID", 0.8),
+}
+
+
+def verify_qr(name, score):
+    """Render each QR code from its actual score lines and decode it. -> [(want, got)]."""
+    try:
+        import zxingcpp
+        from PIL import Image, ImageDraw
+    except ImportError:
+        return None
+    out = []
+    for msg, (x0, y0, x1, y1) in QR_FOUND.get(name, []):
+        k = 20.0                                        # px per mm
+        im = Image.new("L", (round((x1 - x0) * k), round((y1 - y0) * k)), 235)
+        d = ImageDraw.Draw(im)
+        for e in score:
+            if e[0] == "L" and x0 <= e[1][0] <= x1 and y0 <= e[1][1] <= y1:
+                d.line([((e[1][0] - x0) * k, (y1 - e[1][1]) * k), ((e[2][0] - x0) * k, (y1 - e[2][1]) * k)],
+                       fill=60, width=max(1, round(BEAM * k)))
+        got = [r.text for r in zxingcpp.read_barcodes(im)]
+        out.append((msg, got[0] if got else None))
+    return out
 
 
 def vector_dots(dots):
@@ -978,6 +1025,14 @@ def main():
         bad, near = check(name, ents, allowed, score, engrave)
         problems += bad + near
         length = sum(math.dist(e[1], e[2]) if e[0] == "L" else 2 * math.pi * e[2] for e in score) / 1000
+        qr = verify_qr(name, score)
+        if qr is None:
+            print("  (QR not verified: pip install zxing-cpp to check it decodes)")
+        else:
+            for want, got in qr:
+                ok = got == want
+                problems += 0 if ok else 1
+                print(f"  QR {'decodes OK' if ok else 'FAILED'}: {want[:40]!r}" + ("" if ok else f" -> {got!r}"))
         print(f"{name:22s} score {len(score):6d} marks, {length:6.1f} m  outside-area {bad}  "
               f"within 1.5 mm of a cut {near}")
     preview(os.path.join(OUT, "preview.png"), results)
