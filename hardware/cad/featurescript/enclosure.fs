@@ -1001,6 +1001,18 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
 
 const ANY_LENGTH_BOUNDS = { (millimeter) : [-2000, 0, 2000] } as LengthBoundSpec;
 const KERF_BOUNDS       = { (millimeter) : [0, 0.2, 5] } as LengthBoundSpec;
+
+// Light slits round each knob: the Adafruit 4991 behind each encoder carries a
+// NeoPixel on its encoder side, shining at the back of the outer bezel sheet
+// (the inner sheet is pocketed there). A full ring of fine radial slits lets it
+// through wherever on the board it sits and however the board is turned, and
+// reads as the dial's ticks: a light ring round each knob, brightest on the
+// LED's side. From just outside a 1" knob's skirt to inside the inner sheet's
+// 35 mm pocket. 36 slits leave ~1.5 mm of wood between them at the inner end.
+const KNOB_SLITS = 36;
+const KNOB_SLIT_R0 = 13.0;       // mm
+const KNOB_SLIT_R1 = 16.5;       // mm
+const KNOB_SLIT_W = 0.7;         // mm, as cut
 const GAP_BOUNDS        = { (millimeter) : [0, 0.5, 50] } as LengthBoundSpec;
 
 function fingerCount(extent is ValueWithUnits, target is ValueWithUnits) returns number
@@ -2429,6 +2441,7 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         const kCols = definition.knobCols;
         const kRows = floor((definition.knobCount + kCols - 1) / kCols);
         var pockets = [];
+        var slits = [];
 
         for (var i = 0; i < definition.knobCount; i += 1)
         {
@@ -2456,11 +2469,41 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                     "corner1" : vector(knobX - hp, knobY - hp, zBezB - over),
                     "corner2" : vector(knobX + hp, knobY + hp, zOut0) });
             pockets = append(pockets, qCreatedBy(id + ("kpocket" ~ i), EntityType.BODY));
+
+            // light slits, through the outer sheet only (see KNOB_SLITS)
+            const hw = (KNOB_SLIT_W * millimeter - kerf) / 2;
+            const ra = KNOB_SLIT_R0 * millimeter + kerf / 2 + hw;       // end-cap centres
+            const rb = KNOB_SLIT_R1 * millimeter - kerf / 2 - hw;
+            for (var sl = 0; sl < KNOB_SLITS; sl += 1)
+            {
+                const sid = id + ("slit" ~ i ~ "_" ~ sl);
+                const said = id + ("slitA" ~ i ~ "_" ~ sl);
+                const sbid = id + ("slitB" ~ i ~ "_" ~ sl);
+                fCuboid(context, sid, { "corner1" : vector(ra, -hw, zOut0 - over),
+                                        "corner2" : vector(rb, hw, over) });
+                fCylinder(context, said, { "topCenter" : vector(ra, 0 * meter, over),
+                                           "bottomCenter" : vector(ra, 0 * meter, zOut0 - over), "radius" : hw });
+                fCylinder(context, sbid, { "topCenter" : vector(rb, 0 * meter, over),
+                                           "bottomCenter" : vector(rb, 0 * meter, zOut0 - over), "radius" : hw });
+                const tq = qUnion([qCreatedBy(sid, EntityType.BODY), qCreatedBy(said, EntityType.BODY),
+                                   qCreatedBy(sbid, EntityType.BODY)]);
+                // turn about the origin, then move to the knob
+                opTransform(context, id + ("slitT" ~ i ~ "_" ~ sl), {
+                        "bodies"    : tq,
+                        "transform" : transform(vector(knobX, knobY, 0 * meter))
+                                      * rotationAround(line(vector(0, 0, 0) * meter, vector(0, 0, 1)),
+                                                       sl * 360 / KNOB_SLITS * degree) });
+                slits = append(slits, tq);
+            }
         }
 
         opBoolean(context, id + "cut", {
                 "tools"         : qUnion(tools),
                 "targets"       : qUnion(plates),
+                "operationType" : BooleanOperationType.SUBTRACTION });
+        opBoolean(context, id + "slitCut", {
+                "tools"         : qUnion(slits),
+                "targets"       : outerPlate,
                 "operationType" : BooleanOperationType.SUBTRACTION });
         if (nl > 1)
         {

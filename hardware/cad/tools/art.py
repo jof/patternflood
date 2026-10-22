@@ -57,7 +57,7 @@ T = 3.18             # sheet thickness: the finger joints reach this far in from
 EDGE = T + 2.5       # keep this far inside the outline
 HOLE = 2.0           # and this far from any hole or slot
 G = 1.27             # trace grid pitch: real PCB pitch (0.05")
-DIAL_R = 15.0        # dial scale radius round each knob (a 20 mm / 1" knob hides r < ~13)
+DIAL_R = 19.4        # dial scale radius: outside the knob's light slits (r 13-16.5, cut in the bezel)
 DIAL_KEEP = 22.5     # the dial, its numerals and name own r < this round each knob
 PAD = 0.9            # nodes and traces keep this far inside the allowed area (via ring 0.55)
 
@@ -649,7 +649,7 @@ def dial(board, c, name):
     """A knob's dial: rings and a 270-degree scale with fine ticks. Unlabelled on
     purpose — no numerals, no names (`name` is kept for the caller's sake)."""
     board.ring(c, DIAL_R)
-    board.ring(c, DIAL_R - 1.0)
+    board.ring(c, DIAL_R - 0.8)
     a_lo, a_hi = 225.0, -45.0                     # clockwise from lower-left to lower-right
     for k in range(101):
         a = math.radians(a_lo + (a_hi - a_lo) * k / 100)
@@ -657,10 +657,7 @@ def dial(board, c, name):
         p = (c[0] + DIAL_R * math.cos(a), c[1] + DIAL_R * math.sin(a))
         q = (c[0] + (DIAL_R + ln) * math.cos(a), c[1] + (DIAL_R + ln) * math.sin(a))
         board.seg(p, q)
-    # an arc of fine dots just inside, like a gauge
-    for k in range(0, 61):
-        a = math.radians(a_lo + (a_hi - a_lo) * k / 60)
-        board.dot((c[0] + (DIAL_R - 2.2) * math.cos(a), c[1] + (DIAL_R - 2.2) * math.sin(a)), 0.16)
+    # inside the rings, the bezel's own light slits (KNOB_SLITS in enclosure.fs) finish the dial
     # traces leaving the dial, from just outside its numerals
     for k in range(10):
         a = math.radians(k * 36 + 18)

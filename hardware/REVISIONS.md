@@ -94,3 +94,26 @@ The tray is 6.36 narrower (279.3).
   pockets to settle `#piNutAF`.
 - Power budget: the Pi 5 takes ~1 A more than the Zero did, so the panels'
   share drops to ~1.4 A each (`driver-colorlight.md` §4).
+
+## Rev 2.1 — knob light slits (2026-10-21, after the `rev-2` tag)
+
+Each Adafruit 4991 carries a NeoPixel on its encoder side, shining at the back of
+the outer bezel sheet (the inner sheet is pocketed there). A ring of **36 fine
+radial slits** round each knob, through the outer sheet only, lets it through:
+0.7 mm wide, r 13–16.5 mm — just outside a 1" knob's skirt, inside the 35 mm
+pocket. A full ring, so it works wherever the LED sits on the board and however
+the board is turned; it glows brightest on the LED's side. ~1.6 mm of wood
+between slits at the inner end. The etched dial moved outside it (rings at
+r 18.6/19.4, ticks to r 22). Constants `KNOB_SLITS`, `KNOB_SLIT_R0/R1/W` in
+`enclosure.fs`.
+
+**Model sync pending.** The model
+change is in `enclosure.fs` but not pushed, and `bezel-outer.dxf` was patched to
+match it by a one-off script mirroring the FeatureScript exactly. To sync:
+
+    python3 hardware/cad/tools/push.py          # the slits into the model
+    python3 hardware/cad/tools/export_dxf.py    # must reproduce bezel-outer.dxf: check git diff
+    python3 hardware/cad/tools/decals.py        # the new dial art onto the bezel decal
+
+then tag `rev-2.1` and make the Onshape version.
+
