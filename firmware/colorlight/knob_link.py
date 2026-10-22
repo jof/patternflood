@@ -52,7 +52,13 @@ def main():
         proc.wait()
     except KeyboardInterrupt:
         proc.stdin.close()              # renderer sees EOF, blanks the display and exits
-        proc.wait(timeout=5)
+        try:
+            proc.wait(timeout=15)
+        except subprocess.TimeoutExpired:
+            print("renderer did not exit in 15 s; closing ssh (display may hold its last frame)",
+                  file=sys.stderr)
+            proc.terminate()
+            proc.wait(timeout=5)
 
 
 if __name__ == "__main__":
