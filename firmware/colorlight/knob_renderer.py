@@ -177,6 +177,7 @@ def main():
     r75_frame.enable(sock, args.eth_ip)
 
     t_anim, last, bank, lights, frames, t_stat = 0.0, time.monotonic(), 1, None, 0, time.monotonic()
+    t_enable = time.monotonic()
     log("rendering; patterns:", [n for n, _ in PATTERNS])
     try:
         while True:
@@ -205,6 +206,9 @@ def main():
             r75_frame.send_frame(sock, args.eth_ip, frame, bank=bank)
             r75_frame.show_bank(sock, args.eth_ip, bank)
             bank ^= 1
+            if now - t_enable >= 1.0:       # receiver75 boots disabled: re-enable after a card reboot
+                r75_frame.enable(sock, args.eth_ip)
+                t_enable = now
 
             new_lights = knob_lights(state)
             if refresh or new_lights != lights:
@@ -215,7 +219,8 @@ def main():
             if now - t_stat >= 5:
                 log(f"{frames / (now - t_stat):5.1f} fps  est {amps:4.2f} A  cap x{scale:.2f}  "
                     f"{PATTERNS[state.pattern][0]} hue {state.hue:.2f} speed {state.speed:.1f} "
-                    f"scale {state.scale:.2f} bright {state.bright:.2f}")
+                    f"scale {state.scale:.2f} bright {state.bright:.2f}"
+                    f"{'  BLACKOUT' if state.black else ''}{'  FROZEN' if state.frozen else ''}")
                 frames, t_stat = 0, now
 
             time.sleep(max(0.0, 1.0 / FPS - (time.monotonic() - now)))
