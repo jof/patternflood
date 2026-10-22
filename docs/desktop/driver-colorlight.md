@@ -115,6 +115,19 @@ so set `PSU_MAX_CURRENT=5000` in the bootloader config (`rpi-eeprom-config -e`).
 
 ## 5. Software path
 
+> 🔁 **2026-10-21: no LEDVision.** The stock gateware was replaced by the open
+> [receiver75](https://github.com/dgym/receiver75) gateware, loaded over JTAG
+> with a Glasgow, and it drives all four panels correctly. Steps 1–2 below are
+> superseded; bring-up notes and tools are in
+> [`firmware/colorlight/`](../../firmware/colorlight/README.md). The card is a
+> **v8.2**, and the stock flash is backed up.
+>
+> The panels use **J1, J4, J5 and J8**, not J1–J4. receiver75 takes UDP at
+> 192.168.75.39 and has 16 slots, two per connector; each connector Jn shows
+> slot 2n−1. Upper-left J5 is slot 9, upper-right J8 is 15, lower-left J4 is 7,
+> and lower-right J1 is 1, all upright. `r75_frame.py` maps a 128 × 128 frame
+> onto them.
+
 1. **Bring-up:** LEDVision (Windows-only; a VM with a bridged NIC works) to
    configure the card for these panels — 64 × 64, 1/32 scan, FM6124, 138-type
    decoding — and *save to receiver* on both the screen-parameter and mapping
@@ -124,7 +137,8 @@ so set `PSU_MAX_CURRENT=5000` in the bootloader config (`rpi-eeprom-config -e`).
    anything is written.
 3. **The instrument:** a renderer on the Pi that reads the four encoders over
    I²C, runs patterns, applies the per-frame cap, and streams frames to the card
-   — through FPP, or directly once the protocol is in hand. Whether the Live
+   — through FPP, or directly once the protocol is in hand. With receiver75,
+   that's UDP framebuffer writes, as `firmware/colorlight/r75_frame.py` does. Whether the Live
    Editor's **JavaScript** patterns can run here (QuickJS) is the question that
    decides how much of the community library comes along. (On the Zero this
    needed careful budgeting; on the Pi 5 it should not.)
