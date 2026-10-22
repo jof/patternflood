@@ -19,23 +19,42 @@ import numpy as np
 # (row, col) of each 64x64 quadrant in the 128x128 frame -> receiver75 slot
 QUADRANT_SLOTS = {(0, 0): 9, (0, 1): 15, (1, 0): 7, (1, 1): 1}
 SLOTS = 16
+WORDS_PER_SLOT = 64 * 48               # 64 rows of 48 32-bit words (64 px RGB)
+
+# receiver75 CSRs (identical in prebuilt/csr.csv and this build), poked over UDP 4344
+CSR_ENABLE = 0x82002014
+CSR_BASE_ADDR = 0x8200201c
 
 
-def send_slot(sock, ip, im, slot):
+def poke(sock, ip, addr, value):
+    sock.sendto(struct.pack("<II", addr >> 2, value), (ip, 4344))
+
+
+def enable(sock, ip, on=True):
+    poke(sock, ip, CSR_ENABLE, int(on))
+
+
+def show_bank(sock, ip, bank):
+    """Display framebuffer bank 0 or 1; the controller switches at the next frame start."""
+    poke(sock, ip, CSR_BASE_ADDR, bank * SLOTS * WORDS_PER_SLOT)
+
+
+def send_slot(sock, ip, im, slot, bank=0):
+    base = (bank * SLOTS + slot) * WORDS_PER_SLOT
     for r in range(16):                 # 4 rows (768 bytes) a packet, as sender75 does
-        offset = r * 4 * 48 + slot * 64 * 48
-        sock.sendto(struct.pack("<i", offset) + im[r * 4:r * 4 + 4].tobytes(), (ip, 4343))
+        sock.sendto(struct.pack("<i", base + r * 4 * 48) + im[r * 4:r * 4 + 4].tobytes(), (ip, 4343))
 
 
-def send_frame(sock, ip, frame, blank_unused=False):
+def send_frame(sock, ip, frame, blank_unused=False, bank=0):
     """frame: uint8 array (128, 128, 3), RGB, row 0 at the top as seen from the front."""
     assert frame.shape == (128, 128, 3) and frame.dtype == np.uint8
     for (qr, qc), slot in QUADRANT_SLOTS.items():
-        send_slot(sock, ip, np.ascontiguousarray(frame[qr * 64:qr * 64 + 64, qc * 64:qc * 64 + 64]), slot)
+        send_slot(sock, ip, np.ascontiguousarray(frame[qr * 64:qr * 64 + 64, qc * 64:qc * 64 + 64]),
+                  slot, bank)
     if blank_unused:
         black = np.zeros((64, 64, 3), np.uint8)
         for slot in set(range(SLOTS)) - set(QUADRANT_SLOTS.values()):
-            send_slot(sock, ip, black, slot)
+            send_slot(sock, ip, black, slot, bank)
 
 
 def seam_pattern(level):

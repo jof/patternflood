@@ -65,6 +65,31 @@ leads, should cure it.
 - `r75_frame.py`'s seam test (border, diagonals, ring, centre cross) runs
   continuously across all four seams: the 2×2 is one 128×128 display.
 
+## Knobs → patterns (bench demo)
+
+The FeatherS3 knob bridge is on ash's USB, and the card is on durian's USB NIC.
+`knob_link.py` (on ash) pipes knob events over SSH to `knob_renderer.py` (on
+durian) and passes knob-light commands back:
+
+```sh
+scp r75_frame.py knob_renderer.py durian:/tmp/r75/tools/
+./knob_link.py /dev/serial/by-id/usb-Espressif_USB_JTAG_serial_debug_unit_XX:XX:XX:XX:XX:XX-if00 \
+    durian -- python3 -u /tmp/r75/tools/knob_renderer.py --eth-ip 192.168.75.39
+```
+
+| Knob | Turn | Press |
+|---|---|---|
+| k0 (0x37) | hue | next pattern (plasma → tunnel → ripples) |
+| k1 (0x38) | speed | freeze / unfreeze |
+| k2 (0x39) | scale | reset all |
+| k3 (0x3A) | brightness, 30 % at start | blackout |
+
+- Frames are double-buffered through receiver75's two banks, at ~60 fps.
+- Gamma is 2.2, applied on the host.
+- Per-frame current cap, from estimated duty: 1.2 A a panel, 4 A in total. It
+  assumes 2.4 A per panel at full white, so recalibrate on this driver.
+- Ctrl-C blanks the display.
+
 ## Loading a bitstream into SRAM
 
 ```sh
