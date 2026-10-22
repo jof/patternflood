@@ -60,6 +60,10 @@ leads, should cure it.
   with no flicker: the 1/32 scan works.
 - `r75_slot_ids.py` draws each of the 16 slots' numbers, to map slots to panel
   positions and orientation.
+- The map: each connector Jn shows slot 2n−1. Upper-left J5 is slot 9,
+  upper-right J8 is 15, lower-left J4 is 7, lower-right J1 is 1, all upright.
+- `r75_frame.py`'s seam test (border, diagonals, ring, centre cross) runs
+  continuously across all four seams: the 2×2 is one 128×128 display.
 
 ## Loading a bitstream into SRAM
 
