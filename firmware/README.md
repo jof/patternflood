@@ -1,5 +1,12 @@
 # Firmware
 
+**`knob_bridge/`** — development knob bridge for the Colorlight build: a
+FeatherS3 on the STEMMA QT chain scans for the 4991 encoders and streams them to
+a host over USB serial as JSON lines, until the Pi reads them itself. Protocol in
+`knob_bridge/src/main.cpp`.
+
+The rest of this page is the abandoned ESP32 fork:
+
 The delta against upstream Patternflow, as a patch series.
 
 `upstream/` is a pristine clone pinned at `87700bd` (v3.9.5) on `main`, with the
