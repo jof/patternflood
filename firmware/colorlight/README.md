@@ -31,6 +31,30 @@ What works, measured 2026-10-21 at 2 MHz TCK:
   chain is too long", and no TDI found. The wiring is fine; OpenOCD and the
   script both work.
 
+**Open fault, 2026-10-21: TDI–TDO interaction on the bench wiring.**
+
+Measured with `jtag-probe` in a script, at both 2 MHz and 500 kHz:
+- IDCODE reads correctly when TDI is held high.
+- With TDI driven low, 1 bits on TDO randomly read as 0.
+
+That's why Glasgow's `scan`, `pinout` and `jtag-svf` applets fail. An SRAM load via
+`svf_play.py` got through ID, erase and burst, then stopped with status `0x05A00000`:
+DONE clear, BSE error 3 (CRC). The bitstream was corrupted on the way in.
+
+Reads that hold TDI high are unaffected. The flash backup is one; it was checked
+by two identical passes plus an openFPGALoader cross-read. Check the J32/J30 pads
+and jumpers for a bridge before loading anything.
+
+## Loading a bitstream into SRAM
+
+```sh
+glasgow script svf_play.py jtag-probe -V 3.3 -f 2000 -- design.svf
+```
+
+`ecppack --svf` output, played by a small SVF player. It keeps the Pause-DR end
+state between burst chunks and checks every expected TDO, ending with DONE. RAM
+only: a power cycle restores the stock image.
+
 ## Backing up the stock flash
 
 ```sh
