@@ -490,10 +490,13 @@ def main():
           "- **Etched art (sheets 1–3).** The outer faces — bezel, side walls, top wall, back cover — "
           "carry a circuit-board pattern from `art.py`. To etch, load **`sheet-N.svg`** instead of the "
           "DXF: one file, so the art stays on its part. In xTool Creative Space assign processing **by "
-          "colour**: **red = Cut**, **blue = Score** (traces, rings, chip outlines), **black = Engrave** "
-          "(pads and vias). Make sure the score and engrave run **before** the cut, so nothing has "
-          "moved when the art goes on; check the order in the processing list. Try the score and "
-          "engrave settings on an offcut of the same stock first. The art faces up on the bed, which "
+          "colour**: **red = Cut**, **blue = Score** — all of the art, dots included (they are tight "
+          "concentric circles that burn in solid: a raster engrave of thousands of dots would run "
+          "line by line over the whole part). Make sure the score runs **before** the cut, so nothing "
+          "has moved when the art goes on; check the order in the processing list. It is a lot of "
+          "line: ~94 m on the back cover, ~24 m on the bezel, ~9–12 m per wall — budget roughly "
+          "20–30 min for sheet 2 and 5–15 for sheets 1 and 3 at a typical score speed. Try the score "
+          "settings on an offcut of the same stock first: you want a fine, even, light line. The art faces up on the bed, which "
           "is the outside face. Skip it by loading the DXF instead: same cuts.",
           "- **Cut the test sheet first** ([`../test-cuts/`](../test-cuts/README.md), a 12 × 12) if you "
           "haven't, or after any change of stock.",

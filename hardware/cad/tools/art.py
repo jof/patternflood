@@ -6,17 +6,24 @@
 For each visible part — bezel, side walls, top wall, back cover — this reads
 the part's cut DXF (drawn as seen from OUTSIDE, so the face up on the laser bed
 is the outer face), works out where etching is allowed, and fills it with
-PCB-style traces: 45/90-degree routes on a grid, chips with pin rows, vias and
-pads. On the bezel each knob gets a dial ring with ticks, and traces run out
-from it.
+a dense, generated circuit board meant to be looked at for a long time: on a
+1.27 mm grid, QFP / BGA / SOIC chips with their fan-out, passives, headers,
+crystals, test points, fiducials, spiral inductors, Hilbert meanders,
+length-matched serpentines, wide power traces, parallel buses, silkscreen
+designators in a single-stroke font (artfont.py), and the leftover space
+filled with hatch, cross-hatch, topographic contours or stipple — or left empty
+on purpose. Hidden in it: a data matrix that really encodes a message, a space
+invader, a Lissajous figure, and tiny words in some of the empty spaces. On the
+bezel each knob gets a real dial: a 270-degree scale 0-10 with fine ticks,
+numerals, and the knob's name.
 
 Allowed area = the part's outline, inset past the finger joints, minus every
 hole, slot and cutout grown by a margin. Nothing is etched on a joint, near a
 cut edge, or under a knob.
 
 Outputs, per part, in the part's own frame:
-  art/<part>.etch.dxf   etch only: layer SCORE (lines, rings) and ENGRAVE (filled dots,
-                        as circles), for reference
+  art/<part>.etch.dxf   etch only, layer SCORE (lines and circles; the dots are tight
+                        concentric circles that burn in solid — see vector_dots), for reference
   art/<part>.svg        cut (red) + score (blue) + engrave (black fill) — what you'd
                         load to cut that part alone
   art/<part>.decal.png  the art alone, transparent, over exactly the part's DXF frame —
@@ -34,21 +41,23 @@ import sys
 
 from shapely.geometry import LineString, Point, Polygon, box
 from shapely.ops import polygonize, unary_union
+from shapely.prepared import prep
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from nest_sheets import read_dxf  # noqa: E402
+import artfont  # noqa: E402
 
 LASER = os.path.join(HERE, "..", "..", "laser")
 OUT = os.path.join(LASER, "art")
 
 T = 3.18             # sheet thickness: the finger joints reach this far in from an edge
 EDGE = T + 2.5       # keep this far inside the outline
-HOLE = 2.5           # and this far from any hole or slot
-G = 3.0              # trace grid pitch
-KNOB_CLEAR = 13.5    # a 20 mm / 1" knob's skirt hides r < ~13
-DIAL_R = 15.0        # dial ring radius round each knob
-PAD = 1.3            # nodes and traces keep this far inside the allowed area (via ring 1.1)
+HOLE = 2.0           # and this far from any hole or slot
+G = 1.27             # trace grid pitch: real PCB pitch (0.05")
+DIAL_R = 15.0        # dial scale radius round each knob (a 20 mm / 1" knob hides r < ~13)
+DIAL_KEEP = 22.5     # the dial, its numerals and name own r < this round each knob
+PAD = 0.9            # nodes and traces keep this far inside the allowed area (via ring 0.55)
 
 # part file -> seed. The bottom wall is the base: never seen, not etched.
 PARTS = {"bezel-outer.dxf": 11, "wall-left.dxf": 12, "wall-right-iec.dxf": 13,
@@ -78,153 +87,730 @@ def part_regions(ents):
     return outline, holes, knobs
 
 
-# ── generator ─────────────────────────────────────────────────────────────
+# ── generator (v2: dense) ─────────────────────────────────────────────────
+# Composition, in order, on a 1.27 mm grid (real PCB pitch):
+#   dials (bezel) -> title block (back cover) -> components (QFP, BGA, SOIC,
+#   headers, passives, crystals, test points, fiducials, inductors, Hilbert
+#   meanders, serpentines, a data matrix that really encodes a message) ->
+#   their escape routing -> parallel buses -> free traces -> "pours" in the
+#   leftover space (hatch, cross-hatch, topographic contours, stipple, or left
+#   empty on purpose) -> tiny hidden text in some of the empty ones.
 DIRS = [(1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1)]
+KNOB_NAMES = ["BRIGHT", "NETWORK", "VALUES", "PATTERN"]        # K1..K4, reading order
+EGGS = ["LOOK CLOSER", "HELLO FROM INSIDE", "MADE OF LIGHT", "PATTERNFLOW", "NO USER SERVICEABLE PARTS",
+        "128 X 128", "IN LOW OUT HIGH", "KERF 0.15", "FM6124", "RUC7258", "5A-75B", "WAS HERE",
+        "TURN ME", "SEE YOU IN THE GRID", "GND IS A STATE OF MIND"]
+
+
+def hilbert(order):
+    """Points of a Hilbert curve on an n x n grid, n = 2**order."""
+    n = 2 ** order
+    pts = []
+    for d in range(n * n):
+        rx = ry = 0
+        x = y = 0
+        t = d
+        s = 1
+        while s < n:
+            rx = 1 & (t // 2)
+            ry = 1 & (t ^ rx)
+            if ry == 0:
+                if rx == 1:
+                    x, y = s - 1 - x, s - 1 - y
+                x, y = y, x
+            x += s * rx
+            y += s * ry
+            t //= 4
+            s *= 2
+        pts.append((x, y))
+    return pts
 
 
 class Board:
     def __init__(self, allowed, rng):
-        # nodes and trace segments keep PAD clear of the allowed area's edge,
-        # so a via ring or pad drawn on a node still lies inside it
         self.allowed, self.rng = allowed, rng
         self.core = allowed.buffer(-PAD)
+        self.pcore = prep(self.core)
         x0, y0, x1, y1 = allowed.bounds
         self.ox, self.oy = math.floor(x0 / G) * G, math.floor(y0 / G) * G
         self.nodes = set()
         for i in range(int((x1 - self.ox) / G) + 2):
             for j in range(int((y1 - self.oy) / G) + 2):
-                if self.core.contains(Point(self.ox + i * G, self.oy + j * G)):
+                if self.pcore.contains(Point(self.ox + i * G, self.oy + j * G)):
                     self.nodes.add((i, j))
         self.used = set()
-        self.score, self.engrave = [], []      # score: ("L", p, q) / ("C", c, r); engrave: ("C", c, r)
+        self.score, self.engrave = [], []
+        self.geoms = []                       # what the pours must keep clear of
+        self.refs = {}
 
+    # ── primitives ──
     def xy(self, n):
         return (self.ox + n[0] * G, self.oy + n[1] * G)
+
+    def node_at(self, p):
+        return (round((p[0] - self.ox) / G), round((p[1] - self.oy) / G))
 
     def free(self, n):
         return n in self.nodes and n not in self.used
 
-    def route(self, start, d, lo=4, hi=28):
-        """Walk from start heading d; returns the node path (start included) or None."""
+    def ref(self, prefix):
+        self.refs[prefix] = self.refs.get(prefix, 0) + 1
+        return f"{prefix}{self.refs[prefix]}"
+
+    def seg(self, a, b):
+        self.score.append(("L", a, b))
+        self.geoms.append(LineString([a, b]))
+
+    def poly(self, pts, closed=False):
+        if closed:
+            pts = list(pts) + [pts[0]]
+        for a, b in zip(pts, pts[1:]):
+            self.score.append(("L", a, b))
+        self.geoms.append(LineString(pts))
+
+    def ring(self, c, r):
+        self.score.append(("C", c, r))
+        self.geoms.append(Point(c).buffer(r))
+
+    def dot(self, c, r):
+        self.engrave.append(("C", c, r))
+        self.geoms.append(Point(c).buffer(r))
+
+    def rect(self, x0, y0, x1, y1):
+        self.poly([(x0, y0), (x1, y0), (x1, y1), (x0, y1)], closed=True)
+
+    def label(self, s, x, y, h=1.0, anchor="left"):
+        segs = artfont.text(s, x, y, h, anchor)
+        if not segs:
+            return
+        self.score += segs
+        xs = [p[0] for e in segs for p in (e[1], e[2])]
+        ys = [p[1] for e in segs for p in (e[1], e[2])]
+        self.geoms.append(box(min(xs), min(ys), max(xs), max(ys)))
+
+    def label_fits(self, s, x, y, h):
+        w = artfont.width(s, h)
+        return self.pcore.contains(box(x, y, x + w, y + h))
+
+    # ── cells ──
+    def cells_free(self, i0, j0, i1, j1):
+        return all(self.free((i, j)) for i in range(i0, i1 + 1) for j in range(j0, j1 + 1))
+
+    def reserve(self, i0, j0, i1, j1):
+        for i in range(i0, i1 + 1):
+            for j in range(j0, j1 + 1):
+                self.used.add((i, j))
+
+    def spot(self, w, h, margin=1, tries=700):
+        cand = list(self.nodes - self.used)
+        if not cand:
+            return None
+        for _ in range(tries):
+            i, j = self.rng.choice(cand)
+            if self.cells_free(i - margin, j - margin, i + w + margin, j + h + margin):
+                return (i, j)
+        return None
+
+    # ── routing ──
+    def step_ok(self, cur, nd, taken):
+        dx, dy = DIRS[nd]
+        nxt = (cur[0] + dx, cur[1] + dy)
+        if not self.free(nxt) or nxt in taken:
+            return None
+        if dx and dy:
+            if (cur[0] + dx, cur[1]) in self.used and (cur[0], cur[1] + dy) in self.used:
+                return None
+            if not self.pcore.contains(LineString([self.xy(cur), self.xy(nxt)])):
+                return None
+        return nxt
+
+    def route(self, start, d, lo=3, hi=30, straight=10):
+        if not self.free(start):
+            return None
         path, cur = [start], start
         want = self.rng.randint(lo, hi)
+        taken = {start}
         while len(path) <= want:
-            opts = [(d, 8), ((d + 1) % 8, 1), ((d - 1) % 8, 1)]
-            self.rng.shuffle(opts)
-            opts.sort(key=lambda o: -o[1] * self.rng.random())
-            moved = False
-            for nd, _ in opts:
-                dx, dy = DIRS[nd]
-                nxt = (cur[0] + dx, cur[1] + dy)
-                if not self.free(nxt) or nxt in path:
-                    continue
-                if dx and dy and ((cur[0] + dx, cur[1]) in self.used and (cur[0], cur[1] + dy) in self.used):
-                    continue                              # would cross another trace's diagonal
-                if dx and dy and not LineString([self.xy(cur), self.xy(nxt)]).within(self.core):
-                    continue                              # a diagonal across a concave corner
-                path.append(nxt)
-                cur, d, moved = nxt, nd, True
-                break
-            if not moved:
+            opts = [(d, straight), ((d + 1) % 8, 1), ((d - 1) % 8, 1)]
+            weights = [w * self.rng.random() for _, w in opts]
+            for (nd, _), _w in sorted(zip(opts, weights), key=lambda o: -o[1]):
+                nxt = self.step_ok(cur, nd, taken)
+                if nxt:
+                    path.append(nxt)
+                    taken.add(nxt)
+                    cur, d = nxt, nd
+                    break
+            else:
                 break
         return path if len(path) >= lo else None
 
-    def commit(self, path, start_pad=True):
+    def commit(self, path, start="pad", end="via", power=False):
         self.used.update(path)
         pts = [self.xy(n) for n in path]
-        # merge collinear steps into single segments
-        seg = [pts[0]]
+        keep = [pts[0]]
         for a, b, c in zip(pts, pts[1:], pts[2:]):
-            if (b[0] - a[0]) * (c[1] - b[1]) != (b[1] - a[1]) * (c[0] - b[0]):
-                seg.append(b)
-        seg.append(pts[-1])
-        for a, b in zip(seg, seg[1:]):
-            self.score.append(("L", a, b))
-        if start_pad:
-            self.engrave.append(("C", pts[0], 0.9))
-        self.score.append(("C", pts[-1], 1.1))           # via at the far end
-        self.engrave.append(("C", pts[-1], 0.45))
+            if abs((b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0])) > 1e-9:
+                keep.append(b)
+        keep.append(pts[-1])
+        if power and len(keep) >= 2:
+            # a wide trace, drawn as its outline
+            outline = LineString(keep).buffer(0.42, cap_style=1, join_style=2, mitre_limit=2).exterior
+            self.poly(list(outline.simplify(0.02).coords))
+            for n in path:
+                for dx in (-1, 0, 1):
+                    for dy in (-1, 0, 1):
+                        self.used.add((n[0] + dx, n[1] + dy))
+        else:
+            self.poly(keep)
+        for at, kind in ((pts[0], start), (pts[-1], end)):
+            if kind == "via":
+                self.ring(at, 0.55)
+                self.dot(at, 0.2)
+            elif kind == "pad":
+                self.dot(at, 0.42)
+            elif kind == "ring":
+                self.ring(at, 0.45)
 
-    def chip(self, w, h):
-        """Place a w x h (grid cells) chip; draw it; return its pin starts [(node, dir)]."""
-        cand = list(self.nodes)
-        self.rng.shuffle(cand)
-        for (i, j) in cand[:400]:
-            cells = {(i + a, j + b) for a in range(-1, w + 2) for b in range(-1, h + 2)}
-            if not all(self.free(c) for c in cells):
-                continue
-            body = [(i + a, j + b) for a in range(w + 1) for b in range(h + 1)]
-            self.used.update(body)
-            x0, y0 = self.xy((i, j))
-            x1, y1 = self.xy((i + w, j + h))
-            m = G * 0.35
-            r = (x0 + m, y0 + m, x1 - m, y1 - m)
-            for a, b in [((r[0], r[1]), (r[2], r[1])), ((r[2], r[1]), (r[2], r[3])),
-                         ((r[2], r[3]), (r[0], r[3])), ((r[0], r[3]), (r[0], r[1]))]:
-                self.score.append(("L", a, b))
-            self.engrave.append(("C", (r[0] + 1.6, r[3] - 1.6), 0.6))     # pin-1 dot
-            pins = []
-            for a in range(1, w):
-                pins += [((i + a, j - 1), 6, (i + a, j)), ((i + a, j + h + 1), 2, (i + a, j + h))]
-            for b in range(1, h):
-                pins += [((i - 1, j + b), 4, (i, j + b)), ((i + w + 1, j + b), 0, (i + w, j + b))]
-            starts = []
-            for node, d, inner in pins:
-                if self.free(node):
-                    p, q = self.xy(inner), self.xy(node)
-                    edge = ((p[0] + q[0]) / 2, (p[1] + q[1]) / 2)
-                    starts.append((node, d, edge))
-            return starts
-        return []
-
-
-def dial(board, c, rng):
-    """Knob dial: ring, ticks, and traces leaving it radially."""
-    board.score.append(("C", c, DIAL_R))
-    for k in range(24):
-        a = math.radians(k * 15)
-        r1 = DIAL_R + (2.6 if k % 6 == 0 else 1.4)
-        board.score.append(("L", (c[0] + DIAL_R * math.cos(a), c[1] + DIAL_R * math.sin(a)),
-                            (c[0] + r1 * math.cos(a), c[1] + r1 * math.sin(a))))
-    # traces start at grid nodes just outside the ticks, heading away from the knob
-    for k in range(8):
-        a = math.radians(k * 45 + 22.5)
-        p = (c[0] + (DIAL_R + 5) * math.cos(a), c[1] + (DIAL_R + 5) * math.sin(a))
-        n = (round((p[0] - board.ox) / G), round((p[1] - board.oy) / G))
-        d = round(((math.degrees(a)) % 360) / 45) % 8
-        if board.free(n) and rng.random() < 0.8:
-            path = board.route(n, d, 3, 22)
+    def fan_out(self, pins, lo=2, hi=26, power=0.08, end_kinds=("via", "via", "pad", "ring")):
+        for node, d, stub in pins:
+            path = self.route(node, d, lo, hi)
             if path:
-                board.commit(path, start_pad=False)
-                q = board.xy(n)
-                board.score.append(("L", (c[0] + (DIAL_R + 2.8) * math.cos(a), c[1] + (DIAL_R + 2.8) * math.sin(a)), q))
+                self.commit(path, start="none", end=self.rng.choice(end_kinds), power=self.rng.random() < power)
+                if stub:
+                    self.seg(stub, self.xy(node))
+
+    def bus(self, lanes_n):
+        """k parallel traces moving in lockstep."""
+        d = self.rng.choice([0, 2, 4, 6])
+        px, py = DIRS[(d + 2) % 8]
+        for _ in range(60):
+            s = self.rng.choice(list(self.nodes - self.used))
+            lanes = [(s[0] + k * px, s[1] + k * py) for k in range(lanes_n)]
+            if all(self.free(n) for n in lanes):
+                break
+        else:
+            return
+        paths = [[n] for n in lanes]
+        taken = set(lanes)
+        want = self.rng.randint(10, 60)
+        cur_d = d
+        for _ in range(want):
+            nd = cur_d if self.rng.random() < 0.88 else (cur_d + self.rng.choice([1, -1])) % 8
+            if nd % 2 == 1 and cur_d % 2 == 1:
+                nd = cur_d                      # no diagonal-to-diagonal swing
+            nxts = [self.step_ok(p[-1], nd, taken) for p in paths]
+            if not all(nxts):
+                nxts = [self.step_ok(p[-1], cur_d, taken) for p in paths]
+                nd = cur_d
+                if not all(nxts):
+                    break
+            for p, n in zip(paths, nxts):
+                p.append(n)
+                taken.add(n)
+            cur_d = nd
+        if len(paths[0]) >= 6:
+            for k, p in enumerate(paths):
+                self.commit(p, start="via", end="via" if k % 2 else "pad")
+
+    # ── components ──
+    def qfp(self, n):
+        at = self.spot(n, n, margin=2)
+        if not at:
+            return
+        i, j = at
+        self.reserve(i, j, i + n, j + n)
+        x0, y0 = self.xy((i, j))
+        x1, y1 = self.xy((i + n, j + n))
+        m = G * 0.4
+        self.rect(x0 + m, y0 + m, x1 - m, y1 - m)
+        q = (n * G) * 0.28
+        self.rect(x0 + q, y0 + q, x1 - q, y1 - q)                   # the die
+        self.dot((x0 + m + 0.9, y1 - m - 0.9), 0.35)
+        pins = []
+        for a in range(1, n):
+            pins += [((i + a, j - 1), 6, (self.xy((i + a, j))[0], y0 + m)),
+                     ((i + a, j + n + 1), 2, (self.xy((i + a, j))[0], y1 - m)),
+                     ((i - 1, j + a), 4, (x0 + m, self.xy((i, j + a))[1])),
+                     ((i + n + 1, j + a), 0, (x1 - m, self.xy((i, j + a))[1]))]
+        self.rng.shuffle(pins)
+        self.fan_out([p for p in pins[: int(len(pins) * 0.8)]])
+        r = self.ref("U")
+        if self.label_fits(r, x0, y1 + 1.6, 1.2):
+            self.label(r, x0, y1 + 1.6, 1.2)
+        name = self.rng.choice(["MCU", "FPGA", "ECP5", "RP3A0", "DSP", "PHY", "SERDES", "GPU", "NPU"])
+        self.label(name, (x0 + x1) / 2, (y0 + y1) / 2, min(1.6, (x1 - x0) * 0.08), anchor="center")
+
+    def bga(self, n):
+        at = self.spot(n + 1, n + 1, margin=2)
+        if not at:
+            return
+        i, j = at
+        self.reserve(i, j, i + n + 1, j + n + 1)
+        x0, y0 = self.xy((i, j))
+        x1, y1 = self.xy((i + n + 1, j + n + 1))
+        self.poly([(x0 + 1.4, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0 + 1.4), (x0 + 1.4, y0)])
+        for a in range(1, n + 1):
+            for b in range(1, n + 1):
+                self.dot(self.xy((i + a, j + b)), 0.26)
+        pins = []
+        for a in range(1, n + 1, 2):
+            pins += [((i + a, j - 1), 6, None), ((i + a, j + n + 2), 2, None),
+                     ((i - 1, j + a), 4, None), ((i + n + 2, j + a), 0, None)]
+        self.fan_out(pins, end_kinds=("via",))
+        r = self.ref("U")
+        if self.label_fits(r, x0, y1 + 1.4, 1.1):
+            self.label(r, x0, y1 + 1.4, 1.1)
+
+    def soic(self, n):
+        horiz = self.rng.random() < 0.5
+        w, h = (n, 3) if horiz else (3, n)
+        at = self.spot(w, h, margin=2)
+        if not at:
+            return
+        i, j = at
+        self.reserve(i, j, i + w, j + h)
+        x0, y0 = self.xy((i, j))
+        x1, y1 = self.xy((i + w, j + h))
+        m = G * 0.45
+        self.rect(x0 + m, y0 + m, x1 - m, y1 - m)
+        self.dot((x0 + m + 0.7, y0 + m + 0.7), 0.25)
+        pins = []
+        if horiz:
+            for a in range(1, w):
+                pins += [((i + a, j - 1), 6, (self.xy((i + a, j))[0], y0 + m)),
+                         ((i + a, j + h + 1), 2, (self.xy((i + a, j))[0], y1 - m))]
+        else:
+            for b in range(1, h):
+                pins += [((i - 1, j + b), 4, (x0 + m, self.xy((i, j + b))[1])),
+                         ((i + w + 1, j + b), 0, (x1 - m, self.xy((i, j + b))[1]))]
+        self.fan_out(pins)
+        r = self.ref("U")
+        if self.label_fits(r, x1 + 0.8, y0, 1.0):
+            self.label(r, x1 + 0.8, y0, 1.0)
+
+    def passive(self):
+        horiz = self.rng.random() < 0.5
+        w, h = (2, 0) if horiz else (0, 2)
+        at = self.spot(w, h, margin=1)
+        if not at:
+            return
+        i, j = at
+        self.reserve(i - 1, j - 1, i + w + 1, j + h + 1)
+        a, b = self.xy((i, j)), self.xy((i + w, j + h))
+        s = 0.45
+        for p in (a, b):
+            self.rect(p[0] - s, p[1] - s, p[0] + s, p[1] + s)
+        mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+        if horiz:
+            self.rect(mid[0] - 0.5, mid[1] - 0.3, mid[0] + 0.5, mid[1] + 0.3)
+            pins = [((i - 2, j), 4, (a[0] - s, a[1])), ((i + w + 2, j), 0, (b[0] + s, b[1]))]
+        else:
+            self.rect(mid[0] - 0.3, mid[1] - 0.5, mid[0] + 0.3, mid[1] + 0.5)
+            pins = [((i, j - 2), 6, (a[0], a[1] - s)), ((i, j + h + 2), 2, (b[0], b[1] + s))]
+        for node, d, stub in pins:
+            if self.free(node):
+                path = self.route(node, d, 2, 20)
+                if path:
+                    self.commit(path, start="none", end=self.rng.choice(["via", "pad"]))
+                    self.seg(stub, self.xy(node))
+        r = self.ref(self.rng.choice(["R", "R", "C", "C", "L", "D", "FB"]))
+        lx, ly = (a[0] - 0.4, a[1] + 1.0) if horiz else (a[0] + 1.0, a[1] - 0.4)
+        if self.label_fits(r, lx, ly, 0.8):
+            self.label(r, lx, ly, 0.8)
+
+    def header(self, m):
+        horiz = self.rng.random() < 0.5
+        w, h = (m - 1, 0) if horiz else (0, m - 1)
+        at = self.spot(w + 1, h + 1, margin=2)
+        if not at:
+            return
+        i, j = at
+        self.reserve(i - 1, j - 1, i + w + 1, j + h + 1)
+        pins = []
+        for k in range(m):
+            n = (i + k, j) if horiz else (i, j + k)
+            c = self.xy(n)
+            if k == 0:
+                self.rect(c[0] - 0.5, c[1] - 0.5, c[0] + 0.5, c[1] + 0.5)
+            else:
+                self.ring(c, 0.5)
+            self.dot(c, 0.2)
+            pins.append(((n[0], n[1] - 2) if horiz else (n[0] - 2, n[1]), 6 if horiz else 4, None))
+        x0, y0 = self.xy((i, j))
+        x1, y1 = self.xy((i + w, j + h))
+        self.rect(x0 - 0.9, y0 - 0.9, x1 + 0.9, y1 + 0.9)
+        self.fan_out(pins, lo=2, hi=18)
+        r = self.ref("J")
+        if self.label_fits(r, x0, y1 + 1.4, 1.0):
+            self.label(r, x0, y1 + 1.4, 1.0)
+
+    def crystal(self):
+        at = self.spot(4, 2, margin=1)
+        if not at:
+            return
+        i, j = at
+        self.reserve(i, j, i + 4, j + 2)
+        x0, y0 = self.xy((i, j))
+        x1, y1 = self.xy((i + 4, j + 2))
+        r = 1.0
+        pts = []
+        for cx, cy, a0 in ((x1 - r, y0 + r, -90), (x1 - r, y1 - r, 0), (x0 + r, y1 - r, 90), (x0 + r, y0 + r, 180)):
+            pts += [(cx + r * math.cos(math.radians(a0 + t * 15)), cy + r * math.sin(math.radians(a0 + t * 15)))
+                    for t in range(7)]
+        self.poly(pts, closed=True)
+        for n in ((i + 1, j + 1), (i + 3, j + 1)):
+            self.dot(self.xy(n), 0.35)
+        self.fan_out([((i - 1, j + 1), 4, None), ((i + 5, j + 1), 0, None)], lo=2, hi=12)
+        ref = self.ref("Y")
+        if self.label_fits(ref, x0, y1 + 1.0, 0.8):
+            self.label(ref, x0, y1 + 1.0, 0.8)
+
+    def test_point(self):
+        at = self.spot(0, 0, margin=1)
+        if not at:
+            return
+        self.reserve(at[0] - 1, at[1] - 1, at[0] + 1, at[1] + 1)
+        c = self.xy(at)
+        self.ring(c, 0.7)
+        self.dot(c, 0.3)
+        r = self.ref("TP")
+        if self.label_fits(r, c[0] + 1.0, c[1] + 0.6, 0.8):
+            self.label(r, c[0] + 1.0, c[1] + 0.6, 0.8)
+        self.fan_out([((at[0] + 1, at[1] - 1), 7, None)], lo=2, hi=14)
+
+    def fiducial(self):
+        at = self.spot(2, 2, margin=1)
+        if not at:
+            return
+        self.reserve(at[0], at[1], at[0] + 2, at[1] + 2)
+        c = self.xy((at[0] + 1, at[1] + 1))
+        self.ring(c, 1.15)
+        self.dot(c, 0.45)
+
+    def inductor(self, k):
+        at = self.spot(k, k, margin=1)
+        if not at:
+            return
+        i, j = at
+        self.reserve(i, j, i + k, j + k)
+        x0, y0 = self.xy((i, j))
+        s = k * G
+        sp = 0.55
+        pts, lo, hi = [], 0.0, s
+        while hi - lo > 2 * sp:
+            pts += [(x0 + lo, y0 + lo), (x0 + hi, y0 + lo), (x0 + hi, y0 + hi), (x0 + lo + sp, y0 + hi)]
+            lo += sp
+            hi -= sp
+            pts.append((x0 + lo, y0 + hi))
+        self.poly(pts)
+        r = self.ref("L")
+        if self.label_fits(r, x0, y0 + s + 0.9, 0.9):
+            self.label(r, x0, y0 + s + 0.9, 0.9)
+
+    def meander(self, order):
+        k = 2 ** order
+        cells = math.ceil(k * 0.5)
+        at = self.spot(cells, cells, margin=1)
+        if not at:
+            return
+        i, j = at
+        self.reserve(i, j, i + cells, j + cells)
+        x0, y0 = self.xy((i, j))
+        step = cells * G / k
+        pts = [(x0 + (px + 0.5) * step, y0 + (py + 0.5) * step) for px, py in hilbert(order)]
+        self.poly(pts)
+
+    def serpentine(self):
+        n = self.rng.randint(5, 12)
+        horiz = self.rng.random() < 0.5
+        w, h = (2 * n + 2, 3) if horiz else (3, 2 * n + 2)
+        at = self.spot(w, h, margin=1)
+        if not at:
+            return
+        i, j = at
+        self.reserve(i, j, i + w, j + h)
+        x0, y0 = self.xy((i, j))
+        pts = []
+        amp = 3 * G
+        for k in range(n + 1):
+            u = (1 + 2 * k) * G
+            v0, v1 = (0.0, amp) if k % 2 == 0 else (amp, 0.0)
+            pts += [(u, v0), (u, v1)] if k < n else [(u, v0)]
+            if k < n:
+                pts.append((u + 2 * G, v1))
+        pts = [(x0 + u, y0 + v) for u, v in pts] if horiz else [(x0 + v, y0 + u) for u, v in pts]
+        self.poly(pts)
+        for p in (pts[0], pts[-1]):
+            self.ring(p, 0.5)
+        r = self.ref("DIFF")
+        lx, ly = pts[0][0], pts[0][1] - 1.6
+        if self.label_fits(r, lx, ly, 0.8):
+            self.label(r, lx, ly, 0.8)
+
+    def data_matrix(self, message):
+        bits = [int(b) for ch in message for b in format(ord(ch), "08b")]
+        k = 14
+        mod = 0.55
+        cells = math.ceil(k * mod / G) + 1
+        at = self.spot(cells, cells, margin=2)
+        if not at:
+            return
+        i, j = at
+        self.reserve(i - 1, j - 1, i + cells + 1, j + cells + 1)
+        x0, y0 = self.xy((i, j))
+        bi = 0
+        for a in range(k):
+            for b in range(k):
+                if a == 0 or b == 0:
+                    on = True
+                elif a == k - 1 or b == k - 1:
+                    on = (a + b) % 2 == 0
+                else:
+                    on = bits[bi % len(bits)] == 1
+                    bi += 1
+                if on:
+                    self.dot((x0 + (a + 0.5) * mod, y0 + (b + 0.5) * mod), mod * 0.42)
+
+    def invader(self):
+        sprite = ["..X.....X..", "...X...X...", "..XXXXXXX..", ".XX.XXX.XX.", "XXXXXXXXXXX",
+                  "X.XXXXXXX.X", "X.X.....X.X", "...XX.XX..."]
+        p = 0.6
+        cells = math.ceil(11 * p / G) + 1
+        at = self.spot(cells, cells, margin=2)
+        if not at:
+            return
+        i, j = at
+        self.reserve(i, j, i + cells, j + cells)
+        x0, y0 = self.xy((i, j))
+        for r, row in enumerate(sprite):
+            for c, ch in enumerate(row):
+                if ch == "X":
+                    self.dot((x0 + c * p, y0 + (7 - r) * p), 0.24)
+
+    def lissajous(self, size, a=3, b=2):
+        cells = math.ceil(size / G)
+        at = self.spot(cells, cells, margin=2)
+        if not at:
+            return
+        i, j = at
+        self.reserve(i, j, i + cells, j + cells)
+        c = self.xy((i + cells / 2, j + cells / 2))
+        r = size / 2 * 0.92
+        pts = [(c[0] + r * math.sin(a * t + math.pi / 2), c[1] + r * math.sin(b * t))
+               for t in [k * 2 * math.pi / 400 for k in range(401)]]
+        self.poly(pts)
+
+    def title_block(self, lines):
+        h = 1.6
+        w = max(artfont.width(s, h) for s in lines) + 4
+        rows = len(lines)
+        cw, ch = math.ceil(w / G) + 1, math.ceil((rows * 2.6 + 3 + 8) / G) + 1
+        at = self.spot(cw, ch, margin=2, tries=3000)
+        if not at:
+            return
+        i, j = at
+        self.reserve(i, j, i + cw, j + ch)
+        x0, y0 = self.xy((i, j))
+        x1, y1 = self.xy((i + cw, j + ch))
+        self.rect(x0, y0, x1, y1)
+        self.rect(x0 + 0.6, y0 + 0.6, x1 - 0.6, y1 - 0.6)
+        y = y1 - 2.4 - h
+        for s in lines:
+            self.label(s, x0 + 2, y, h)
+            self.seg((x0 + 0.6, y - 0.6), (x1 - 0.6, y - 0.6))
+            y -= 2.6
+        # a barcode under the text
+        bx = x0 + 2
+        while bx < x1 - 2:
+            wbar = self.rng.choice([0.2, 0.2, 0.4, 0.6])
+            for t in range(int(wbar / 0.2)):
+                self.seg((bx + t * 0.2, y0 + 1.6), (bx + t * 0.2, y0 + 6.0))
+            bx += wbar + self.rng.choice([0.3, 0.5, 0.7])
+
+
+def dial(board, c, name):
+    """A knob's dial: rings, a 270-degree scale 0-10 with fine ticks, numerals, the knob's name."""
+    board.ring(c, DIAL_R)
+    board.ring(c, DIAL_R - 1.0)
+    a_lo, a_hi = 225.0, -45.0                     # clockwise from 0 at lower-left to 10 at lower-right
+    for k in range(101):
+        a = math.radians(a_lo + (a_hi - a_lo) * k / 100)
+        ln = 2.6 if k % 10 == 0 else 1.6 if k % 5 == 0 else 0.9
+        p = (c[0] + DIAL_R * math.cos(a), c[1] + DIAL_R * math.sin(a))
+        q = (c[0] + (DIAL_R + ln) * math.cos(a), c[1] + (DIAL_R + ln) * math.sin(a))
+        board.seg(p, q)
+        if k % 10 == 0:
+            r = DIAL_R + 4.4
+            board.label(str(k // 10), c[0] + r * math.cos(a), c[1] + r * math.sin(a), 1.3, anchor="center")
+    # the name in the gap at the bottom of the scale
+    board.label(name, c[0], c[1] - DIAL_R + 2.2, 1.2, anchor="center")
+    # an arc of fine dots just inside, like a gauge
+    for k in range(0, 61):
+        a = math.radians(a_lo + (a_hi - a_lo) * k / 60)
+        board.dot((c[0] + (DIAL_R - 2.2) * math.cos(a), c[1] + (DIAL_R - 2.2) * math.sin(a)), 0.16)
+    # traces leaving the dial, from just outside its numerals
+    for k in range(10):
+        a = math.radians(k * 36 + 18)
+        p = (c[0] + (DIAL_KEEP + 1.5) * math.cos(a), c[1] + (DIAL_KEEP + 1.5) * math.sin(a))
+        n = board.node_at(p)
+        d = round((math.degrees(a) % 360) / 45) % 8
+        if board.free(n):
+            path = board.route(n, d, 3, 30)
+            if path:
+                board.commit(path, start="ring", end=board.rng.choice(["via", "pad"]))
+
+
+def pours(b, eggs):
+    """Fill the leftover space: hatch, cross-hatch, contours, stipple — or nothing."""
+    occupied = unary_union([g.buffer(0.55) for g in b.geoms]) if b.geoms else Polygon()
+    free = b.allowed.buffer(-0.7).difference(occupied)
+    polys = [p for p in getattr(free, "geoms", [free]) if p.area > 25]
+    polys.sort(key=lambda p: -p.area)
+    empty = []
+    for p in polys:
+        style = b.rng.choices(["hatch", "cross", "contour", "stipple", "empty"], [30, 14, 26, 10, 20])[0]
+        inner = p.buffer(-0.35)
+        if inner.is_empty:
+            continue
+        if style in ("hatch", "cross"):
+            sp = 0.8 if style == "hatch" else 1.15
+            angs = [45] if style == "hatch" else [45, -45]
+            if b.rng.random() < 0.3 and style == "hatch":
+                angs = [-45]
+            x0, y0, x1, y1 = inner.bounds
+            L = (x1 - x0) + (y1 - y0)
+            for ang in angs:
+                ca, sa = math.cos(math.radians(ang)), math.sin(math.radians(ang))
+                cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+                n = int(L / sp) + 2
+                for k in range(-n, n + 1):
+                    off = k * sp
+                    a = (cx - sa * off - ca * L, cy + ca * off - sa * L)
+                    q = (cx - sa * off + ca * L, cy + ca * off + sa * L)
+                    clip = inner.intersection(LineString([a, q]))
+                    for g in getattr(clip, "geoms", [clip]):
+                        if g.geom_type == "LineString" and g.length > 0.3:
+                            cs = list(g.coords)
+                            b.score.append(("L", cs[0], cs[-1]))
+        elif style == "contour":
+            d = 0.7
+            for k in range(1, 40):
+                ring_poly = p.buffer(-d * k)
+                if ring_poly.is_empty:
+                    break
+                for g in getattr(ring_poly, "geoms", [ring_poly]):
+                    for ring in [g.exterior] + list(g.interiors):
+                        cs = list(ring.simplify(0.04).coords)
+                        b.score += [("L", u, v) for u, v in zip(cs, cs[1:])]
+        elif style == "stipple":
+            if p.area > 1500:
+                empty.append(p)
+                continue
+            sp = 1.0
+            x0, y0, x1, y1 = inner.bounds
+            pin = prep(inner.buffer(-0.2))
+            row = 0
+            y = y0
+            while y < y1:
+                x = x0 + (sp / 2 if row % 2 else 0)
+                while x < x1:
+                    if pin.contains(Point(x, y)):
+                        b.engrave.append(("C", (x, y), 0.17))
+                    x += sp
+                y += sp * 0.866
+                row += 1
+        else:
+            empty.append(p)
+    # hidden words, tiny, in some of the empty spaces
+    b.rng.shuffle(eggs)
+    for p in empty:
+        if not eggs:
+            break
+        s = eggs[0]
+        h = 0.9
+        w = artfont.width(s, h)
+        c = p.representative_point()
+        bx = box(c.x - w / 2, c.y - h / 2, c.x + w / 2, c.y + h / 2)
+        if p.buffer(-0.4).contains(bx):
+            b.score += artfont.text(s, c.x, c.y, h, anchor="center")
+            eggs.pop(0)
 
 
 def generate(name, seed):
     ents = read_dxf(os.path.join(LASER, name))
     outline, holes, knobs = part_regions(ents)
-    keep_out = [h.buffer(HOLE) for h in holes] + [Point(k).buffer(DIAL_R + 4) for k in knobs]
+    keep_out = [h.buffer(HOLE) for h in holes] + [Point(k).buffer(DIAL_KEEP) for k in knobs]
     allowed = outline.buffer(-EDGE).difference(unary_union(keep_out)) if keep_out else outline.buffer(-EDGE)
     rng = random.Random(SEED * 100 + seed)
     b = Board(allowed, rng)
-    for k in knobs:
-        dial(b, k, rng)
-    area = allowed.area
-    for _ in range(max(1, int(area / 9000))):
-        for node, d, edge in b.chip(rng.choice([3, 4, 5, 6]), rng.choice([2, 3, 4])):
-            path = b.route(node, d, 2, 24)
-            if path:
-                b.commit(path, start_pad=False)
-                b.score.append(("L", edge, b.xy(node)))
-    for _ in range(int(area / 160)):
-        free = [n for n in b.nodes if n not in b.used]
-        if not free:
+    knobs = sorted(knobs, key=lambda c: (-round(c[1]), c[0]))        # reading order: K1..K4
+    for k, c in enumerate(knobs):
+        dial(b, c, KNOB_NAMES[k] if k < len(KNOB_NAMES) else f"K{k + 1}")
+    A = allowed.area
+    if name.startswith("back-cover"):
+        b.title_block(["PATTERNFLOW / DESKTOP", "REV 2  2026-10", "128 X 128  P2 GOB X4", "PI 5 + 5A-75B",
+                       "LRS-50-5  5V 10A", "BIRCH 3.18  KERF 0.15"])
+    if name.startswith("bezel"):
+        b.lissajous(11)
+    big = A > 20000
+    for _ in range(max(1 if big else 0, int(A / 16000))):
+        b.qfp(rng.randint(9, 15))
+    for _ in range(int(A / 24000)):
+        b.bga(rng.randint(5, 8))
+    for _ in range(max(1, int(A / 5000))):
+        b.soic(rng.randint(5, 9))
+    for _ in range(int(A / 12000)):
+        b.header(rng.randint(4, 10))
+    for _ in range(int(A / 9000)):
+        b.crystal()
+    for _ in range(int(A / 14000)):
+        b.inductor(rng.randint(5, 8))
+    for _ in range(max(1, int(A / 20000))):
+        b.meander(rng.choice([3, 4]))
+    for _ in range(int(A / 9000)):
+        b.serpentine()
+    b.data_matrix("PATTERNFLOW " + name[:-4].upper())
+    if rng.random() < 0.7 or name.startswith("back"):
+        b.invader()
+    for _ in range(3):
+        b.fiducial()
+    for _ in range(int(A / 1600)):
+        b.test_point()
+    for _ in range(int(A / 420)):
+        b.passive()
+    for _ in range(int(A / 6000)):
+        b.bus(rng.randint(3, 8))
+    for _ in range(int(A / 30)):
+        free = list(b.nodes - b.used)
+        if len(free) < 4:
             break
         n = rng.choice(free)
-        path = b.route(n, rng.randrange(0, 8, 2) if rng.random() < 0.7 else rng.randrange(8))
+        path = b.route(n, rng.randrange(0, 8, 2) if rng.random() < 0.75 else rng.randrange(8), 3, 34)
         if path:
-            b.commit(path)
-    return ents, allowed, b.score, b.engrave
+            b.commit(path, start=rng.choice(["pad", "via", "ring"]), end=rng.choice(["via", "pad"]),
+                     power=rng.random() < 0.05)
+    pours(b, list(EGGS))
+    return ents, allowed, b.score + vector_dots(b.engrave), []
+
+
+BEAM = 0.15          # what one scored line burns, roughly
+
+
+def vector_dots(dots):
+    """Filled dots as concentric scored circles, BEAM apart, which burn in solid.
+
+    A raster ENGRAVE of thousands of dots spread over a whole part runs as long
+    as the part is tall, line by line; scored circles are vector and quick. So
+    everything the art draws is one process: Score."""
+    out = []
+    for e in dots:
+        r = e[2]
+        while r > BEAM / 2:
+            out.append(("C", e[1], round(r, 3)))
+            r -= BEAM
+        if not out or out[-1][1] != e[1]:
+            out.append(("C", e[1], BEAM / 2))
+    return out
 
 
 # ── output ────────────────────────────────────────────────────────────────
@@ -261,13 +847,26 @@ def svg_body(cut, score, engrave):
             pts = sampled(e, 0.2)
             out.append('<polyline points="' + " ".join(f"{x:.3f},{y:.3f}" for x, y in pts)
                        + '" stroke="#ff0000" stroke-width="0.1" fill="none"/>')
+    # chain end-to-start segments into polylines: one move per trace, not one per step
+    chain = []
+
+    def flush():
+        if chain:
+            out.append('<polyline points="' + " ".join(f"{x:.3f},{y:.3f}" for x, y in chain)
+                       + '" stroke="#0000ff" stroke-width="0.1" fill="none"/>')
+            chain.clear()
     for e in score:
         if e[0] == "L":
-            out.append(f'<line x1="{e[1][0]:.3f}" y1="{e[1][1]:.3f}" x2="{e[2][0]:.3f}" y2="{e[2][1]:.3f}" '
-                       'stroke="#0000ff" stroke-width="0.1" fill="none"/>')
+            if chain and abs(chain[-1][0] - e[1][0]) < 1e-6 and abs(chain[-1][1] - e[1][1]) < 1e-6:
+                chain.append(e[2])
+            else:
+                flush()
+                chain.extend([e[1], e[2]])
         else:
+            flush()
             out.append(f'<circle cx="{e[1][0]:.3f}" cy="{e[1][1]:.3f}" r="{e[2]:.3f}" '
                        'stroke="#0000ff" stroke-width="0.1" fill="none"/>')
+    flush()
     for e in engrave:
         out.append(f'<circle cx="{e[1][0]:.3f}" cy="{e[1][1]:.3f}" r="{e[2]:.3f}" fill="#000000" stroke="none"/>')
     return out
@@ -283,7 +882,7 @@ def write_svg(path, W, H, body):
 
 def preview(path, results):
     from PIL import Image, ImageDraw
-    k, pad = 1.6, 10
+    k, pad = 4.0, 16
     cells = []
     for name, (ents, allowed, score, engrave) in results.items():
         x0, y0, x1, y1 = Polygon(sampled(("C", (0, 0), 1))).bounds if not ents else (0, 0, 0, 0)
@@ -305,7 +904,7 @@ def preview(path, results):
                 c, r = e[1], e[2]
                 d.ellipse([Tr((c[0] - r, c[1] + r)), Tr((c[0] + r, c[1] - r))], outline=(70, 45, 20))
         for e in engrave:
-            c, r = e[1], max(e[2], 0.6)
+            c, r = e[1], e[2]
             d.ellipse([Tr((c[0] - r, c[1] + r)), Tr((c[0] + r, c[1] - r))], fill=(40, 25, 10))
         for e in ents:
             pts = [Tr(p) for p in sampled(e, 0.5)]
@@ -314,7 +913,7 @@ def preview(path, results):
     im.save(path)
 
 
-DECAL_PX = 8.0                      # px per mm in the Onshape decal images
+DECAL_MAX = 4096                    # Onshape's decal image limit, px a side
 BURN = (52, 32, 14, 235)            # what a laser score/engrave on birch looks like, roughly
 
 
@@ -325,17 +924,18 @@ def decal_png(path, ents, score, engrave):
     xs = [p[0] for e in ents for p in sampled(e)]
     ys = [p[1] for e in ents for p in sampled(e)]
     W, H = max(xs), max(ys)
-    k = DECAL_PX
+    k = min(12.0, (DECAL_MAX - 2) / max(W, H))      # as fine as the decal limit allows
     im = Image.new("RGBA", (round(W * k), round(H * k)), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
     Tr = lambda p: (p[0] * k, (H - p[1]) * k)
-    lw = max(2, round(0.35 * k))
+    lw = max(1, round(0.16 * k))
     for e in score:
         if e[0] == "L":
             d.line([Tr(e[1]), Tr(e[2])], fill=BURN, width=lw)
         else:
             c, r = e[1], e[2]
             d.ellipse([Tr((c[0] - r, c[1] + r)), Tr((c[0] + r, c[1] - r))], outline=BURN, width=lw)
+    # (score lines are drawn ~0.16 mm wide: about what one pass of the beam leaves)
     for e in engrave:
         c, r = e[1], e[2]
         d.ellipse([Tr((c[0] - r, c[1] + r)), Tr((c[0] + r, c[1] - r))], fill=BURN)
@@ -344,24 +944,21 @@ def decal_png(path, ents, score, engrave):
 
 
 def check(name, ents, allowed, score, engrave):
-    """Every etch mark inside the allowed area (with its own half-width)."""
-    bad = 0
-    region = allowed.buffer(0.05)
-    for e in score:
-        g = LineString([e[1], e[2]]) if e[0] == "L" else Point(e[1]).buffer(e[2]).exterior
-        if not g.within(region):
-            # the dial rings and the knob-to-trace stubs live in the knob keep-out by design
-            if not ("bezel" in name):
-                bad += 1
-    for e in engrave:
-        if not Point(e[1]).buffer(e[2]).within(region):
-            bad += 1
-    # nothing etched within 1.5 mm of any cut path, knobs included
-    cutlines = unary_union([LineString(sampled(e)) for e in ents])
+    """(marks outside the allowed area, marks within 1.5 mm of any cut path)."""
+    region = prep(allowed.buffer(0.05))
+    outline, holes, knobs = part_regions(ents)
+    dials = prep(unary_union([Point(k).buffer(DIAL_KEEP + 0.05) for k in knobs])) if knobs else None
     shape = lambda e, filled: (LineString([e[1], e[2]]) if e[0] == "L"
-                               else Point(e[1]).buffer(e[2]) if filled else Point(e[1]).buffer(e[2]).exterior)
-    near = (sum(1 for e in score if shape(e, False).distance(cutlines) < 1.5)      # score rings are rings
-            + sum(1 for e in engrave if shape(e, True).distance(cutlines) < 1.5))
+                               else Point(e[1]).buffer(e[2], 8) if filled else Point(e[1]).buffer(e[2], 8).exterior)
+    bad = 0
+    for e, filled in [(e, False) for e in score] + [(e, True) for e in engrave]:
+        g = shape(e, filled)
+        # the dials live in the knob keep-out by design
+        if not region.contains(g) and not (dials and dials.contains(g)):
+            bad += 1
+    cutzone = prep(unary_union([LineString(sampled(e)) for e in ents]).buffer(1.5))
+    near = sum(1 for e in score if cutzone.intersects(shape(e, False))) + \
+        sum(1 for e in engrave if cutzone.intersects(shape(e, True)))
     return bad, near
 
 
@@ -380,7 +977,8 @@ def main():
         decal_png(os.path.join(OUT, stem + ".decal.png"), ents, score, engrave)
         bad, near = check(name, ents, allowed, score, engrave)
         problems += bad + near
-        print(f"{name:22s} score {len(score):5d}  engrave {len(engrave):4d}  outside-area {bad}  "
+        length = sum(math.dist(e[1], e[2]) if e[0] == "L" else 2 * math.pi * e[2] for e in score) / 1000
+        print(f"{name:22s} score {len(score):6d} marks, {length:6.1f} m  outside-area {bad}  "
               f"within 1.5 mm of a cut {near}")
     preview(os.path.join(OUT, "preview.png"), results)
     if problems:
