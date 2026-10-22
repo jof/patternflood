@@ -65,6 +65,28 @@ leads, should cure it.
 - `r75_frame.py`'s seam test (border, diagonals, ring, centre cross) runs
   continuously across all four seams: the 2×2 is one 128×128 display.
 
+## receiver75 in flash, 2026-10-21
+
+```sh
+glasgow script ecp5_flash_write.py jtag-probe -V 3.3 -f 2000 -- colorlight_5a_75b.bit 0
+glasgow script ecp5_flash_write.py jtag-probe -V 3.3 -f 2000 -- status   # read-only
+```
+
+- The stock firmware ships the flash with **SR1 = 0x1C** (BP2..0 set), which
+  protects the whole array. SRP0/SRP1/CMP are 0, so it's software-only.
+- The script clears the protection with a one-byte `01 00`. This GD25Q32C
+  ignores the two-byte `01 xx yy` form. It then erases, programs, verifies every
+  byte, and restores 0x1C.
+- receiver75 (663,499 bytes) was written at offset 0 and verified.
+- **The card boots it after a power cycle**: dark, answering ARP at
+  192.168.75.39. The `LSC_REFRESH` at the end of the script doesn't reboot this
+  card; power-cycle it.
+- The rest of the stock contents (second image at 0x200000, data blocks) are
+  still in place but unused.
+- No IP config block is written. The config location (byte 4,000,000 =
+  0x3D0900) is blank, so the patched BIOS keeps the built-in IP.
+- To restore stock, write the backup image from offset 0.
+
 ## Knobs → patterns (bench demo)
 
 The FeatherS3 knob bridge is on ash's USB, and the card is on durian's USB NIC.
