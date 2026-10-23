@@ -58,6 +58,24 @@ the board edge.
 - **The adapter must be gigabit** (e.g. RTL8153 or ASIX AX88179). The 5A-75B
   won't link at 100 Mbit. Over the Zero's USB 2.0 it runs at about 300 Mbit/s,
   far more than the frames need.
+- **⚠ Don't power the adapter from the Zero's port.** On 2026-10-22 two RTL8153
+  adapters (a generic one and an Anker) never worked on the bare port. Details are
+  in §5. Give the adapter its own 5 V (§2.1), or use a Pi with Ethernet on board.
+
+### 2.1 Power-injected USB extension (the fix to try)
+
+Open a USB-A extension's jacket partway along, between the OTG dongle and the
+adapter:
+
+| Wire | Change |
+|---|---|
+| Red (VBUS) | **Cut.** Adapter-side end to the LRS +5 V; tape off the Pi-side end |
+| Black (GND) | Leave it continuous to the Pi, **and** run a wire from it to the LRS GND |
+| Green (D+), white (D−), shield | Unchanged |
+
+The adapter then draws from the PSU, and the Zero's port carries data only. Never
+join the two 5 V feeds: the Pi-side red stays cut. A powered USB hub does the same
+job.
 - The appliance gives any wired interface 192.168.75.1/24. receiver75 is at
   192.168.75.39.
 
@@ -71,10 +89,48 @@ Two options, both from the LRS-50-5's 5 V (trim to about 5.15 V, as in
 - **Header pin 2 (5 V) and pin 6 (GND).** Tidier inside the box, but it
   bypasses the micro-USB input's protection, so the supply has to be right.
 
-The Zero W draws about 0.2–0.35 A, plus about 0.15–0.3 A for the USB gigabit
-adapter. That's well inside the budget the Pi 5 was planned for.
+The Zero W draws about 0.2–0.35 A. The USB gigabit adapter draws more than first
+assumed: an Anker RTL8153 measured **0.41 A** on a PC with no link. Budget about
+0.5 A for it, from its own feed (§2.1).
 
-## 4. Bring-up check
+## 4. Serial console
+
+`enable_uart=1` puts the Pi's console on the header: GPIO14 TXD (pin 8) and GPIO15
+RXD (pin 10), 115200. Free grounds are pins 9, 14, 20, 25, 30, 34 and 39; pin 6 is the
+knob chain's. With a Glasgow on port B, Pi TXD → B0 and Pi RXD → B1:
+
+    glasgow run uart -V B=3.3 --rx B0 --tx B1 -b 115200 tty
+
+The Glasgow reset off its host's USB twice when the Pi powered up, probably from the
+power-on surge on the shared ground. Rerun the applet if the console stops.
+
+## 5. USB Ethernet on the bare Zero port: findings, 2026-10-22
+
+Kernel 6.18.50, `dwc_otg` in host mode through a micro-B-to-A OTG dongle:
+
+| Test | Result |
+|---|---|
+| SanDisk USB stick, through the dongle (and through dongle + extension) | **High speed**, every time |
+| Generic RTL8153, Anker RTL8153 | No connect at all on some boots (`HPRT0 = 0x00001000`, D+ never pulled up). On others, **full speed with `device descriptor read/64, error -71`**, then the hub driver powers the port off |
+| Same adapters on ash (xHCI) | Enumerate at once, at high speed |
+| 5 V at the header, meter min-hold through boot | **5.045 V** min, 4.993 V with the Anker drawing; `throttled=0x0` |
+| 5 V at the adapter on the Pi (inline USB meter) | 4.89 V, 0.635 A; later **4.81 V, 0.90 A**, and the Anker got hot |
+| Anker on ash, same meter (no data) | 4.62 V, **0.41 A** |
+| Panels and encoders off the PSU | No change |
+| Hot-plugging an adapter | **Resets the Pi** (brown-out: the console stops with no panic) |
+| True cold start (PSU off, adapter in, PSU on) | Still no connect |
+
+- The Anker no longer enumerated on ash afterwards. Take it as damaged.
+- The data path is fine, since the stick works through it. The supply level is fine too.
+- The adapters misbehave only when powered from the Zero's port: they draw 1.5–2× their PC current and won't connect.
+- The mechanism isn't pinned down without a scope; candidates are port noise and latch-up after the brown-outs. `dwc_otg.speed=1` doesn't help, because full speed already fails, and it's too slow for frames anyway.
+- **Don't plug these adapters into the bare port.** Use §2.1, a powered hub, or a Pi with Ethernet on board.
+
+`~/patternflood-debug/` on ash keeps the UART console log and `usb-flex.sh`. That
+script shows the port's state on the ACT LED at 20 Hz (off / blinking for D+ pulled up /
+solid once enumerated), for cable-flex tests.
+
+## 6. Bring-up check
 
 1. Power the Pi with the knobs and the card connected. First boot takes a few
    minutes: it resizes the card and installs numpy over Wi-Fi.

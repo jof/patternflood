@@ -90,8 +90,9 @@ glasgow script ecp5_flash_write.py jtag-probe -V 3.3 -f 2000 -- status   # read-
 ## Boot splash
 
 Built 2026-10-22 on receiver75 branch `boot-splash` (worktree
-`~/src/ext/receiver75-boot-splash`). **Works in SRAM, 2026-10-22: the spinner
-shows after a load. Not flashed yet.** The image flashed before it is kept at
+`~/src/ext/receiver75-boot-splash`). **In flash since 2026-10-22, verified byte
+for byte. The spinner was seen after an SRAM load; at power-on from flash it
+hasn't been looked at yet.** The image flashed before it is kept at
 `~/colorlight-5a75b-v8.2-backup/receiver75/receiver75-74a525e-before-splash.bit`.
 
 - The first load stayed dark. LiteX's `sdram_init()` memtests 2 MiB from
