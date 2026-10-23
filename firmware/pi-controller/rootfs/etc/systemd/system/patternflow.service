@@ -1,0 +1,20 @@
+[Unit]
+Description=Patternflow knob renderer (2x2 P2 panels via Colorlight 5A-75B / receiver75)
+After=network.target cloud-final.service
+StartLimitIntervalSec=0
+
+[Service]
+User=patternflow
+Group=patternflow
+WorkingDirectory=/opt/patternflow
+# Steady frame timing on the single-core Zero W.
+ExecStartPre=+/bin/sh -c 'echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor || true'
+# numpy arrives with cloud-init's first-boot package install; until then, retry.
+ExecStartPre=/usr/bin/python3 -c "import numpy"
+ExecStart=/usr/bin/python3 -u /opt/patternflow/knob_renderer.py --knobs i2c --eth-ip 192.168.75.39 --res 64 --fps 30
+Nice=-5
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,19 @@
+#cloud-config
+# Patternflow controller (Pi Zero W). First-boot setup by cloud-init (NoCloud,
+# seeded from /boot/firmware). The user is created by userconf.txt (pi -> jof),
+# not here, so the two first-boot mechanisms don't collide; Wi-Fi is in
+# network-config. Everything else lives in the rootfs, written by provision_card.py.
+
+hostname: patternflow
+manage_etc_hosts: true
+
+ssh_pwauth: false
+
+package_update: true
+packages:
+  - python3-numpy
+  - i2c-tools
+
+runcmd:
+  - systemctl disable --now hciuart.service || true
+  - systemctl restart patternflow.service || true

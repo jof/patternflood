@@ -1,0 +1,18 @@
+# Point-to-point gigabit link to the Colorlight card (receiver75 at 192.168.75.39).
+# No interface-name: applies to whichever USB Ethernet adapter is plugged in.
+# The 5A-75B will not link at 100 Mbit, so the adapter must be gigabit.
+[connection]
+id=colorlight
+type=ethernet
+autoconnect=true
+autoconnect-priority=10
+
+[ethernet]
+
+[ipv4]
+method=manual
+address1=192.168.75.1/24
+never-default=true
+
+[ipv6]
+method=disabled
