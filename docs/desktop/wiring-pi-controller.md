@@ -119,12 +119,14 @@ Kernel 6.18.50, `dwc_otg` in host mode through a micro-B-to-A OTG dongle:
 | Panels and encoders off the PSU | No change |
 | Hot-plugging an adapter | **Resets the Pi** (brown-out: the console stops with no panic) |
 | True cold start (PSU off, adapter in, PSU on) | Still no connect |
+| **Pi Zero 2 W** (patternflood card, same dongle chain, RTL8153) | **Same:** port powered, no connect, after a minute |
 
 - The Anker no longer enumerated on ash afterwards. Take it as damaged.
-- The data path is fine, since the stick works through it. The supply level is fine too.
-- The adapters misbehave only when powered from the Zero's port: they draw 1.5–2× their PC current and won't connect.
-- The mechanism isn't pinned down without a scope; candidates are port noise and latch-up after the brown-outs. `dwc_otg.speed=1` doesn't help, because full speed already fails, and it's too slow for frames anyway.
-- **Don't plug these adapters into the bare port.** Use §2.1, a powered hub, or a Pi with Ethernet on board.
+- Two different Zeros fail the same way, so it isn't one bad board. Both tests shared the OTG dongle and the PSU.
+- RTL8153 adapters on Zeros are a common working setup elsewhere, so **the dongle is the main suspect**. The stick proved its data lines, but only at about a tenth of the adapter's 0.4–0.9 A.
+- The supply level at the Pi is fine.
+- The mechanism isn't pinned down without a scope; candidates are the dongle's contacts under load, and latch-up after the brown-outs. `dwc_otg.speed=1` doesn't help, because full speed already fails, and it's too slow for frames anyway.
+- **Next:** replace the dongle with a proper micro-B-to-A OTG cable, ideally a "Y" one with a separate power input. Or use §2.1, or a powered hub. Don't hot-plug adapters on the Zero.
 
 `~/patternflood-debug/` on ash keeps the UART console log and `usb-flex.sh`. That
 script shows the port's state on the ACT LED at 20 Hz (off / blinking for D+ pulled up /
