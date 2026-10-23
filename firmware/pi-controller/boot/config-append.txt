@@ -5,3 +5,5 @@ dtparam=i2c_arm=on
 dtparam=i2c_arm_baudrate=100000
 # No Bluetooth on the appliance.
 dtoverlay=disable-bt
+# Serial console on GPIO14/15 (pins 8/10), 115200; cmdline.txt already has console=serial0.
+enable_uart=1

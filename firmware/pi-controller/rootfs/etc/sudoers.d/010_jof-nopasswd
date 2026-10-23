@@ -1,0 +1,3 @@
+# Passwordless sudo for the appliance user (renamed from pi by userconf.txt).
+# Pi OS trixie no longer ships a pi-nopasswd rule that would follow the rename.
+jof ALL=(ALL) NOPASSWD: ALL

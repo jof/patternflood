@@ -25,11 +25,13 @@ the Colorlight card. Wiring: [`docs/desktop/wiring-pi-controller.md`](../../docs
 
 | | |
 |---|---|
-| User | `pi` renamed to `jof` by `userconf.txt` (password in `a password file` on ash); SSH key only; passwordless sudo |
+| User | `pi` renamed to `jof` by `userconf.txt` (password in `a password file` on ash); SSH key only; passwordless sudo from `/etc/sudoers.d/010_jof-nopasswd` (trixie has no pi-nopasswd rule to inherit) |
 | Host | `patternflood` / `patternflood.local` (avahi) |
 | Wi-Fi | via cloud-init `network-config` (regulatory domain US) |
 | Card link | NetworkManager `colorlight`: any wired interface → 192.168.75.1/24, no default route |
 | I²C | `i2c_arm` on at 100 kHz, `i2c-dev` loaded; Bluetooth off |
+| Serial console | `enable_uart=1`: GPIO14 TXD (pin 8), GPIO15 RXD (pin 10), 115200. With a Glasgow on port B: `glasgow run uart -V 3.3 --rx B0 --tx B1 -b 115200 tty` |
+| Login | `update-motd.d/05-patternflood`: wordmark, plus renderer, card link and power (under-voltage) status |
 | First boot | cloud-init installs `python3-numpy` and `i2c-tools` |
 | Service | `patternflood.service` runs `/opt/patternflood/knob_renderer.py --knobs i2c --res 64 --fps 30` as user `patternflood` (group i2c), CPU governor `performance`, restarts forever |
 | Boot splash | `pf-splash` moves the card's progress bar on (below); needs `arm-linux-gnueabihf-gcc` on the provisioning host |

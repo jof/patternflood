@@ -88,7 +88,14 @@ def main():
     for src in sorted((HERE / "rootfs").rglob("*")):
         if src.is_file():
             rel = src.relative_to(HERE / "rootfs")
-            mode = 0o600 if "system-connections" in rel.parts else 0o755 if "initramfs-tools" in rel.parts else 0o644
+            if "system-connections" in rel.parts:
+                mode = 0o600
+            elif "sudoers.d" in rel.parts:
+                mode = 0o440
+            elif "initramfs-tools" in rel.parts or "update-motd.d" in rel.parts:
+                mode = 0o755
+            else:
+                mode = 0o644
             install(src, root / rel, mode)
     for name in RENDERER_FILES:
         install(RENDERER / name, root / "opt/patternflood" / name, 0o755 if name == "knob_renderer.py" else 0o644)
