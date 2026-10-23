@@ -18,7 +18,7 @@ Nobody touches a knob.
 
 ## 1. Why this is its own project
 
-Splitting this off the Patternflow build is right, and the clearest argument is
+Splitting this off the desktop (Patternflood) build is right, and the clearest argument is
 that the two projects want **opposite things**:
 
 | | [Desktop](../desktop/) | Wall (this) |

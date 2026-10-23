@@ -1,4 +1,4 @@
-# Project B — Patternflow Desktop
+# Project B — Patternflood (desktop)
 
 **Status: enclosure modelled; driver bring-up next.** Redesigned 2026-10-12.
 

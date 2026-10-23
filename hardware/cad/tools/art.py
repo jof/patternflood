@@ -99,7 +99,7 @@ def part_regions(ents):
 #   empty on purpose) -> tiny hidden text in some of the empty ones.
 DIRS = [(1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1)]
 KNOB_NAMES = ["BRIGHT", "NETWORK", "VALUES", "PATTERN"]        # K1..K4, reading order
-EGGS = ["LOOK CLOSER", "HELLO FROM INSIDE", "MADE OF LIGHT", "PATTERNFLOW", "NO USER SERVICEABLE PARTS",
+EGGS = ["LOOK CLOSER", "HELLO FROM INSIDE", "MADE OF LIGHT", "PATTERNFLOOD", "NO USER SERVICEABLE PARTS",
         "128 X 128", "IN LOW OUT HIGH", "KERF 0.15", "FM6124", "RUC7258", "5A-75B", "WAS HERE",
         "TURN ME", "SEE YOU IN THE GRID", "GND IS A STATE OF MIND"]
 
@@ -758,11 +758,11 @@ def generate(name, seed):
         dial(b, c, KNOB_NAMES[k] if k < len(KNOB_NAMES) else f"K{k + 1}")
     A = allowed.area
     if name.startswith("back-cover"):
-        b.title_block(["PATTERNFLOW / DESKTOP", "REV 2  2026-10", "128 X 128  P2 GOB X4", "PI 5 + 5A-75B",
+        b.title_block(["PATTERNFLOOD / DESKTOP", "REV 2.1  2026-10", "128 X 128  P2 GOB X4", "PI 5 + 5A-75B",
                        "LRS-50-5  5V 10A", "BIRCH 3.18  KERF 0.15"])
     if name.startswith("bezel"):
         b.lissajous(11)
-    msg, mod = QR_MESSAGES.get(name, ("PATTERNFLOW", 0.8))
+    msg, mod = QR_MESSAGES.get(name, ("PATTERNFLOOD", 0.8))
     b.qr(msg, module=mod)
     big = A > 20000
     for _ in range(max(1 if big else 0, int(A / 16000))):
@@ -810,7 +810,7 @@ QR_FILL = 0.12       # QR dark-module fill pitch: a little under BEAM, so it bur
 QR_FOUND = {}        # part -> [(message, box)], filled by generate(), checked by verify_qr()
 # one real QR code per part: (text, module size mm). Phone cameras read 0.8 mm modules fine.
 QR_MESSAGES = {
-    "back-cover.dxf": ("PATTERNFLOW DESKTOP / REV 2 / 2026 - 128x128 P2 GOB - RASPBERRY PI 5 + COLORLIGHT 5A-75B "
+    "back-cover.dxf": ("PATTERNFLOOD DESKTOP / REV 2.1 / 2026 - 128x128 P2 GOB - RASPBERRY PI 5 + COLORLIGHT 5A-75B "
                        "- LRS-50-5 - BALTIC BIRCH 3.18 - IF YOU CAN READ THIS, YOU LOOKED CLOSE ENOUGH", 1.0),
     "bezel-outer.dxf": ("TURN THE KNOBS", 0.8),
     "wall-left.dxf": ("LOOK CLOSER", 0.8),

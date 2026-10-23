@@ -1,5 +1,5 @@
 
-# --- patternflow controller ---
+# --- patternflood controller ---
 # Knob chain (4x Adafruit 4991 seesaw) on the header's I2C: GPIO2 SDA (pin 3), GPIO3 SCL (pin 5).
 dtparam=i2c_arm=on
 dtparam=i2c_arm_baudrate=100000

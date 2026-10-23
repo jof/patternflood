@@ -238,7 +238,7 @@ a 5 V buck — plus the cell-balancing, thermal cutoff and mechanical protection
 that make a lithium pack safe in a wooden or plastic box you carry around.
 
 That is a genuinely good project and a completely different one from building a
-Patternflow. **The sealed bank is the right v1** and it is not a compromise you
+Patternflood. **The sealed bank is the right v1** and it is not a compromise you
 have to undo later: the PD trigger + buck stage stays identical if you ever
 swap the bank for a custom pack. Only the thing upstream of the trigger board
 changes.

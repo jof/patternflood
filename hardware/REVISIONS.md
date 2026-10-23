@@ -107,6 +107,13 @@ between slits at the inner end. The etched dial moved outside it (rings at
 r 18.6/19.4, ticks to r 22). Constants `KNOB_SLITS`, `KNOB_SLIT_R0/R1/W` in
 `enclosure.fs`.
 
+**Renamed Patternflood (2026-10-22).** The back cover's etched title block and QR
+code now read "PATTERNFLOOD / DESKTOP / REV 2.1", and the "PATTERNFLOW" easter
+egg became "PATTERNFLOOD". `art.py` was re-run, then `nest_sheets.py`. Only the
+back-cover art and sheet 2's SVG/PNG changed; the other parts regenerate
+byte-identical, and every QR still decodes. The back-cover decal is part of the
+`decals.py` step below.
+
 **Model sync pending.** The model
 change is in `enclosure.fs` but not pushed, and `bezel-outer.dxf` was patched to
 match it by a one-off script mirroring the FeatureScript exactly. To sync:

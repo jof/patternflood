@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Turn a freshly written Raspberry Pi OS Lite (trixie, armhf) card into the patternflow controller.
+"""Turn a freshly written Raspberry Pi OS Lite (trixie, armhf) card into the patternflood controller.
 
 Run as root against the card's mounted partitions:
 
@@ -19,7 +19,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 RENDERER = HERE.parent / "colorlight"
 RENDERER_FILES = ["knob_renderer.py", "r75_frame.py", "seesaw.py"]
-MARKER = "# --- patternflow controller ---"
+MARKER = "# --- patternflood controller ---"
 FIRST_UID = 1000                        # the image's "pi" user, renamed by userconf.txt
 
 
@@ -82,11 +82,11 @@ def main():
             mode = 0o600 if "system-connections" in rel.parts else 0o644
             install(src, root / rel, mode)
     for name in RENDERER_FILES:
-        install(RENDERER / name, root / "opt/patternflow" / name, 0o755 if name == "knob_renderer.py" else 0o644)
-    wants = root / "etc/systemd/system/multi-user.target.wants/patternflow.service"
+        install(RENDERER / name, root / "opt/patternflood" / name, 0o755 if name == "knob_renderer.py" else 0o644)
+    wants = root / "etc/systemd/system/multi-user.target.wants/patternflood.service"
     if not wants.is_symlink():
-        wants.symlink_to("/etc/systemd/system/patternflow.service")
-        print(f"  {wants} -> /etc/systemd/system/patternflow.service")
+        wants.symlink_to("/etc/systemd/system/patternflood.service")
+        print(f"  {wants} -> /etc/systemd/system/patternflood.service")
 
     home = root / "home/pi"                 # usermod -m moves it to /home/jof at first boot
     ssh_dir = home / ".ssh"

@@ -1,4 +1,4 @@
-// Patternflow desktop - development knob bridge.
+// Patternflood desktop - development knob bridge.
 //
 // Scans the FeatherS3's STEMMA QT bus for Adafruit 4991 seesaw encoders
 // (0x36-0x3D, set by the A0-A2 jumpers) and reports them over USB serial,

@@ -26,19 +26,19 @@ the Colorlight card. Wiring: [`docs/desktop/wiring-pi-controller.md`](../../docs
 | | |
 |---|---|
 | User | `pi` renamed to `jof` by `userconf.txt` (password in `a password file` on ash); SSH key only; passwordless sudo |
-| Host | `patternflow` / `patternflow.local` (avahi) |
+| Host | `patternflood` / `patternflood.local` (avahi) |
 | Wi-Fi | via cloud-init `network-config` (regulatory domain US) |
 | Card link | NetworkManager `colorlight`: any wired interface → 192.168.75.1/24, no default route |
 | I²C | `i2c_arm` on at 100 kHz, `i2c-dev` loaded; Bluetooth off |
 | First boot | cloud-init installs `python3-numpy` and `i2c-tools` |
-| Service | `patternflow.service` runs `/opt/patternflow/knob_renderer.py --knobs i2c --res 64 --fps 30` as user `patternflow` (group i2c), CPU governor `performance`, restarts forever |
+| Service | `patternflood.service` runs `/opt/patternflood/knob_renderer.py --knobs i2c --res 64 --fps 30` as user `patternflood` (group i2c), CPU governor `performance`, restarts forever |
 
 To update the renderer on a running Pi:
 
 ```sh
-scp ../colorlight/{knob_renderer,r75_frame,seesaw}.py jof@patternflow.local:/tmp/
-ssh jof@patternflow.local 'sudo install -m 644 /tmp/{r75_frame,seesaw}.py /opt/patternflow/ \
-    && sudo install -m 755 /tmp/knob_renderer.py /opt/patternflow/ && sudo systemctl restart patternflow'
+scp ../colorlight/{knob_renderer,r75_frame,seesaw}.py jof@patternflood.local:/tmp/
+ssh jof@patternflood.local 'sudo install -m 644 /tmp/{r75_frame,seesaw}.py /opt/patternflood/ \
+    && sudo install -m 755 /tmp/knob_renderer.py /opt/patternflood/ && sudo systemctl restart patternflood'
 ```
 
 Not done yet: a read-only root filesystem (overlayfs) before the box is closed.

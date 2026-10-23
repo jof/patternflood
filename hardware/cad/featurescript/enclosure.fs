@@ -19,7 +19,7 @@ ArtBackCover::import(path : "7d8f74de8d66542a9f28ae5b", version : "a955c273ef643
 // ART IMPORTS END
 
 /**
- * Patternflow desktop enclosure — parametric features.
+ * Patternflood desktop enclosure — parametric features.
  *
  * Laser-cut 3 mm finger-joint box, a 2 x 2 array of Waveshare P2 64x64 GOB
  * panels driven by a Colorlight 5A-75B receiver card and a Raspberry Pi 5,

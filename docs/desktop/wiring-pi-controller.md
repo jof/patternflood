@@ -78,7 +78,7 @@ adapter. That's well inside the budget the Pi 5 was planned for.
 
 1. Power the Pi with the knobs and the card connected. First boot takes a few
    minutes: it resizes the card and installs numpy over Wi-Fi.
-2. `ssh jof@patternflow.local`
+2. `ssh jof@patternflood.local`
 3. `i2cdetect -y 1` should show 37, 38, 39 and 3a.
-4. `journalctl -u patternflow -f` should show the `knobs:` line, then a
+4. `journalctl -u patternflood -f` should show the `knobs:` line, then a
    frames-per-second line every 5 s.

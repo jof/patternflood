@@ -1,4 +1,4 @@
-# Patternflow — personal fork, and what grew out of it
+# Patternflood — a Patternflow fork, and what grew out of it
 
 Two projects with one shared inspiration: [Patternflow](https://github.com/engmung/patternflow),
 an open-source LED synthesizer you play with four knobs.
@@ -34,10 +34,14 @@ small enough that four of them make the instrument, and four panels want a
 Colorlight 5A-75B and a Pi rather than an ESP32 —
 [`docs/desktop/driver-colorlight.md`](docs/desktop/driver-colorlight.md).
 
+*2026-10-22:* renamed **Patternflood**. It started as a Patternflow fork, but it
+no longer runs upstream's code, so it gets its own name. "Patternflow" in these
+docs now means the upstream project.
+
 ## Layout
 
 ```
-docs/desktop/    Project B — the Patternflow fork
+docs/desktop/    Project B — Patternflood, the desktop build
 docs/wall/       Project A — the room-interactive wall
 firmware/        patch series against upstream (desktop build)
 hardware/cad/    vendor STEP models (MIT, from Adafruit_CAD_Parts)
