@@ -32,6 +32,7 @@ the Colorlight card. Wiring: [`docs/desktop/wiring-pi-controller.md`](../../docs
 | I²C | `i2c_arm` on at 100 kHz, `i2c-dev` loaded; Bluetooth off |
 | First boot | cloud-init installs `python3-numpy` and `i2c-tools` |
 | Service | `patternflood.service` runs `/opt/patternflood/knob_renderer.py --knobs i2c --res 64 --fps 30` as user `patternflood` (group i2c), CPU governor `performance`, restarts forever |
+| Boot splash | `pf-splash` moves the card's progress bar on (below); needs `arm-linux-gnueabihf-gcc` on the provisioning host |
 
 To update the renderer on a running Pi:
 
@@ -40,5 +41,33 @@ scp ../colorlight/{knob_renderer,r75_frame,seesaw}.py jof@patternflood.local:/tm
 ssh jof@patternflood.local 'sudo install -m 644 /tmp/{r75_frame,seesaw}.py /opt/patternflood/ \
     && sudo install -m 755 /tmp/knob_renderer.py /opt/patternflood/ && sudo systemctl restart patternflood'
 ```
+
+## Boot splash
+
+The card draws a spinner and a five-step bar from power-on, until the renderer
+takes the display (receiver75's `bios/splash.c`; see
+[`../colorlight/README.md`](../colorlight/README.md#boot-splash)). The Pi moves the
+bar on with `pf-splash STEP`:
+
+| Step | Lit by | When |
+|---|---|---|
+| 1 | the card's BIOS | power-on, about 2 s |
+| 2 | initramfs (`init-premount/patternflood-splash`, in the background) | kernel up |
+| 3 | `patternflood-splash-early.service` (sysinit, after `udevadm settle`) | systemd up |
+| 4 | `patternflood-splash-network.service` | NetworkManager up; on first boot it sits here through cloud-init's package install |
+| 5 | `patternflood.service`'s `ExecStartPre` | renderer starting (numpy import) |
+
+When `patternflood.service` stops or restarts, its `ExecStopPost` runs `pf-splash --show 5`, which puts the spinner back.
+
+`pf-splash` (in `pf-splash/`) is freestanding C: raw syscalls, no libc, 3.6 KB, ARMv6.
+It writes the card's CSRs with the same 8-byte UDP packets as `r75_frame.poke()`, built
+by hand and sent as raw Ethernet frames to `10:e2:d5:00:00:00`. That way it needs no IP
+address or ARP, only link, so it works before NetworkManager. It finds the NIC with
+ioctls, not `/sys`, because the initramfs copy outlives the switch to the real root.
+`make host` builds an x86-64 copy for testing.
+
+The initramfs hook is picked up by cloud-init's `update-initramfs -u` on first
+boot, so step 2 first shows on the second boot. Steps out of order (2 arriving
+after 3) are ignored: the bar only moves forward.
 
 Not done yet: a read-only root filesystem (overlayfs) before the box is closed.

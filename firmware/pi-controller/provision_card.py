@@ -14,6 +14,7 @@ import argparse
 import json
 import os
 import shutil
+import subprocess
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -21,6 +22,12 @@ RENDERER = HERE.parent / "colorlight"
 RENDERER_FILES = ["knob_renderer.py", "r75_frame.py", "seesaw.py"]
 MARKER = "# --- patternflood controller ---"
 FIRST_UID = 1000                        # the image's "pi" user, renamed by userconf.txt
+# unit -> the target that pulls it in
+UNITS = {
+    "patternflood.service": "multi-user.target",
+    "patternflood-splash-early.service": "sysinit.target",
+    "patternflood-splash-network.service": "multi-user.target",
+}
 
 
 def install(src, dst, mode, uid=0, gid=0):
@@ -52,6 +59,8 @@ def main():
     boot, root = args.boot, args.root
     assert (boot / "cmdline.txt").exists() and (root / "etc/os-release").exists(), "not a Pi OS card"
     assert os.geteuid() == 0, "run as root (files are written root-owned)"
+    # The boot splash sender, cross-built for the Zero's ARMv6 (needs arm-linux-gnueabihf-gcc).
+    subprocess.run(["make", "-C", str(HERE / "pf-splash")], check=True)
 
     print("boot partition:")
     install(args.userconf, boot / "userconf.txt", 0o600)
@@ -79,14 +88,17 @@ def main():
     for src in sorted((HERE / "rootfs").rglob("*")):
         if src.is_file():
             rel = src.relative_to(HERE / "rootfs")
-            mode = 0o600 if "system-connections" in rel.parts else 0o644
+            mode = 0o600 if "system-connections" in rel.parts else 0o755 if "initramfs-tools" in rel.parts else 0o644
             install(src, root / rel, mode)
     for name in RENDERER_FILES:
         install(RENDERER / name, root / "opt/patternflood" / name, 0o755 if name == "knob_renderer.py" else 0o644)
-    wants = root / "etc/systemd/system/multi-user.target.wants/patternflood.service"
-    if not wants.is_symlink():
-        wants.symlink_to("/etc/systemd/system/patternflood.service")
-        print(f"  {wants} -> /etc/systemd/system/patternflood.service")
+    install(HERE / "pf-splash/pf-splash", root / "usr/local/sbin/pf-splash", 0o755)
+    for unit, target in UNITS.items():
+        wants = root / f"etc/systemd/system/{target}.wants" / unit
+        wants.parent.mkdir(parents=True, exist_ok=True)
+        if not wants.is_symlink():
+            wants.symlink_to(f"/etc/systemd/system/{unit}")
+            print(f"  {wants} -> /etc/systemd/system/{unit}")
 
     home = root / "home/pi"                 # usermod -m moves it to /home/jof at first boot
     ssh_dir = home / ".ssh"

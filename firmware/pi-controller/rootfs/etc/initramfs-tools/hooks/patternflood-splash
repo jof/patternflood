@@ -1,0 +1,16 @@
+#!/bin/sh
+# Boot splash step 2 needs pf-splash and the USB gigabit NIC's driver in the
+# initramfs. See scripts/init-premount/patternflood-splash.
+PREREQ=""
+prereqs() { echo "$PREREQ"; }
+case "$1" in
+prereqs) prereqs; exit 0 ;;
+esac
+
+. /usr/share/initramfs-tools/hook-functions
+
+copy_exec /usr/local/sbin/pf-splash /sbin
+# RTL8153 (r8152, or cdc_ncm/cdc_ether in its CDC mode) and ASIX AX88179.
+for m in r8152 ax88179_178a cdc_ncm cdc_ether; do
+	manual_add_modules "$m"
+done

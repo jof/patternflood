@@ -1,0 +1,16 @@
+[Unit]
+Description=Boot splash step 3 on the Colorlight card: systemd is up
+DefaultDependencies=no
+After=systemd-udev-trigger.service
+Conflicts=shutdown.target
+Before=shutdown.target
+
+[Service]
+# simple, not oneshot: waiting for the card's link mustn't hold up boot.
+Type=simple
+# Let udev rename the NIC before pf-splash brings it up; an up interface can't be renamed.
+ExecStartPre=-/usr/bin/udevadm settle --timeout=20
+ExecStart=/usr/local/sbin/pf-splash -t 30 3
+
+[Install]
+WantedBy=sysinit.target

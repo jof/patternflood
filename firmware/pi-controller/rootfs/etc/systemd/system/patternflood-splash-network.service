@@ -1,0 +1,10 @@
+[Unit]
+Description=Boot splash step 4 on the Colorlight card: networking is up
+After=network.target NetworkManager.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/pf-splash -t 60 4
+
+[Install]
+WantedBy=multi-user.target

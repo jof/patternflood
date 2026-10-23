@@ -87,6 +87,46 @@ glasgow script ecp5_flash_write.py jtag-probe -V 3.3 -f 2000 -- status   # read-
   0x3D0900) is blank, so the patched BIOS keeps the built-in IP.
 - To restore stock, write the backup image from offset 0.
 
+## Boot splash
+
+Built 2026-10-22 on receiver75 branch `boot-splash` (worktree
+`~/src/ext/receiver75-boot-splash`). **Not yet loaded or flashed.**
+
+- From power-on, the card's BIOS draws a dim spinner and a five-step bar into
+  framebuffer bank 2 (words 98304 on), shows it, and animates it every 80 ms.
+- It stops drawing as soon as a host points `base_addr` at bank 0 or 1, as
+  `knob_renderer.py` does every frame. Pointing it back at bank 2 brings the
+  splash back.
+- The bar shows the step in `ctrl_scratch` (0x82000804). It only moves forward.
+  The Pi side is `../pi-controller/pf-splash`.
+- **The quadrant→slot map is compiled into the BIOS** (`bios/splash.c`, the same as
+  `QUADRANT_SLOTS` here). Change both if the panels are rewired.
+- New gateware, `CsrDramWriter`: the CPU writes SDRAM a whole 64-bit word at a
+  time through three new CSRs at the end of the `hub75_soc` bank
+  (`fb_address`/`fb_data_lo`/`fb_data_hi`, 0x8200280c–14).
+  - Why 64-bit words: the board grounds the SDRAM's DQM pins, so a narrower write would clobber the rest of its word.
+  - Every existing CSR address is unchanged.
+- Build: LUTs 67 %, BRAM 64 %. `sys_clk` meets timing (69.1 MHz against 64.6). `eth_rx` reaches 75.3 of
+  125 MHz, the same known failure as the flashed build, which works. BIOS 8.3 KiB.
+
+To test, load it into SRAM (a power cycle reverts to the flashed image):
+
+```sh
+B=~/src/ext/receiver75-boot-splash/gateware/build/colorlight_5a_75b/gateware
+glasgow script svf_play.py jtag-probe -V 3.3 -f 2000 -- $B/colorlight_5a_75b.svf
+```
+
+The spinner and the first bar segment should appear within a second or two.
+Then, from the host on the card's link:
+
+```sh
+python3 -c 'import socket, r75_frame as f; f.poke(socket.socket(socket.AF_INET, socket.SOCK_DGRAM), "192.168.75.39", 0x82000804, 3)'
+```
+
+That should light three segments. Starting `knob_renderer.py` should take the
+display over. If all of that works, flash it with
+`ecp5_flash_write.py ... -- $B/colorlight_5a_75b.bit 0`, as below.
+
 ## Knobs → patterns (bench demo)
 
 The FeatherS3 knob bridge is on ash's USB, and the card is on durian's USB NIC.

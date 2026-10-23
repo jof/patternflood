@@ -16,4 +16,6 @@ packages:
 
 runcmd:
   - systemctl disable --now hciuart.service || true
+  # Pick up the boot splash hook (rootfs/etc/initramfs-tools); step 2 shows from the next boot.
+  - update-initramfs -u || true
   - systemctl restart patternflood.service || true
