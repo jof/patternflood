@@ -1,6 +1,9 @@
 [Unit]
 Description=Patternflood knob renderer (2x2 P2 panels via Colorlight 5A-75B / receiver75)
-After=network.target cloud-final.service
+# Not After=cloud-final.service: cloud-final runs after multi-user.target, which waits
+# for this unit, so that's an ordering cycle and systemd drops this unit's start job.
+# The numpy check below retries until cloud-init's first-boot install lands.
+After=network.target
 StartLimitIntervalSec=0
 
 [Service]
