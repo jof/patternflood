@@ -90,7 +90,15 @@ glasgow script ecp5_flash_write.py jtag-probe -V 3.3 -f 2000 -- status   # read-
 ## Boot splash
 
 Built 2026-10-22 on receiver75 branch `boot-splash` (worktree
-`~/src/ext/receiver75-boot-splash`). **Not yet loaded or flashed.**
+`~/src/ext/receiver75-boot-splash`). **Works in SRAM, 2026-10-22: the spinner
+shows after a load. Not flashed yet.** The image flashed before it is kept at
+`~/colorlight-5a75b-v8.2-backup/receiver75/receiver75-74a525e-before-splash.bit`.
+
+- The first load stayed dark. LiteX's `sdram_init()` memtests 2 MiB from
+  `MAIN_RAM_BASE`, but `main_ram` here is the 4 KiB integrated RAM. The test
+  runs into unmapped addresses, each of which waits out the bus timeout, so it
+  never finishes. The stock BIOS hangs there too; nobody noticed, because the
+  host turned the display on over UDP. The BIOS now runs only the init sequence.
 
 - From power-on, the card's BIOS draws a dim spinner and a five-step bar into
   framebuffer bank 2 (words 98304 on), shows it, and animates it every 80 ms.
@@ -106,8 +114,8 @@ Built 2026-10-22 on receiver75 branch `boot-splash` (worktree
   (`fb_address`/`fb_data_lo`/`fb_data_hi`, 0x8200280c–14).
   - Why 64-bit words: the board grounds the SDRAM's DQM pins, so a narrower write would clobber the rest of its word.
   - Every existing CSR address is unchanged.
-- Build: LUTs 67 %, BRAM 64 %. `sys_clk` meets timing (69.1 MHz against 64.6). `eth_rx` reaches 75.3 of
-  125 MHz, the same known failure as the flashed build, which works. BIOS 8.3 KiB.
+- Build: LUTs 67 %, BRAM 64 %. `sys_clk` meets timing (66.8 MHz against 64.6). `eth_rx` misses
+  125 MHz, the same known failure as the flashed build, which works. BIOS 5.4 KiB.
 
 To test, load it into SRAM (a power cycle reverts to the flashed image):
 
