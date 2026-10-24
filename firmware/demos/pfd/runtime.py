@@ -152,7 +152,7 @@ class Runtime:
 
     def _menu_turn(self, k, d):
         if k == 0:
-            self.index = (self.index + (1 if d > 0 else -1)) % len(self.demo_classes)
+            self.index = (self.index + (-1 if d > 0 else 1)) % len(self.demo_classes)   # anticlockwise = next, by feel
             self.demo = self._instance(self.index)
         elif k == 3:
             self.bright = min(1.0, max(0.02, self.bright * (1.08 ** d)))

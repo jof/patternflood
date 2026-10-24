@@ -29,7 +29,7 @@ and `knob_renderer` from `../colorlight`.
 ## Menu
 
 **Hold the two outer knobs (k0 and k3) for a second.** In the menu:
-- **k0** steps through the demos. They switch live behind the overlay and keep their state.
+- **k0** steps through the demos (anticlockwise = next, which felt right on the bench). They switch live behind the overlay and keep their state.
 - **k3** sets brightness (0.3 at start).
 - **A click on any knob** closes the menu, or it closes after 6 s with no input.
 
