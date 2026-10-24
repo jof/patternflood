@@ -82,11 +82,15 @@ times slower per core, so it should fit everything. If Reaction doesn't, turn k2
 
 ## Bench network: durian
 
-- Durian's USB NIC (`enx000000000000`) carries the card link. Its NetworkManager profile is
-  plain DHCP, so after a reboot the link needs its address back:
-  ```sh
-  ssh durian sudo ip addr add 192.168.75.1/24 dev enx000000000000
-  ```
+- Durian's USB NIC (`enx000000000000`) carries the card link through the NetworkManager
+  profile `colorlight`, added 2026-10-23: static 192.168.75.1/24, no default route, and
+  autoconnect priority 50 over the stock DHCP "Wired connection 2". It's the same idea as the
+  Pi appliance's profile.
+  - Don't add the address by hand with `ip addr`. NetworkManager's DHCP attempt timed out
+    and wiped it within minutes.
+  - When the address is missing, frames route over Wi-Fi to the home router with no error.
+    `run.py` reports healthy sends while the card keeps showing its spinner.
+  - Check it with `ssh durian ip route get 192.168.75.39`.
 - ash → durian runs over Wi-Fi. About 27 MB/s through ssh was measured; frames need about 2.9 MB/s.
   `pipe:` keeps only the newest frame, so a stall drops frames instead of building lag.
   Drops show in the 5-second status line.
