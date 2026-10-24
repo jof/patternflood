@@ -34,7 +34,7 @@ class Galaxy(Inked):
         self.z = (rng.normal(0, 0.025, len(self.a)) * (1 + 2 * np.exp(-self.a / 0.1))).astype(np.float32)
         self.da = (rng.uniform(0.15, 1.0, DUST)).astype(np.float32)
         self.dm0 = rng.uniform(0, 2 * math.pi, DUST).astype(np.float32)
-        self.twist, self.tilt = 2.6, 0.9
+        self.twist, self.tilt = 2.6, 0.55
         self.arms, self.bar = 2, False
         self.t, self.roll = 0.0, 0.0
         self.peak = None
@@ -86,7 +86,7 @@ class Galaxy(Inked):
         y, z = y * ct - z * st, y * st + z * ct
         cr, sr = math.cos(self.roll + 0.4), math.sin(self.roll + 0.4)
         x, y = x * cr - y * sr, x * sr + y * cr
-        return x * 52 + 63.5, y * 52 + 63.5, z
+        return x * 56 + 63.5, y * 56 + 63.5, z
 
     def density(self, px, py, w=None):
         ok = (px >= 0) & (px < N - 1) & (py >= 0) & (py < N - 1)
@@ -109,7 +109,7 @@ class Galaxy(Inked):
         # the bulge: a soft glow at the centre, flattened by the tilt
         cx, cy, _ = self.project(np.zeros(1), np.zeros(1), np.zeros(1))
         yy, xx = np.mgrid[0:N, 0:N].astype(np.float32)
-        u, v = (xx - cx[0]) / 52, (yy - cy[0]) / 52
+        u, v = (xx - cx[0]) / 56, (yy - cy[0]) / 56
         bulge = np.exp(-(u * u + v * v / max(0.2, math.cos(self.tilt)) ** 2) / (2 * R_CORE ** 2))
         tone = tone * np.exp(-dust * 0.35) + 0.8 * bulge * (1 + 0.3 * self.beat)
         return self.print(np.clip(tone * (1 + 0.25 * self.sound[1]), 0, 1))
