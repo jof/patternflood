@@ -1,7 +1,7 @@
 # Demos
 
 Interactive demos for the 2×2 (128 × 128), written once and run in either place.
-There are 79: 31 of ours, plus all 48 of upstream Patternflow's patterns, run
+There are 83: 35 of ours, plus all 48 of upstream Patternflow's patterns, run
 natively ([below](#upstream-patternflow-presets)). That's the 34 firmware presets and
 our ports of the 14 that upstream only had as web sources.
 
@@ -192,11 +192,33 @@ On real drum & bass (the Boiler Room sets in `~/Music`), it holds 174–175 or 8
 - **k2:** the A/V delay.
 
 **Demos**, on the Audio shelf. All need audio; without it they run on a quiet 120 BPM stand-in.
-Winamp's visualizers are the inspiration for the first two:
+Winamp's visualizers inspire the first six.
+
+**The Milk family**, after MilkDrop (`pfd/demos/milk.py`, one engine, five families of presets):
+- Each frame, the last one is resampled through a per-pixel motion field, as MilkDrop does:
+  - **zoom,** pushed by the bass, and growing towards the edges for tunnels;
+  - **turn,** pushed by the mids, twisting the middle more for whirlpools;
+  - **a warp** pushed by the treble, a centre that wanders with the bass, a drift and a stretch,
+    and edges that can wrap.
+- **On top:** waves (circle, spiral, line, double, dots, spectrum, stereo XY) and shapes, solid or
+  *textured*: filled with a shrunken copy of the screen, MilkDrop's signature look.
+- **On the way out, never into the buffer:** video echo (the frame zoomed and flipped over itself),
+  a kaleidoscope fold, a colour map of brightness, and a flash of inversion on a drop.
+- Presets blend over a bar at each phrase, and a drop jumps to a random one. Frames take 1.3-2.8 ms on ash.
+- Knobs: k0 preset (click for a random one), k1 hue, k2 trails, k3 sensitivity.
+
+| Demo | Presets | Look |
+|---|---|---|
+| **Milk** | bloom, vortex, ripple, mandala, nebula | the classic: waves flowing out through zoom, turn and warp |
+| **Milk Tunnel** | wormhole, hyperspace, twister, spectrum tunnel | edge-growing zoom and a twisted middle, centre wandering with the bass |
+| **Milk Flame** | bonfire, blue gas, aurora, embers | upward drift through a wobble, coloured by a heat, gas or aurora map |
+| **Milk Mirror** | hexes, quad bloom, triad, rose window | kaleidoscope folds over spinning screen-textured shapes |
+| **Milk Echo** | hall of mirrors, double vision, tiles, ghosts | video echo and wrapping edges |
+
+And AVS:
 
 | Demo | What | Knobs |
 |---|---|---|
-| **Milk** | feedback visuals after MilkDrop: each frame the last one flows back through a zoom (bass), a turn (mids) and a sine warp (treble), dims, and the waveform is drawn on top; five presets blend over a bar at each phrase, a drop jumps to a random one | k0 preset (click random), k1 hue, k2 trails, k3 sensitivity |
 | **Superscope** | point shapes made of the music, after AVS superscopes: spectrum ring, a tunnel of waveform rings launched on each beat, a torus knot breathing with the bass, a sphere pushed out by the spectrum; the shape changes each phrase | k0 shape, k1 hue, k2 trails, k3 spin |
 
 Some of our Play demos, played by the music (`pfd/demos/played.py`). They keep their own knobs, so
