@@ -62,6 +62,7 @@ from .cumulus import Cumulus
 from .radar import Radar
 from .zen import Zen
 from .plankton import Plankton
+from .neon import Neon
 
 from .. import upstream
 
@@ -87,7 +88,7 @@ ORIGINALS = [(BitTunnel, "pf 0521"), (Obra, "pf 0522"), (Riso, "pf 0528"), (Stra
              (Koi, "pf 0614-2"), (Shore, "pf Midsummer Sea"),
              (Grove, "pf 0601"), (Cumulus, "pf 0517"),
              (Radar, "pf 0614"), (Zen, "pf 0619"),
-             (Plankton, "pf 0526")]
+             (Plankton, "pf 0526"), (Neon, "pf 0622")]
 
 
 def _shelf(presets):
