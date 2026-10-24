@@ -45,6 +45,7 @@ from .tesla import Tesla
 from .window import Window
 from .life import Life
 from .jelly import Jelly
+from .aurora import Aurora
 
 from .. import upstream
 
@@ -61,7 +62,8 @@ ORIGINALS = [(BitTunnel, "pf 0521"), (Obra, "pf 0522"), (Riso, "pf 0528"), (Stra
              (Bonfire, "pf Firefly Hollow"),
              (Mandel, "pf Retro Digital Tapestry"), (Lava, "pf 0520"),
              (Tesla, "pf MagVortex"), (Window, "pf 0609"),
-             (Life, "pf TileWaves"), (Jelly, "pf 0529")]
+             (Life, "pf TileWaves"), (Jelly, "pf 0529"),
+             (Aurora, "pf 0602")]
 
 
 def _shelf(presets):
