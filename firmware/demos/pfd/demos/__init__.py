@@ -57,6 +57,7 @@ from .orrery import Orrery
 from .flock import Flock
 from .koi import Koi
 from .shore import Shore
+from .grove import Grove
 
 from .. import upstream
 
@@ -79,7 +80,8 @@ ORIGINALS = [(BitTunnel, "pf 0521"), (Obra, "pf 0522"), (Riso, "pf 0528"), (Stra
              (Fireworks, "pf a big hit"), (Gears, "pf Origin"),
              (Pendulums, "pf Wave Saw"), (Spiro, "pf Lissajous Weave"),
              (Orrery, "pf 0513"), (Flock, "pf Vector Field Flow"),
-             (Koi, "pf 0614-2"), (Shore, "pf Midsummer Sea")]
+             (Koi, "pf 0614-2"), (Shore, "pf Midsummer Sea"),
+             (Grove, "pf 0601")]
 
 
 def _shelf(presets):
