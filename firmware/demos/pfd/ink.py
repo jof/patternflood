@@ -2,7 +2,7 @@
 
 A screen is a (128, 128) map of thresholds in [0, 1). Comparing a value field
 against it turns tone into pattern. Ordered (Bayer), blue-noise and
-interleaved-gradient screens dither, and the halftone and line screens print.
+interleaved-gradient screens dither; the halftone, line and cross-hatch screens print.
 `dither` quantizes a tone field onto a palette of inks, stepping between
 neighbouring inks so a 4-ink palette gives the PICO-8/Game Boy look.
 """
@@ -20,6 +20,7 @@ PALETTES = [
     ("synth", [(0, 0, 0), (0.22, 0.04, 0.45), (0.95, 0.15, 0.6), (0.2, 0.9, 1.0), (1, 1, 1)]),
     ("ember", [(0, 0, 0), (0.35, 0.02, 0.02), (0.95, 0.3, 0.02), (1.0, 0.8, 0.25), (1, 1, 0.9)]),
     ("ice", [(0, 0, 0), (0.02, 0.1, 0.3), (0.1, 0.5, 0.8), (0.75, 0.95, 1.0)]),
+    ("silver", [(0, 0, 0), (0.1, 0.1, 0.12), (0.42, 0.42, 0.46), (1.0, 0.98, 0.92)]),
     ("mac", [(0, 0, 0), (1, 1, 1)]),
     ("hotpink", [(0, 0, 0), (1.0, 0.0, 0.6)]),
 ]
@@ -67,7 +68,7 @@ def blue_noise(size=64, sigma=1.6):
 
 
 def screen(kind, scale=1, angle=0.0, pitch=6.0):
-    """A threshold map. kind: bayer2 bayer4 bayer8 blue ign dots lines."""
+    """A threshold map. kind: bayer2 bayer4 bayer8 blue ign dots lines hatch."""
     if kind.startswith("bayer"):
         return _tile(bayer(int(kind[5:])), scale)
     if kind == "blue":
@@ -82,10 +83,17 @@ def screen(kind, scale=1, angle=0.0, pitch=6.0):
         return _rank(d + 1e-4 * _tile(bayer(8)))
     if kind == "lines":
         return _rank(np.abs(v - np.floor(v) - 0.5) + 1e-4 * _tile(bayer(8)))
+    if kind == "hatch":             # an etcher's cross-hatching: line sets come in one by one as tone rises
+        p = max(3, int(round(pitch)))       # pixel-exact diagonals and rows, so the lines stay crisp
+        sets = []
+        for i, w in enumerate(((X + Y) % p, (X - Y) % p, Y % p)):
+            d = np.minimum(w, p - w) / (p / 2)              # 0 on a line, 1 midway between lines
+            sets.append(0.06 + 0.27 * i + 0.3 * d)
+        return np.minimum(np.minimum(sets[0], sets[1]), np.minimum(sets[2], 0.95)).astype(np.float32)
     raise ValueError(kind)
 
 
-SCREENS = ["bayer8", "bayer4", "blue", "dots", "lines", "bayer2", "ign"]
+SCREENS = ["bayer8", "bayer4", "blue", "dots", "lines", "hatch", "bayer2", "ign"]
 
 
 def dither(v, inks, thresh, scale=1):

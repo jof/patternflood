@@ -1,9 +1,9 @@
 # Demos
 
 Interactive demos for the 2×2 (128 × 128), written once and run in either place.
-There are 88: 40 of ours, plus all 48 of upstream Patternflow's patterns, run
+There are 91: 43 of ours, plus all 48 of upstream Patternflow's patterns, run
 natively ([below](#upstream-patternflow-presets)). That's the 34 firmware presets and
-our ports of the 14 that upstream only had as web sources. Five of ours are
+our ports of the 14 that upstream only had as web sources. Eight of ours are
 [Patternflow-style originals](#our-originals-on-the-patternflow-shelf), shelved among Lee's.
 
 | | Knobs | Frames | Renders on |
@@ -361,7 +361,7 @@ same way: drop it in `upstream_host/web_ports/`.
 
 ### Our originals on the Patternflow shelf
 
-Five patterns of ours, in Patternflow's manner: each runs by itself, and the four knobs turn
+Eight patterns of ours, in Patternflow's manner: each runs by itself, and the four knobs turn
 its qualities, not a game. They're in our own style, which is print-shop and demoscene,
 and each sits on the shelf right after the preset of Lee's it riffs on.
 
@@ -371,16 +371,21 @@ and each sits on the shelf right after the preset of Lee's it riffs on.
 | **Obra** | pf 0522 | A raymarched solid (torus, metaballs, twisted box, gyroid ball, octahedron, gimbal rings) lit by a circling light, printed in 2–5 inks through a screen, with an ink outline. | k0 turns it; k1 morphs to the next form; k2 screen (Bayer 8/4/2, blue noise, halftone dots, engraving lines, IGN); k3 inks. Click: k0 auto-spin, k2 chunky, k3 outline. |
 | **Riso** | pf 0528 | A moving colour field printed as three halftone plates at 15°, 75° and 45°. The plates turn against each other, so the rosettes and moiré churn, and drifting misregistration fringes the colours. | k0 dot size; k1 how fast the screens turn; k2 misprint; k3 inks (riso, RGB light, sunset, mint, or ink on lit paper). Click: k0 next picture, k1 square the screens. |
 | **Pixel Sort** | pf 0519-2 | A landscape (sunset, aurora, orbs) melted by sorting each run of bright pixels by brightness. Runs also break at intervals that crawl, so the streaks drip. | k0 threshold (it sweeps by itself until turned); k1 direction; k2 drift speed; k3 hue. Click: k0 auto sweep, k1 next scene, k2 sort the other way. |
+| **Smoke** | pf Vector Field Flow | Incense smoke, dithered. Dye rises from a source and rides a curl-noise flow (no divergence, so it never bunches or thins) whose swirl grows with height: a smooth ribbon at the stick that breaks into curls as it climbs. Each frame it's advected semi-Lagrangian style and fades slowly. | k0 turbulence; k1 moves the source; k2 screen; k3 inks. Click: k0 gust, k1 puff, k2 chunky, k3 a second source. |
+| **Moon** | pf Poincaré Sphere | A world in the dark, lit through its phases: a cratered moon (bump-mapped bowls and rims, dark maria), an Earth (continents, ice caps, drifting clouds, a sun glint on the sea, an atmosphere's rim), or a banded giant whose rings take its shadow and cast theirs on it. Analytic sphere, one-pixel twinkling stars. | k0 turns it; k1 moves the sun; k2 screen; k3 inks. Click: k0 next world, k1 auto phase, k2 chunky. |
+| **Sea** | pf Midsummer Sea | Open water from a boat riding the swell: eight deep-water waves (each at the speed its length gives it), raycast column by column so crests hide the troughs behind them. Fresnel reflection of the sky, ripples that only tilt the normals, and a glitter path from the moon, or the sun at sunset. | k0 swell; k1 moves the moon; k2 screen; k3 inks. Click: k0 storm (with lightning), k1 sunset, k2 chunky. |
 | **Strange** | pf Lissajous Weave | A Clifford attractor drawn as the glowing density of 30 000 points, coloured by which way each point jumped. A form change fades out, jumps, and fades in, because gliding between forms passes through dull periodic orbits. | k0–k3 bend its a, b, c, d. Click: k0 next form, k1 colours, k2 freeze the drift, k3 long glow. |
 
 Left alone, each moves on by itself: a new form, shape or scene every 14–40 s. The menu's
 *audio knobs* switch (k2 on this shelf) works for them too. With it on, the music's mid,
 level, bass and treble envelopes add to what the knobs set (the same four upstream's audio
-edition reads). Each beat pulses them, each 8-bar phrase brings the next form, shape, picture
-or scene, and in Bit Tunnel each bar steps the bit mask.
+edition reads). Each beat pulses them, each 8-bar phrase brings the next form, shape, picture,
+world or scene (a gust in Smoke, lightning at Sea), in Bit Tunnel each bar steps the bit mask,
+and in Smoke each kick puffs.
 
 Their shared parts are `pfd/ink.py` (threshold screens: Bayer, blue noise by void filling,
-interleaved gradient noise, halftone dots and lines; and the ink palettes) and
+interleaved gradient noise, halftone dots, engraving lines and pixel-exact cross-hatching,
+whose line sets come in one at a time as the tone rises; and the ink palettes) and
 `pfd/demos/original.py` (the shelf, the audio envelopes and the bar and phrase events).
 
 ## Speed
@@ -391,8 +396,8 @@ Measured per frame on ash:
   Pool 1.4 ms (it was 8.3 ms before drawing a diagonal of pillars at a time).
 - **Reaction takes 4.3 ms** at 10 iterations a frame.
 - The upstream presets take **0.1–0.6 ms** natively.
-- The Patternflow originals: Bit Tunnel 0.7 ms, Riso 1.9 ms, Pixel Sort 2.0 ms and
-  Strange 2.2 ms. **Obra takes 2.6–5.3 ms**, depending on the form (octahedron fastest,
+- The Patternflow originals: Bit Tunnel 0.7 ms, Smoke 1.6 ms, Riso 1.9 ms, Moon 1.9 ms,
+  Pixel Sort 2.0 ms, Strange 2.2 ms and Sea 2.9 ms. **Obra takes 2.6–5.3 ms**, depending on the form (octahedron fastest,
   metaballs slowest).
 
 The Pi 5 has 16.7 ms a frame at 60 fps and is a few times slower per core, so it should fit
