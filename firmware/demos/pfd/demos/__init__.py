@@ -64,6 +64,12 @@ from .zen import Zen
 from .plankton import Plankton
 from .neon import Neon
 from .clock import Clock
+from .truchet import Truchet
+from .isobands import Isobands
+from .glass import Glass
+from .chroma import Chroma
+from .guilloche import Guilloche
+from .weave import Weave
 
 from .. import upstream
 
@@ -90,7 +96,10 @@ ORIGINALS = [(BitTunnel, "pf 0521"), (Obra, "pf 0522"), (Riso, "pf 0528"), (Stra
              (Grove, "pf 0601"), (Cumulus, "pf 0517"),
              (Radar, "pf 0614"), (Zen, "pf 0619"),
              (Plankton, "pf 0526"), (Neon, "pf 0622"),
-             (Clock, "pf 0515-4")]
+             (Clock, "pf 0515-4"),
+             (Truchet, "pf 0514"), (Isobands, "pf 0531"),
+             (Glass, "pf 0601"), (Chroma, "pf Retro Digital Tapestry"),
+             (Guilloche, "pf Poincaré Sphere"), (Weave, "pf 0511")]
 
 
 def _shelf(presets):

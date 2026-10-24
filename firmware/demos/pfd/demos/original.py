@@ -10,7 +10,7 @@ knobs set. `self.on_bar` and `self.on_phrase` are true for the frame a bar or an
 """
 import math
 
-from .. import ink
+from .. import hues, ink
 from ..draw import hsv1
 from ..runtime import Demo
 
@@ -91,3 +91,31 @@ class Inked(Original):
     def ink_lights(self):
         """Lights for k2 and k3: the screen's hue, and the palette's top ink."""
         return [self.glow(2, self.screen_i / len(ink.SCREENS)), tuple(float(c) for c in self.inks[-1])]
+
+
+class Chromatic(Original):
+    """An Original in full colour, through pfd.hues: by the shelf's convention k3 is colour.
+    Turning it slides the palette's hues (call `turn_hue` from turn()); `next_palette()`
+    (k3's click) changes palette; `colour(t)` looks colours up."""
+    palette = 0
+
+    def __init__(self, rt):
+        super().__init__(rt)
+        self.pal_i = self.palette
+        self.shift = 0.0
+
+    def turn_hue(self, k, d):
+        """k3 slides the hues; True if it took the turn."""
+        if k != 3:
+            return False
+        self.shift += d / 48
+        return True
+
+    def next_palette(self):
+        self.pal_i = (self.pal_i + 1) % len(hues.PRESETS)
+
+    def colour(self, t):
+        return hues.cosine(t, self.pal_i, self.shift)
+
+    def hue_light(self):
+        return tuple(float(v) * 0.7 for v in hues.cosine(0.0, self.pal_i, self.shift))

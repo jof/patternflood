@@ -1,9 +1,9 @@
 # Demos
 
 Interactive demos for the 2×2 (128 × 128), written once and run in either place.
-There are 121: 73 of ours, plus all 48 of upstream Patternflow's patterns, run
+There are 127: 79 of ours, plus all 48 of upstream Patternflow's patterns, run
 natively ([below](#upstream-patternflow-presets)). That's the 34 firmware presets and
-our ports of the 14 that upstream only had as web sources. Thirty-eight of ours are
+our ports of the 14 that upstream only had as web sources. Forty-four of ours are
 [Patternflow-style originals](#our-originals-on-the-patternflow-shelf), shelved among Lee's.
 
 | | Knobs | Frames | Renders on |
@@ -421,6 +421,22 @@ whose line sets come in one at a time as the tone rises; and the ink palettes) a
 `Inked`, which gives a pattern the k2 screen and k3 inks knobs, the chunky toggle and
 `print(tone)`).
 
+#### In full colour
+
+Six more, closer to Patternflow's own look: bold procedural colour, no dither. They share
+`Chromatic` (in `pfd/demos/original.py`), whose k3 slides the palette's hues as it turns and
+changes palette when clicked. The palettes are `pfd/hues.py`'s cosine gradients
+(colour = a + b cos 2π(ct + d), per channel), tuned to stay bright all the way round.
+
+| Demo | After | What it is | Knobs (turn; click) |
+|---|---|---|---|
+| **Truchet** | pf 0514 | Quarter-circle arc tiles whose arcs join into endless paths: shaded ribbons carrying a rainbow that flows across the grid, over a two-colour maze that stays continuous across tiles. Tiles spin a quarter turn now and then, rerouting the paths; waves of spins come on each bar with music. | k0 tile size; k1 spin rate; k2 ribbon width; k3 colour. Click: k0 a wave of spins, k1 hold still, k2 fills, k3 next palette. |
+| **Isobands** | pf 0531 | A flowing domain-warped field cut into bands of flat colour, each shaded like a terrace from its low edge up, with contour lines between. | k0 bands; k1 warp; k2 flow speed; k3 colour. Click: k0 contour lines, k1 hold still, k2 terraces, k3 next palette. |
+| **Stained Glass** | pf 0601 | Voronoi panes of coloured glass in lead lines, the seeds drifting so panes grow and trade neighbours, lit from behind by a wandering sun through rippled glass. | k0 panes; k1 drift; k2 lead width; k3 colour. Click: k0 a new window, k1 hold still, k3 next palette. |
+| **Chroma Waves** | pf Retro Digital Tapestry | A ripple tank in colour: two to seven drifting sources each send out rings in their own colour, and where they cross, the colours add into a shimmering moiré. | k0 wavelength; k1 drift; k2 sources; k3 colour. Click: k0 sharp rings or soft waves, k1 hold still, k3 next palette. |
+| **Guilloche** | pf Poincaré Sphere | Banknote rosettes: rings of lobed curves, K of them each, crossing into woven bands, three colours turning against each other. Each pixel finds which curves pass through it (an arcsine), so it's one pass per ring. | k0 lobes; k1 lines; k2 amplitude; k3 colour. Click: k0 next rosette, k1 hold still, k3 next palette. |
+| **Weave** | pf 0511 | Cloth off the loom: warp and weft in mirrored stripe setts make a plaid, woven plain, twill, basket or satin, threads shaded round and dipping at crossings; it scrolls and ripples. | k0 thread size; k1 weave; k2 ripple; k3 colour. Click: k1 a new plaid, k2 hold still, k3 next palette. |
+
 ## Speed
 
 Measured per frame on ash:
@@ -431,13 +447,14 @@ Measured per frame on ash:
 - The upstream presets take **0.1–0.6 ms** natively.
 - The Patternflow originals, fastest first: Life 0.3 ms, Op Art 0.3 ms, Fireworks 0.4 ms,
   Aurora 0.5 ms, Snow 0.5 ms, Warp 0.5 ms, Lava 0.6 ms, Orrery 0.6 ms, Spiro 0.6 ms, Bit Tunnel
-  0.7 ms, Grove 0.8 ms, Jellyfish 0.8 ms, Flock 0.9 ms, Gears 1.1 ms, Pendulums 1.1 ms,
-  Plankton 1.1 ms, Radar 1.2 ms, Tesla 1.2 ms, Zen 1.5 ms, Clock 1.6 ms, Galaxy 1.6 ms, Smoke
-  1.6 ms, Window 1.7 ms, Moon 1.9 ms, Riso 1.9 ms, Pixel Sort 2.0 ms, Caustics 2.1 ms, Neon 2.2
-  ms, Strange 2.2 ms, Shore 2.3 ms, Cumulus 2.4 ms, Koi 2.5 ms, Valley 2.7 ms, Bonfire 2.8 ms
-  and Sea 2.9 ms. **Helix takes 5.7 ms** (a hundred-odd sphere impostors), **Obra 2.6–5.3 ms**
-  depending on the form (octahedron fastest, metaballs slowest), and **Mandel averages 8 ms**,
-  rising with depth as more points take hundreds of iterations.
+  0.7 ms, Isobands 0.7 ms, Chroma Waves 0.8 ms, Grove 0.8 ms, Jellyfish 0.8 ms, Flock 0.9 ms,
+  Guilloche 1.0 ms, Gears 1.1 ms, Pendulums 1.1 ms, Plankton 1.1 ms, Radar 1.2 ms, Tesla 1.2
+  ms, Zen 1.5 ms, Clock 1.6 ms, Galaxy 1.6 ms, Smoke 1.6 ms, Window 1.7 ms, Moon 1.9 ms, Riso
+  1.9 ms, Pixel Sort 2.0 ms, Caustics 2.1 ms, Weave 2.1 ms, Neon 2.2 ms, Strange 2.2 ms, Shore
+  2.3 ms, Truchet 2.3 ms, Cumulus 2.4 ms, Koi 2.5 ms, Valley 2.7 ms, Bonfire 2.8 ms, Sea 2.9 ms
+  and Stained Glass 3.7 ms. **Helix takes 5.7 ms** (a hundred-odd sphere impostors), **Obra
+  2.6–5.3 ms** depending on the form (octahedron fastest, metaballs slowest), and **Mandel
+  averages 8 ms**, rising with depth as more points take hundreds of iterations.
 
 The Pi 5 has 16.7 ms a frame at 60 fps and is a few times slower per core, so it should fit
 everything. If Reaction doesn't, turn its k2 (speed) down. Obra watches its own time: if
