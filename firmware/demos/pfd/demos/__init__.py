@@ -37,6 +37,8 @@ from .sea import Sea
 from .caustics import Caustics
 from .galaxy import Galaxy
 from .valley import Valley
+from .opart import OpArt
+from .bonfire import Bonfire
 
 from .. import upstream
 
@@ -49,7 +51,8 @@ ORIGINALS = [(BitTunnel, "pf 0521"), (Obra, "pf 0522"), (Riso, "pf 0528"), (Stra
              (Moon, "pf Poincaré Sphere"), (Smoke, "pf Vector Field Flow"),
              (Sea, "pf Midsummer Sea"),
              (Caustics, "pf 0530"), (Galaxy, "pf Chromatic Vortex"),
-             (Valley, "pf 0624")]
+             (Valley, "pf 0624"), (OpArt, "pf Warped Wave"),
+             (Bonfire, "pf Firefly Hollow")]
 
 
 def _shelf(presets):
