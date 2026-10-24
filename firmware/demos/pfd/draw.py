@@ -19,16 +19,20 @@ def hsv1(h, s=1.0, v=1.0):
 
 
 def disc(img, x, y, r, rgb, soft=1.0, op="max"):
-    """A filled disc with a soft edge, drawn into img in place. op is "max" or "add"."""
-    x0, x1 = max(0, int(x - r - soft - 1)), min(N, int(x + r + soft + 2))
-    y0, y1 = max(0, int(y - r - soft - 1)), min(N, int(y + r + soft + 2))
+    """A filled disc with a soft edge, drawn into img in place. op is "max", "add" or "over" (paint)."""
+    h, w = img.shape[:2]
+    x0, x1 = max(0, int(x - r - soft - 1)), min(w, int(x + r + soft + 2))
+    y0, y1 = max(0, int(y - r - soft - 1)), min(h, int(y + r + soft + 2))
     if x0 >= x1 or y0 >= y1:
         return
-    d = np.hypot(X[y0:y1, x0:x1] - x, Y[y0:y1, x0:x1] - y)
+    yy, xx = np.ogrid[y0:y1, x0:x1]
+    d = np.hypot(xx - x, yy - y)
     a = np.clip((r + soft - d) / (2 * soft) + 0.5, 0, 1)[..., None] if soft else (d <= r)[..., None]
     patch = a * np.asarray(rgb, np.float32)
     if op == "add":
         img[y0:y1, x0:x1] += patch
+    elif op == "over":
+        img[y0:y1, x0:x1] = img[y0:y1, x0:x1] * (1 - a) + patch
     else:
         np.maximum(img[y0:y1, x0:x1], patch, out=img[y0:y1, x0:x1])
 
@@ -48,11 +52,13 @@ def poly(img, pts, rgb, mask_out=None):
     """Fill a polygon (even-odd rule, pixel centres) with a flat colour.
     If mask_out is given, OR the coverage into it as well."""
     pts = np.asarray(pts, np.float32)
+    h, w = img.shape[:2]
     x0, y0 = max(0, int(np.floor(pts[:, 0].min()))), max(0, int(np.floor(pts[:, 1].min())))
-    x1, y1 = min(N, int(np.ceil(pts[:, 0].max())) + 1), min(N, int(np.ceil(pts[:, 1].max())) + 1)
+    x1, y1 = min(w, int(np.ceil(pts[:, 0].max())) + 1), min(h, int(np.ceil(pts[:, 1].max())) + 1)
     if x0 >= x1 or y0 >= y1:
         return
-    px, py = X[y0:y1, x0:x1] + 0.5, Y[y0:y1, x0:x1] + 0.5
+    py, px = np.ogrid[y0:y1, x0:x1]
+    px, py = np.broadcast_arrays(px + 0.5, py + 0.5)
     inside = np.zeros(px.shape, bool)
     xa, ya = pts[:, 0], pts[:, 1]
     xb, yb = np.roll(xa, -1), np.roll(ya, -1)

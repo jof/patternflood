@@ -100,12 +100,20 @@ And one generator:
 
 | Demo | After | Knobs | Hypothesis | Watch for |
 |---|---|---|---|---|
-| **Resort** | Hiroshi Nagai's city-pop illustrations: flat colour, cobalt skies, pools, palms, white modernist blocks | k0 time of day (click: let the day pass), k1 a new scene per detent, k2 horizon (click: mirror), k3 palette (click: album-cover frame) | **One story knob:** a single continuous control (noon → golden hour → sunset → night) can carry a whole demo. Plus **seeded scenes you can browse and return to,** a detent at a time. | Whether people sweep k0 back and forth to watch the light change, or park it at sunset; whether k1 browsing feels like flipping through records. |
+| **Resort** | Hiroshi Nagai's city-pop illustrations: flat colour, cobalt skies, pools, palms, white modernist blocks | k0 time of day (click: let the day pass), k1 pan along the coast (click: cruise), k2 horizon (click: mirror), k3 colour story, continuous (click: album-cover frame) | **One story knob:** a single continuous control (noon → golden hour → sunset → night) can carry a whole demo. And **a world you pan through,** with parallax, rather than scenes you switch between. | Whether people sweep k0 back and forth to watch the light change, or park it at sunset; whether they explore the coast or cruise and watch. |
 
-Every Resort scene is generated (`compose()` in `pfd/demos/resort.py`): pool, beach or coast drive, with palms, an optional
-modernist block, clouds, the sun's track and a made-up album title. Nothing is copied from a real picture. The static
-layers are cached and rebuilt only when time, scene or horizon change, and palms redraw about 15 times a second.
-A typical frame takes 0.45 ms on ash; a palm redraw 2–4 ms; the first frame of a new scene up to about 20 ms.
+Resort's coast is generated lot by lot (`World` in `pfd/demos/resort.py`), so it is endless, and each stretch
+always looks the same:
+- Lots are 128 px wide: pools, sun decks, beach, and a coast road. They come in runs, and every six lots hold
+  all three kinds.
+- Kinds meet along a diagonal curb, and the shore's depth eases between lot centres, so it never steps.
+- Panning eases towards the knob. Clouds move at a third of the speed, the stars barely move, and the sun
+  stays put.
+- k3 turns the hue of the sky, sea, sun and pool continuously, in YIQ so brightness holds, through cobalt,
+  lagoon, vivid and violet. Pools turn only a third as far, so they never go green.
+- Speed: lots are cached per lighting state, and palms are cached as part maps, recoloured per lighting and
+  sheared for sway each frame. Frames take about 0.9 ms on ash while panning, and under 3 ms while turning
+  the light or colour.
 
 Cross-cutting questions, worth noting on every demo:
 
