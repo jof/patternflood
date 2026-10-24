@@ -33,13 +33,16 @@ from .io import log
 CLICK_S = 0.45          # a press shorter than this, with no turn in it, is a click
 MENU_HOLD_S = 1.0
 MENU_IDLE_S = 6.0
+MENU_JUMP = 8           # k1 in the menu skips this many demos a detent
 LIGHT_MAX = 64          # the 4991 NeoPixels are bright next to a dim panel
 NKNOBS = 4
+DETENTS_PER_REV = 24    # the 4991's encoder (PEC11-style); for demos that map a knob to an absolute angle
 
 
 class Demo:
     name = "?"
     blurb = ""
+    group = "patternflood"
 
     def __init__(self, rt):
         self.rt = rt
@@ -151,8 +154,9 @@ class Runtime:
             self.t_menu_input = self.t
 
     def _menu_turn(self, k, d):
-        if k == 0:
-            self.index = (self.index + (1 if d > 0 else -1)) % len(self.demo_classes)
+        if k in (0, 1):
+            step = d if k == 0 else d * MENU_JUMP
+            self.index = (self.index + step) % len(self.demo_classes)
             self.demo = self._instance(self.index)
         elif k == 3:
             self.bright = min(1.0, max(0.02, self.bright * (1.08 ** d)))
@@ -178,15 +182,17 @@ class Runtime:
             rgb[:16] *= 0.3
             draw.text(rgb, name.upper(), 64, 3, (1, 1, 1), center=True)
             n = len(self.demo_classes)
-            for i in range(n):
-                x = 64 + (i - (n - 1) / 2) * 8
-                draw.disc(rgb, x, 20, 1.6 if i == self.index else 1.0, (1, 1, 1) if i == self.index else (.3, .3, .3))
+            group = getattr(self.demo_classes[self.index], "group", "")
+            draw.text(rgb, f"{self.index + 1}/{n}  {group}".strip(), 64, 16, (.45, .45, .45), center=True)
+            rgb[29, 4:124] = 0.12                               # where we are in the list
+            x = 4 + int(119 * self.index / max(1, n - 1))
+            rgb[28:31, max(4, x - 1):x + 2] = (1, 1, 1)
             blurb = self.demo_classes[self.index].blurb
             for j, line in enumerate(_wrap(blurb, 120)[:6]):
-                draw.text(rgb, line, 64, 30 + 12 * j, (.8, .8, .6), center=True)
+                draw.text(rgb, line, 64, 34 + 11 * j, (.8, .8, .6), center=True)
             rgb[118:122, 4:124] = 0.15
             rgb[118:122, 4:4 + int(120 * self.bright)] = (1, .8, .3)
-            draw.text(rgb, "k0 demo   k3 bright", 64, 104, (.5, .5, .5), center=True)
+            draw.text(rgb, "k0/k1 demo  k3 bright", 64, 104, (.5, .5, .5), center=True)
         elif self.t - self.t_banner < 1.5:
             a = min(1.0, 3 * (1.5 - (self.t - self.t_banner)))
             band = rgb[:14]

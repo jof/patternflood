@@ -7,5 +7,13 @@ from .sand import Sand
 from .harmono import Harmono
 from .rewind import Rewind
 from .reaction import Reaction
+from .rotor import Rotor
+from .echo import Echo
+from .rocket import Rocket
+from .vault import Vault
+from .mandala import Mandala
 
-ALL = [Classic, Etch, Squash, Cycles, Sand, Harmono, Rewind, Reaction]
+from .. import upstream
+
+OURS = [Classic, Etch, Squash, Cycles, Sand, Harmono, Rewind, Reaction, Rotor, Echo, Rocket, Vault, Mandala]
+ALL = OURS + upstream.demos()       # upstream Patternflow's presets, after ours

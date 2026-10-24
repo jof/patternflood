@@ -86,13 +86,15 @@ def _mask(s):
     return _glyphs[s]
 
 
-def text_width(s):
-    return _mask(s).shape[1]
+def text_width(s, scale=1):
+    return _mask(s).shape[1] * scale
 
 
-def text(img, s, x, y, rgb, center=False):
-    """Draw s with its top-left at (x, y), or centred on x."""
+def text(img, s, x, y, rgb, center=False, scale=1):
+    """Draw s with its top-left at (x, y), or centred on x; scale blows the bitmap font up."""
     m = _mask(s)
+    if scale > 1:
+        m = np.kron(m, np.ones((scale, scale), np.float32))
     h, w = m.shape
     x = int(round(x - w / 2)) if center else int(x)
     y = int(y)

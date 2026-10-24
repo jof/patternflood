@@ -1,6 +1,8 @@
 # Demos
 
-Interactive demos for the 2×2 (128 × 128), written once and run in either place:
+Interactive demos for the 2×2 (128 × 128), written once and run in either place.
+There are 47: 13 of ours, plus all 34 of upstream Patternflow's presets, run
+natively ([below](#upstream-patternflow-presets)).
 
 | | Knobs | Frames | Renders on |
 |---|---|---|---|
@@ -23,13 +25,16 @@ path they're on: the Pi 5 port is a change of flags.
 ```
 
 Needs `numpy` and `pyserial` (bench only). Text (demo names, labels) needs
-Pillow; without it the demos run without text. It imports `r75_frame`, `seesaw`
-and `knob_renderer` from `../colorlight`.
+Pillow; without it the demos run without text. The upstream presets need `g++`
+and the `upstream/` clone; without them they're skipped. It imports `r75_frame`,
+`seesaw` and `knob_renderer` from `../colorlight`.
 
 ## Menu
 
 **Hold the two outer knobs (k0 and k3) for a second.** In the menu:
-- **k0** steps through the demos (clockwise = next). They switch live behind the overlay and keep their state.
+- **k0** steps through the demos (clockwise = next), and **k1** jumps eight at a time. They switch
+  live behind the overlay and keep their state. The overlay shows the demo's place in the list
+  and its group (patternflood or patternflow).
 - **k3** sets brightness (0.3 at start).
 - **A click on any knob** closes the menu, or it closes after 6 s with no input.
 
@@ -69,6 +74,16 @@ Notes from playing them should go here.
 | **Rewind** | k0 scrubs generations; k1 play speed through zero into reverse; click k2: drop a pattern | **Time as a knob:** scrubbing history with a jog wheel is a knob-only pleasure. Change the past and watch a new future. | Whether "reverse" on k1 is understood without the history bar, and whether people drop patterns in the past on purpose. |
 | **Reaction** | k0 feed, k1 kill, k2 speed, k3 colour; click k1: preset | **Delayed response:** a slow, emergent reply (seconds, not frames) is still fun when the results are this varied. | Impatience. If people turn and turn again before the field responds, the lag is too long, and a faster sim or a preview inset is needed. |
 
+Added on 2026-10-23, each testing something the first eight don't:
+
+| Demo | Knobs | Hypothesis | Watch for |
+|---|---|---|---|
+| **Rotor** | k0 heading; hold k1 thrust; click/hold k2 fire; hold k3 shield | **Absolute mapping:** the knob *is* the ship, with one revolution of k0 = one revolution of the ship (`DETENTS_PER_REV`, assumed 24). No acceleration and no rate. | Whether it feels like holding the ship. If the ship's turn doesn't match the knob's, the detent count is wrong: count a revolution and fix `runtime.DETENTS_PER_REV`. |
+| **Echo** | press (later also turn) the knobs to repeat the sequence | **The knob lights as the primary display.** The sequence plays on the caps as well as the panel. From round 5, **turn direction is a second vocabulary**: steps can be "turn this one clockwise". | Whether players watch the caps or the panel; whether turn steps feel fair or like a trick; whether pressing wobbles the knob. Turns while a knob is held are ignored for that reason. |
+| **Rocket** | k0 aim; hold k1 charge, release to fire; k2 colour; k3 burst | **Hold to charge, release to fire:** press duration as an analogue input, with a predicted arc while aiming. | Whether the 1.2 s charge feels right, and whether the arc makes aiming a skill or takes the fun out of it. |
+| **Vault** | each knob rolls its own tumbler; click to try | **Feedback through the knob alone:** each cap warms as its number gets close, the same within ±1, so the last step is a guess. One knob, one tumbler, in the row's order. | Whether people find the warmth readable without being told; whether the ±1 ambiguity is tension or annoyance. |
+| **Mandala** | k0 orbits the pen, k1 radius, k2 colour, k3 symmetry | **Polar against Cartesian:** the same drawing toy as Etch, but turning the angle knob literally orbits the pen. | Compare with Etch. Which do people draw more with, and which knob do they reach for first? |
+
 Cross-cutting questions, worth noting on every demo:
 
 1. **Acceleration curve.** 1× to about 6 detents/s, then up to 6×. Too twitchy? Too slow?
@@ -76,11 +91,71 @@ Cross-cutting questions, worth noting on every demo:
 3. **Knob lights.** Are they read at a glance, or ignored? If they're ignored, they may be worth less than the NeoPixel power and the light-slit work in the enclosure.
 4. **Attract mode.** `--knobs auto` plays the demos by itself. Does an idle box running it draw people in?
 
+## Upstream Patternflow presets
+
+All 34 of upstream's preset patterns (`upstream/firmware/patternflow/presets/`, minus the
+calibration card) run here **natively and unchanged**:
+
+- `upstream_host/build.py` copies the preset headers and upstream's portable cores (math,
+  colour, noise, tables, params) into `upstream_host/build/tree/`. It overlays small host
+  stand-ins for the hardware-specific headers (`upstream_host/shim/`: `Arduino.h`, `config.h`,
+  canvas, display, encoders).
+- It generates a C API over every preset's namespace, and compiles everything into one shared
+  library in about 2 s.
+- `pfd/upstream.py` loads that library with ctypes and wraps each preset as a demo named
+  `pf <name>`:
+  - Knob turns become `knobDeltas`: raw detents, no acceleration, as upstream.
+  - Presses become `btnPressed` (edge) and `btnHeld`.
+  - Upstream's saturation boost (1.62) is applied. Gamma and the current cap are ours, as for
+    every demo.
+- `run.py` builds the library on first start if it's missing.
+
+```sh
+./upstream_host/build.py                # 128 x 128 (the default; run.py does this itself)
+./upstream_host/build.py --size 128x64  # upstream's own panel size, for comparison
+```
+
+**Geometry.** Upstream panels are 128 × 64. The presets are compiled with `PANEL_RES` set
+to 128 × 128, and almost all of them scale to fill the square. Three are portrait patterns:
+upstream's device usually stands on end, and these draw with "up" along the panel's +x, as
+upstream's canvas maps a 64 × 128 frame.
+- **Midsummer Sea** and **Firefly Hollow** are turned a quarter anticlockwise to stand upright,
+  and still fill the square.
+- **Breakout Arcade**'s layout needs exactly 64 rows, so it runs at 128 × 64, turned, as a
+  centred 64 × 128 column.
+
+The table is `PORTRAIT`/`PORTRAIT_NATIVE` in `pfd/upstream.py`, and was chosen by eye from
+contact sheets at both sizes.
+
+**Known quirk:** `0519-1` starts black. Its knob 1 defaults to 0, which puts the whole field
+below zero. Turn k0 up about ten detents. That is upstream's behaviour, kept as it is.
+
+**Licence:** the presets are CC BY-SA 4.0 (upstream's). They are read from the gitignored
+`upstream/` clone at build time and never committed here. The shim and build script are ours (MIT).
+
+**On the Pi 5:**
+1. Install `g++`.
+2. Clone upstream next to the repo:
+   ```sh
+   git clone https://github.com/engmung/patternflow upstream && git -C upstream checkout 87700bd
+   ```
+   The `desktop` branch's only change is the HUB75 pinout, which no preset touches.
+3. Start `run.py`. The first start builds the library for aarch64.
+
+Not yet ported: the 14 patterns that exist only as web (TypeScript) sources in
+`upstream/web/src/lib/presets/`, and the community library on patternflow.work. Upstream turns
+the JavaScript into `.h` headers with an AI prompt. Any `.h` from the community's
+"flashable" set should build here the same way: drop it in `presets/`.
+
 ## Speed
 
-Measured per frame on ash (render, gamma, cap). Most demos take 0.4–1.1 ms. **Reaction
-takes 4.3 ms** at 10 iterations a frame. The Pi 5 has 16.7 ms a frame at 60 fps and is a few
-times slower per core, so it should fit everything. If Reaction doesn't, turn k2 down.
+Measured per frame on ash:
+- Most of our demos take 0.4–1.1 ms (render, gamma, cap). The new five take under 1 ms.
+- **Reaction takes 4.3 ms** at 10 iterations a frame.
+- The upstream presets take **0.1–0.6 ms** natively.
+
+The Pi 5 has 16.7 ms a frame at 60 fps and is a few times slower per core, so it should fit
+everything. If Reaction doesn't, turn its k2 (speed) down.
 
 ## Bench network: durian
 
