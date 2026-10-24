@@ -424,13 +424,14 @@ Measured per frame on ash:
   Pool 1.4 ms (it was 8.3 ms before drawing a diagonal of pillars at a time).
 - **Reaction takes 4.3 ms** at 10 iterations a frame.
 - The upstream presets take **0.1–0.6 ms** natively.
-- The Patternflow originals: Op Art 0.3 ms, Life 0.3 ms, Fireworks 0.4 ms, Warp 0.5 ms,
-  Aurora 0.5 ms, Snow 0.5 ms, Lava 0.6 ms, Orrery 0.6 ms, Spiro 0.6 ms, Pendulums 1.1 ms,
-  Gears 1.1 ms, Grove 0.8 ms, Flock 0.9 ms, Shore 2.3 ms, Cumulus 2.4 ms, Koi 2.5 ms, Bit Tunnel 0.7 ms, Jellyfish 0.8 ms, Tesla 1.2 ms, Galaxy 1.6 ms, Smoke 1.6 ms, Window 1.7 ms, Riso 1.9 ms, Moon 1.9 ms,
-  Pixel Sort 2.0 ms, Caustics 2.1 ms, Strange 2.2 ms, Valley 2.7 ms, Bonfire 2.8 ms and Sea
-  2.9 ms, and Helix 5.7 ms (a hundred-odd sphere impostors). **Mandel averages 8 ms**, rising with depth as more points take hundreds of
-  iterations. **Obra takes 2.6–5.3 ms**, depending on the form (octahedron fastest,
-  metaballs slowest).
+- The Patternflow originals, fastest first: Life 0.3 ms, Op Art 0.3 ms, Fireworks 0.4 ms,
+  Aurora 0.5 ms, Snow 0.5 ms, Warp 0.5 ms, Lava 0.6 ms, Orrery 0.6 ms, Spiro 0.6 ms, Bit Tunnel
+  0.7 ms, Grove 0.8 ms, Jellyfish 0.8 ms, Flock 0.9 ms, Gears 1.1 ms, Pendulums 1.1 ms, Tesla
+  1.2 ms, Galaxy 1.6 ms, Smoke 1.6 ms, Window 1.7 ms, Moon 1.9 ms, Riso 1.9 ms, Pixel Sort 2.0
+  ms, Caustics 2.1 ms, Strange 2.2 ms, Shore 2.3 ms, Cumulus 2.4 ms, Koi 2.5 ms, Valley 2.7 ms,
+  Bonfire 2.8 ms and Sea 2.9 ms. **Helix takes 5.7 ms** (a hundred-odd sphere impostors),
+  **Obra 2.6–5.3 ms** depending on the form (octahedron fastest, metaballs slowest), and
+  **Mandel averages 8 ms**, rising with depth as more points take hundreds of iterations.
 
 The Pi 5 has 16.7 ms a frame at 60 fps and is a few times slower per core, so it should fit
 everything. If Reaction doesn't, turn its k2 (speed) down. Obra watches its own time: if
