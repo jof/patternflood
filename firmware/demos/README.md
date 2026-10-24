@@ -1,8 +1,9 @@
 # Demos
 
 Interactive demos for the 2×2 (128 × 128), written once and run in either place.
-There are 47: 13 of ours, plus all 34 of upstream Patternflow's presets, run
-natively ([below](#upstream-patternflow-presets)).
+There are 66: 18 of ours, plus all 48 of upstream Patternflow's patterns, run
+natively ([below](#upstream-patternflow-presets)). That's the 34 firmware presets and
+our ports of the 14 that upstream only had as web sources.
 
 | | Knobs | Frames | Renders on |
 |---|---|---|---|
@@ -84,6 +85,17 @@ Added on 2026-10-23, each testing something the first eight don't:
 | **Vault** | each knob rolls its own tumbler; click to try | **Feedback through the knob alone:** each cap warms as its number gets close, the same within ±1, so the last step is a guess. One knob, one tumbler, in the row's order. | Whether people find the warmth readable without being told; whether the ±1 ambiguity is tension or annoyance. |
 | **Mandala** | k0 orbits the pen, k1 radius, k2 colour, k3 symmetry | **Polar against Cartesian:** the same drawing toy as Etch, but turning the angle knob literally orbits the pen. | Compare with Etch. Which do people draw more with, and which knob do they reach for first? |
 
+Five more, each taking one of Seunghun Lee's visual ideas from upstream and making it
+something you play rather than tune:
+
+| Demo | After Lee's | Knobs | Hypothesis | Watch for |
+|---|---|---|---|---|
+| **Droplet** | 0524-2 droplet refraction, 0530 water surface | each knob a dropper: turn to slide, click to drip, hold to rain | **A click as a physical event:** a real wave equation, refracting a tiled pool floor, with caustics. Four droppers, so ripples from different hands interfere. | Whether people play together, timing drops to make patterns, or each just pokes at their own. |
+| **Terrain** | 0519-1 isocontours, 0529 contour lines | k0/k1 brush, k2 piles or digs earth, k3 sea level | **Turning moves earth,** and **a global reveal knob** (sea level) gives what you sculpted a meaning. | Whether k3 makes people go back and sculpt more: dig a channel, then flood it. |
+| **Glitch** | 0519-2 glitch type, 0511 sliding rows, 0602 colour separation | k0 tear, k1 colour split, k2 smear, k3 crush; click k0 changes the text | **A knob as a whammy bar:** each knob injects one unmistakable effect that springs back over ~1.6 s. Hold to pin it. And a clock gives the box a reason to sit on a desk. | Whether the spring-back reads as playful or as the knob "not working". |
+| **Kaleido** | 0522 quad-fold, 0526 kaleidoscope, 0622 mirror grid | k0 barrel, k1 zoom, k2 mirrors, k3 colour; click k0 shake, k3 oil | **The literal physical gesture:** twisting k0 twists the barrel, and real beads tumble under gravity inside the cell. | Whether the lag of falling beads feels analogue and pleasant, or mushy next to Classic's instant response. |
+| **Pool** | 0624 isometric pillars | each knob a wave paddle on one side (Squash's seats) | **Rate as input:** every detent is a push, so spinning faster makes bigger waves. Four people can collide waves. | Whether people discover that speed matters, and whether waves from opposite sides read in isometric 3D. |
+
 Cross-cutting questions, worth noting on every demo:
 
 1. **Acceleration curve.** 1× to about 6 detents/s, then up to 6×. Too twitchy? Too slow?
@@ -142,15 +154,43 @@ below zero. Turn k0 up about ten detents. That is upstream's behaviour, kept as 
    The `desktop` branch's only change is the HUB75 pinout, which no preset touches.
 3. Start `run.py`. The first start builds the library for aarch64.
 
-Not yet ported: the 14 patterns that exist only as web (TypeScript) sources in
-`upstream/web/src/lib/presets/`, and the community library on patternflow.work. Upstream turns
-the JavaScript into `.h` headers with an AI prompt. Any `.h` from the community's
-"flashable" set should build here the same way: drop it in `presets/`.
+### The web-only patterns (ported here)
+
+Fourteen of upstream's patterns exist only as JavaScript, in `upstream/web/src/lib/presets/`:
+0516, 0517, 0519-2, 0524, 0524-2, 0526, 0529, 0530, 0609, 0614, 0614-2, 0619, 0622 and 0624.
+Upstream turns JavaScript into firmware headers with an AI prompt (`web/src/lib/lab/cppPrompt.ts`).
+We did the same, following that prompt and the knob conventions of upstream's existing ports,
+into `upstream_host/web_ports/preset_*.h`. `build.py` adds them to the library.
+
+- **They're derived from CC BY-SA 4.0 sources,** so they carry that licence and Lee's
+  attribution in their headers, and they are committed here (share-alike).
+- **Every port was checked against the original.**
+  `upstream_host/tools/compare.py` runs the JavaScript in Node and the C++ side by side, for
+  the same frames, at two knob settings (upstream's defaults, and every knob turned). It
+  compares the last frames:
+  ```sh
+  upstream_host/tools/compare.py ../../upstream/web/src/lib/presets/pattern-0526.ts \
+      upstream_host/web_ports/preset_0526.h --size 128x128 --png /tmp/0526.png
+  ```
+  All 14 match within 1.9/255 mean difference and 1 % of pixels; six match exactly. The rest
+  is the sine lookup table's error landing on hard thresholds.
+- **Fidelity over ESP32 rules.** Upstream's prompt forbids double maths and sine-hash noise,
+  because the ESP32 is slow at the one and its sine table bands the other. These ports run on
+  x86 and a Pi 5, where both are native. So 0517 keeps the JavaScript's sine-hash noise, and
+  0519-2 decides its cross-arm edges in double precision. Each spot is marked in the code.
+- **The checker also caught a slip in one of upstream's own ports.** `preset_0519_1.h` uses
+  knob 3's raw value (0–4.9) where the JavaScript uses it normalized (0–1), so zoom comes out
+  about 2.5× too large. It's upstream's file, so it's left as it is and noted here.
+
+Not ported: the community library on patternflow.work. Any community `.h` should build the
+same way: drop it in `upstream_host/web_ports/`.
 
 ## Speed
 
 Measured per frame on ash:
-- Most of our demos take 0.4–1.1 ms (render, gamma, cap). The new five take under 1 ms.
+- Most of our demos take 0.4–1.1 ms (render, gamma, cap). Rotor, Echo, Rocket, Vault and
+  Mandala take under 1 ms; Droplet, Terrain and Glitch about 1 ms; **Kaleido 3.1 ms**; and
+  Pool 1.4 ms (it was 8.3 ms before drawing a diagonal of pillars at a time).
 - **Reaction takes 4.3 ms** at 10 iterations a frame.
 - The upstream presets take **0.1–0.6 ms** natively.
 

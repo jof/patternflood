@@ -36,9 +36,17 @@ SAT_BOOST = 1.62
 LUMA = np.array([0.299, 0.587, 0.114], np.float32)
 
 
+def _stale(lib_path):
+    """Missing, or older than anything of ours it's built from (the upstream clone itself is pinned)."""
+    if not lib_path.exists():
+        return True
+    ours = [BUILD / "build.py", *BUILD.glob("shim/**/*.h"), *BUILD.glob("web_ports/*.h")]
+    return max(p.stat().st_mtime for p in ours) > lib_path.stat().st_mtime
+
+
 def _load(size="128x128"):
     lib_path = BUILD / "build" / f"libpfup_{size}.so"
-    if not lib_path.exists():
+    if _stale(lib_path):
         log(f"upstream: building {lib_path.name}")
         r = subprocess.run([sys.executable, str(BUILD / "build.py"), "--size", size], capture_output=True, text=True)
         if r.returncode:
@@ -120,10 +128,12 @@ def demos():
     for i in range(lib.pf_count()):
         name = lib.pf_name(i).decode()
         use, upright = lib, name in PORTRAIT
+        index = i
         if name in PORTRAIT_NATIVE:
             native = native or _load("128x64")
-            if native is not None:
-                use, upright = native, True
+            names = [native.pf_name(n).decode() for n in range(native.pf_count())] if native else []
+            if name in names:                       # by name: the two libraries needn't list the same presets
+                use, upright, index = native, True, names.index(name)
         labels = [lib.pf_label(i, k).decode() for k in range(4)]
         author = lib.pf_author(i).decode()
         blurb = f"Patternflow preset{' by ' + author if author else ''}."
@@ -131,6 +141,6 @@ def demos():
             blurb += " " + ", ".join(f"k{k} {lab}" for k, lab in enumerate(labels)) + "."
         if name in NOTES:
             blurb += " " + NOTES[name]
-        out.append(type(f"PF_{name}", (Upstream,), {"name": f"pf {name}", "blurb": blurb, "lib": use, "index": i,
+        out.append(type(f"PF_{name}", (Upstream,), {"name": f"pf {name}", "blurb": blurb, "lib": use, "index": index,
                                                     "turn_upright": upright}))
     return out

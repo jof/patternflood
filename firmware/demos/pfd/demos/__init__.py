@@ -12,8 +12,14 @@ from .echo import Echo
 from .rocket import Rocket
 from .vault import Vault
 from .mandala import Mandala
+from .droplet import Droplet
+from .terrain import Terrain
+from .glitch import Glitch
+from .kaleido import Kaleido
+from .pool import Pool
 
 from .. import upstream
 
-OURS = [Classic, Etch, Squash, Cycles, Sand, Harmono, Rewind, Reaction, Rotor, Echo, Rocket, Vault, Mandala]
+OURS = [Classic, Etch, Squash, Cycles, Sand, Harmono, Rewind, Reaction, Rotor, Echo, Rocket, Vault, Mandala,
+        Droplet, Terrain, Glitch, Kaleido, Pool]
 ALL = OURS + upstream.demos()       # upstream Patternflow's presets, after ours

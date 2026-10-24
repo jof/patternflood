@@ -9,8 +9,8 @@ one .so with a C API that pfd/upstream.py drives through ctypes:
     pf_count()  pf_name(i)  pf_label(i, k)  pf_author(i)  pf_width()  pf_height()
     pf_setup(i)  pf_frame(i, dt, deltas[4], pressed[4], held[4], now_ms) -> RGB888 buffer
 
-    ./build.py                              # ../../../upstream, 128 x 128, into build/
-    ./build.py --size 128x64                # upstream's own panel size, for comparison
+    ./build.py                              # ../../../upstream, 128 x 128 and 128 x 64, into build/
+    ./build.py --size 128x64                # just one size
     ./build.py --tree-only --out /tmp/pfup  # a self-contained source tree to build elsewhere (Pi 5)
 
 The patterns are CC BY-SA 4.0 (upstream's licence). They are read from the
@@ -43,7 +43,8 @@ SKIP = {"preset_calib.h"}       # an overlay the tuner summons, not a pattern
 
 def presets(src):
     out = []
-    for p in sorted((src / "presets").glob("preset_*.h")):
+    files = list((src / "presets").glob("preset_*.h")) + list((HERE / "web_ports").glob("preset_*.h"))
+    for p in sorted(files, key=lambda f: f.name):         # by date, as the names run: ports interleave
         if p.name in SKIP:
             continue
         text = p.read_text(encoding="utf-8", errors="replace")
@@ -67,6 +68,8 @@ def write_tree(upstream, out):
     (out / "src").mkdir(parents=True)
     (out / "abi").mkdir()
     shutil.copytree(src / "presets", out / "presets")
+    for port in sorted((HERE / "web_ports").glob("preset_*.h")):   # our ports of web-only patterns
+        shutil.copy(port, out / "presets" / port.name)
     for c in CORES:
         shutil.copy(src / "src" / c, out / "src" / c)
     shutil.copy(src / "abi" / "pf_params.h", out / "abi" / "pf_params.h")
@@ -132,20 +135,21 @@ def main():
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0],
                                 formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
     p.add_argument("--upstream", type=Path, default=None)
-    p.add_argument("--size", default="128x128")
+    p.add_argument("--size", action="append", help="panel size to build, repeatable (default 128x128 and 128x64)")
     p.add_argument("--out", type=Path, default=None, help="tree directory (default build/tree)")
     p.add_argument("--tree-only", action="store_true")
     args = p.parse_args()
 
-    size = tuple(int(v) for v in args.size.lower().split("x"))
+    sizes = [tuple(int(v) for v in s.lower().split("x")) for s in (args.size or ["128x128", "128x64"])]
     tree = args.out or HERE / "build" / "tree"
     found, rev = write_tree(args.upstream or default_upstream(), tree)
     print(f"{len(found)} presets from upstream {rev} -> {tree}")
     if args.tree_only:
         return
-    lib = HERE / "build" / f"libpfup_{size[0]}x{size[1]}.so"
-    compile_tree(tree, size, lib)
-    print(f"built {lib}")
+    for size in sizes:
+        lib = HERE / "build" / f"libpfup_{size[0]}x{size[1]}.so"
+        compile_tree(tree, size, lib)
+        print(f"built {lib}")
 
 
 if __name__ == "__main__":
