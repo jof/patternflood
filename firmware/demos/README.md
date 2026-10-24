@@ -1,9 +1,9 @@
 # Demos
 
 Interactive demos for the 2×2 (128 × 128), written once and run in either place.
-There are 111: 63 of ours, plus all 48 of upstream Patternflow's patterns, run
+There are 116: 68 of ours, plus all 48 of upstream Patternflow's patterns, run
 natively ([below](#upstream-patternflow-presets)). That's the 34 firmware presets and
-our ports of the 14 that upstream only had as web sources. Twenty-eight of ours are
+our ports of the 14 that upstream only had as web sources. Thirty-three of ours are
 [Patternflow-style originals](#our-originals-on-the-patternflow-shelf), shelved among Lee's.
 
 | | Knobs | Frames | Renders on |
@@ -361,7 +361,7 @@ same way: drop it in `upstream_host/web_ports/`.
 
 ### Our originals on the Patternflow shelf
 
-Twenty-eight patterns of ours, in Patternflow's manner: each runs by itself, and the four knobs turn
+Thirty-three patterns of ours, in Patternflow's manner: each runs by itself, and the four knobs turn
 its qualities, not a game. They're in our own style, which is print-shop and demoscene,
 and each sits on the shelf right after the preset of Lee's it riffs on.
 
@@ -394,6 +394,11 @@ and each sits on the shelf right after the preset of Lee's it riffs on.
 | **Pendulums** | pf Wave Saw | The pendulum wave from above: 18 pendulums whose lengths make the first swing 51 times a minute, the next 52, and so on, so they fall into snakes, interleaved lines and scatter, and line up again every 60 s. Shaded balls, depth-sorted. | k0 speed; k1 view; k2 screen; k3 inks. Click: k0 release them together, k2 chunky. |
 | **Spiro** | pf Lissajous Weave | A spirograph: a wheel rolling inside a 96-tooth ring draws a hypotrochoid onto a fading page, so fresh ink is white and ages down through the inks. The wheel and the pen's hole drift, laying each figure over the ghost of the last. | k0 pen speed; k1 wheel size (teeth); k2 screen; k3 inks. Click: k0 clear the page, k1 a new figure, k2 chunky. |
 | **Orrery** | pf 0513 | A sun and five planets on tilted orbits with Kepler's periods (radius to the 1.5), one ringed, two with moons. Each world is lit from its sun, so it waxes and wanes as it goes round, and crosses the sun as a dark disc. | k0 time; k1 tilt; k2 screen; k3 inks. Click: k0 reverse time, k1 orbits, k2 chunky. |
+| **Flock** | pf Vector Field Flow | A murmuration: 1800 starlings align with, close on and keep off the birds near them (a grid of cells stands in for "near"), hold together as one cloud steered by a drifting roost, and flee a falcon, whose wake folds and hollows the flock. Dark birds on a sunset. | k0 cohesion; k1 the falcon's hunger; k2 screen; k3 inks. Click: k0 scatter, k1 the falcon stoops, k2 chunky. |
+| **Koi** | pf 0614-2 | Carp on linked spines (the head steers, each segment follows at a fixed distance), tapered bodies in orange, white and black patches with fanned tails, under drifting lily pads in a green spot ink. They mouth the surface in rings, and mob food when it's dropped. | k0 swim speed; k2 screen; k3 inks. Click: k1 drop food, k2 chunky. |
+| **Shore** | pf Midsummer Sea | A beach from above: swells refracting along the shoreline, breaking white in the shallows, the swash running up the sand with a lacy foam edge and sliding back, leaving wet sand that dries. Sets of bigger waves now and then. | k0 swell; k1 tide; k2 screen; k3 inks. Click: k0 a set of big waves, k2 chunky. |
+| **Grove** | pf 0601 | Fractal trees (seven forks deep) growing from saplings and swaying, more at the tips, in silhouette against dusk. The year turns: blossom, green, orange with leaves falling and blowing, bare. Leaves are spot inks. | k0 wind; k1 season; k2 screen; k3 inks. Click: k0 a gust, k1 grow a new grove, k2 chunky. |
+| **Cumulus** | pf 0517 | Clouds of drifting fractal noise across a low sun, each shaded by the cloud lying sunward of it (silver linings near the sun, dark undersides), with crepuscular rays smeared outward from the sun through the gaps. | k0 wind; k1 cloud cover; k2 screen; k3 inks. Click: k0 time-lapse, k1 move the sun, k2 chunky. |
 | **Strange** | pf Lissajous Weave | A Clifford attractor drawn as the glowing density of 30 000 points, coloured by which way each point jumped. A form change fades out, jumps, and fades in, because gliding between forms passes through dull periodic orbits. | k0–k3 bend its a, b, c, d. Click: k0 next form, k1 colours, k2 freeze the drift, k3 long glow. |
 
 Left alone, each moves on by itself: a new form, shape or scene every 14–40 s. The menu's
@@ -421,7 +426,7 @@ Measured per frame on ash:
 - The upstream presets take **0.1–0.6 ms** natively.
 - The Patternflow originals: Op Art 0.3 ms, Life 0.3 ms, Fireworks 0.4 ms, Warp 0.5 ms,
   Aurora 0.5 ms, Snow 0.5 ms, Lava 0.6 ms, Orrery 0.6 ms, Spiro 0.6 ms, Pendulums 1.1 ms,
-  Gears 1.1 ms, Bit Tunnel 0.7 ms, Jellyfish 0.8 ms, Tesla 1.2 ms, Galaxy 1.6 ms, Smoke 1.6 ms, Window 1.7 ms, Riso 1.9 ms, Moon 1.9 ms,
+  Gears 1.1 ms, Grove 0.8 ms, Flock 0.9 ms, Shore 2.3 ms, Cumulus 2.4 ms, Koi 2.5 ms, Bit Tunnel 0.7 ms, Jellyfish 0.8 ms, Tesla 1.2 ms, Galaxy 1.6 ms, Smoke 1.6 ms, Window 1.7 ms, Riso 1.9 ms, Moon 1.9 ms,
   Pixel Sort 2.0 ms, Caustics 2.1 ms, Strange 2.2 ms, Valley 2.7 ms, Bonfire 2.8 ms and Sea
   2.9 ms, and Helix 5.7 ms (a hundred-odd sphere impostors). **Mandel averages 8 ms**, rising with depth as more points take hundreds of
   iterations. **Obra takes 2.6–5.3 ms**, depending on the form (octahedron fastest,
