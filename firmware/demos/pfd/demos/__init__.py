@@ -41,6 +41,7 @@ from .opart import OpArt
 from .bonfire import Bonfire
 from .mandel import Mandel
 from .lava import Lava
+from .tesla import Tesla
 
 from .. import upstream
 
@@ -55,7 +56,8 @@ ORIGINALS = [(BitTunnel, "pf 0521"), (Obra, "pf 0522"), (Riso, "pf 0528"), (Stra
              (Caustics, "pf 0530"), (Galaxy, "pf Chromatic Vortex"),
              (Valley, "pf 0624"), (OpArt, "pf Warped Wave"),
              (Bonfire, "pf Firefly Hollow"),
-             (Mandel, "pf Retro Digital Tapestry"), (Lava, "pf 0520")]
+             (Mandel, "pf Retro Digital Tapestry"), (Lava, "pf 0520"),
+             (Tesla, "pf MagVortex")]
 
 
 def _shelf(presets):
