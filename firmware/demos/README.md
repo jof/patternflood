@@ -1,9 +1,9 @@
 # Demos
 
 Interactive demos for the 2×2 (128 × 128), written once and run in either place.
-There are 91: 43 of ours, plus all 48 of upstream Patternflow's patterns, run
+There are 101: 53 of ours, plus all 48 of upstream Patternflow's patterns, run
 natively ([below](#upstream-patternflow-presets)). That's the 34 firmware presets and
-our ports of the 14 that upstream only had as web sources. Eight of ours are
+our ports of the 14 that upstream only had as web sources. Eighteen of ours are
 [Patternflow-style originals](#our-originals-on-the-patternflow-shelf), shelved among Lee's.
 
 | | Knobs | Frames | Renders on |
@@ -361,7 +361,7 @@ same way: drop it in `upstream_host/web_ports/`.
 
 ### Our originals on the Patternflow shelf
 
-Eight patterns of ours, in Patternflow's manner: each runs by itself, and the four knobs turn
+Eighteen patterns of ours, in Patternflow's manner: each runs by itself, and the four knobs turn
 its qualities, not a game. They're in our own style, which is print-shop and demoscene,
 and each sits on the shelf right after the preset of Lee's it riffs on.
 
@@ -374,6 +374,16 @@ and each sits on the shelf right after the preset of Lee's it riffs on.
 | **Smoke** | pf Vector Field Flow | Incense smoke, dithered. Dye rises from a source and rides a curl-noise flow (no divergence, so it never bunches or thins) whose swirl grows with height: a smooth ribbon at the stick that breaks into curls as it climbs. Each frame it's advected semi-Lagrangian style and fades slowly. | k0 turbulence; k1 moves the source; k2 screen; k3 inks. Click: k0 gust, k1 puff, k2 chunky, k3 a second source. |
 | **Moon** | pf Poincaré Sphere | A world in the dark, lit through its phases: a cratered moon (bump-mapped bowls and rims, dark maria), an Earth (continents, ice caps, drifting clouds, a sun glint on the sea, an atmosphere's rim), or a banded giant whose rings take its shadow and cast theirs on it. Analytic sphere, one-pixel twinkling stars. | k0 turns it; k1 moves the sun; k2 screen; k3 inks. Click: k0 next world, k1 auto phase, k2 chunky. |
 | **Sea** | pf Midsummer Sea | Open water from a boat riding the swell: eight deep-water waves (each at the speed its length gives it), raycast column by column so crests hide the troughs behind them. Fresnel reflection of the sky, ripples that only tilt the normals, and a glitter path from the moon, or the sun at sunset. | k0 swell; k1 moves the moon; k2 screen; k3 inks. Click: k0 storm (with lightning), k1 sunset, k2 chunky. |
+| **Caustics** | pf 0530 | Sunlight through moving water, netting a pool floor. Light through each point of the surface lands where the slope throws it, splatted over the four nearest floor pixels; the focused places blaze. The tile grout wobbles by the same refraction, and pebbles (click k0, or every kick) send rings out. | k0 chop; k1 depth (focus); k2 screen; k3 inks. Click: k0 a pebble, k1 tiles, k2 chunky. |
+| **Galaxy** | pf Chromatic Vortex | A spiral galaxy whose arms are a density wave: 40 000 stars ride slightly out-of-round orbits whose shapes twist with radius, so they crowd into arms that persist while the stars flow through them. Dust lanes trail the arms; tilted in 3D. | k0 arm twist; k1 tilt; k2 screen; k3 inks. Click: k0 arm count (2–4), k1 a bar, k2 chunky. |
+| **Valley** | pf 0624 | Low flight over a tiling ridged-fractal range, Comanche style (each column a ray across the heightmap). Sun-shaded slopes, snow on the peaks, lakes that mirror the sky, haze; the plane banks into its turns and steers clear of high ground. Dawn, night (moon and wheeling stars) or dusk. | k0 steers; k1 altitude; k2 screen; k3 inks. Click: k0 autopilot, k1 time of day, k2 chunky, k3 new land. |
+| **Op Art** | pf Warped Wave | Hard black and white, after Bridget Riley: wavy lines whose spacing breathes, a checkerboard crowding into a drifting fold, a grid under a roaming lens, two crossing ring sets, a twisting sunburst. | k0 line spacing; k1 warp; k2 picture; k3 inks. Click: k0 invert, k1 hold still, k2 screen, k3 chunky. |
+| **Bonfire** | pf Firefly Hollow | Flames over crossed logs: a teardrop of heat eaten by fractal noise that streams upward faster than the flame, so tongues lick and break off; wind leans the tips. Sparks rise and waver; the ground catches the glow. | k0 fire size; k1 wind; k2 screen; k3 inks. Click: k0 stoke, k1 calm, k2 chunky. |
+| **Mandel** | pf Retro Digital Tapestry | An endless dive into the Mandelbrot set: a million times in on one of six deep places, then out and on to the next. Points iterate only until they escape (or are caught in a cycle), with a smooth count whose bands flow inward. | k0 zoom (takes over for 20 s); k1 colour flow; k2 screen; k3 inks. Click: k0 next place, k1 turn the view, k2 chunky. |
+| **Lava** | pf 0520 | A lava lamp: wax blobs warm over the bulb, rise, cool at the cap and sink, stretching as they move and merging as metaballs (compact ones, so they only touch when close) over a pool on the bottom. | k0 heat; k1 how much wax; k2 screen; k3 inks. Click: k0 shake, k2 chunky. |
+| **Tesla** | pf MagVortex | A plasma globe: jagged filaments, re-drawn each frame from a few octaves of wiggle, writhe from the electrode to the glass, with forks. Hold k0 to touch the glass and every filament leaps to your finger. | k0 moves your finger (hold to touch); k1 filaments; k2 screen; k3 inks. Click: k1 forks, k2 chunky. |
+| **Window** | pf 0609 | Rain on glass over a city out of focus. A mist of droplets, and larger drops that are lenses, each showing the bokeh small and upside down; heavy drops slide, clearing a path and leaving droplets. | k0 rain; k1 focus (bokeh size); k2 screen; k3 inks. Click: k0 the wiper, k1 lightning, k2 chunky. |
+| **Life** | pf TileWaves | Conway's Life on a wrapping board: newborn cells blaze, old ones glow, the dead leave fading ghosts (gliders trail comets). It reseeds when it settles: soup, a glider fleet, an R-pentomino, an acorn. | k0 speed; k1 ghost length; k2 screen; k3 inks. Click: k0 pause, k1 reseed, k2 big cells. |
 | **Strange** | pf Lissajous Weave | A Clifford attractor drawn as the glowing density of 30 000 points, coloured by which way each point jumped. A form change fades out, jumps, and fades in, because gliding between forms passes through dull periodic orbits. | k0–k3 bend its a, b, c, d. Click: k0 next form, k1 colours, k2 freeze the drift, k3 long glow. |
 
 Left alone, each moves on by itself: a new form, shape or scene every 14–40 s. The menu's
@@ -381,12 +391,15 @@ Left alone, each moves on by itself: a new form, shape or scene every 14–40 s.
 level, bass and treble envelopes add to what the knobs set (the same four upstream's audio
 edition reads). Each beat pulses them, each 8-bar phrase brings the next form, shape, picture,
 world or scene (a gust in Smoke, lightning at Sea), in Bit Tunnel each bar steps the bit mask,
-and in Smoke each kick puffs.
+in Smoke each kick puffs, in Caustics a kick drops a pebble, in Tesla it touches the glass, and in Life a
+generation passes on every beat.
 
 Their shared parts are `pfd/ink.py` (threshold screens: Bayer, blue noise by void filling,
 interleaved gradient noise, halftone dots, engraving lines and pixel-exact cross-hatching,
 whose line sets come in one at a time as the tone rises; and the ink palettes) and
-`pfd/demos/original.py` (the shelf, the audio envelopes and the bar and phrase events).
+`pfd/demos/original.py` (the shelf, the audio envelopes and the bar and phrase events; and
+`Inked`, which gives a pattern the k2 screen and k3 inks knobs, the chunky toggle and
+`print(tone)`).
 
 ## Speed
 
@@ -396,15 +409,20 @@ Measured per frame on ash:
   Pool 1.4 ms (it was 8.3 ms before drawing a diagonal of pillars at a time).
 - **Reaction takes 4.3 ms** at 10 iterations a frame.
 - The upstream presets take **0.1–0.6 ms** natively.
-- The Patternflow originals: Bit Tunnel 0.7 ms, Smoke 1.6 ms, Riso 1.9 ms, Moon 1.9 ms,
-  Pixel Sort 2.0 ms, Strange 2.2 ms and Sea 2.9 ms. **Obra takes 2.6–5.3 ms**, depending on the form (octahedron fastest,
+- The Patternflow originals: Op Art 0.3 ms, Life 0.3 ms, Lava 0.6 ms, Bit Tunnel 0.7 ms,
+  Tesla 1.2 ms, Galaxy 1.6 ms, Smoke 1.6 ms, Window 1.7 ms, Riso 1.9 ms, Moon 1.9 ms,
+  Pixel Sort 2.0 ms, Caustics 2.1 ms, Strange 2.2 ms, Valley 2.7 ms, Bonfire 2.8 ms and Sea
+  2.9 ms. **Mandel averages 8 ms**, rising with depth as more points take hundreds of
+  iterations. **Obra takes 2.6–5.3 ms**, depending on the form (octahedron fastest,
   metaballs slowest).
 
 The Pi 5 has 16.7 ms a frame at 60 fps and is a few times slower per core, so it should fit
 everything. If Reaction doesn't, turn its k2 (speed) down. Obra watches its own time: if
 its render averages over 12 ms, it marches at half resolution (one ray per 2 × 2 block, about
 half the cost). The dither and outline stay at full resolution, so it looks nearly the same.
-It logs when it does this.
+It logs when it does this. Mandel does the same past 14 ms, and goes back to full resolution
+once a frame would be cheap again, so on ash only the deepest seconds of a dive (into a
+mini-Mandelbrot, whose inside burns every iteration) drop to half.
 
 ## Bench network
 
