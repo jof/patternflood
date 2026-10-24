@@ -177,10 +177,14 @@ default for a `bluez` sink is 0.15 s (0 for wired output). Fine-tune it live wit
     every two bars doesn't (it's been heard).
     - It also counts the sound turning into something not heard in those 6 s, or the level
       passing the loudest recent moment.
+    - A drop that swells in over a bar, from an intro whose hits already reach most of the way,
+      is caught by the last 0.6 s against the *average* of the 8 s before (Calibre's "Moonlight"
+      at 1:29). That term sits out for 8 s after any hit, so one drop is one impact.
     - It fires once per change, re-arming only after the contrast settles, and gives a strength
       (0.55-1).
     - The Audio shelf's visualizers **flare** on it: lit parts blaze towards white and everything
-      lifts, scaled by the strength, fading over about a second. Tempo, Waterfall and Scope don't.
+      lifts, near full strength on every hit, fading over about half a second. Tempo, Waterfall
+      and Scope don't.
     - Milk punches its zoom and fires a white ring; Pulse bursts and Spectrum shockwaves.
     - Tempo shows the live contrast (purple bar) and the envelope after a hit (gold).
   - **Builds:** rising highs over thinning bass.
