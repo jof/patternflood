@@ -1,7 +1,7 @@
 # Demos
 
 Interactive demos for the 2×2 (128 × 128), written once and run in either place.
-There are 67: 19 of ours, plus all 48 of upstream Patternflow's patterns, run
+There are 72: 24 of ours, plus all 48 of upstream Patternflow's patterns, run
 natively ([below](#upstream-patternflow-presets)). That's the 34 firmware presets and
 our ports of the 14 that upstream only had as web sources.
 
@@ -121,6 +121,80 @@ Cross-cutting questions, worth noting on every demo:
 2. **The menu chord.** Is holding two knobs discoverable, and does it ever fire by accident (e.g. two Squash players clicking at once)?
 3. **Knob lights.** Are they read at a glance, or ignored? If they're ignored, they may be worth less than the NeoPixel power and the light-slit work in the enclosure.
 4. **Attract mode.** `--knobs auto` plays the demos by itself. Does an idle box running it draw people in?
+
+## Audio
+
+Every demo can hear music: `rt.audio`, refreshed each frame (`pfd/audio.py`). On the bench
+it listens to whatever ash is playing, through the default output's PulseAudio/PipeWire
+monitor, so nothing has to be wired in.
+
+```sh
+./run.py --demo spectrum                                  # --audio pulse is the default
+./run.py --audio-delay 0.25                               # if beats land early or late
+./run.py --audio file:~/Music/set.mp4@600 --demo pulse    # a track, silently, in real time
+./run.py --audio alsa:hw:1                                # the Pi 5, with a line-in or mic
+```
+
+**Sync.** The analysis runs on audio held back by `--audio-delay`, so beats land on the panel
+when they're heard. Bluetooth output trails its own monitor by ~0.2 s, which is the default
+when the default sink is a `bluez` one (0.03 s otherwise). Fine-tune it live with k2 in Tempo.
+
+**What the analyzer hears**, at 48 kHz in 512-sample hops (93.75 a second), at about 1 % of one core:
+- **Level and spectrum:** RMS and 24 log-spaced bands from 30 Hz to 16 kHz, each against its own
+  slow peak; bass, mid and treble summaries.
+- **Onsets:** spectral flux, with kick, snare and hat split by range.
+- **Tempo:** autocorrelation of the last 8 s of onsets.
+  - Each candidate is scored with its bar (4×) and two-bar (8×) repeats and its off-beat (½), under
+    a broad prior.
+  - The multiples are what reject the 3:2 alias breakbeats invite: 174 BPM heard as 116.
+  - A new tempo has to persist: about 2 s for an unrelated one, 6 s for a 3:2 relation. An exact
+    octave never replaces the current tempo, since it's the same groove.
+- **Beats:** a phase-locked clock, aligned to the onsets four times a second.
+  - The onsets it aligns to weight *kicks*: low onsets whose added energy is gone within 85 ms,
+    unlike an off-beat bass note.
+  - Corrections scale with how decisively one phase wins, so the clock coasts through rolls and
+    risers, and a big jump has to repeat three times running.
+- **Downbeats:** which of the four beats carries the most low-end onset and spectral change,
+  accumulated over many bars.
+- **Phrases:** 8-bar phrases, *predicted*, not just noticed.
+  - Bar-by-bar novelty (the last four bars against the four before) is accumulated by bar
+    position mod 8, and boundary events fire on the grid.
+  - **Drops:** a bar starting with over 6× the low end of the previous four bars.
+  - **Builds:** rising highs over thinning bass.
+
+**Scores**, from `tools/audio_test.py synth`: a generated house track with known truth, with
+a kick on every beat, so downbeats must come from the bass line.
+
+| Tempo | Tempo error | Beats (F) | Downbeats | Phrases | Drops |
+|---|---|---|---|---|---|
+| 100 | +0.26 % | 0.92 | 0.78 | 0.50 | 1 of 1, 1 false |
+| 128 | +0.21 % | 0.91 | 0.77 | 0.71 | 0 of 1 |
+| 174 | −0.09 % | 0.94 | 0.94 | 0.86 | 1 of 1 |
+
+On real drum & bass (the Boiler Room sets in `~/Music`), it holds 174–175 or 87 at confidence
+0.8–1.0. A cold start can still catch the 3:2 alias (~117) for half a minute.
+
+**When it's wrong, people can fix it**, in Tempo:
+- **k1 click:** tap the tempo (it holds for 8 s).
+- **k3 click:** mark the one.
+- **k0:** shift the phrase grid a bar.
+- **k2:** the A/V delay.
+
+**Demos** (all need audio; without it they run on a quiet 120 BPM stand-in):
+
+| Demo | What | Knobs |
+|---|---|---|
+| **Tempo** | the tracker shown: BPM and confidence, beats of the bar (the one in red), bars of the phrase, onset trace under the beat grid, spectrum, drops and builds | k0 phrase shift, k1 tap, k2 A/V delay, k3 mark the one |
+| **Spectrum** | 24 bands with falling caps, as bars, mirrored or radial; caps flash on the beat, colour steps each phrase, drops send a shockwave | k0 style, k1 hue, k2 fall, k3 gain |
+| **Scope** | an oscilloscope with phosphor: circle, stereo XY (a goniometer), or a triggered wave | k0 mode, k1 persistence, k2 gain, k3 hue |
+| **Waterfall** | a scrolling spectrogram with the analyzer's grid drawn in: beat ticks (the one in red), phrase lines, drop lines | k0 speed, k1 palette, k2 gain, k3 click: marks |
+| **Pulse** | rings on the kick, a figure turning once a bar, colour per phrase, builds tighten and drops burst; soft, never strobing | k0 hue, k1 symmetry, k2 reactivity, k3 trails |
+
+**The upstream patterns, too.** In the menu, k2 turns on *audio knobs*. Then, as in
+upstream's audio edition, sound turns each upstream pattern's four knobs:
+- k0 follows the mids, k1 the level, k2 the bass and k3 the treble.
+- Each rises fast and falls slowly, through upstream's own `knobAudioActive`/`knobAudioValue`
+  fields, so every one of the 48 reacts without a line of it changing.
 
 ## Upstream Patternflow presets
 

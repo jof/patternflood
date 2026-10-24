@@ -7,7 +7,7 @@ stand-ins for the Arduino and panel headers (shim/). Upstream's portable cores
 one .so with a C API that pfd/upstream.py drives through ctypes:
 
     pf_count()  pf_name(i)  pf_label(i, k)  pf_author(i)  pf_width()  pf_height()
-    pf_setup(i)  pf_frame(i, dt, deltas[4], pressed[4], held[4], now_ms) -> RGB888 buffer
+    pf_setup(i)  pf_frame(i, dt, deltas[4], pressed[4], held[4], now_ms, audio_on[4], audio[4]) -> RGB888
 
     ./build.py                              # ../../../upstream, 128 x 128 and 128 x 64, into build/
     ./build.py --size 128x64                # just one size
@@ -102,7 +102,8 @@ def write_tree(upstream, out):
               "const char* pf_label(int i, int k) { return ENTRIES[i].labels[k]; }",
               "void pf_setup(int i) { PFCanvas::clear(); ENTRIES[i].setup(); }",
               "const uint8_t* pf_frame(int i, float dt, const int* deltas, const uint8_t* pressed,",
-              "                        const uint8_t* held, uint32_t now) {",
+              "                        const uint8_t* held, uint32_t now, const uint8_t* audio_on,",
+              "                        const float* audio) {",
               "  InputFrame in;",
               "  memset(&in, 0, sizeof in);",
               "  for (int k = 0; k < 4; k++) {",
@@ -111,6 +112,8 @@ def write_tree(upstream, out):
               "    in.knobDeltas[k] = deltas[k];",
               "    in.btnPressed[k] = pressed[k];",
               "    in.btnHeld[k] = held[k];",
+              "    in.knobAudioActive[k] = audio_on[k];     // upstream's audio edition: sound turns the knob",
+              "    in.knobAudioValue[k] = audio[k];",
               "  }",
               "  in.now = now;",
               "  pf_host_now_ms = now;",

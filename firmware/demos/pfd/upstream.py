@@ -12,6 +12,7 @@ The runtime's gamma then treats the pattern's 0..255 as perceptual, as
 upstream's panel driver does.
 """
 import ctypes
+import math
 import subprocess
 import sys
 from pathlib import Path
@@ -33,6 +34,7 @@ PORTRAIT = {"Midsummer Sea", "Firefly Hollow"}       # scale fine to 128x128, th
 PORTRAIT_NATIVE = {"Breakout Arcade"}               # layout needs 64 rows: 128x64, turned, centred
 NOTES = {"0519-1": "Starts dark (upstream's default): turn k0 up."}
 SAT_BOOST = 1.62
+AUDIO_ATTACK_S, AUDIO_RELEASE_S = 0.04, 0.35
 LUMA = np.array([0.299, 0.587, 0.114], np.float32)
 
 
@@ -56,7 +58,8 @@ def _load(size="128x128"):
     lib.pf_name.restype = lib.pf_author.restype = lib.pf_label.restype = ctypes.c_char_p
     lib.pf_frame.restype = ctypes.POINTER(ctypes.c_uint8)
     lib.pf_frame.argtypes = [ctypes.c_int, ctypes.c_float, ctypes.POINTER(ctypes.c_int),
-                             ctypes.POINTER(ctypes.c_uint8), ctypes.POINTER(ctypes.c_uint8), ctypes.c_uint32]
+                             ctypes.POINTER(ctypes.c_uint8), ctypes.POINTER(ctypes.c_uint8), ctypes.c_uint32,
+                             ctypes.POINTER(ctypes.c_uint8), ctypes.POINTER(ctypes.c_float)]
     return lib
 
 
@@ -74,6 +77,9 @@ class Upstream(Demo):
         self.deltas = (ctypes.c_int * 4)()
         self.pressed = (ctypes.c_uint8 * 4)()
         self.held = (ctypes.c_uint8 * 4)()
+        self.audio_on = (ctypes.c_uint8 * 4)()
+        self.audio_val = (ctypes.c_float * 4)()
+        self.ballistic = [0.0] * 4
         self.t_touch = [-10.0] * 4
         self.lib.pf_setup(self.index)
         self.frame = np.zeros((N, N, 3), np.float32)
@@ -89,8 +95,18 @@ class Upstream(Demo):
     def step(self, dt):
         for k in range(4):
             self.held[k] = int(self.rt.held(k))
+        # Upstream's audio edition: each knob follows the energy in one range of the spectrum,
+        # quick to rise and slow to fall, and the pattern sees it as the knob's value (0..1).
+        a = self.rt.audio
+        on = self.rt.audio_knobs and a.live
+        targets = (a.mid, a.level, a.bass, a.treble)
+        for k in range(4):
+            tc = AUDIO_ATTACK_S if targets[k] > self.ballistic[k] else AUDIO_RELEASE_S
+            self.ballistic[k] += (targets[k] - self.ballistic[k]) * (1 - math.exp(-dt / tc))
+            self.audio_on[k] = int(on)
+            self.audio_val[k] = min(1.0, max(0.0, self.ballistic[k]))
         buf = self.lib.pf_frame(self.index, dt, self.deltas, self.pressed, self.held,
-                                int(self.rt.t * 1000) & 0xFFFFFFFF)
+                                int(self.rt.t * 1000) & 0xFFFFFFFF, self.audio_on, self.audio_val)
         for k in range(4):
             self.deltas[k] = self.pressed[k] = 0
         img = np.ctypeslib.as_array(buf, shape=(self.h, self.w, 3)).astype(np.float32) / 255.0

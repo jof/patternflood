@@ -15,6 +15,9 @@ and these runtime helpers on self.rt:
     rt.held_for(k)        seconds it has been down (0 if up)
     rt.accel(k, d)        d scaled up when the knob is spun fast (for cursors and paddles)
     rt.t                  seconds since start
+    rt.audio              this frame's music (pfd.audio.AudioState): level, bands, bass/mid/
+                          treble, onsets, bpm, beat/bar/phrase phases and events, drops. With
+                          no audio it's a quiet, steady 120 BPM, so visualizers still move.
 
 System gesture, in every demo: hold the two outer knobs (k0 and k3) for a
 second to open the menu. In the menu k0 picks the demo (live), k3 sets
@@ -28,6 +31,7 @@ import numpy as np
 
 from knob_renderer import GAMMA, capped
 from . import draw
+from .audio import SilentState
 from .io import log
 
 CLICK_S = 0.45          # a press shorter than this, with no turn in it, is a click
@@ -77,10 +81,13 @@ class Knob:
 
 
 class Runtime:
-    def __init__(self, demos, knobs, out, fps=60.0, bright=0.3, start=0, duration=None):
+    def __init__(self, demos, knobs, out, fps=60.0, bright=0.3, start=0, duration=None, audio=None):
         self.demo_classes = demos
         self.instances = {}
         self.knobs_in, self.out = knobs, out
+        self.audio_in = audio
+        self.audio = SilentState(0.0, -1)
+        self.audio_knobs = False        # upstream patterns: sound turns their knobs, as upstream's audio edition
         self.fps, self.bright, self.duration = fps, bright, duration
         self.k = [Knob() for _ in range(NKNOBS)]
         self.t = 0.0
@@ -160,6 +167,9 @@ class Runtime:
             self.demo = self._instance(self.index)
         elif k == 3:
             self.bright = min(1.0, max(0.02, self.bright * (1.08 ** d)))
+        elif k == 2:
+            self.audio_knobs = d > 0
+            log(f"menu: audio drives upstream knobs {'on' if self.audio_knobs else 'off'}")
 
     def _check_menu_chord(self):
         k0, k3 = self.k[0], self.k[NKNOBS - 1]
@@ -193,6 +203,9 @@ class Runtime:
             rgb[118:122, 4:124] = 0.15
             rgb[118:122, 4:4 + int(120 * self.bright)] = (1, .8, .3)
             draw.text(rgb, "k0/k1 demo  k3 bright", 64, 104, (.5, .5, .5), center=True)
+            if self.audio.live:
+                draw.text(rgb, f"k2 audio knobs {'ON' if self.audio_knobs else 'off'}  {self.audio.bpm:.0f} bpm",
+                          64, 93, (.45, .7, .9) if self.audio_knobs else (.4, .4, .4), center=True)
         elif self.t - self.t_banner < 1.5:
             a = min(1.0, 3 * (1.5 - (self.t - self.t_banner)))
             band = rgb[:14]
@@ -220,6 +233,10 @@ class Runtime:
                 for ev in self.knobs_in.poll(self.t):
                     self._event(ev)
                 self._check_menu_chord()
+                if self.audio_in:
+                    self.audio = self.audio_in.frame(dt)
+                else:
+                    self.audio = SilentState(self.t, self.audio.counts["beat"])
                 self.demo.step(dt)
 
                 # NaN would slip through the current cap, so scrub it before anything else
@@ -253,6 +270,8 @@ class Runtime:
             self.knobs_in.set_lights([(0, 0, 0)] * NKNOBS)
             self.knobs_in.close()
             self.out.close()
+            if self.audio_in:
+                self.audio_in.close()
             log("stopped; display blanked")
 
 

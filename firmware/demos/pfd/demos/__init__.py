@@ -18,9 +18,15 @@ from .glitch import Glitch
 from .kaleido import Kaleido
 from .pool import Pool
 from .resort import Resort
+from .tempo import Tempo
+from .spectrum import Spectrum
+from .scope import Scope
+from .waterfall import Waterfall
+from .pulse import Pulse
 
 from .. import upstream
 
 OURS = [Classic, Etch, Squash, Cycles, Sand, Harmono, Rewind, Reaction, Rotor, Echo, Rocket, Vault, Mandala,
-        Droplet, Terrain, Glitch, Kaleido, Pool, Resort]
+        Droplet, Terrain, Glitch, Kaleido, Pool, Resort,
+        Tempo, Spectrum, Scope, Waterfall, Pulse]
 ALL = OURS + upstream.demos()       # upstream Patternflow's presets, after ours

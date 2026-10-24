@@ -11,7 +11,12 @@ Pi 5 (knobs on I2C, card on the Pi's own Ethernet):
 Preview without hardware (writes a GIF; --knobs auto plays by itself):
     ./run.py --demo etch --knobs auto --out preview:/tmp/etch.gif --seconds 8
 
-Hold k0 and k3 together for a second for the menu: k0 picks the demo, k3 sets brightness.
+Audio (what ash is playing, by default; previews take --audio file:PATH):
+    ./run.py --demo tempo                  # the calibration demo: tap tempo, mark the one, A/V delay
+    ./run.py --audio file:~/Music/set.mp4@600 --out preview:/tmp/viz.gif --demo spectrum
+
+Hold k0 and k3 together for a second for the menu: k0 picks the demo, k3 sets brightness,
+k2 lets the music turn the upstream patterns' knobs.
 """
 import argparse
 import os
@@ -22,6 +27,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "colorlight"))     # r75_frame, seesaw, knob_renderer
 
 from pfd.demos import ALL                   # noqa: E402
+from pfd.audio import audio_source          # noqa: E402
 from pfd.io import frame_sink, knob_source  # noqa: E402
 from pfd.runtime import Runtime             # noqa: E402
 
@@ -35,6 +41,10 @@ def main():
     p.add_argument("--out", default="pipe:durian", help="pipe:HOST[:IP] | udp[:IP] | preview:FILE.gif")
     p.add_argument("--demo", default="0", help="start demo, by name or index")
     p.add_argument("--fps", type=float, default=None, help="default 60, or 20 for previews")
+    p.add_argument("--audio", default=None,
+                   help="pulse[:SOURCE] | alsa[:DEVICE] | file:PATH[@SECONDS] | none (default: pulse on the bench, none for previews)")
+    p.add_argument("--audio-delay", type=float, default=None,
+                   help="seconds to hold audio back so beats land when heard (default 0.2 for Bluetooth output, else 0.03)")
     p.add_argument("--bright", type=float, default=None, help="0..1, default 0.3 (1.0 for previews)")
     p.add_argument("--seconds", type=float, default=None, help="stop after this long (previews default to 8)")
     p.add_argument("--list", action="store_true", help="list the demos and exit")
@@ -58,7 +68,9 @@ def main():
 
     out = frame_sink(args.out, preview_fps=fps)
     knobs = knob_source(args.knobs)
-    Runtime(ALL, knobs, out, fps=fps, bright=bright, start=start, duration=seconds).run()
+    spec = args.audio or ("none" if preview else "pulse")
+    audio = audio_source(spec, delay=args.audio_delay, preview=preview)
+    Runtime(ALL, knobs, out, fps=fps, bright=bright, start=start, duration=seconds, audio=audio).run()
 
 
 if __name__ == "__main__":
