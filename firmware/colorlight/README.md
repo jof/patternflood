@@ -138,6 +138,10 @@ display over. If all of that works, flash it with
 
 ## Knobs → patterns (bench demo)
 
+*Superseded on 2026-10-23 by [`../demos/`](../demos/README.md)*. There, ash renders
+everything and durian only forwards UDP. The arrangement below, which renders on
+durian, still works.
+
 The FeatherS3 knob bridge is on ash's USB, and the card is on durian's USB NIC.
 `knob_link.py` (on ash) pipes knob events over SSH to `knob_renderer.py` (on
 durian) and passes knob-light commands back:

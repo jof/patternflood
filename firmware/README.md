@@ -5,6 +5,10 @@ FeatherS3 on the STEMMA QT chain scans for the 4991 encoders and streams them to
 a host over USB serial as JSON lines, until the Pi reads them itself. Protocol in
 `knob_bridge/src/main.cpp`.
 
+**`demos/`**: the interactive demos, along with the runtime that runs them on the bench (ash
+renders, durian pipes frames to the card) and on the Pi 5 (I²C knobs, direct
+UDP). It also lists the interaction hypotheses each demo tests.
+
 The rest of this page is the abandoned ESP32 fork:
 
 The delta against upstream Patternflow, as a patch series.
