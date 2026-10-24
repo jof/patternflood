@@ -36,6 +36,7 @@ from .smoke import Smoke
 from .sea import Sea
 from .caustics import Caustics
 from .galaxy import Galaxy
+from .valley import Valley
 
 from .. import upstream
 
@@ -47,7 +48,8 @@ OURS = OURS + AUDIO
 ORIGINALS = [(BitTunnel, "pf 0521"), (Obra, "pf 0522"), (Riso, "pf 0528"), (Strange, "pf Lissajous Weave"), (PixelSort, "pf 0519-2"),
              (Moon, "pf Poincaré Sphere"), (Smoke, "pf Vector Field Flow"),
              (Sea, "pf Midsummer Sea"),
-             (Caustics, "pf 0530"), (Galaxy, "pf Chromatic Vortex")]
+             (Caustics, "pf 0530"), (Galaxy, "pf Chromatic Vortex"),
+             (Valley, "pf 0624")]
 
 
 def _shelf(presets):
