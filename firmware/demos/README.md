@@ -112,7 +112,7 @@ always looks the same:
 - k3 turns the hue of the sky, sea, sun and pool continuously, in YIQ so brightness holds, through cobalt,
   lagoon, vivid and violet. Pools turn only a third as far, so they never go green.
 - Speed: lots are cached per lighting state, and palms are cached as part maps, recoloured per lighting and
-  sheared for sway each frame. Frames take about 0.9 ms on ash while panning, and under 3 ms while turning
+  drawn in seven real sway poses (picked per frame, so the whole tree bends). Frames take about 0.9 ms on ash while panning, and under 3 ms while turning
   the light or colour.
 
 Cross-cutting questions, worth noting on every demo:

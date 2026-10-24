@@ -425,60 +425,68 @@ class Resort(Demo):
 
     # ---- palms: drawn once per lot and look as sprites; the sway is a shear, every frame
 
-    def _palm_shapes(self, i):
-        """Each palm of lot i as a map of parts (-1 none, 0 trunk shade, 1 trunk lit, 2-4 greens,
-        5 coconut). Shapes don't change with the light, so this is cached on the horizon alone."""
+    POSES = 3                   # sway poses either side of rest: 7 in all
+
+    def _palms_of(self, i):
+        """The palms of lot i, placed on its shore; their sway poses are drawn on demand.
+        Shapes don't change with the light, so this is cached on the horizon alone."""
         key = (i, self.horizon)
         if key in self.palm_shapes:
             return self.palm_shapes[key]
         if len(self.palm_shapes) > 32:
             self.palm_shapes.clear()
-        s = self.world.lot(i)
         D = (self.horizon + self.world.depth_profile(i)).astype(int)
-        shapes = []
-        W = TILE + 2 * MARGIN
-        for p in sorted(s["palms"], key=lambda p: p["dy"]):
-            part = np.full((N, W), -1, np.int8)
-            bx = p["x"] + MARGIN
+        palms = []
+        for p in sorted(self.world.lot(i)["palms"], key=lambda p: p["dy"]):
             by = D[int(min(TILE - 1, p["x"]))] + p["dy"]
-            h = min(p["h"], by - 6)
-            lean = p["lean"]
-            cx, cy = bx + lean * h, by - h
-            ss = np.linspace(0, 1, 12)
-            ctrl = (bx + lean * h * 0.15, by - h * 0.6)
-            px = (1 - ss) ** 2 * bx + 2 * (1 - ss) * ss * ctrl[0] + ss ** 2 * cx
-            py = (1 - ss) ** 2 * by + 2 * (1 - ss) * ss * ctrl[1] + ss ** 2 * cy
-            wdt = 2.2 - 1.0 * ss
-            draw.poly(part, list(zip(px - wdt, py)) + list(zip(px + wdt, py))[::-1], 0)
-            draw.poly(part, list(zip(px - wdt * 0.9, py)) + list(zip(px, py))[::-1], 1)   # sunlit side
-            r = random.Random(p["seed"])
-            n = p["n"]
-            for k in range(n):
-                th = math.radians(-18 + 216 * k / (n - 1) + r.uniform(-8, 8))
-                dx, dy = math.cos(th), -math.sin(th)
-                ln = p["size"] * r.uniform(0.85, 1.1)
-                droop = 0.75 if abs(dx) > 0.5 else 0.35
-                s_ = np.linspace(0, 1, 11)
-                fx = cx + dx * ln * s_
-                fy = cy + dy * ln * s_ + droop * ln * s_ ** 2
-                nx, ny = -(dy + 2 * droop * s_), np.full_like(s_, dx)
-                nl = np.hypot(nx, ny) + 1e-6
-                nx, ny = nx / nl, ny / nl
-                wd = p["size"] * 0.17 * np.sin(np.pi * s_) ** 0.7 * (0.7 + 0.3 * (np.arange(11) % 2))
-                draw.poly(part, list(zip(fx + nx * wd, fy + ny * wd)) + list(zip(fx - nx * wd, fy - ny * wd))[::-1],
-                          2 + (k + (1 if dy < -0.3 else 0)) % 3)
-            yy, xx = np.ogrid[0:N, 0:W]
-            for k in range(3):
-                part[(xx - (cx + (k - 1) * 1.8)) ** 2 + (yy - (cy + 1.5)) ** 2 <= 1.6] = 5
-            ys, xs = np.nonzero(part >= 0)
-            if not len(ys):
-                continue
-            y0, y1 = ys.min(), ys.max() + 1
-            x0, x1 = max(0, xs.min() - 6), min(W, xs.max() + 7)      # room to sway
-            shapes.append(dict(part=part[y0:y1, x0:x1].copy(), x=i * TILE - MARGIN + x0, y=int(y0),
-                               base=int(by), phase=p["phase"]))
-        self.palm_shapes[key] = shapes
-        return shapes
+            palms.append(dict(p=p, lot=i, by=by, h=min(p["h"], by - 6), poses={}))
+        self.palm_shapes[key] = palms
+        return palms
+
+    def _palm_pose(self, palm, pose):
+        """One sway pose of a palm, as a map of parts: -1 none, 0 trunk shade, 1 trunk lit,
+        2-4 greens, 5 coconut. A pose bends the whole tree: the trunk leans a little further,
+        the crown follows it and the fronds turn and lift with the wind."""
+        if pose in palm["poses"]:
+            return palm["poses"][pose]
+        p, by, h = palm["p"], palm["by"], palm["h"]
+        W = TILE + 2 * MARGIN
+        part = np.full((N, W), -1, np.int8)
+        bx = p["x"] + MARGIN
+        lean = p["lean"] + pose * 0.017                    # about a pixel at the crown per pose
+        cx, cy = bx + lean * h, by - h + abs(pose) * 0.15
+        ss = np.linspace(0, 1, 12)
+        ctrl = (bx + lean * h * 0.15, by - h * 0.6)
+        px = (1 - ss) ** 2 * bx + 2 * (1 - ss) * ss * ctrl[0] + ss ** 2 * cx
+        py = (1 - ss) ** 2 * by + 2 * (1 - ss) * ss * ctrl[1] + ss ** 2 * cy
+        wdt = 2.2 - 1.0 * ss
+        draw.poly(part, list(zip(px - wdt, py)) + list(zip(px + wdt, py))[::-1], 0)
+        draw.poly(part, list(zip(px - wdt * 0.9, py)) + list(zip(px, py))[::-1], 1)   # sunlit side
+        r = random.Random(p["seed"])
+        n = p["n"]
+        for k in range(n):
+            th = math.radians(-18 + 216 * k / (n - 1) + r.uniform(-8, 8)) - pose * 0.045
+            dx, dy = math.cos(th), -math.sin(th)
+            ln = p["size"] * r.uniform(0.85, 1.1)
+            # fronds on the downwind side stream out flatter; upwind ones droop more
+            droop = (0.75 if abs(dx) > 0.5 else 0.35) * (1 - 0.06 * pose * (1 if dx > 0 else -1))
+            s_ = np.linspace(0, 1, 11)
+            fx = cx + dx * ln * s_
+            fy = cy + dy * ln * s_ + droop * ln * s_ ** 2
+            nx, ny = -(dy + 2 * droop * s_), np.full_like(s_, dx)
+            nl = np.hypot(nx, ny) + 1e-6
+            nx, ny = nx / nl, ny / nl
+            wd = p["size"] * 0.17 * np.sin(np.pi * s_) ** 0.7 * (0.7 + 0.3 * (np.arange(11) % 2))
+            draw.poly(part, list(zip(fx + nx * wd, fy + ny * wd)) + list(zip(fx - nx * wd, fy - ny * wd))[::-1],
+                      2 + (k + (1 if dy < -0.3 else 0)) % 3)
+        yy, xx = np.ogrid[0:N, 0:W]
+        for k in range(3):
+            part[(xx - (cx + (k - 1) * 1.8)) ** 2 + (yy - (cy + 1.5)) ** 2 <= 1.6] = 5
+        ys, xs = np.nonzero(part >= 0)
+        y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
+        out = dict(part=part[y0:y1, x0:x1].copy(), x=palm["lot"] * TILE - MARGIN + x0, y=int(y0))
+        palm["poses"][pose] = out
+        return out
 
     def _palm_colours(self):
         """The palette for palm parts under the current light (indexed by part)."""
@@ -493,25 +501,22 @@ class Resort(Demo):
         t = self.rt.t
         pal = self._palm_colours()
         for i in range(i0 - 1, i0 + 3):
-            for sp in self._palm_shapes(i):
+            for palm in self._palms_of(i):
+                if not -MARGIN - TILE < i * TILE - pan < N + MARGIN:
+                    continue
+                # a slow sway with a gentler gust on top, stepped through whole poses
+                ph = palm["p"]["phase"]
+                wind = 0.75 * math.sin(t * 0.9 + ph) + 0.25 * math.sin(t * 2.3 + ph * 1.7)
+                sp = self._palm_pose(palm, int(round(wind * self.POSES)))
                 h, w = sp["part"].shape
                 sx = sp["x"] - pan
-                if sx + w <= 0 or sx >= N:
-                    continue
-                # sway: shear the sprite sideways, more the higher above the trunk's foot
-                lift = sp["base"] - (sp["y"] + np.arange(h))
-                shift = np.rint(0.035 * math.sin(t * 0.9 + sp["phase"]) * lift).astype(int)
-                src = np.arange(w)[None, :] - shift[:, None]
-                ok = (src >= 0) & (src < w)
-                src = np.clip(src, 0, w - 1)
-                rows = np.arange(h)[:, None]
-                part = sp["part"][rows, src]
-                m = (part >= 0) & ok
-                rgb = pal[np.maximum(part, 0)]
                 a, b = max(0, -sx), min(w, N - sx)
+                if a >= b:
+                    continue
+                part = sp["part"][:, a:b]
+                m = part >= 0
                 region = img[sp["y"]:sp["y"] + h, sx + a:sx + b]
-                mm = m[:, a:b]
-                region[mm] = rgb[:, a:b][mm]
+                region[m] = pal[part[m]]
 
     # ---- per frame
 
