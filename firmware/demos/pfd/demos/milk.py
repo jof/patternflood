@@ -26,7 +26,8 @@ to the music rather than just following its loudness:
              bright ring that then flows out through the field (tunnels fly one per bar)
     phrase   zoom and warp ramp up across the eight bars, then let go at the boundary,
              where the next preset cuts in over half a bar with a flash
-    build    pushes the warp; a drop punches the zoom, flashes and inverts
+    build    pushes the warp; a drop or any big change punches the zoom and fires a
+             white ring, and the runtime's flare makes the moment blaze
 
 Each demo is a family of presets; a drop jumps to a random one. k3 scales both the
 sound's push and the rhythm layer.
@@ -146,10 +147,10 @@ class MilkEngine(Demo):
         self.t += dt
         if a.phrase:
             self._go(self.pi + 1)
-            self.flash = max(self.flash, 0.6)
+            self.flash = max(self.flash, 0.35)
         if a.drop:
             self._go(self.rng.randrange(len(self.PRESETS)))
-            self.flash, self.invert, self.punch = 1.0, 1.0, 1.0
+            self.punch = 1.0                       # (the runtime's flare brightens it; no wash, no inversion)
         bar = 4 * 60.0 / max(60.0, a.bpm or 120.0)
         self.blend = min(1.0, self.blend + dt / (bar / 2))     # the next preset cuts in over half a bar
         f = self.blend * self.blend * (3 - 2 * self.blend)
@@ -169,6 +170,9 @@ class MilkEngine(Demo):
         self.punch = getattr(self, "punch", 0.0) * math.exp(-dt * 3)
         if a.bar and a.live:
             self.stamp = 1.0
+        if a.impact_hit:                                        # a big change: punch, and a big white ring
+            self.punch = max(self.punch, a.impact)
+            self.big_ring = a.impact
 
         # where each pixel samples the last frame from: back through the motion field
         cx = p["cx"] + p["wander"] * math.sin(beats * 0.35) * (0.4 + bass)
@@ -198,6 +202,9 @@ class MilkEngine(Demo):
         hue = self.hue + self.t * p["hue_speed"] + 0.2 * treble + math.floor(beats) / 24   # a step each beat
         kick = math.exp(-a.phase * 6) * min(1.0, a.kick + 0.3)
         self.wave_boost = 1 + 0.5 * R * env
+        if getattr(self, "big_ring", 0.0) > 0:
+            draw.ring(out, 63.5 + p["cx"] * 64, 63.5 + p["cy"] * 64, 12, (self.big_ring,) * 3, width=3.0)
+            self.big_ring = 0.0
         if getattr(self, "stamp", 0.0) > 0:
             # the downbeat stamps a ring, which the field then carries away
             col = np.array(hsv1(hue + 0.5, 0.5, 1.0), np.float32) * self.stamp

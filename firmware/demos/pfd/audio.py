@@ -131,6 +131,15 @@ class Analyzer:
         self.taps = collections.deque(maxlen=8)
         self.manual_until = 0.0
         self.onset_gate = collections.deque([0.0] * 32, maxlen=32)
+        # impact: how sharply the last ~0.4 s contrasts with the ~6 s before it
+        self.imp_low = collections.deque(maxlen=int(6.5 * FPS))     # linear low-end energy per hop
+        self.imp_rms = collections.deque(maxlen=int(6.5 * FPS))
+        self.imp_vec = collections.deque(maxlen=int(6.5 * FPS))     # log band energies per hop
+        self.impact = 0.0              # an envelope: jumps on a big change, fades over about a bar
+        self.impact_score = 0.0        # the contrast right now
+        self.last_impact = -1e9
+        self.impact_armed = True
+        self.counts["impact"] = 0
 
     # ---- input
 
@@ -188,6 +197,7 @@ class Analyzer:
             self.kick_hist.append((self.frames - KICK_LAG - 1, kickness))
             self._events(flux, kick, snare, hat)
             self._beat_clock(e, rms)
+            self._impact(e, rms)
             if self.frames % TEMPO_EVERY == 0 and self.frames > 3 * FPS:
                 self._tempo()
 
@@ -203,6 +213,55 @@ class Analyzer:
             if v > 0.25 * self.peak_flux and v / tot > 0.35 and v > prev * 1.5:
                 self.counts[name] += 1
             setattr(self, name, 0.6 * prev + 0.4 * v)
+
+    # ---- impact: the big changes, whatever their loudness
+
+    def _impact(self, e, rms):
+        """A big change in the music: the low end arriving (a warm bass drop needn't be loud),
+        the sound turning into something new, or the level jumping. "New" is the point: the
+        last ~0.4 s is compared with the *strongest* and *most similar* moments of the ~6 s
+        before it, not their average, so a stab that recurs every couple of bars, already
+        heard, isn't news, while a drop that outdoes everything recent is."""
+        self.imp_low.append(float(np.expm1(e[self.low]).sum()))
+        self.imp_rms.append(rms)
+        self.imp_vec.append(e)
+        W, gap = int(0.4 * FPS), int(0.6 * FPS)
+        n = len(self.imp_low)
+        if n < W + gap + int(5 * FPS):                           # a fair memory first: at the start everything is new
+            return
+        if self.frames % 2:                                       # every other hop is plenty
+            self.impact *= math.exp(-1 / (FPS * 0.8))
+            return
+
+        def windows(a):
+            cs = np.concatenate([np.zeros((1,) + a.shape[1:], np.float64), np.cumsum(a, 0, dtype=np.float64)])
+            return (cs[W:] - cs[:-W]) / W                          # the mean of every W-hop window
+
+        low = windows(np.fromiter(self.imp_low, np.float32))
+        lvl = windows(np.fromiter(self.imp_rms, np.float32))
+        vec = windows(np.array(self.imp_vec, np.float32))
+        past = slice(0, len(low) - gap)
+        s_low, s_rms, sv = low[-1], lvl[-1], vec[-1]
+        bass_in = math.log2((s_low + 1e-6) / (low[past].max() + 1e-6))
+        louder = math.log2((s_rms + 1e-6) / (lvl[past].max() + 1e-6))
+        pv = vec[past][::4]
+        cos = pv @ sv / (np.linalg.norm(pv, axis=1) * np.linalg.norm(sv) + 1e-9)
+        change = 1 - float(cos.max())                             # unlike even the nearest recent moment
+        score = max(np.clip((bass_in - 0.2) / 1.2, 0, 1),         # past the biggest recent low end
+                    np.clip((change - 0.01) * 25, 0, 1),           # a sound not heard in the last 6 s
+                    np.clip((louder - 0.25) / 0.8, 0, 1))          # past the loudest recent moment
+        if s_rms < 0.004:                                          # silence isn't an event
+            score = 0.0
+        self.impact_score = float(score)
+        # One hit per change: once it fires, it re-arms only after the contrast has settled.
+        if score < 0.3:
+            self.impact_armed = True
+        if score > 0.55 and self.impact_armed and self.frames - self.last_impact > 2 * FPS:
+            self.counts["impact"] += 1
+            self.last_impact = self.frames
+            self.impact_armed = False
+            self.impact = max(self.impact, float(score))
+        self.impact *= math.exp(-2 / (FPS * 0.8))
 
     # ---- tempo: autocorrelation of onset strength
 
@@ -426,7 +485,8 @@ class Analyzer:
                         conf=self.conf, phase=self.phase, locked=self.locked,
                         beat_in_bar=(self.counts["beat"] - self.downbeat) % 4,
                         bar_in_phrase=self.bar_in_phrase, build=self.build, intensity=self.intensity,
-                        manual=time.monotonic() < self.manual_until,
+                        manual=time.monotonic() < self.manual_until, impact=self.impact,
+                        impact_score=self.impact_score,
                         wave=self.wave.copy(), onset_hist=np.array(list(self.onset)[-256:], np.float32) / self.peak_flux)
 
 
@@ -566,6 +626,7 @@ class AudioState:
         self.bar = c["bar"] > p["bar"] and self.beat_in_bar == 0
         self.phrase = c["phrase"] > p["phrase"]
         self.drop = c["drop"] > p["drop"]
+        self.impact_hit = c["impact"] > p.get("impact", c["impact"])
         self.kick_hit = c["kick"] > p["kick"]
         self.snare_hit = c["snare"] > p["snare"]
         self.hat_hit = c["hat"] > p["hat"]
@@ -644,6 +705,8 @@ class SilentState:
         self.onset = self.beat
         self.build, self.intensity = 0.0, 0.5
         self.manual = False
+        self.impact = self.impact_score = 0.0
+        self.impact_hit = False
         self.wave = np.zeros((1024, 2), np.float32)
         self.onset_hist = np.zeros(256, np.float32)
         self.rms = 0.0

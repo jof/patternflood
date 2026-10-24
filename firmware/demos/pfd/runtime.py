@@ -262,6 +262,9 @@ class Runtime:
 
                 # NaN would slip through the current cap, so scrub it before anything else
                 rgb = np.clip(np.nan_to_num(self.demo.render()), 0, 1).astype(np.float32, copy=True)
+                # the music's big moments, made bright, on the Audio shelf's visualizers
+                if getattr(self.demo, "flare", self.demo.group == "audio") and self.audio.live:
+                    rgb = draw.flare(rgb, float(np.clip((self.audio.impact - 0.45) / 0.5, 0, 1)))
                 rgb = self._overlay(rgb)
                 rgb = np.clip(rgb, 0, 1) ** GAMMA * self.bright
                 frame, amps, scale = capped(rgb)

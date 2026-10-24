@@ -60,7 +60,7 @@ class Spectrum(Demo):
         self.flash *= math.exp(-dt * 7)
         if a.phrase:
             self.hue = (self.hue + 0.137) % 1.0
-        if a.drop:
+        if a.drop or a.impact_hit:
             self.shock = 0.0
         if self.shock >= 0:
             self.shock += dt * 1.6

@@ -19,6 +19,7 @@ from ..runtime import Demo
 class Tempo(Demo):
     name = "Tempo"
     group = "audio"
+    flare = False                 # a diagnostic display: no flare
     blurb = "The beat tracker, shown. k1 click taps tempo, k3 click marks the one, k2 A/V delay, k0 shifts the phrase grid."
 
     def __init__(self, rt):
@@ -107,6 +108,9 @@ class Tempo(Demo):
             x0 = 4 + i * 5
             h = int(v * 22)
             img[127 - h:127, x0:x0 + 4] = (.3 + .7 * v, .4, 1 - .6 * v)
+        # impact: the contrast right now (the bar), and the envelope after a hit (the fill)
+        img[67:69, 2:2 + int(124 * a.impact_score)] = (.35, .3, .5)
+        img[67:69, 2:2 + int(124 * a.impact)] = (1, .9, .6)
         # events
         drop = max(0.0, 1 - (t - self.t_drop) / 1.0)
         if drop:

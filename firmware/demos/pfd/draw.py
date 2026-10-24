@@ -18,6 +18,17 @@ def hsv1(h, s=1.0, v=1.0):
     return tuple(float(c) for c in hsv(np.array(h), np.array(s), np.array(v)))
 
 
+def flare(img, k):
+    """The big moments made bright: lit parts blaze towards white, everything lifts, and a
+    faint veil comes up over the dark. k 0..1."""
+    if k < 0.02:
+        return img
+    hot = np.clip(img.max(-1, keepdims=True) * 2.5, 0, 1)
+    img = img * (1 + 1.5 * k)
+    img = img + (1 - img) * hot * 0.75 * k
+    return np.clip(img + 0.1 * k, 0, 1)
+
+
 def disc(img, x, y, r, rgb, soft=1.0, op="max"):
     """A filled disc with a soft edge, drawn into img in place. op is "max", "add" or "over" (paint)."""
     h, w = img.shape[:2]

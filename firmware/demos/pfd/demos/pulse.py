@@ -64,7 +64,7 @@ class Pulse(Demo):
             self.rings.append([2.0, 70, 0.35, 0.5])
         if a.phrase:
             self.hue = (self.hue + 0.18) % 1.0
-        if a.drop:
+        if a.drop or a.impact_hit:
             self.burst = 1.0
             self.invert = 1.0
         if a.bar and self.invert > 0:

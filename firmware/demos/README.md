@@ -171,6 +171,18 @@ default for a `bluez` sink is 0.15 s (0 for wired output). Fine-tune it live wit
   - Bar-by-bar novelty (the last four bars against the four before) is accumulated by bar
     position mod 8, and boundary events fire on the grid.
   - **Drops:** a bar starting with over 6× the low end of the previous four bars.
+  - **Impacts:** any big change, whatever its loudness. The last ~0.4 s is set against the
+    *strongest* and *most similar* moments of the ~6 s before, not their average. So a warm bass
+    drop that isn't loud still counts (it outdoes every recent low end), and a stab that recurs
+    every two bars doesn't (it's been heard).
+    - It also counts the sound turning into something not heard in those 6 s, or the level
+      passing the loudest recent moment.
+    - It fires once per change, re-arming only after the contrast settles, and gives a strength
+      (0.55-1).
+    - The Audio shelf's visualizers **flare** on it: lit parts blaze towards white and everything
+      lifts, scaled by the strength, fading over about a second. Tempo, Waterfall and Scope don't.
+    - Milk punches its zoom and fires a white ring; Pulse bursts and Spectrum shockwaves.
+    - Tempo shows the live contrast (purple bar) and the envelope after a hit (gold).
   - **Builds:** rising highs over thinning bass.
 
 **Scores**, from `tools/audio_test.py synth`: a generated house track with known truth, with
