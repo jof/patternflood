@@ -53,6 +53,7 @@ from .fireworks import Fireworks
 from .gears import Gears
 from .pendulums import Pendulums
 from .spiro import Spiro
+from .orrery import Orrery
 
 from .. import upstream
 
@@ -73,7 +74,8 @@ ORIGINALS = [(BitTunnel, "pf 0521"), (Obra, "pf 0522"), (Riso, "pf 0528"), (Stra
              (Aurora, "pf 0602"), (Warp, "pf 0510"),
              (Snow, "pf 0515-3"), (Helix, "pf 0512"),
              (Fireworks, "pf a big hit"), (Gears, "pf Origin"),
-             (Pendulums, "pf Wave Saw"), (Spiro, "pf Lissajous Weave")]
+             (Pendulums, "pf Wave Saw"), (Spiro, "pf Lissajous Weave"),
+             (Orrery, "pf 0513")]
 
 
 def _shelf(presets):
