@@ -1,9 +1,9 @@
 # Demos
 
 Interactive demos for the 2×2 (128 × 128), written once and run in either place.
-There are 116: 68 of ours, plus all 48 of upstream Patternflow's patterns, run
+There are 121: 73 of ours, plus all 48 of upstream Patternflow's patterns, run
 natively ([below](#upstream-patternflow-presets)). That's the 34 firmware presets and
-our ports of the 14 that upstream only had as web sources. Thirty-three of ours are
+our ports of the 14 that upstream only had as web sources. Thirty-eight of ours are
 [Patternflow-style originals](#our-originals-on-the-patternflow-shelf), shelved among Lee's.
 
 | | Knobs | Frames | Renders on |
@@ -361,7 +361,7 @@ same way: drop it in `upstream_host/web_ports/`.
 
 ### Our originals on the Patternflow shelf
 
-Thirty-three patterns of ours, in Patternflow's manner: each runs by itself, and the four knobs turn
+Thirty-eight patterns of ours, in Patternflow's manner: each runs by itself, and the four knobs turn
 its qualities, not a game. They're in our own style, which is print-shop and demoscene,
 and each sits on the shelf right after the preset of Lee's it riffs on.
 
@@ -399,6 +399,11 @@ and each sits on the shelf right after the preset of Lee's it riffs on.
 | **Shore** | pf Midsummer Sea | A beach from above: swells refracting along the shoreline, breaking white in the shallows, the swash running up the sand with a lacy foam edge and sliding back, leaving wet sand that dries. Sets of bigger waves now and then. | k0 swell; k1 tide; k2 screen; k3 inks. Click: k0 a set of big waves, k2 chunky. |
 | **Grove** | pf 0601 | Fractal trees (seven forks deep) growing from saplings and swaying, more at the tips, in silhouette against dusk. The year turns: blossom, green, orange with leaves falling and blowing, bare. Leaves are spot inks. | k0 wind; k1 season; k2 screen; k3 inks. Click: k0 a gust, k1 grow a new grove, k2 chunky. |
 | **Cumulus** | pf 0517 | Clouds of drifting fractal noise across a low sun, each shaded by the cloud lying sunward of it (silver linings near the sun, dark undersides), with crepuscular rays smeared outward from the sun through the gaps. | k0 wind; k1 cloud cover; k2 screen; k3 inks. Click: k0 time-lapse, k1 move the sun, k2 chunky. |
+| **Radar** | pf 0614 | A phosphor radar scope: the sweep paints what it passes (a speckled coastline, drifting rain cells, aircraft that move between sweeps), and the phosphor fades over the turn. Range rings and bearing ticks on the glass. | k0 sweep speed; k1 range; k2 screen; k3 inks. Click: k0 new traffic, k1 rain, k2 chunky. |
+| **Zen** | pf 0619 | A raked sand garden: grooves run straight and bend into rings around three rocks, lit by a low sun, in a sand palette whose inks sit close so the ridges are a fine grain. A rake re-rakes it top to bottom at a new angle; petals drift down in a spot ink. | k0 rake speed; k1 groove spacing; k2 screen; k3 inks. Click: k0 rake now, k1 move the stones, k2 chunky. |
+| **Plankton** | pf 0526 | Six thousand plankton drift dark on a slow current and flare blue where they're disturbed: a hand trails through them (k0 and k1 steer it), splashes ring outward, and the wake swirls away. | k0/k1 steer the hand; k2 screen; k3 inks. Click: k0 splash, k1 a wave over all of it, k2 chunky. |
+| **Neon** | pf 0622 | A neon sign on bricks (OPEN, a cocktail bar, a palm and sun, a heart): each colour is its own dithered plate, cores white-hot, glow lighting the wall; tubes hum, and now and then one fails and stutters. | k0 glow; k1 sign; k2 screen; k3 wall inks. Click: k0 a failing tube, k1 lights out, k2 chunky. |
+| **Clock** | pf 0515-4 | The real local time on an engraved dial (bars, dots or minimal), hands as tapered blades with drop shadows, and a red spot-ink second hand that ticks with a quartz overshoot, or sweeps. With music it ticks on the beat. | k0 face; k1 tick or sweep; k2 screen; k3 inks. Click: k1 tick on the beat, k2 chunky. |
 | **Strange** | pf Lissajous Weave | A Clifford attractor drawn as the glowing density of 30 000 points, coloured by which way each point jumped. A form change fades out, jumps, and fades in, because gliding between forms passes through dull periodic orbits. | k0–k3 bend its a, b, c, d. Click: k0 next form, k1 colours, k2 freeze the drift, k3 long glow. |
 
 Left alone, each moves on by itself: a new form, shape or scene every 14–40 s. The menu's
@@ -426,12 +431,13 @@ Measured per frame on ash:
 - The upstream presets take **0.1–0.6 ms** natively.
 - The Patternflow originals, fastest first: Life 0.3 ms, Op Art 0.3 ms, Fireworks 0.4 ms,
   Aurora 0.5 ms, Snow 0.5 ms, Warp 0.5 ms, Lava 0.6 ms, Orrery 0.6 ms, Spiro 0.6 ms, Bit Tunnel
-  0.7 ms, Grove 0.8 ms, Jellyfish 0.8 ms, Flock 0.9 ms, Gears 1.1 ms, Pendulums 1.1 ms, Tesla
-  1.2 ms, Galaxy 1.6 ms, Smoke 1.6 ms, Window 1.7 ms, Moon 1.9 ms, Riso 1.9 ms, Pixel Sort 2.0
-  ms, Caustics 2.1 ms, Strange 2.2 ms, Shore 2.3 ms, Cumulus 2.4 ms, Koi 2.5 ms, Valley 2.7 ms,
-  Bonfire 2.8 ms and Sea 2.9 ms. **Helix takes 5.7 ms** (a hundred-odd sphere impostors),
-  **Obra 2.6–5.3 ms** depending on the form (octahedron fastest, metaballs slowest), and
-  **Mandel averages 8 ms**, rising with depth as more points take hundreds of iterations.
+  0.7 ms, Grove 0.8 ms, Jellyfish 0.8 ms, Flock 0.9 ms, Gears 1.1 ms, Pendulums 1.1 ms,
+  Plankton 1.1 ms, Radar 1.2 ms, Tesla 1.2 ms, Zen 1.5 ms, Clock 1.6 ms, Galaxy 1.6 ms, Smoke
+  1.6 ms, Window 1.7 ms, Moon 1.9 ms, Riso 1.9 ms, Pixel Sort 2.0 ms, Caustics 2.1 ms, Neon 2.2
+  ms, Strange 2.2 ms, Shore 2.3 ms, Cumulus 2.4 ms, Koi 2.5 ms, Valley 2.7 ms, Bonfire 2.8 ms
+  and Sea 2.9 ms. **Helix takes 5.7 ms** (a hundred-odd sphere impostors), **Obra 2.6–5.3 ms**
+  depending on the form (octahedron fastest, metaballs slowest), and **Mandel averages 8 ms**,
+  rising with depth as more points take hundreds of iterations.
 
 The Pi 5 has 16.7 ms a frame at 60 fps and is a few times slower per core, so it should fit
 everything. If Reaction doesn't, turn its k2 (speed) down. Obra watches its own time: if
