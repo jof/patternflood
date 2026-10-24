@@ -17,8 +17,19 @@ MilkDrop's signature look. On the way out, never into the buffer: video echo (an
 overlay of the frame zoomed and flipped onto itself), a kaleidoscope fold, a colour
 map of brightness, and on a drop a flash of inversion.
 
-Each demo is a family of presets. They blend into one another over a bar at each phrase
-boundary, and a drop jumps to a random one.
+On top of each preset runs a rhythm layer, from the beat tracker, so the motion is locked
+to the music rather than just following its loudness:
+
+    beat     a zoom punch that decays through the beat; the wave swells on the kick;
+             the hue steps on; the warp's wobble cycles in beat time
+    bar      the turn swings one way for a bar and back the next; the downbeat stamps a
+             bright ring that then flows out through the field (tunnels fly one per bar)
+    phrase   zoom and warp ramp up across the eight bars, then let go at the boundary,
+             where the next preset cuts in over half a bar with a flash
+    build    pushes the warp; a drop punches the zoom, flashes and inverts
+
+Each demo is a family of presets; a drop jumps to a random one. k3 scales both the
+sound's push and the rhythm layer.
 
     k0  preset (turn), random preset (click)
     k1  hue
@@ -135,11 +146,12 @@ class MilkEngine(Demo):
         self.t += dt
         if a.phrase:
             self._go(self.pi + 1)
+            self.flash = max(self.flash, 0.6)
         if a.drop:
             self._go(self.rng.randrange(len(self.PRESETS)))
-            self.flash, self.invert = 1.0, 1.0
+            self.flash, self.invert, self.punch = 1.0, 1.0, 1.0
         bar = 4 * 60.0 / max(60.0, a.bpm or 120.0)
-        self.blend = min(1.0, self.blend + dt / bar)
+        self.blend = min(1.0, self.blend + dt / (bar / 2))     # the next preset cuts in over half a bar
         f = self.blend * self.blend * (3 - 2 * self.blend)
         for key in NUMERIC:
             self.cur[key] = self.frm[key] * (1 - f) + self.to[key] * f
@@ -148,19 +160,32 @@ class MilkEngine(Demo):
         p, s = self.cur, self.sens
         bass, mid, treble = a.bass * s, a.mid * s, a.treble * s
 
+        # the rhythm layer
+        R = min(2.0, s)
+        beats = a.counts["beat"] + a.phase                      # time, in beats
+        env = math.exp(-a.phase * 5) * (0.6 + 0.4 * min(1.0, a.kick + 0.3))
+        ramp = a.phrase_phase ** 2                              # tension across the phrase
+        swing = math.sin(math.pi * (a.counts.get("bar", 0) + a.bar_phase))   # one way a bar, back the next
+        self.punch = getattr(self, "punch", 0.0) * math.exp(-dt * 3)
+        if a.bar and a.live:
+            self.stamp = 1.0
+
         # where each pixel samples the last frame from: back through the motion field
-        cx = p["cx"] + p["wander"] * math.sin(self.t * 0.7) * (0.4 + bass)
-        cy = p["cy"] + p["wander"] * math.cos(self.t * 0.53) * (0.4 + bass)
+        cx = p["cx"] + p["wander"] * math.sin(beats * 0.35) * (0.4 + bass)
+        cy = p["cy"] + p["wander"] * math.cos(beats * 0.27) * (0.4 + bass)
         x, y = self.U - cx, self.V - cy
         rad = np.sqrt(x * x + y * y)
-        zoom = (p["zoom"] + p["zoom_bass"] * bass) ** (dt * (1 + p["zoom_rad"] * (rad - 0.5)))
+        zbase = p["zoom"] + p["zoom_bass"] * bass + R * (0.45 * env + 0.35 * ramp + 1.2 * self.punch + 0.3 * a.build)
+        zoom = zbase ** (dt * (1 + p["zoom_rad"] * (rad - 0.5)))
         x, y = x / zoom / p["sx"] ** dt, y / zoom / p["sy"] ** dt
-        th = (p["rot"] + p["rot_mid"] * (mid - 0.2) + p["rot_rad"] * np.clip(1 - rad, 0, 1)) * dt
+        th = (p["rot"] + p["rot_mid"] * (mid - 0.2) + R * 0.7 * swing
+              + p["rot_rad"] * np.clip(1 - rad, 0, 1)) * dt
         c, sn = np.cos(th), np.sin(th)
         x, y = c * x + sn * y, -sn * x + c * y
-        w = p["warp"] * (0.5 + treble) * dt * 60
-        x = x + w * np.sin(y * p["freq"] + self.t * p["speed"])
-        y = y + w * np.cos(x * p["freq"] * 1.1 - self.t * p["speed"] * 0.9)
+        w = (p["warp"] * (0.5 + treble) + R * 0.012 * (ramp + a.build)) * dt * 60
+        tb = beats * math.pi * 0.5                              # the wobble cycles every four beats
+        x = x + w * np.sin(y * p["freq"] + tb * p["speed"])
+        y = y + w * np.cos(x * p["freq"] * 1.1 - tb * p["speed"] * 0.9)
         x, y = x + cx - p["dx"] * dt, y + cy - p["dy"] * dt
         out = self._sample(self.buf, x * 64 + 63.5, y * 64 + 63.5, p["wrap"])
         out *= (min(0.99, p["decay"] + self.trail_adj)) ** (dt * 60)
@@ -170,8 +195,14 @@ class MilkEngine(Demo):
             out[:, N // 2:] = out[:, :N // 2][:, ::-1]
             out[N // 2:] = out[:N // 2][::-1]
 
-        hue = self.hue + self.t * p["hue_speed"] + 0.2 * treble
+        hue = self.hue + self.t * p["hue_speed"] + 0.2 * treble + math.floor(beats) / 24   # a step each beat
         kick = math.exp(-a.phase * 6) * min(1.0, a.kick + 0.3)
+        self.wave_boost = 1 + 0.5 * R * env
+        if getattr(self, "stamp", 0.0) > 0:
+            # the downbeat stamps a ring, which the field then carries away
+            col = np.array(hsv1(hue + 0.5, 0.5, 1.0), np.float32) * self.stamp
+            draw.ring(out, 63.5 + (p["cx"]) * 64, 63.5 + p["cy"] * 64, 6 + 4 * bass, col, width=1.6)
+            self.stamp = 0.0
         self._shapes(out, p, a, bass, hue, dt)
         self._wave(out, p, a, bass, hue, kick, s)
         if self.flash > 0:
@@ -218,7 +249,7 @@ class MilkEngine(Demo):
         n = len(wave)
         i = np.arange(n) / n
         col = np.array(hsv1(hue, 0.75, 0.5 + 0.5 * min(1.0, a.level * s)), np.float32) * (0.6 + 0.8 * kick)
-        size = p["size"]
+        size = p["size"] * getattr(self, "wave_boost", 1.0)
         kind = p["wave"]
         if kind == "circle":
             th = i * 2 * np.pi

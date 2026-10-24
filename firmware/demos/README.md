@@ -204,7 +204,19 @@ Winamp's visualizers inspire the first six.
   *textured*: filled with a shrunken copy of the screen, MilkDrop's signature look.
 - **On the way out, never into the buffer:** video echo (the frame zoomed and flipped over itself),
   a kaleidoscope fold, a colour map of brightness, and a flash of inversion on a drop.
-- Presets blend over a bar at each phrase, and a drop jumps to a random one. Frames take 1.3-2.8 ms on ash.
+- **A rhythm layer from the beat tracker, on every preset:**
+  - **Each beat:** a zoom punch decaying through the beat, a wave that swells on the kick, a hue
+    step, and a warp wobble that cycles in beat time.
+  - **Each bar:** the turn swings one way and back the next, and the downbeat stamps a ring that
+    the field carries off.
+  - **Across the phrase:** zoom and warp ramp up over the eight bars, then let go.
+  - **At the boundary:** the next preset cuts in over half a bar with a flash. A drop punches the
+    zoom, flashes and inverts, and jumps to a random preset.
+- Measured on a drum & bass set, against the loudness-only version:
+  - Frame-to-frame motion roughly doubled.
+  - The first quarter of each beat now moves 1.8-1.9x as much as the rest (Milk, Milk Tunnel).
+  - Downbeats now move ~2x as much as other beats; before, they were indistinguishable.
+- Frames take 1.3-2.8 ms on ash.
 - Knobs: k0 preset (click for a random one), k1 hue, k2 trails, k3 sensitivity.
 
 | Demo | Presets | Look |
