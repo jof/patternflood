@@ -1,9 +1,10 @@
 # Demos
 
 Interactive demos for the 2×2 (128 × 128), written once and run in either place.
-There are 83: 35 of ours, plus all 48 of upstream Patternflow's patterns, run
+There are 88: 40 of ours, plus all 48 of upstream Patternflow's patterns, run
 natively ([below](#upstream-patternflow-presets)). That's the 34 firmware presets and
-our ports of the 14 that upstream only had as web sources.
+our ports of the 14 that upstream only had as web sources. Five of ours are
+[Patternflow-style originals](#our-originals-on-the-patternflow-shelf), shelved among Lee's.
 
 | | Knobs | Frames | Renders on |
 |---|---|---|---|
@@ -358,6 +359,30 @@ into `upstream_host/web_ports/preset_*.h`. `build.py` adds them to the library.
 Not ported: the community library on patternflow.work. Any community `.h` should build the
 same way: drop it in `upstream_host/web_ports/`.
 
+### Our originals on the Patternflow shelf
+
+Five patterns of ours, in Patternflow's manner: each runs by itself, and the four knobs turn
+its qualities, not a game. They're in our own style, which is print-shop and demoscene,
+and each sits on the shelf right after the preset of Lee's it riffs on.
+
+| Demo | After | What it is | Knobs (turn; click) |
+|---|---|---|---|
+| **Bit Tunnel** | pf 0521 | A flight down a tunnel papered with XOR texture, fogged into the dark through a dither screen. The cross-section morphs round → square → diamond → petals. | k0 speed, through zero to reverse; k1 roll; k2 bit pattern (xor, 0521's xor mask, and, or, checker, xor mod, each with 1–5 bits); k3 inks. Click: k0 stop, k1 next shape, k2 chunky pixels, k3 next screen. |
+| **Obra** | pf 0522 | A raymarched solid (torus, metaballs, twisted box, gyroid ball, octahedron, gimbal rings) lit by a circling light, printed in 2–5 inks through a screen, with an ink outline. | k0 turns it; k1 morphs to the next form; k2 screen (Bayer 8/4/2, blue noise, halftone dots, engraving lines, IGN); k3 inks. Click: k0 auto-spin, k2 chunky, k3 outline. |
+| **Riso** | pf 0528 | A moving colour field printed as three halftone plates at 15°, 75° and 45°. The plates turn against each other, so the rosettes and moiré churn, and drifting misregistration fringes the colours. | k0 dot size; k1 how fast the screens turn; k2 misprint; k3 inks (riso, RGB light, sunset, mint, or ink on lit paper). Click: k0 next picture, k1 square the screens. |
+| **Pixel Sort** | pf 0519-2 | A landscape (sunset, aurora, orbs) melted by sorting each run of bright pixels by brightness. Runs also break at intervals that crawl, so the streaks drip. | k0 threshold (it sweeps by itself until turned); k1 direction; k2 drift speed; k3 hue. Click: k0 auto sweep, k1 next scene, k2 sort the other way. |
+| **Strange** | pf Lissajous Weave | A Clifford attractor drawn as the glowing density of 30 000 points, coloured by which way each point jumped. A form change fades out, jumps, and fades in, because gliding between forms passes through dull periodic orbits. | k0–k3 bend its a, b, c, d. Click: k0 next form, k1 colours, k2 freeze the drift, k3 long glow. |
+
+Left alone, each moves on by itself: a new form, shape or scene every 14–40 s. The menu's
+*audio knobs* switch (k2 on this shelf) works for them too. With it on, the music's mid,
+level, bass and treble envelopes add to what the knobs set (the same four upstream's audio
+edition reads). Each beat pulses them, each 8-bar phrase brings the next form, shape, picture
+or scene, and in Bit Tunnel each bar steps the bit mask.
+
+Their shared parts are `pfd/ink.py` (threshold screens: Bayer, blue noise by void filling,
+interleaved gradient noise, halftone dots and lines; and the ink palettes) and
+`pfd/demos/original.py` (the shelf, the audio envelopes and the bar and phrase events).
+
 ## Speed
 
 Measured per frame on ash:
@@ -366,9 +391,15 @@ Measured per frame on ash:
   Pool 1.4 ms (it was 8.3 ms before drawing a diagonal of pillars at a time).
 - **Reaction takes 4.3 ms** at 10 iterations a frame.
 - The upstream presets take **0.1–0.6 ms** natively.
+- The Patternflow originals: Bit Tunnel 0.7 ms, Riso 1.9 ms, Pixel Sort 2.0 ms and
+  Strange 2.2 ms. **Obra takes 2.6–5.3 ms**, depending on the form (octahedron fastest,
+  metaballs slowest).
 
 The Pi 5 has 16.7 ms a frame at 60 fps and is a few times slower per core, so it should fit
-everything. If Reaction doesn't, turn its k2 (speed) down.
+everything. If Reaction doesn't, turn its k2 (speed) down. Obra watches its own time: if
+the march averages over 9 ms, it marches at half resolution (one ray per 2 × 2 block, about
+half the cost). The dither and outline stay at full resolution, so it looks nearly the same.
+It logs when it does this.
 
 ## Bench network
 
@@ -397,6 +428,8 @@ no Wi-Fi in the loop:
 ## Adding a demo
 
 Subclass `pfd.runtime.Demo` in `pfd/demos/`, and add it to `ALL` in `pfd/demos/__init__.py`.
+For the Patternflow shelf, subclass `Original` (`pfd/demos/original.py`) instead, and add it to
+`ORIGINALS` with the preset it should follow.
 The interface is in `pfd/runtime.py`'s docstring. `render()` returns float RGB in perceptual
 units; the runtime applies gamma, brightness and the current cap. Check it with a preview
 before it goes near the panels:

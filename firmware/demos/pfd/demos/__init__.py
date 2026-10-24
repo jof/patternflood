@@ -26,6 +26,11 @@ from .pulse import Pulse
 from .played import Prism, Rain, Spores, Lissajous, NightDrive
 from .milk import Milk, MilkTunnel, MilkFlame, MilkMirror, MilkEcho
 from .superscope import Superscope
+from .obra import Obra
+from .bittunnel import BitTunnel
+from .riso import Riso
+from .strange import Strange
+from .pixelsort import PixelSort
 
 from .. import upstream
 
@@ -33,4 +38,16 @@ OURS = [Classic, Etch, Squash, Cycles, Sand, Harmono, Rewind, Reaction, Rotor, E
         Droplet, Terrain, Glitch, Kaleido, Pool, Resort]
 AUDIO = [Milk, MilkTunnel, MilkFlame, MilkMirror, MilkEcho, Superscope, Pulse, Spectrum, Scope, Waterfall, Prism, Rain, Spores, Lissajous, NightDrive, Tempo]
 OURS = OURS + AUDIO
-ALL = OURS + upstream.demos()       # upstream Patternflow's presets, after ours
+# Our own patterns on the Patternflow shelf, each placed after the preset of Lee's it riffs on
+ORIGINALS = [(BitTunnel, "pf 0521"), (Obra, "pf 0522"), (Riso, "pf 0528"), (Strange, "pf Lissajous Weave"), (PixelSort, "pf 0519-2")]
+
+
+def _shelf(presets):
+    out = list(presets)
+    for cls, after in ORIGINALS:
+        names = [d.name for d in out]
+        out.insert(names.index(after) + 1 if after in names else len(out), cls)
+    return out
+
+
+ALL = OURS + _shelf(upstream.demos())       # upstream Patternflow's presets, after ours, with our originals among them
