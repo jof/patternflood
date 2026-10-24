@@ -10,6 +10,7 @@ knobs set. `self.on_bar` and `self.on_phrase` are true for the frame a bar or an
 """
 import math
 
+from .. import ink
 from ..draw import hsv1
 from ..runtime import Demo
 
@@ -48,3 +49,45 @@ class Original(Demo):
         """A knob light: `level` at rest, brighter for a moment after the knob is used."""
         a = max(0.0, 1 - (self.rt.t - self.t_touch[k]) / 0.6)
         return tuple(min(1.0, (level + 0.5 * a) * c) for c in hsv1(hue, 0.8))
+
+
+class Inked(Original):
+    """An Original printed through pfd.ink: by the shelf's convention k2 turns the screen and k3
+    the inks (call `turn_ink` from turn()); `chunky()` doubles the pixels; `print(tone)` dithers."""
+    palette, screen_kind, pitch = "silver", "bayer8", 3.0
+
+    def __init__(self, rt):
+        super().__init__(rt)
+        self.pal_i = ink.palette_index(self.palette)
+        self.screen_i = ink.SCREENS.index(self.screen_kind)
+        self.scale = 1
+        self.set_screen()
+
+    def set_screen(self):
+        self.thresh = ink.screen(ink.SCREENS[self.screen_i], self.scale, angle=0.3, pitch=self.pitch * self.scale)
+
+    def turn_ink(self, k, d):
+        """k2 steps the screen, k3 the inks; True if it took the turn."""
+        if k == 2:
+            self.screen_i = (self.screen_i + (1 if d > 0 else -1)) % len(ink.SCREENS)
+            self.set_screen()
+        elif k == 3:
+            self.pal_i = (self.pal_i + (1 if d > 0 else -1)) % len(ink.PALETTES)
+        else:
+            return False
+        return True
+
+    def chunky(self):
+        self.scale = 3 - self.scale
+        self.set_screen()
+
+    @property
+    def inks(self):
+        return ink.PALETTES[self.pal_i][1]
+
+    def print(self, tone):
+        return ink.dither(tone, self.inks, self.thresh, self.scale)
+
+    def ink_lights(self):
+        """Lights for k2 and k3: the screen's hue, and the palette's top ink."""
+        return [self.glow(2, self.screen_i / len(ink.SCREENS)), tuple(float(c) for c in self.inks[-1])]

@@ -34,6 +34,8 @@ from .pixelsort import PixelSort
 from .moon import Moon
 from .smoke import Smoke
 from .sea import Sea
+from .caustics import Caustics
+from .galaxy import Galaxy
 
 from .. import upstream
 
@@ -44,7 +46,8 @@ OURS = OURS + AUDIO
 # Our own patterns on the Patternflow shelf, each placed after the preset of Lee's it riffs on
 ORIGINALS = [(BitTunnel, "pf 0521"), (Obra, "pf 0522"), (Riso, "pf 0528"), (Strange, "pf Lissajous Weave"), (PixelSort, "pf 0519-2"),
              (Moon, "pf Poincaré Sphere"), (Smoke, "pf Vector Field Flow"),
-             (Sea, "pf Midsummer Sea")]
+             (Sea, "pf Midsummer Sea"),
+             (Caustics, "pf 0530"), (Galaxy, "pf Chromatic Vortex")]
 
 
 def _shelf(presets):
