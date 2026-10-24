@@ -22,7 +22,7 @@ STEPS = 32
 HIT = 4e-3
 FOV = 1.9
 EYE = 3.0
-SLOW_S = 0.009             # if a frame's march takes longer than this (a slower machine), march at half resolution
+SLOW_S = 0.012             # if a frame's render takes longer than this (a slower machine), march at half resolution
 
 
 def _rays(res):
@@ -236,7 +236,7 @@ class Obra(Original):
         inks = ink.PALETTES[self.pal_i][1]
         img = ink.dither(tone, inks, self.thresh, self.scale if ink.SCREENS[self.screen_i] != "dots" else 1)
         self.cost += (time.perf_counter() - t0 - self.cost) * 0.05
-        if self.cost > SLOW_S and self.res == 1:
+        if self.cost > SLOW_S and self.res == 1 and self.rt.t > 2:     # past the warm-up
             self.res = 2
             log(f"obra: {self.cost * 1000:.1f} ms a frame, marching at half resolution")
         if self.outline and len(hits):

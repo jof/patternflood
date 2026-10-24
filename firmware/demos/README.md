@@ -397,7 +397,7 @@ Measured per frame on ash:
 
 The Pi 5 has 16.7 ms a frame at 60 fps and is a few times slower per core, so it should fit
 everything. If Reaction doesn't, turn its k2 (speed) down. Obra watches its own time: if
-the march averages over 9 ms, it marches at half resolution (one ray per 2 × 2 block, about
+its render averages over 12 ms, it marches at half resolution (one ray per 2 × 2 block, about
 half the cost). The dither and outline stay at full resolution, so it looks nearly the same.
 It logs when it does this.
 
