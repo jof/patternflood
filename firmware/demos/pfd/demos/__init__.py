@@ -48,6 +48,7 @@ from .jelly import Jelly
 from .aurora import Aurora
 from .warp import Warp
 from .snow import Snow
+from .helix import Helix
 
 from .. import upstream
 
@@ -66,7 +67,7 @@ ORIGINALS = [(BitTunnel, "pf 0521"), (Obra, "pf 0522"), (Riso, "pf 0528"), (Stra
              (Tesla, "pf MagVortex"), (Window, "pf 0609"),
              (Life, "pf TileWaves"), (Jelly, "pf 0529"),
              (Aurora, "pf 0602"), (Warp, "pf 0510"),
-             (Snow, "pf 0515-3")]
+             (Snow, "pf 0515-3"), (Helix, "pf 0512")]
 
 
 def _shelf(presets):
