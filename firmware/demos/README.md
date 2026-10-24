@@ -7,7 +7,7 @@ our ports of the 14 that upstream only had as web sources.
 
 | | Knobs | Frames | Renders on |
 |---|---|---|---|
-| **Bench, now** | FeatherS3 knob bridge on ash's USB (`serial:`) | ssh to durian, which forwards UDP to the card (`pipe:durian`) | ash |
+| **Bench, now** | FeatherS3 knob bridge on ash's USB (`serial:`) | UDP over the LAN, straight to the card (`auto`); or via durian (`pipe:durian`) | ash |
 | **Production** | 4991s on the Pi 5's I²C (`i2c:1`) | the Pi's own Ethernet (`udp:`) | Pi 5 |
 | **No hardware** | a random or scripted player (`auto`, `script:`) | an animated GIF (`preview:`) | anywhere |
 
@@ -320,25 +320,29 @@ Measured per frame on ash:
 The Pi 5 has 16.7 ms a frame at 60 fps and is a few times slower per core, so it should fit
 everything. If Reaction doesn't, turn its k2 (speed) down.
 
-## Bench network: durian
+## Bench network
 
-- Durian's USB NIC (`enx000000000000`) carries the card link through the NetworkManager
-  profile `colorlight`, added 2026-10-23: static 192.168.75.1/24, no default route, and
-  autoconnect priority 50 over the stock DHCP "Wired connection 2". It's the same idea as the
-  Pi appliance's profile.
-  - Don't add the address by hand with `ip addr`. NetworkManager's DHCP attempt timed out
-    and wiped it within minutes.
-  - When the address is missing, frames route over Wi-Fi to the home router with no error.
-    `run.py` reports healthy sends while the card keeps showing its spinner.
-  - Check it with `ssh durian ip route get 192.168.75.39`.
-- ash → durian runs over Wi-Fi. About 27 MB/s through ssh was measured; frames need about 2.9 MB/s.
-  `pipe:` keeps only the newest frame, so a stall drops frames instead of building lag.
-  Drops show in the 5-second status line.
-- Durian stays awake on AC power (set 2026-10-23):
-  - The GDM greeter's `sleep-inactive-ac-type='nothing'` is in `/etc/gdm3/greeter.dconf-defaults`. The original is kept as `.orig-2026-10-23`.
+Since 2026-10-23 the card is on the home LAN, through a gigabit switch port, since the 5A-75B
+won't link at 100 Mbit. Ash renders and sends UDP straight to it over its own wired port, with
+no Wi-Fi in the loop:
+- **The card keeps its built-in 192.168.75.39.** Ash's NetworkManager connection `wired` carries
+  an extra address, 192.168.75.2/24, beside its DHCP one, so the card's subnet is on the same wire.
+  Remove it with `nmcli con modify wired -ipv4.addresses 192.168.75.2/24`.
+- **`--out auto` (the default)** checks at start whether the card answers ARP on one of ash's own
+  links. If it does, frames go over UDP; if not, they fall back to `pipe:durian`.
+
+**The durian pipe**, still there as the fallback:
+- `pipe:durian` sends `pfd/r75_pipe.py`'s source over ssh and streams frames to it. Durian
+  forwards them as UDP from its USB NIC `enx000000000000`, through NetworkManager profile
+  `colorlight` (static 192.168.75.1/24, no default route).
+- `pipe:` keeps only the newest frame, so a Wi-Fi stall drops frames rather than building lag.
+- Durian's Wi-Fi power saving is off in its Wi-Fi profile (2026-10-23). With it on, the link
+  spiked to 100-270 ms.
+- Durian also stays awake on AC power (2026-10-23):
+  - The GDM greeter's `sleep-inactive-ac-type='nothing'` is in `/etc/gdm3/greeter.dconf-defaults`.
+    The original is kept as `.orig-2026-10-23`.
   - jof's GNOME session has the same setting.
   - `HandleLidSwitchExternalPower=ignore` is in `/etc/systemd/logind.conf.d/50-patternflood-ac-awake.conf`.
-  - Battery behaviour is unchanged.
 
 ## Adding a demo
 
