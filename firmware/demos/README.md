@@ -1,7 +1,7 @@
 # Demos
 
 Interactive demos for the 2×2 (128 × 128), written once and run in either place.
-There are 72: 24 of ours, plus all 48 of upstream Patternflow's patterns, run
+There are 79: 31 of ours, plus all 48 of upstream Patternflow's patterns, run
 natively ([below](#upstream-patternflow-presets)). That's the 34 firmware presets and
 our ports of the 14 that upstream only had as web sources.
 
@@ -32,12 +32,22 @@ and the `upstream/` clone; without them they're skipped. It imports `r75_frame`,
 
 ## Menu
 
-**Hold the two outer knobs (k0 and k3) for a second.** In the menu:
-- **k0** steps through the demos (clockwise = next), and **k1** jumps eight at a time. They switch
-  live behind the overlay and keep their state. The overlay shows the demo's place in the list
-  and its group (patternflood or patternflow).
+**Hold the two outer knobs (k0 and k3) for a second.** The demos sit on three shelves:
+
+| Shelf | What's on it |
+|---|---|
+| **Play** | our interactive demos: the knob toys and games |
+| **Audio** | visualizers, and some of the Play demos played by the music |
+| **Patternflow** | upstream's 48 patterns |
+
+In the menu:
+- **k1** moves between shelves, back to wherever you were on each.
+- **k0** steps along the shelf. Demos switch live behind the overlay and keep their state.
 - **k3** sets brightness (0.3 at start).
+- **k2,** on the Patternflow shelf only, turns *audio knobs* on or off (below).
 - **A click on any knob** closes the menu, or it closes after 6 s with no input.
+
+A demo's shelf is its class's `group`: `play` (the default), `audio` or `patternflow`.
 
 The power cap is the same as `knob_renderer.py`'s and still uncalibrated: 1.2 A
 a panel and 4 A in total, from estimated duty.
@@ -180,7 +190,26 @@ On real drum & bass (the Boiler Room sets in `~/Music`), it holds 174–175 or 8
 - **k0:** shift the phrase grid a bar.
 - **k2:** the A/V delay.
 
-**Demos** (all need audio; without it they run on a quiet 120 BPM stand-in):
+**Demos**, on the Audio shelf. All need audio; without it they run on a quiet 120 BPM stand-in.
+Winamp's visualizers are the inspiration for the first two:
+
+| Demo | What | Knobs |
+|---|---|---|
+| **Milk** | feedback visuals after MilkDrop: each frame the last one flows back through a zoom (bass), a turn (mids) and a sine warp (treble), dims, and the waveform is drawn on top; five presets blend over a bar at each phrase, a drop jumps to a random one | k0 preset (click random), k1 hue, k2 trails, k3 sensitivity |
+| **Superscope** | point shapes made of the music, after AVS superscopes: spectrum ring, a tunnel of waveform rings launched on each beat, a torus knot breathing with the bass, a sphere pushed out by the spectrum; the shape changes each phrase | k0 shape, k1 hue, k2 trails, k3 spin |
+
+Some of our Play demos, played by the music (`pfd/demos/played.py`). They keep their own knobs, so
+you can still steer, and the music does what a hand would:
+
+| Demo | From | What the music does |
+|---|---|---|
+| **Prism** | Kaleido | turns the barrel a nudge each bar (beads settle and tumble through the view), kicks tap the tube, phrases change the mirrors, drops pour in new beads |
+| **Rain** | Droplet | kicks drop big drops, snares middling ones, hats drizzle |
+| **Spores** | Reaction | kicks seed it, the section's intensity sets its pace, each phrase starts a new preset fresh, drops wipe and reseed |
+| **Lissajous** | Harmono | glides to a new locked ratio each phrase, turns a quarter each bar, pumps on the kick, longer trails when it's loud |
+| **Night Drive** | Resort | cruises ten pixels a beat, the day moves on a twelfth each phrase (the sunset follows the set), palms sway with the bass, drops turn the colour story |
+
+And the analysis made visible:
 
 | Demo | What | Knobs |
 |---|---|---|

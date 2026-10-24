@@ -23,10 +23,14 @@ from .spectrum import Spectrum
 from .scope import Scope
 from .waterfall import Waterfall
 from .pulse import Pulse
+from .played import Prism, Rain, Spores, Lissajous, NightDrive
+from .milk import Milk
+from .superscope import Superscope
 
 from .. import upstream
 
 OURS = [Classic, Etch, Squash, Cycles, Sand, Harmono, Rewind, Reaction, Rotor, Echo, Rocket, Vault, Mandala,
-        Droplet, Terrain, Glitch, Kaleido, Pool, Resort,
-        Tempo, Spectrum, Scope, Waterfall, Pulse]
+        Droplet, Terrain, Glitch, Kaleido, Pool, Resort]
+AUDIO = [Milk, Superscope, Pulse, Spectrum, Scope, Waterfall, Prism, Rain, Spores, Lissajous, NightDrive, Tempo]
+OURS = OURS + AUDIO
 ALL = OURS + upstream.demos()       # upstream Patternflow's presets, after ours

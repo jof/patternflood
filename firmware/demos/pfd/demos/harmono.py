@@ -96,11 +96,12 @@ class Harmono(Demo):
         rgb = hsv(hue0 + spread * age, np.full_like(age, 0.85), np.clip(1 - age, 0, 1) ** 1.3)
         dens = max(1.0, POINTS / (self.trail * 250))       # keep brightness steady as the trail grows
         img = draw.blank()
-        draw.plot(img, 63.5 + 58 * x, 63.5 + 58 * y, rgb / dens * 2.2)
+        amp = 58 * getattr(self, "amp", 1.0)
+        draw.plot(img, 63.5 + amp * x, 63.5 + amp * y, rgb / dens * 2.2)
         # soft glow: a cheap blur of the line
         glow = (np.roll(img, 1, 0) + np.roll(img, -1, 0) + np.roll(img, 1, 1) + np.roll(img, -1, 1)) * 0.12
         img = img + glow
-        draw.disc(img, 63.5 + 58 * x[-1], 63.5 + 58 * y[-1], 1.3, (1, 1, 1), soft=0.6)
+        draw.disc(img, 63.5 + amp * x[-1], 63.5 + amp * y[-1], 1.3, (1, 1, 1), soft=0.6)
 
         flash = max(0.0, 1 - (self.rt.t - self.t_lock) / 0.6)
         if locked is not None:

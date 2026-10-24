@@ -20,8 +20,11 @@ and these runtime helpers on self.rt:
                           no audio it's a quiet, steady 120 BPM, so visualizers still move.
 
 System gesture, in every demo: hold the two outer knobs (k0 and k3) for a
-second to open the menu. In the menu k0 picks the demo (live), k3 sets
-brightness, and a click on any knob, or 6 s with no input, closes it.
+second to open the menu. Demos sit on shelves (Play, Audio, Patternflow, from
+each class's `group`): in the menu k1 moves between shelves, k0 picks the demo
+on the shelf (live), k3 sets brightness, and on the Patternflow shelf k2 lets
+the music turn the patterns' knobs. A click on any knob, or 6 s with no input,
+closes it.
 """
 import math
 import signal
@@ -37,7 +40,7 @@ from .io import log
 CLICK_S = 0.45          # a press shorter than this, with no turn in it, is a click
 MENU_HOLD_S = 1.0
 MENU_IDLE_S = 6.0
-MENU_JUMP = 8           # k1 in the menu skips this many demos a detent
+SHELF_NAMES = {"play": "PLAY", "audio": "AUDIO", "patternflow": "PATTERNFLOW"}
 LIGHT_MAX = 64          # the 4991 NeoPixels are bright next to a dim panel
 NKNOBS = 4
 DETENTS_PER_REV = 24    # the 4991's encoder (PEC11-style); for demos that map a knob to an absolute angle
@@ -46,7 +49,7 @@ DETENTS_PER_REV = 24    # the 4991's encoder (PEC11-style); for demos that map a
 class Demo:
     name = "?"
     blurb = ""
-    group = "patternflood"
+    group = "play"
 
     def __init__(self, rt):
         self.rt = rt
@@ -95,6 +98,8 @@ class Runtime:
         self.t_menu_input = 0.0
         self.t_banner = -10.0
         self.index = start % len(demos)
+        self.shelves = list(dict.fromkeys(getattr(d, "group", "play") for d in demos))
+        self.shelf_pos = {g: next(i for i, d in enumerate(demos) if d.group == g) for g in self.shelves}
         self.demo = self._instance(self.index)
 
     # ---- helpers for demos
@@ -160,14 +165,25 @@ class Runtime:
         if self.menu:
             self.t_menu_input = self.t
 
+    def _shelf(self, i=None):
+        g = self.demo_classes[self.index if i is None else i].group
+        return g, [j for j, d in enumerate(self.demo_classes) if d.group == g]
+
     def _menu_turn(self, k, d):
-        if k in (0, 1):
-            step = d if k == 0 else d * MENU_JUMP
-            self.index = (self.index + step) % len(self.demo_classes)
+        if k == 0:                                  # along the shelf
+            g, members = self._shelf()
+            pos = members.index(self.index)
+            self.index = members[(pos + d) % len(members)]
+            self.shelf_pos[g] = self.index
+            self.demo = self._instance(self.index)
+        elif k == 1:                                # to the next shelf, where we left it
+            g = self.demo_classes[self.index].group
+            s = self.shelves[(self.shelves.index(g) + (1 if d > 0 else -1)) % len(self.shelves)]
+            self.index = self.shelf_pos[s]
             self.demo = self._instance(self.index)
         elif k == 3:
             self.bright = min(1.0, max(0.02, self.bright * (1.08 ** d)))
-        elif k == 2:
+        elif k == 2 and self.demo_classes[self.index].group == "patternflow":
             self.audio_knobs = d > 0
             log(f"menu: audio drives upstream knobs {'on' if self.audio_knobs else 'off'}")
 
@@ -189,23 +205,28 @@ class Runtime:
         name = self.demo_classes[self.index].name
         if self.menu:
             rgb *= 0.35
-            rgb[:16] *= 0.3
-            draw.text(rgb, name.upper(), 64, 3, (1, 1, 1), center=True)
-            n = len(self.demo_classes)
-            group = getattr(self.demo_classes[self.index], "group", "")
-            draw.text(rgb, f"{self.index + 1}/{n}  {group}".strip(), 64, 16, (.45, .45, .45), center=True)
-            rgb[29, 4:124] = 0.12                               # where we are in the list
-            x = 4 + int(119 * self.index / max(1, n - 1))
+            rgb[:27] *= 0.25
+            g, members = self._shelf()
+            # the shelf, with a dot for each shelf
+            draw.text(rgb, f"< {SHELF_NAMES.get(g, g.upper())} >", 64, 0, (.55, .75, 1), center=True)
+            for s, shelf in enumerate(self.shelves):
+                x = 64 + (s - (len(self.shelves) - 1) / 2) * 6
+                draw.disc(rgb, x, 12, 1.2, (.55, .75, 1) if shelf == g else (.25, .25, .3), soft=0.3)
+            draw.text(rgb, name.upper(), 64, 15, (1, 1, 1), center=True)
+            pos = members.index(self.index)
+            rgb[29, 4:124] = 0.12                               # where we are on the shelf
+            x = 4 + int(119 * pos / max(1, len(members) - 1))
             rgb[28:31, max(4, x - 1):x + 2] = (1, 1, 1)
+            draw.text(rgb, f"{pos + 1}/{len(members)}", 64, 31, (.45, .45, .45), center=True)
             blurb = self.demo_classes[self.index].blurb
-            for j, line in enumerate(_wrap(blurb, 120)[:6]):
-                draw.text(rgb, line, 64, 34 + 11 * j, (.8, .8, .6), center=True)
+            for j, line in enumerate(_wrap(blurb, 120)[:5]):
+                draw.text(rgb, line, 64, 43 + 11 * j, (.8, .8, .6), center=True)
             rgb[118:122, 4:124] = 0.15
             rgb[118:122, 4:4 + int(120 * self.bright)] = (1, .8, .3)
-            draw.text(rgb, "k0/k1 demo  k3 bright", 64, 104, (.5, .5, .5), center=True)
-            if self.audio.live:
-                draw.text(rgb, f"k2 audio knobs {'ON' if self.audio_knobs else 'off'}  {self.audio.bpm:.0f} bpm",
-                          64, 93, (.45, .7, .9) if self.audio_knobs else (.4, .4, .4), center=True)
+            draw.text(rgb, "k0 demo  k1 shelf", 64, 104, (.5, .5, .5), center=True)
+            if g == "patternflow" and self.audio.live:
+                draw.text(rgb, f"k2 audio knobs {'ON' if self.audio_knobs else 'off'}",
+                          64, 96, (.45, .7, .9) if self.audio_knobs else (.4, .4, .4), center=True)
         elif self.t - self.t_banner < 1.5:
             a = min(1.0, 3 * (1.5 - (self.t - self.t_banner)))
             band = rgb[:14]

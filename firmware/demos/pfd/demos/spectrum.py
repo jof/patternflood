@@ -22,6 +22,7 @@ STYLES = ["bars", "mirror", "radial"]
 
 class Spectrum(Demo):
     name = "Spectrum"
+    group = "audio"
     blurb = "Spectrum bars that know the beat: caps flash on it, colours step each phrase, drops shockwave. k0 style, k1 hue, k2 fall, k3 gain."
 
     def __init__(self, rt):

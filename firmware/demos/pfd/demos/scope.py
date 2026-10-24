@@ -24,6 +24,7 @@ MODES = ["xy", "circle", "wave"]
 
 class Scope(Demo):
     name = "Scope"
+    group = "audio"
     blurb = "An oscilloscope with phosphor glow: stereo XY, circle, or wave. k0 mode, k1 persistence, k2 gain, k3 hue."
 
     def __init__(self, rt):

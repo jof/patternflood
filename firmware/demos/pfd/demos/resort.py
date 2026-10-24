@@ -497,6 +497,10 @@ class Resort(Demo):
         pal = [mix(np.array(c) * L["tint"], sil_col, sil) for c in cols] + [mix((.35, .22, .1), sil_col, sil)]
         return np.array(pal, np.float32)
 
+    def _wind(self, phase, t):
+        """-1..1: a slow sway with a gentler gust on top."""
+        return 0.75 * math.sin(t * 0.9 + phase) + 0.25 * math.sin(t * 2.3 + phase * 1.7)
+
     def _draw_palms(self, img, pan, i0):
         t = self.rt.t
         pal = self._palm_colours()
@@ -506,7 +510,7 @@ class Resort(Demo):
                     continue
                 # a slow sway with a gentler gust on top, stepped through whole poses
                 ph = palm["p"]["phase"]
-                wind = 0.75 * math.sin(t * 0.9 + ph) + 0.25 * math.sin(t * 2.3 + ph * 1.7)
+                wind = self._wind(ph, t)
                 sp = self._palm_pose(palm, int(round(wind * self.POSES)))
                 h, w = sp["part"].shape
                 sx = sp["x"] - pan

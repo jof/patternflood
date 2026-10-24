@@ -26,6 +26,7 @@ C = 63.5
 
 class Pulse(Demo):
     name = "Pulse"
+    group = "audio"
     blurb = "Rings on the kick, a figure turning with the bar, colour by phrase, and builds and drops as tension and release. k0 hue, k1 symmetry, k2 reactivity, k3 trails."
 
     def __init__(self, rt):

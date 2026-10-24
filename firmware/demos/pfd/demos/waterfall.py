@@ -23,6 +23,7 @@ PALETTES = [((0.02, 0.02, 0.1), (0.1, 0.1, 0.6), (0.9, 0.2, 0.5), (1.0, 0.85, 0.
 
 class Waterfall(Demo):
     name = "Waterfall"
+    group = "audio"
     blurb = "A scrolling spectrogram with the beat grid drawn in: beats, bars, phrases, drops. k0 speed, k1 palette, k2 gain, click k3 for marks."
 
     def __init__(self, rt):

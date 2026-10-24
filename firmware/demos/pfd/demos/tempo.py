@@ -18,6 +18,7 @@ from ..runtime import Demo
 
 class Tempo(Demo):
     name = "Tempo"
+    group = "audio"
     blurb = "The beat tracker, shown. k1 click taps tempo, k3 click marks the one, k2 A/V delay, k0 shifts the phrase grid."
 
     def __init__(self, rt):
