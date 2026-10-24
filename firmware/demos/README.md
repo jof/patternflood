@@ -1,9 +1,9 @@
 # Demos
 
 Interactive demos for the 2×2 (128 × 128), written once and run in either place.
-There are 101: 53 of ours, plus all 48 of upstream Patternflow's patterns, run
+There are 106: 58 of ours, plus all 48 of upstream Patternflow's patterns, run
 natively ([below](#upstream-patternflow-presets)). That's the 34 firmware presets and
-our ports of the 14 that upstream only had as web sources. Eighteen of ours are
+our ports of the 14 that upstream only had as web sources. Twenty-three of ours are
 [Patternflow-style originals](#our-originals-on-the-patternflow-shelf), shelved among Lee's.
 
 | | Knobs | Frames | Renders on |
@@ -361,7 +361,7 @@ same way: drop it in `upstream_host/web_ports/`.
 
 ### Our originals on the Patternflow shelf
 
-Eighteen patterns of ours, in Patternflow's manner: each runs by itself, and the four knobs turn
+Twenty-three patterns of ours, in Patternflow's manner: each runs by itself, and the four knobs turn
 its qualities, not a game. They're in our own style, which is print-shop and demoscene,
 and each sits on the shelf right after the preset of Lee's it riffs on.
 
@@ -384,6 +384,11 @@ and each sits on the shelf right after the preset of Lee's it riffs on.
 | **Tesla** | pf MagVortex | A plasma globe: jagged filaments, re-drawn each frame from a few octaves of wiggle, writhe from the electrode to the glass, with forks. Hold k0 to touch the glass and every filament leaps to your finger. | k0 moves your finger (hold to touch); k1 filaments; k2 screen; k3 inks. Click: k1 forks, k2 chunky. |
 | **Window** | pf 0609 | Rain on glass over a city out of focus. A mist of droplets, and larger drops that are lenses, each showing the bokeh small and upside down; heavy drops slide, clearing a path and leaving droplets. | k0 rain; k1 focus (bokeh size); k2 screen; k3 inks. Click: k0 the wiper, k1 lightning, k2 chunky. |
 | **Life** | pf TileWaves | Conway's Life on a wrapping board: newborn cells blaze, old ones glow, the dead leave fading ghosts (gliders trail comets). It reseeds when it settles: soup, a glider fleet, an R-pentomino, an acorn. | k0 speed; k1 ghost length; k2 screen; k3 inks. Click: k0 pause, k1 reseed, k2 big cells. |
+| **Jellyfish** | pf 0529 | Glowing jellies climbing through the deep in fits: each bell squeezes (narrower, taller) and shoves itself up, then relaxes and sinks a little. Tentacles are chains of links, each easing after the one before, so they stream and ripple. Marine snow drifts past. | k0 pulse rate; k1 current; k2 screen; k3 inks. Click: k0 all pulse at once, k2 chunky. |
+| **Aurora** | pf 0602 | Northern lights over mountains and a still lake: folding curtains brightest at the hem, made of fine rays that flicker and travel, over a faint airglow. Substorms (now and then, or each phrase) brighten and quicken everything; the lake mirrors it with a slow ripple. | k0 activity; k1 curtain height; k2 screen; k3 inks. Click: k0 substorm, k1 the lake, k2 chunky. |
+| **Warp** | pf 0510 | A 3D starfield drawn as streaks from where each star is to where it was, so cruise shows points and speed shows lines. A jump winds up into a tunnel of light, holds, and drops out with a flash among new stars. A big hit in the music jumps. | k0 throttle; k1 steer; k2 screen; k3 inks. Click: k0 jump, k2 chunky. |
+| **Snow** | pf 0515-3 | A village at night in three layers of snowfall (far small and slow, near big and swaying). Chimneys smoke downwind, windows go on and off (in a warm spot ink printed over the palette), and drifts build where flakes land. | k0 snowfall; k1 wind; k2 screen; k3 inks. Click: k0 clear the drifts, k1 lights, k2 chunky. |
+| **Helix** | pf 0512 | A DNA double helix (10.5 base pairs a turn, with the minor groove) turning and rising forever. Every atom is a shaded sphere impostor in a depth buffer, so the strands pass properly in front and behind. Unzipping parts the base pairs from the top down. | k0 spin; k1 tilt; k2 screen; k3 inks. Click: k0 unzip, k2 chunky. |
 | **Strange** | pf Lissajous Weave | A Clifford attractor drawn as the glowing density of 30 000 points, coloured by which way each point jumped. A form change fades out, jumps, and fades in, because gliding between forms passes through dull periodic orbits. | k0–k3 bend its a, b, c, d. Click: k0 next form, k1 colours, k2 freeze the drift, k3 long glow. |
 
 Left alone, each moves on by itself: a new form, shape or scene every 14–40 s. The menu's
@@ -409,10 +414,10 @@ Measured per frame on ash:
   Pool 1.4 ms (it was 8.3 ms before drawing a diagonal of pillars at a time).
 - **Reaction takes 4.3 ms** at 10 iterations a frame.
 - The upstream presets take **0.1–0.6 ms** natively.
-- The Patternflow originals: Op Art 0.3 ms, Life 0.3 ms, Lava 0.6 ms, Bit Tunnel 0.7 ms,
-  Tesla 1.2 ms, Galaxy 1.6 ms, Smoke 1.6 ms, Window 1.7 ms, Riso 1.9 ms, Moon 1.9 ms,
+- The Patternflow originals: Op Art 0.3 ms, Life 0.3 ms, Warp 0.5 ms, Aurora 0.5 ms,
+  Snow 0.5 ms, Lava 0.6 ms, Bit Tunnel 0.7 ms, Jellyfish 0.8 ms, Tesla 1.2 ms, Galaxy 1.6 ms, Smoke 1.6 ms, Window 1.7 ms, Riso 1.9 ms, Moon 1.9 ms,
   Pixel Sort 2.0 ms, Caustics 2.1 ms, Strange 2.2 ms, Valley 2.7 ms, Bonfire 2.8 ms and Sea
-  2.9 ms. **Mandel averages 8 ms**, rising with depth as more points take hundreds of
+  2.9 ms, and Helix 5.7 ms (a hundred-odd sphere impostors). **Mandel averages 8 ms**, rising with depth as more points take hundreds of
   iterations. **Obra takes 2.6–5.3 ms**, depending on the form (octahedron fastest,
   metaballs slowest).
 
