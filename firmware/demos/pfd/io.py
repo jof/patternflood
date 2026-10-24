@@ -13,6 +13,7 @@ and take knob lights as a list of (r, g, b) 0..255.
 
 Frame sinks take uint8 (128, 128, 3) frames, post-gamma, as receiver75 shows them:
 
+    auto[:HOST]        udp if the card is on this host's own Ethernet, else pipe via HOST
     udp[:IP]           straight to the card (Pi, or any host on its link)
     pipe:HOST[:IP]     over ssh to a host on the card's link, which just forwards UDP
     preview:FILE.gif   an animated GIF, for checking a demo without the panels
@@ -447,8 +448,34 @@ class PreviewOut:
         log(f"preview: wrote {len(ims)} frames to {self.path}")
 
 
+def card_on_link(ip="192.168.75.39", timeout=1.0):
+    """Is the card on one of this host's own Ethernet links? Nudge it with a datagram to the
+    discard port (receiver75 ignores it) and see whether ARP resolves its address."""
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.sendto(b"", (ip, 9))
+    except OSError:
+        return False
+    t0 = time.monotonic()
+    while time.monotonic() - t0 < timeout:
+        out = subprocess.run(["ip", "neigh", "show", ip], capture_output=True, text=True).stdout
+        if "lladdr" in out and "FAILED" not in out and "INCOMPLETE" not in out:
+            return True
+        time.sleep(0.1)
+    return False
+
+
 def frame_sink(spec, preview_fps=20):
     kind, _, arg = spec.partition(":")
+    if kind == "auto":
+        # straight to the card if it's on our own wire (fastest), else via the bench pipe
+        host, _, ip = (arg or "durian").partition(":")
+        ip = ip or "192.168.75.39"
+        if card_on_link(ip):
+            log(f"out: the card is on this host's link: udp {ip}")
+            return UdpOut(ip)
+        log(f"out: card not on this host's link; pipe through {host}")
+        return PipeOut(host, ip)
     if kind == "udp":
         return UdpOut(arg or "192.168.75.39")
     if kind == "pipe":

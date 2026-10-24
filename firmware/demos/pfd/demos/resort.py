@@ -426,6 +426,7 @@ class Resort(Demo):
     # ---- palms: drawn once per lot and look as sprites; the sway is a shear, every frame
 
     POSES = 3                   # sway poses either side of rest: 7 in all
+    LEAN_STEP = 0.017           # extra trunk lean per pose: about a pixel at the crown
 
     def _palms_of(self, i):
         """The palms of lot i, placed on its shore; their sway poses are drawn on demand.
@@ -453,7 +454,7 @@ class Resort(Demo):
         W = TILE + 2 * MARGIN
         part = np.full((N, W), -1, np.int8)
         bx = p["x"] + MARGIN
-        lean = p["lean"] + pose * 0.017                    # about a pixel at the crown per pose
+        lean = p["lean"] + pose * self.LEAN_STEP
         cx, cy = bx + lean * h, by - h + abs(pose) * 0.15
         ss = np.linspace(0, 1, 12)
         ctrl = (bx + lean * h * 0.15, by - h * 0.6)

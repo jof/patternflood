@@ -511,10 +511,13 @@ class _FileSteps:
 
 
 def default_delay():
-    """Bluetooth output lags its monitor by ~0.2 s; wired output barely at all."""
+    """How far to hold the analysis back. Bluetooth (A2DP, SBC) plays ~0.2 s behind its
+    monitor; the panel itself shows a frame ~30-50 ms after the analysis sees it (render,
+    transport, the card's bank flip), so the hold-back is the difference. Wired output
+    is about as quick as the panel, so nothing."""
     try:
         sink = subprocess.run(["pactl", "get-default-sink"], capture_output=True, text=True, timeout=2).stdout
-        return 0.2 if sink.startswith("bluez") else 0.03
+        return 0.15 if sink.startswith("bluez") else 0.0
     except (OSError, subprocess.TimeoutExpired):
         return 0.03
 

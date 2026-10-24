@@ -177,6 +177,8 @@ class Lissajous(Harmono):
 class NightDrive(Resort):
     name = "Night Drive"
     group = "audio"
+    POSES = 5                   # eleven poses, leaning further: the palms dance, visibly
+    LEAN_STEP = 0.022
     blurb = "Resort, played: it cruises at the tempo, the day moves on each phrase so the sunset follows the set, palms sway with the bass, drops turn the colour."
 
     def __init__(self, rt):
@@ -203,8 +205,16 @@ class NightDrive(Resort):
             self.t = target
         self.t += (target - self.t) * (1 - math.exp(-dt / 2.0))
         self.grade += (self.grade_target - self.grade) * (1 - math.exp(-dt / 2.0))
-        self.bass = getattr(self, "bass", 0.0) * 0.8 + 0.2 * a.bass
         super().step(dt)
 
     def _wind(self, phase, t):
-        return max(-1.0, min(1.0, super()._wind(phase, t) * (0.4 + 1.2 * getattr(self, "bass", 0.0))))
+        """The palms dance: a swing to one side on one beat and back on the next, at the
+        end of each swing exactly on the beat, wider when the music is loud, with the kick
+        snapping them a little further. Each palm leads or lags a touch, so they don't move
+        as one."""
+        a = self.rt.audio
+        beats = a.counts["beat"] + a.phase + 0.06 * math.sin(phase)
+        swing = math.cos(math.pi * beats)
+        size = 0.45 + 0.55 * min(1.0, a.level * 1.4)
+        kick = math.exp(-a.phase * 6) * min(1.0, a.kick + 0.2)
+        return max(-1.0, min(1.0, swing * size + 0.25 * kick * (1 if swing >= 0 else -1)))

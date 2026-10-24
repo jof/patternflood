@@ -146,8 +146,9 @@ monitor, so nothing has to be wired in.
 ```
 
 **Sync.** The analysis runs on audio held back by `--audio-delay`, so beats land on the panel
-when they're heard. Bluetooth output trails its own monitor by ~0.2 s, which is the default
-when the default sink is a `bluez` one (0.03 s otherwise). Fine-tune it live with k2 in Tempo.
+when they're heard. Bluetooth (A2DP, SBC; e.g. to headphones) trails its own
+monitor by ~0.2 s, and the panel shows a frame ~30-50 ms after the analysis sees it, so the
+default for a `bluez` sink is 0.15 s (0 for wired output). Fine-tune it live with k2 in Tempo.
 
 **What the analyzer hears**, at 48 kHz in 512-sample hops (93.75 a second), at about 1 % of one core:
 - **Level and spectrum:** RMS and 24 log-spaced bands from 30 Hz to 16 kHz, each against its own

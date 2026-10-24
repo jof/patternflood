@@ -38,13 +38,14 @@ def main():
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0],
                                 formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
     p.add_argument("--knobs", default=f"serial:{BRIDGE}", help="serial:PORT | i2c[:BUS] | auto[:SEED] | script:SPEC | none")
-    p.add_argument("--out", default="pipe:durian", help="pipe:HOST[:IP] | udp[:IP] | preview:FILE.gif")
+    p.add_argument("--out", default="auto:durian",
+                   help="auto[:HOST] (udp if the card is on our link, else pipe) | pipe:HOST[:IP] | udp[:IP] | preview:FILE.gif")
     p.add_argument("--demo", default="0", help="start demo, by name or index")
     p.add_argument("--fps", type=float, default=None, help="default 60, or 20 for previews")
     p.add_argument("--audio", default=None,
                    help="pulse[:SOURCE] | alsa[:DEVICE] | file:PATH[@SECONDS] | none (default: pulse on the bench, none for previews)")
     p.add_argument("--audio-delay", type=float, default=None,
-                   help="seconds to hold audio back so beats land when heard (default 0.2 for Bluetooth output, else 0.03)")
+                   help="seconds to hold audio back so beats land when heard (default 0.15 for Bluetooth output, else 0)")
     p.add_argument("--bright", type=float, default=None, help="0..1, default 0.3 (1.0 for previews)")
     p.add_argument("--seconds", type=float, default=None, help="stop after this long (previews default to 8)")
     p.add_argument("--list", action="store_true", help="list the demos and exit")
