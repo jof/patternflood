@@ -1,9 +1,9 @@
 # Demos
 
 Interactive demos for the 2×2 (128 × 128), written once and run in either place.
-There are 106: 58 of ours, plus all 48 of upstream Patternflow's patterns, run
+There are 111: 63 of ours, plus all 48 of upstream Patternflow's patterns, run
 natively ([below](#upstream-patternflow-presets)). That's the 34 firmware presets and
-our ports of the 14 that upstream only had as web sources. Twenty-three of ours are
+our ports of the 14 that upstream only had as web sources. Twenty-eight of ours are
 [Patternflow-style originals](#our-originals-on-the-patternflow-shelf), shelved among Lee's.
 
 | | Knobs | Frames | Renders on |
@@ -361,7 +361,7 @@ same way: drop it in `upstream_host/web_ports/`.
 
 ### Our originals on the Patternflow shelf
 
-Twenty-three patterns of ours, in Patternflow's manner: each runs by itself, and the four knobs turn
+Twenty-eight patterns of ours, in Patternflow's manner: each runs by itself, and the four knobs turn
 its qualities, not a game. They're in our own style, which is print-shop and demoscene,
 and each sits on the shelf right after the preset of Lee's it riffs on.
 
@@ -389,6 +389,11 @@ and each sits on the shelf right after the preset of Lee's it riffs on.
 | **Warp** | pf 0510 | A 3D starfield drawn as streaks from where each star is to where it was, so cruise shows points and speed shows lines. A jump winds up into a tunnel of light, holds, and drops out with a flash among new stars. A big hit in the music jumps. | k0 throttle; k1 steer; k2 screen; k3 inks. Click: k0 jump, k2 chunky. |
 | **Snow** | pf 0515-3 | A village at night in three layers of snowfall (far small and slow, near big and swaying). Chimneys smoke downwind, windows go on and off (in a warm spot ink printed over the palette), and drifts build where flakes land. | k0 snowfall; k1 wind; k2 screen; k3 inks. Click: k0 clear the drifts, k1 lights, k2 chunky. |
 | **Helix** | pf 0512 | A DNA double helix (10.5 base pairs a turn, with the minor groove) turning and rising forever. Every atom is a shaded sphere impostor in a depth buffer, so the strands pass properly in front and behind. Unzipping parts the base pairs from the top down. | k0 spin; k1 tilt; k2 screen; k3 inks. Click: k0 unzip, k2 chunky. |
+| **Fireworks** | pf a big hit | Rockets climb on sparking trails and burst into shells thrown evenly over a sphere: peonies, drooping willows with long golden trails, tilted rings, and crackle that pops. The sky keeps faint trails, and each burst lights the town's skyline. With music, shells go up on the kicks and each phrase brings a finale. | k0 launch rate; k1 shell size; k2 screen; k3 inks. Click: k0 a volley, k1 the finale, k2 chunky. |
+| **Gears** | pf Origin | A clockwork train of meshing gears (one tooth size, each set at the angle that slots its teeth into its neighbour's gaps; checked to overlap by a few pixels at most). Brushed-brass shading under the cross-hatch screen, like an engraving. With music it ticks forward on each beat, like an escapement. | k0 crank speed; k1 a new train; k2 screen; k3 inks. Click: k0 reverse, k2 chunky. |
+| **Pendulums** | pf Wave Saw | The pendulum wave from above: 18 pendulums whose lengths make the first swing 51 times a minute, the next 52, and so on, so they fall into snakes, interleaved lines and scatter, and line up again every 60 s. Shaded balls, depth-sorted. | k0 speed; k1 view; k2 screen; k3 inks. Click: k0 release them together, k2 chunky. |
+| **Spiro** | pf Lissajous Weave | A spirograph: a wheel rolling inside a 96-tooth ring draws a hypotrochoid onto a fading page, so fresh ink is white and ages down through the inks. The wheel and the pen's hole drift, laying each figure over the ghost of the last. | k0 pen speed; k1 wheel size (teeth); k2 screen; k3 inks. Click: k0 clear the page, k1 a new figure, k2 chunky. |
+| **Orrery** | pf 0513 | A sun and five planets on tilted orbits with Kepler's periods (radius to the 1.5), one ringed, two with moons. Each world is lit from its sun, so it waxes and wanes as it goes round, and crosses the sun as a dark disc. | k0 time; k1 tilt; k2 screen; k3 inks. Click: k0 reverse time, k1 orbits, k2 chunky. |
 | **Strange** | pf Lissajous Weave | A Clifford attractor drawn as the glowing density of 30 000 points, coloured by which way each point jumped. A form change fades out, jumps, and fades in, because gliding between forms passes through dull periodic orbits. | k0–k3 bend its a, b, c, d. Click: k0 next form, k1 colours, k2 freeze the drift, k3 long glow. |
 
 Left alone, each moves on by itself: a new form, shape or scene every 14–40 s. The menu's
@@ -396,8 +401,8 @@ Left alone, each moves on by itself: a new form, shape or scene every 14–40 s.
 level, bass and treble envelopes add to what the knobs set (the same four upstream's audio
 edition reads). Each beat pulses them, each 8-bar phrase brings the next form, shape, picture,
 world or scene (a gust in Smoke, lightning at Sea), in Bit Tunnel each bar steps the bit mask,
-in Smoke each kick puffs, in Caustics a kick drops a pebble, in Tesla it touches the glass, and in Life a
-generation passes on every beat.
+in Smoke each kick puffs, in Caustics a kick drops a pebble, in Tesla it touches the glass, in Life a
+generation passes on every beat, Fireworks launch on the kicks, and Gears tick like an escapement.
 
 Their shared parts are `pfd/ink.py` (threshold screens: Bayer, blue noise by void filling,
 interleaved gradient noise, halftone dots, engraving lines and pixel-exact cross-hatching,
@@ -414,8 +419,9 @@ Measured per frame on ash:
   Pool 1.4 ms (it was 8.3 ms before drawing a diagonal of pillars at a time).
 - **Reaction takes 4.3 ms** at 10 iterations a frame.
 - The upstream presets take **0.1–0.6 ms** natively.
-- The Patternflow originals: Op Art 0.3 ms, Life 0.3 ms, Warp 0.5 ms, Aurora 0.5 ms,
-  Snow 0.5 ms, Lava 0.6 ms, Bit Tunnel 0.7 ms, Jellyfish 0.8 ms, Tesla 1.2 ms, Galaxy 1.6 ms, Smoke 1.6 ms, Window 1.7 ms, Riso 1.9 ms, Moon 1.9 ms,
+- The Patternflow originals: Op Art 0.3 ms, Life 0.3 ms, Fireworks 0.4 ms, Warp 0.5 ms,
+  Aurora 0.5 ms, Snow 0.5 ms, Lava 0.6 ms, Orrery 0.6 ms, Spiro 0.6 ms, Pendulums 1.1 ms,
+  Gears 1.1 ms, Bit Tunnel 0.7 ms, Jellyfish 0.8 ms, Tesla 1.2 ms, Galaxy 1.6 ms, Smoke 1.6 ms, Window 1.7 ms, Riso 1.9 ms, Moon 1.9 ms,
   Pixel Sort 2.0 ms, Caustics 2.1 ms, Strange 2.2 ms, Valley 2.7 ms, Bonfire 2.8 ms and Sea
   2.9 ms, and Helix 5.7 ms (a hundred-odd sphere impostors). **Mandel averages 8 ms**, rising with depth as more points take hundreds of
   iterations. **Obra takes 2.6–5.3 ms**, depending on the form (octahedron fastest,

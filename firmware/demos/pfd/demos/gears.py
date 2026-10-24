@@ -34,7 +34,7 @@ class Gears(Inked):
 
     def layout(self):
         """A chain of gears from the middle outwards, each placed against the last at a free angle."""
-        rng = np.random.default_rng(self.seed)
+        rng = np.random.default_rng(self.seed % 100000)      # k1 turns it either way; seeds must be >= 0
         gears = []                                       # (x, y, teeth, ratio, phase)
         teeth = int(rng.integers(14, 22))
         gears.append((64.0, 64.0, teeth, 1.0, 0.0))
