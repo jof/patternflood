@@ -29,7 +29,7 @@ and `knob_renderer` from `../colorlight`.
 ## Menu
 
 **Hold the two outer knobs (k0 and k3) for a second.** In the menu:
-- **k0** steps through the demos (anticlockwise = next, which felt right on the bench). They switch live behind the overlay and keep their state.
+- **k0** steps through the demos (clockwise = next). They switch live behind the overlay and keep their state.
 - **k3** sets brightness (0.3 at start).
 - **A click on any knob** closes the menu, or it closes after 6 s with no input.
 
@@ -47,6 +47,8 @@ Conventions shared by every demo, so they transfer:
 - **Discrete actions fire on a click** (release, under 0.45 s, no turn in it), not on
   press. That frees press-and-hold for continuous actions (pour, drain, scrub-hold) and
   for push-and-turn as a second layer.
+- **Clockwise is positive.** The 4991s count down when turned clockwise, so `pfd/io.py`
+  negates them at the source. Demos never see the raw sign.
 - **Spinning fast accelerates** (`rt.accel`). One detent is still one pixel when you
   go slowly, but you can cross the panel in about a turn.
 - **Knob lights carry state:** join state, lock, recharge, reverse. They aren't decoration.

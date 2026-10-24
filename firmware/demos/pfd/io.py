@@ -1,6 +1,8 @@
 """Knob sources and frame sinks, so the same demos run on the bench and on the Pi.
 
-Knob sources yield events:  ("turn", k, d)  ("down", k)  ("up", k)  ("hello", n)
+Knob sources yield events:  ("turn", k, d)  ("down", k)  ("up", k)  ("hello", n),
+with d > 0 for clockwise. The 4991's seesaw counts down when turned clockwise
+(Adafruit's examples negate it too), so the hardware sources flip the sign.
 and take knob lights as a list of (r, g, b) 0..255.
 
     serial:PORT    FeatherS3 knob_bridge on USB (bench, ash)
@@ -103,7 +105,7 @@ class SerialKnobs(_QueueSource):
                     continue
                 t, k = ev.get("t"), ev.get("k")
                 if t == "enc":
-                    self.q.put(("turn", k, ev["d"]))
+                    self.q.put(("turn", k, -ev["d"]))       # seesaw counts down clockwise
                 elif t == "btn":
                     self.q.put(("down" if ev["down"] else "up", k))
                 elif t == "hello":
@@ -149,7 +151,7 @@ class I2CKnobs(_QueueSource):
                     continue
                 step = p - self.pos[k]
                 if step and abs(step) <= self.MAX_STEP:
-                    self.q.put(("turn", k, step))
+                    self.q.put(("turn", k, -step))          # seesaw counts down clockwise
                 self.pos[k] = p
                 if d != self.down[k]:
                     self.q.put(("down" if d else "up", k))

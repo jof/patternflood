@@ -112,7 +112,7 @@ class State:
 def handle(state, ev):
     t, k = ev.get("t"), ev.get("k")
     if t == "enc":
-        d = ev["d"]
+        d = -ev["d"]                    # the 4991's seesaw counts down when turned clockwise
         if k == 0:
             state.hue = (state.hue + d / 48.0) % 1.0
         elif k == 1:
