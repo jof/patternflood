@@ -1,7 +1,7 @@
 # Demos
 
 Interactive demos for the 2×2 (128 × 128), written once and run in either place.
-There are 66: 18 of ours, plus all 48 of upstream Patternflow's patterns, run
+There are 67: 19 of ours, plus all 48 of upstream Patternflow's patterns, run
 natively ([below](#upstream-patternflow-presets)). That's the 34 firmware presets and
 our ports of the 14 that upstream only had as web sources.
 
@@ -95,6 +95,17 @@ something you play rather than tune:
 | **Glitch** | 0519-2 glitch type, 0511 sliding rows, 0602 colour separation | k0 tear, k1 colour split, k2 smear, k3 crush; click k0 changes the text | **A knob as a whammy bar:** each knob injects one unmistakable effect that springs back over ~1.6 s. Hold to pin it. And a clock gives the box a reason to sit on a desk. | Whether the spring-back reads as playful or as the knob "not working". |
 | **Kaleido** | 0522 quad-fold, 0526 kaleidoscope, 0622 mirror grid | k0 barrel, k1 zoom, k2 mirrors, k3 colour; click k0 shake, k3 oil | **The literal physical gesture:** twisting k0 twists the barrel, and real beads tumble under gravity inside the cell. | Whether the lag of falling beads feels analogue and pleasant, or mushy next to Classic's instant response. |
 | **Pool** | 0624 isometric pillars | each knob a wave paddle on one side (Squash's seats) | **Rate as input:** every detent is a push, so spinning faster makes bigger waves. Four people can collide waves. | Whether people discover that speed matters, and whether waves from opposite sides read in isometric 3D. |
+
+And one generator:
+
+| Demo | After | Knobs | Hypothesis | Watch for |
+|---|---|---|---|---|
+| **Resort** | Hiroshi Nagai's city-pop illustrations: flat colour, cobalt skies, pools, palms, white modernist blocks | k0 time of day (click: let the day pass), k1 a new scene per detent, k2 horizon (click: mirror), k3 palette (click: album-cover frame) | **One story knob:** a single continuous control (noon → golden hour → sunset → night) can carry a whole demo. Plus **seeded scenes you can browse and return to,** a detent at a time. | Whether people sweep k0 back and forth to watch the light change, or park it at sunset; whether k1 browsing feels like flipping through records. |
+
+Every Resort scene is generated (`compose()` in `pfd/demos/resort.py`): pool, beach or coast drive, with palms, an optional
+modernist block, clouds, the sun's track and a made-up album title. Nothing is copied from a real picture. The static
+layers are cached and rebuilt only when time, scene or horizon change, and palms redraw about 15 times a second.
+A typical frame takes 0.45 ms on ash; a palm redraw 2–4 ms; the first frame of a new scene up to about 20 ms.
 
 Cross-cutting questions, worth noting on every demo:
 

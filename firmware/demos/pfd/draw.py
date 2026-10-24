@@ -44,6 +44,29 @@ def ring(img, x, y, r, rgb, width=0.8):
     np.maximum(img[y0:y1, x0:x1], a * np.asarray(rgb, np.float32), out=img[y0:y1, x0:x1])
 
 
+def poly(img, pts, rgb, mask_out=None):
+    """Fill a polygon (even-odd rule, pixel centres) with a flat colour.
+    If mask_out is given, OR the coverage into it as well."""
+    pts = np.asarray(pts, np.float32)
+    x0, y0 = max(0, int(np.floor(pts[:, 0].min()))), max(0, int(np.floor(pts[:, 1].min())))
+    x1, y1 = min(N, int(np.ceil(pts[:, 0].max())) + 1), min(N, int(np.ceil(pts[:, 1].max())) + 1)
+    if x0 >= x1 or y0 >= y1:
+        return
+    px, py = X[y0:y1, x0:x1] + 0.5, Y[y0:y1, x0:x1] + 0.5
+    inside = np.zeros(px.shape, bool)
+    xa, ya = pts[:, 0], pts[:, 1]
+    xb, yb = np.roll(xa, -1), np.roll(ya, -1)
+    for i in range(len(pts)):
+        if ya[i] == yb[i]:
+            continue
+        cross = (ya[i] > py) != (yb[i] > py)
+        xint = xa[i] + (py - ya[i]) * (xb[i] - xa[i]) / (yb[i] - ya[i])
+        inside ^= cross & (px < xint)
+    img[y0:y1, x0:x1][inside] = rgb
+    if mask_out is not None:
+        mask_out[y0:y1, x0:x1] |= inside
+
+
 def segment(x0, y0, x1, y1, step=0.5):
     """Points along a line segment, at most `step` apart (including both ends)."""
     n = max(1, int(math.hypot(x1 - x0, y1 - y0) / step))
