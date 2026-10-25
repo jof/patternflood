@@ -8,14 +8,17 @@ the part's cut DXF (drawn as seen from OUTSIDE, so the face up on the laser bed
 is the outer face), works out where etching is allowed, and fills it with
 a dense, generated circuit board meant to be looked at for a long time: on a
 1.27 mm grid, QFP / BGA / SOIC chips with their fan-out, passives, headers,
-crystals, test points, fiducials, spiral inductors, Hilbert meanders,
+crystals, test points, fiducials, spiral inductors (square, octagonal, round,
+bifilar), space-filling meanders (Hilbert, Moore, Peano, a Minkowski fractal
+loop), meander-line and dipole antennas, strain-gauge serpentines,
 length-matched serpentines, wide power traces, parallel buses, silkscreen
-designators in a single-stroke plotter font and plates in IBM Plex Mono
+designators in a single-stroke plotter font and plates in JetBrains Mono
 (artfont.py), and the leftover space filled with hatch, cross-hatch,
 topographic contours or stipple — or left empty on purpose. Hidden in it: a real QR code per part (it scans; see QR_MESSAGES), a space
 invader, a Lissajous figure, and tiny words in some of the empty spaces. The back cover
-carries a credits plate with a QR code to patternflow.work, and each push button on
-the left wall gets a halo ring just outside its head. On the
+carries a credits plate with a QR code to patternflow.work, each push button on
+the top wall gets a halo ring just outside its head, and each French cleat hole
+in the back cover is drawn as a plated mounting hole. On the
 bezel each knob gets a real dial: a 270-degree scale 0-10 with fine ticks,
 numerals, and the knob's name.
 
@@ -65,6 +68,9 @@ DIAL_KEEP = 22.5     # the dial, its numerals and name own r < this round each k
 PAD = 0.9            # nodes and traces keep this far inside the allowed area (via ring 0.55)
 BTN_HALO = 9.8       # push buttons (BTN_* in enclosure.fs): rings just outside the 17.5 mm head
 BTN_KEEP = 11.5      # and the halo owns r < this round each button
+MNT_R = (2.4, 2.7)   # the back cover's French cleat holes (CLEAT_HOLE in enclosure.fs), radius as cut
+MNT_VIA = 6.4        # their stitching vias sit on this radius
+MNT_KEEP = 7.8       # and the mounting hole owns r < this round each one
 
 # part file -> seed. The bottom wall is the base: never seen, not etched.
 PARTS = {"bezel-outer.dxf": 11, "wall-left.dxf": 12, "wall-right-iec.dxf": 13,
@@ -93,6 +99,11 @@ def button_centres(holes):
         if 10.5 < w < 11.5 and 11.5 < ht < 12.5:
             out.append(((x0 + x1) / 2, (y0 + y1) / 2))
     return out
+
+
+def mount_centres(ents):
+    """Centres of the French cleat holes: plain round holes of CLEAT_HOLE."""
+    return [e[1] for e in ents if e[0] == "C" and MNT_R[0] < e[2] < MNT_R[1]]
 
 
 def part_regions(ents):
@@ -155,6 +166,44 @@ def hilbert(order):
             t //= 4
             s *= 2
         pts.append((x, y))
+    return pts
+
+
+def lsystem(axiom, rules, n):
+    """Grid points of an L-system curve: F steps one unit, + and - turn 90 degrees."""
+    s = axiom
+    for _ in range(n):
+        s = "".join(rules.get(ch, ch) for ch in s)
+    x = y = d = 0
+    pts = [(0, 0)]
+    for ch in s:
+        if ch == "F":
+            x, y = x + (1, 0, -1, 0)[d], y + (0, 1, 0, -1)[d]
+            pts.append((x, y))
+        elif ch == "+":
+            d = (d + 1) % 4
+        elif ch == "-":
+            d = (d - 1) % 4
+    mx, my = min(q[0] for q in pts), min(q[1] for q in pts)
+    return [(px - mx, py - my) for px, py in pts]
+
+
+# name -> (axiom, rules, iterations to pick from)
+CURVES = {
+    "moore": ("LFL+F+LFL", {"L": "-RF+LFL+FR-", "R": "+LF-RFR-FL+"}, (2, 3)),
+    "peano": ("X", {"X": "XFYFX+F+YFXFY-F-XFYFX", "Y": "YFXFY-F-XFYFX+F+YFXFY"}, (2, 3)),
+    "minkowski": ("F+F+F+F", {"F": "F+F-F-FF+F+F-F"}, (2,)),
+}
+
+
+def square_spiral(x0, y0, s, sp, lo=0.0):
+    """A square spiral in the s x s square at (x0, y0), turns sp apart, from lo in."""
+    pts, hi = [], s - lo
+    while hi - lo > 2 * sp:
+        pts += [(x0 + lo, y0 + lo), (x0 + hi, y0 + lo), (x0 + hi, y0 + hi), (x0 + lo + sp, y0 + hi)]
+        lo += sp
+        hi -= sp
+        pts.append((x0 + lo, y0 + hi))
     return pts
 
 
@@ -523,6 +572,8 @@ class Board:
         self.dot(c, 0.45)
 
     def inductor(self, k):
+        """A spiral inductor k cells a side: square, octagonal or round, or two
+        square windings interleaved (a transformer). A via at the inner end."""
         at = self.spot(k, k, margin=1)
         if not at:
             return
@@ -531,14 +582,26 @@ class Board:
         x0, y0 = self.xy((i, j))
         s = k * G
         sp = 0.55
-        pts, lo, hi = [], 0.0, s
-        while hi - lo > 2 * sp:
-            pts += [(x0 + lo, y0 + lo), (x0 + hi, y0 + lo), (x0 + hi, y0 + hi), (x0 + lo + sp, y0 + hi)]
-            lo += sp
-            hi -= sp
-            pts.append((x0 + lo, y0 + hi))
-        self.poly(pts)
-        r = self.ref("L")
+        kind = self.rng.choices(["square", "octagon", "round", "bifilar"], [3, 3, 2, 2])[0]
+        if kind == "square":
+            windings = [square_spiral(x0, y0, s, sp)]
+        elif kind == "bifilar":
+            windings = [square_spiral(x0, y0, s, 2 * sp), square_spiral(x0, y0, s, 2 * sp, sp)]
+        else:
+            c, rr = (x0 + s / 2, y0 + s / 2), s / 2
+            step = 45.0 if kind == "octagon" else 8.0
+            a, pts = 22.5 if kind == "octagon" else 0.0, []
+            while rr > max(0.9, s * 0.16):
+                pts.append((c[0] + rr * math.cos(math.radians(a)), c[1] + rr * math.sin(math.radians(a))))
+                a += step
+                rr -= sp * step / 360 / math.cos(math.radians(22.5) if kind == "octagon" else 0)
+            windings = [pts]
+        for w in windings:
+            if len(w) > 1:
+                self.poly(w)
+                self.ring(w[-1], 0.45)
+                self.dot(w[-1], 0.18)
+        r = self.ref("T" if kind == "bifilar" else "L")
         if self.label_fits(r, x0, y0 + s + 0.9, 0.9):
             self.label(r, x0, y0 + s + 0.9, 0.9)
 
@@ -581,6 +644,142 @@ class Board:
         lx, ly = pts[0][0], pts[0][1] - 1.6
         if self.label_fits(r, lx, ly, 0.8):
             self.label(r, lx, ly, 0.8)
+
+    def block(self, wu, hu, un, margin=1):
+        """Reserve room for a figure wu x hu units of un mm, at one of four turns.
+        -> a map (u, v) -> (x, y) into it, or None if there is no room."""
+        rot = self.rng.randrange(4)
+        w, h = (hu, wu) if rot % 2 else (wu, hu)
+        cw, ch = math.ceil(w * un / G), math.ceil(h * un / G)
+        at = self.spot(cw, ch, margin=margin)
+        if not at:
+            return None
+        i, j = at
+        self.reserve(i, j, i + cw, j + ch)
+        x0, y0 = self.xy((i, j))
+        turn = [lambda u, v: (u, v), lambda u, v: (hu - v, u),
+                lambda u, v: (wu - u, hu - v), lambda u, v: (v, wu - u)][rot]
+        return lambda u, v: (lambda q: (x0 + q[0] * un, y0 + q[1] * un))(turn(u, v))
+
+    def tag(self, prefix, pts):
+        """A designator just above a figure, if it fits."""
+        r = self.ref(prefix)
+        x, y = min(q[0] for q in pts), max(q[1] for q in pts) + 0.9
+        if self.label_fits(r, x, y, 0.8):
+            self.label(r, x, y, 0.8)
+
+    def hatched(self, f, u0, v0, u1, v1, sp=0.4):
+        """A filled copper area: its outline, and score lines across it."""
+        a, b = f(u0, v0), f(u1, v1)
+        x0, x1, y0, y1 = min(a[0], b[0]), max(a[0], b[0]), min(a[1], b[1]), max(a[1], b[1])
+        self.rect(x0, y0, x1, y1)
+        x = x0 + sp
+        while x < x1 - sp / 2:
+            self.score.append(("L", (x, y0), (x, y1)))
+            x += sp
+
+    def antenna(self):
+        """One of the meander family, picked for variety."""
+        kind = self.rng.choices(["hilbert", "moore", "peano", "minkowski", "mifa", "dipole", "gauge"],
+                                [2, 2, 2, 2, 3, 3, 2])[0]
+        if kind == "hilbert":
+            self.meander(self.rng.choice([3, 4]))
+        elif kind in CURVES:
+            self.curve(kind)
+        else:
+            getattr(self, kind)()
+
+    def curve(self, name):
+        """A space-filling or fractal curve: Moore (open, fed at both ends),
+        Peano, or a Minkowski island (a fractal loop antenna, one feed via)."""
+        axiom, rules, orders = CURVES[name]
+        pts = lsystem(axiom, rules, self.rng.choice(orders))
+        n = max(max(q) for q in pts) + 1
+        f = self.block(n, n, G / 2)
+        if not f:
+            return
+        q = [f(px + 0.5, py + 0.5) for px, py in pts]
+        closed = name == "minkowski"
+        self.poly(q, closed=closed)
+        for e in ([q[0]] if closed else [q[0], q[-1]]):
+            self.ring(e, 0.45)
+            self.dot(e, 0.18)
+
+    def mifa(self):
+        """A meandered inverted-F antenna, as on every 2.4 GHz module: a ground
+        bar with a gap for the feed, a shorting stub, then the radiator
+        folding back and forth past the end of the ground."""
+        n = self.rng.randint(4, 9)                       # meander periods
+        a = self.rng.randint(4, 8)                       # meander depth, units
+        top = a + 3
+        wu = 6 + 2 * n + 1
+        f = self.block(wu, top + 1, G / 2)
+        if not f:
+            return
+        self.hatched(f, 0.0, 0.0, 2.4, 1.4)
+        self.hatched(f, 3.6, 0.0, 6.0, 1.4)
+        pts = [f(1.0, 1.4), f(1.0, top), f(6.0, top)]   # short to ground, then the arm
+        u = 6.0
+        for k in range(n):
+            pts += [f(u, top - a), f(u + 1, top - a), f(u + 1, top), f(u + 2, top)]
+            u += 2
+        self.poly(pts)
+        self.seg(f(3.0, 0.7), f(3.0, top))               # the feed, up through the gap
+        self.ring(f(3.0, 0.7), 0.45)
+        self.dot(f(3.0, 0.7), 0.18)
+        self.tag("ANT", pts)
+
+    def dipole(self):
+        """A meandered dipole: two square-wave arms out from a centre feed."""
+        n = self.rng.randint(3, 7)
+        a = self.rng.randint(2, 4)                       # half-depth, units
+        arm = n + 4
+        f = self.block(2 * arm, 2 * a + 2, G / 2)
+        if not f:
+            return
+        mid, c = a + 1, arm
+        drawn = []
+        for sgn in (1, -1):
+            u, up = c + sgn * 2.2, 1
+            pts = [f(c + sgn * 1.1, mid), f(u, mid), f(u, mid + a)]
+            for k in range(n):
+                pts.append(f(u + sgn, mid + up * a))          # across
+                u += sgn
+                up = -up
+                pts.append(f(u, mid + up * a))                # and over to the other side
+            pts.append(f(u + sgn, mid + up * a))
+            self.poly(pts)
+            self.dot(pts[0], 0.32)
+            drawn += pts
+        self.tag("ANT", drawn)
+
+    def gauge(self):
+        """A foil strain gauge: a tight serpentine grid with fat end loops, two
+        solder tabs, and the alignment ticks on its centre lines."""
+        m = 2 * self.rng.randint(4, 7)                   # grid lines (even, so both ends finish low)
+        ln = self.rng.randint(10, 18)                    # grid length, units
+        g0, g1 = 3.0, 3.0 + ln
+        wu = m + 3.5
+        f = self.block(wu, g1 + 3.0, G / 2)
+        if not f:
+            return
+        xs = [1.75 + k for k in range(m)]
+        for k, u in enumerate(xs):
+            self.seg(f(u, g0), f(u, g1))
+        for k in range(m - 1):
+            v0, v1 = (g1, g1 + 0.8) if k % 2 == 0 else (g0 - 0.8, g0)
+            lo, hi = f(xs[k] - 0.2, v0), f(xs[k + 1] + 0.2, v1)
+            self.rect(min(lo[0], hi[0]), min(lo[1], hi[1]), max(lo[0], hi[0]), max(lo[1], hi[1]))
+        half = m // 2
+        self.hatched(f, 0.3, 0.0, 1.75 + half - 1.2, 1.4)
+        self.hatched(f, 1.75 + half - 0.2, 0.0, wu - 0.3, 1.4)
+        self.seg(f(xs[0], 1.4), f(xs[0], g0))
+        self.seg(f(xs[-1], 1.4), f(xs[-1], g0))
+        cu, cv = (xs[0] + xs[-1]) / 2, (g0 + g1) / 2
+        self.seg(f(cu, g1 + 1.6), f(cu, g1 + 2.8))
+        self.seg(f(0.0, cv), f(1.0, cv))
+        self.seg(f(wu - 1.0, cv), f(wu, cv))
+        self.tag("SG", [f(0.0, 0.0), f(wu, g1 + 3.0)])
 
     def qr(self, message, module=0.8, quiet=4):
         """A real, scannable QR code (segno, error correction M). Dark modules
@@ -720,6 +919,27 @@ def button_halo(board, c):
     board.ring(c, BTN_HALO + 0.8)
 
 
+def mounting_hole(board, c):
+    """A French cleat hole as a plated PCB mounting hole: an annular ring, a
+    ring of stitching vias round it, and a few ground traces leaving in line
+    with them."""
+    board.ring(c, 4.2)
+    board.ring(c, 5.0)
+    for k in range(8):
+        a = math.radians(k * 45)
+        v = (c[0] + MNT_VIA * math.cos(a), c[1] + MNT_VIA * math.sin(a))
+        board.ring(v, 0.5)
+        board.dot(v, 0.2)
+    for k in board.rng.sample(range(8), board.rng.randint(2, 4)):
+        a = math.radians(k * 45)
+        p = (c[0] + (MNT_KEEP + 1.2) * math.cos(a), c[1] + (MNT_KEEP + 1.2) * math.sin(a))
+        n = board.node_at(p)
+        if board.free(n):
+            path = board.route(n, k, 3, 24)
+            if path:
+                board.commit(path, start="ring", end=board.rng.choice(["via", "pad"]), power=board.rng.random() < 0.4)
+
+
 def dial(board, c, name):
     """A knob's dial: rings and a 270-degree scale with fine ticks. Unlabelled on
     purpose — no numerals, no names (`name` is kept for the caller's sake)."""
@@ -825,8 +1045,9 @@ def generate(name, seed):
     ents = read_dxf(os.path.join(LASER, name))
     outline, holes, knobs = part_regions(ents)
     buttons = button_centres(holes)
+    mounts = mount_centres(ents)
     keep_out = ([h.buffer(HOLE) for h in holes] + [Point(k).buffer(DIAL_KEEP) for k in knobs]
-                + [Point(c).buffer(BTN_KEEP) for c in buttons])
+                + [Point(c).buffer(BTN_KEEP) for c in buttons] + [Point(c).buffer(MNT_KEEP) for c in mounts])
     allowed = outline.buffer(-EDGE).difference(unary_union(keep_out)) if keep_out else outline.buffer(-EDGE)
     rng = random.Random(SEED * 100 + seed)
     b = Board(allowed, rng)
@@ -835,9 +1056,11 @@ def generate(name, seed):
         dial(b, c, KNOB_NAMES[k] if k < len(KNOB_NAMES) else f"K{k + 1}")
     for c in buttons:
         button_halo(b, c)
+    for c in mounts:
+        mounting_hole(b, c)
     A = allowed.area
     if name.startswith("back-cover"):
-        b.title_block(["PATTERNFLOOD / DESKTOP", "REV 2.2  2026-10", "128 X 128  P2 GOB X4", "PI 5 + 5A-75B",
+        b.title_block(["PATTERNFLOOD / DESKTOP", "REV 2.3  2026-10", "128 X 128  P2 GOB X4", "PI 5 + 5A-75B",
                        "LRS-50-5  5V 10A", "BIRCH 3.18  KERF 0.15"])
         b.credits(["Made by jof", "jof@thejof.com", "Inspired by Patternflow", "by SeungHun Lee",
                    "patternflow.work"], "https://patternflow.work/")
@@ -856,10 +1079,10 @@ def generate(name, seed):
         b.header(rng.randint(4, 10))
     for _ in range(int(A / 9000)):
         b.crystal()
-    for _ in range(int(A / 14000)):
+    for _ in range(max(1, int(A / 12000))):
         b.inductor(rng.randint(5, 8))
-    for _ in range(max(1, int(A / 20000))):
-        b.meander(rng.choice([3, 4]))
+    for _ in range(max(2, int(A / 11000))):
+        b.antenna()
     for _ in range(int(A / 9000)):
         b.serpentine()
     if rng.random() < 0.7 or name.startswith("back"):
@@ -891,7 +1114,7 @@ QR_FILL = 0.12       # QR dark-module fill pitch: a little under BEAM, so it bur
 QR_FOUND = {}        # part -> [(message, box)], filled by generate(), checked by verify_qr()
 # one real QR code per part: (text, module size mm). Phone cameras read 0.8 mm modules fine.
 QR_MESSAGES = {
-    "back-cover.dxf": ("PATTERNFLOOD DESKTOP / REV 2.2 / 2026 - 128x128 P2 GOB - RASPBERRY PI 5 + COLORLIGHT 5A-75B "
+    "back-cover.dxf": ("PATTERNFLOOD DESKTOP / REV 2.3 / 2026 - 128x128 P2 GOB - RASPBERRY PI 5 + COLORLIGHT 5A-75B "
                        "- LRS-50-5 - BALTIC BIRCH 3.18 - IF YOU CAN READ THIS, YOU LOOKED CLOSE ENOUGH", 1.0),
     "bezel-outer.dxf": ("TURN THE KNOBS", 0.8),
     "wall-left.dxf": ("LOOK CLOSER", 0.8),
@@ -1073,14 +1296,15 @@ def check(name, ents, allowed, score, engrave):
     region = prep(allowed.buffer(0.05))
     outline, holes, knobs = part_regions(ents)
     owned = [Point(k).buffer(DIAL_KEEP + 0.05) for k in knobs] + \
-        [Point(c).buffer(BTN_KEEP + 0.05) for c in button_centres(holes)]
+        [Point(c).buffer(BTN_KEEP + 0.05) for c in button_centres(holes)] + \
+        [Point(c).buffer(MNT_KEEP + 0.05) for c in mount_centres(ents)]
     dials = prep(unary_union(owned)) if owned else None
     shape = lambda e, filled: (LineString([e[1], e[2]]) if e[0] == "L"
                                else Point(e[1]).buffer(e[2], 8) if filled else Point(e[1]).buffer(e[2], 8).exterior)
     bad = 0
     for e, filled in [(e, False) for e in score] + [(e, True) for e in engrave]:
         g = shape(e, filled)
-        # the dials live in the knob keep-out by design
+        # the dials, halos and mounting holes live in their keep-outs by design
         if not region.contains(g) and not (dials and dials.contains(g)):
             bad += 1
     cutzone = prep(unary_union([LineString(sampled(e)) for e in ents]).buffer(1.5))

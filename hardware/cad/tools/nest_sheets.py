@@ -4,7 +4,7 @@
     hardware/cad/tools/nest_sheets.py            (reads and writes hardware/laser/)
 
 Reads the per-part DXFs that export_dxf.py wrote, and the quantities in its
-MANIFEST.md, and lays every part out on four sheets, one DXF per sheet in
+MANIFEST.md, and lays every part out on five sheets, one DXF per sheet in
 hardware/laser/sheets/, with a preview PNG each and a README cut list.
 
 The layout is written down by hand below rather than searched for: it is
@@ -201,6 +201,9 @@ LAYOUT = [
                ("stiffener-shelf.dxf", True)],
      # the knob ribs, in the inner bezel's display aperture
      "inside": [("knob-rib-1.dxf", False), ("knob-rib-2.dxf", False)]},
+    # 286 x 310: nothing else of that size has room left on sheets 1-4
+    {"title": "Sheet 5 — back cover doubler",
+     "along": [("back-cover-doubler.dxf", True)]},
 ]
 
 
@@ -440,6 +443,7 @@ PART = {  # file -> what to call it on the cut sheet
     "wall-bottom-doubler-psu.dxf": "Wall bottom doubler, PSU holes (glued inside)",
     "wall-top-doubler.dxf": "Wall top doubler (glued inside)",
     "back-cover.dxf": "Back cover",
+    "back-cover-doubler.dxf": "Back cover doubler (glued inside the cover, between the rails)",
     "electronics-tray-front-sheet.dxf": "Electronics tray, front sheet",
     "electronics-tray-rear-sheet-board-nuts.dxf": "Electronics tray, rear sheet (board nuts)",
     "panel-brace-middle.dxf": "Panel brace middle (front or rear sheet; identical)",
@@ -506,7 +510,7 @@ def main():
           "the face against the honeycomb, with its flash-back marks, ends up inside.",
           f"- **Buy {len(LAYOUT) + 2}:** {len(LAYOUT)} for the box, one 12 × 12 for the test cuts, "
           "one spare for a recut.",
-          "- **Rev 2:** the bezel and every wall are two sheets, the second glued on (PVA, clamped flat) "
+          "- **Rev 2:** the bezel, every wall and (rev 2.3) the back cover are two sheets, the second glued on (PVA, clamped flat) "
           "before the box goes together — `docs/desktop/enclosure-lasercut.md` §2.", ""]
     for si, (spec, placed) in enumerate(zip(LAYOUT, sheets), 1):
         all_ents = [e for _, ents in placed for e in ents]

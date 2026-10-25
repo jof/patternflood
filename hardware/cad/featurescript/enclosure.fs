@@ -11,11 +11,11 @@ LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "cc40456c8213d35e9d39
 // The etched art, as images for decals on the outer faces (tools/art.py
 // renders them, tools/decals.py uploads them and rewrites this block).
 // ART IMPORTS BEGIN — written by tools/decals.py
-ArtBezelOuter::import(path : "669f5ff90ec051aa8533859d", version : "a045c707966ed98fd719da2b");
-ArtWallLeft::import(path : "6770a70595bb6770e346f98b", version : "667390690132de535f3f0f4e");
-ArtWallRight::import(path : "f594dee1c28d8c4c2048360d", version : "c794158a764279320afa906a");
-ArtWallTop::import(path : "d58d302d5216cc1a0cdf491c", version : "168a34a178048f02f1e64ffc");
-ArtBackCover::import(path : "7d8f74de8d66542a9f28ae5b", version : "18ab3d2522ad4ba14f7322db");
+ArtBezelOuter::import(path : "669f5ff90ec051aa8533859d", version : "25de5630277f39bcc76a90fd");
+ArtWallLeft::import(path : "6770a70595bb6770e346f98b", version : "1064204e0b01ada69197d7ad");
+ArtWallRight::import(path : "f594dee1c28d8c4c2048360d", version : "ff1441f4836ae67ea425b6b9");
+ArtWallTop::import(path : "d58d302d5216cc1a0cdf491c", version : "0a86a485fc577e8d12f419e0");
+ArtBackCover::import(path : "7d8f74de8d66542a9f28ae5b", version : "c0707eef34276d54226301ca");
 // ART IMPORTS END
 
 /**
@@ -1030,6 +1030,20 @@ const BTN_FLATS = 11.0;          // mm, across the key flats
 const BTN_CLEAR = 0.2;           // mm, on the dia and on the flats: a snug key
 const BTN_NUT_ROOM = 11.0;       // mm, doubler cut back this far from each button centre: the nut and fingers
 const BTN_PITCH = 24.0;          // mm, centre to centre: 6.5 between heads
+
+// French cleat holes through the back cover and its doubler (rev 2.3), for
+// an optional cleat strip on the outside: wood screws driven from inside,
+// heads on the doubler, through the 6.4 mm of cover into the strip. A row
+// across the top, just under the upper rail stack, for the cleat itself; a
+// pair across the bottom, just over the lower one, for the spacer strip of
+// the same thickness that holds the box plumb off the wall. Each row is
+// 43.2 mm from its edge of the box; the strips keep 25 mm clear of those
+// edges, where the cover's own screw heads are. Until then they are just
+// holes (the art rings them).
+const CLEAT_HOLE = 5.2;          // mm, clearance for a #10 or 5 mm wood screw
+const CLEAT_FROM_RAIL = 12.0;    // mm, hole centre from the rail stack's inner edge: a pan head clears rail A
+const CLEAT_X_TOP = [-120, -40, 40, 120];   // mm
+const CLEAT_X_BOTTOM = [-80, 80];           // mm
 const GAP_BOUNDS       = { (millimeter) : [0, 0.5, 50] } as LengthBoundSpec;
 
 function fingerCount(extent is ValueWithUnits, target is ValueWithUnits) returns number
@@ -1973,6 +1987,65 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                     "operationType" : BooleanOperationType.SUBTRACTION });
         }
 
+        // The back cover's doubler (rev 2.3): one more sheet GLUED to the
+        // cover's inside face, in the band between the two rail stacks, flush
+        // with rail A — so the rails, the cover screws and their lengths are
+        // as before, and the doubler drops in between the rail A strips as
+        // the cover goes on. Nothing inside comes nearer the back than rail
+        // C's front face, so the band is free. It stiffens the cover the way
+        // the wall doublers stiffen the walls, and gives the cleat screws
+        // twice the sheet to bear on.
+        fCuboid(context, id + "backDbl", {
+                "corner1" : vector(left + t + dc,  railY0[0] + railW + dc, zBc1),
+                "corner2" : vector(right - t - dc, railY0[1] - dc,         zBc1 + t) });
+        // ...except over the boards' tallest parts. The doubler takes 3.18 of
+        // the 3.2 mm the Pi 5's stacked USB had to the cover, and these four
+        // came within 3 mm of its face (2026-10-25: the Pi's USB/Ethernet
+        // block 0, its cooler 2.0, the card's RJ45 2.1, its 5 V terminal
+        // 1.1). A window round each, its footprint grown 2 mm, leaves them
+        // what they had in rev 2.2; the windows over each board merge.
+        const reliefGrow = 2 * millimeter;
+        const reliefBoxes = [
+            [piToBox(definition.piX, definition.piY, PI_PARTS[0][0], PI_PARTS[0][1]),
+             piToBox(definition.piX, definition.piY, PI_PARTS[0][2], PI_PARTS[0][3])],
+            [piToBox(definition.piX, definition.piY, PI_PARTS[3][0], PI_PARTS[3][1]),
+             piToBox(definition.piX, definition.piY, PI_PARTS[3][2], PI_PARTS[3][3])],
+            [clToBox(definition.clX, definition.clY, CL_RJ45[0], CL_RJ45[1]),
+             clToBox(definition.clX, definition.clY, CL_RJ45[2], CL_RJ45[3])],
+            [clToBox(definition.clX, definition.clY, CL_TERM[0], CL_TERM[1]),
+             clToBox(definition.clX, definition.clY, CL_TERM[2], CL_TERM[3])]];
+        var reliefs = [];
+        for (var rw = 0; rw < size(reliefBoxes); rw += 1)
+        {
+            const relA = reliefBoxes[rw][0];
+            const relB = reliefBoxes[rw][1];
+            fCuboid(context, id + ("dblRelief" ~ rw), {
+                    "corner1" : vector(min(relA[0], relB[0]) - reliefGrow, min(relA[1], relB[1]) - reliefGrow, zBc1 - over),
+                    "corner2" : vector(max(relA[0], relB[0]) + reliefGrow, max(relA[1], relB[1]) + reliefGrow, zBc1 + t + over) });
+            reliefs = append(reliefs, qCreatedBy(id + ("dblRelief" ~ rw), EntityType.BODY));
+        }
+        opBoolean(context, id + "dblReliefCut", {
+                "tools"         : qUnion(reliefs),
+                "targets"       : qCreatedBy(id + "backDbl", EntityType.BODY),
+                "operationType" : BooleanOperationType.SUBTRACTION });
+
+        // French cleat holes (see CLEAT_*), through cover and doubler.
+        const cleatRows = [[CLEAT_X_TOP,    railY0[1] - CLEAT_FROM_RAIL * millimeter],
+                           [CLEAT_X_BOTTOM, railY0[0] + railW + CLEAT_FROM_RAIL * millimeter]];
+        for (var ri = 0; ri < 2; ri += 1)
+        {
+            for (var k = 0; k < size(cleatRows[ri][0]); k += 1)
+            {
+                const cx = cleatRows[ri][0][k] * millimeter;
+                const tag = "" ~ ri ~ k;
+                fCylinder(context, id + ("cleat" ~ tag), {
+                        "topCenter"    : vector(cx, cleatRows[ri][1], zBc1 + t + over),
+                        "bottomCenter" : vector(cx, cleatRows[ri][1], zBc0 - over),
+                        "radius"       : CLEAT_HOLE / 2 * millimeter - kerf / 2 });
+                coverHoles = append(coverHoles, qCreatedBy(id + ("cleat" ~ tag), EntityType.BODY));
+            }
+        }
+
         // ── stiffening: one horizontal brace ────────────────────────────
         // Horizontal, and that orientation is the whole point. The
         // back-cover rail stacks run HORIZONTALLY along the top and bottom
@@ -2496,7 +2569,8 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
 
         opBoolean(context, id + "coverCut", {
                 "tools"         : qUnion(coverHoles),
-                "targets"       : qCreatedBy(id + "backCover", EntityType.BODY),
+                "targets"       : qUnion([qCreatedBy(id + "backCover", EntityType.BODY),
+                                          qCreatedBy(id + "backDbl", EntityType.BODY)]),
                 "operationType" : BooleanOperationType.SUBTRACTION });
 
         // ── display aperture and knob bores, through every lamination ───
@@ -2626,6 +2700,7 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             nameBody(context, id + ("n06t" ~ k), id + ("dblT" ~ k), "Wall top" ~ sfx);
         }
         nameBody(context, id + "n07", id + "backCover", "Back cover");
+        nameBody(context, id + "n07d", id + "backDbl", "Back cover doubler");
         nameBody(context, id + "n08t", id + "tray",   "Electronics tray, front sheet");
         nameBody(context, id + "n08r", id + "trayRear", "Electronics tray, rear sheet (board nuts)");
         // Braces top to bottom. brace0 and brace1 keep the ids they had in

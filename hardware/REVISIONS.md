@@ -212,3 +212,42 @@ Pushed and exported: only the shelf, top wall,
 top doubler and the left wall + doubler changed. Art re-run (the top wall's
 three buttons get halo rings), sheets re-nested, decals re-uploaded: checks
 clean, every QR decodes, every decal attaches.
+
+## Rev 2.3 — back cover doubler, French cleat holes (2026-10-25)
+
+Not yet tagged or versioned: the Onshape main workspace holds it. Designed, not
+yet built.
+
+- **The back cover is two sheets.** A doubler is glued to its inside face, in
+  the band between the two rail stacks and flush with rail A: 285.6 × 309.6,
+  z −57.5 to −54.4, 0.5 mm clear of the walls and of rail A's edges. The rails,
+  the cover screws and their lengths are unchanged; the doubler drops in
+  between the rail A strips as the cover goes on, and lifts away with it.
+- **Relief windows in the doubler** over the Pi 5's port block and cooler and
+  over the Colorlight's RJ45 and 5 V terminal (each part's footprint grown
+  2 mm, so each board's windows merge into one). They had only 3.2–5.3 mm to
+  the cover, and the Pi's stacked USB would have touched the doubler. Every
+  body inside is now ≥ 2 mm from it (checked with `evDistance`).
+- **Six French cleat holes**, Ø5.2 through cover and doubler (`CLEAT_*` in
+  `enclosure.fs`): four at y +105.3 (x ±40, ±120) for the cleat strip, two at
+  y −181.3 (x ±80) for a spacer strip of the same thickness, each row 43.2 mm
+  from its edge of the box. For #10 / 5 mm pan-head wood screws driven from
+  inside, heads on the doubler; a 1" screw gives ~18 mm of bite in a 19 mm
+  strip. Keep both strips 25 mm clear of the box's top and bottom edges (the
+  cover's screw heads). A screw-head volume (Ø11 × 7 mm) behind each hole is
+  clear of everything. Until a cleat goes on they are just holes.
+- **Art:** each cleat hole is drawn as a plated mounting hole (annular ring,
+  eight stitching vias, ground traces leaving in line with them). More
+  variety in the meander family: besides Hilbert meanders and square spiral
+  inductors there are now Moore, Peano and Minkowski-island curves, meandered
+  inverted-F antennas with their ground bar and feed, meandered dipoles,
+  strain-gauge serpentines, and octagonal, round and bifilar (transformer)
+  spirals. Title block and back-cover QR say REV 2.3. Every part's art
+  re-rolled; checks clean, every QR decodes, every decal attaches.
+- **Paper knob diffusers** (`hardware/laser/diffusers/`, `diffusers.py`, new):
+  a 34.5 mm square per knob (`#knobPocket` less 0.25 a side) with a Ø7.3 hole
+  (`#boreDia` + 0.3) for the bushing. It lies in the inner bezel's pocket
+  against the outer sheet, clamped by the encoder's face, and spreads each
+  NeoPixel through the whole ring of light slits. 8 on one small sheet (4 +
+  4 spares).
+- **Five cut sheets**: the doubler has sheet 5 to itself.

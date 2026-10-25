@@ -33,7 +33,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "..", "laser")
 
 # Parts that are cut from sheet. Everything else in the studio is a proxy.
-PATTERN = r"^(Bezel.*|Wall.*|Back cover|Rail.*|Stiffener.*|Knob rib.*|Panel brace.*|Electronics tray.*|Spacer ring.*)$"
+PATTERN = r"^(Bezel.*|Wall.*|Back cover.*|Rail.*|Stiffener.*|Knob rib.*|Panel brace.*|Electronics tray.*|Spacer ring.*)$"
 
 SCRIPT = r'''
 function(context is Context, queries)
@@ -104,7 +104,7 @@ def plain(v):
 
 
 # The parts whose outer face is on show.
-SKIN = r"^(Bezel.*|Wall.*|Back cover)$"
+SKIN = r"^(Bezel.*|Wall.*|Back cover.*)$"
 
 # Which way each 2-D frame looks at its part: the frame's normal (u x v), along
 # the thin axis. (z, y) and (x, z) look from the negative side; (x, y) from +z.
@@ -304,7 +304,8 @@ def main():
         "- **Drawn as seen from outside the box.** Cut each part as drawn and the face that",
         "  was up on the bed is its outside face — the bezel's front, the walls' outer faces.",
         "- **To cut the whole box, use [`sheets/`](sheets/README.md)**: every part nested on",
-        "  three 12 × 24\" sheets (`nest_sheets.py`).",
+        "  12 × 24\" sheets (`nest_sheets.py`).",
+        "- **Paper light diffusers** for the knob LEDs: [`diffusers/`](diffusers/README.md) (`diffusers.py`).",
         "- **Cut [`test-cuts/`](test-cuts/README.md) first** — kerf, nut pockets, hole sizes, the",
         "  panel jig and the board templates, all on one 12 × 12\" sheet.",
         "- Material: 3 mm Baltic birch, B/BB (enclosure-lasercut.md §13). Everything fits",

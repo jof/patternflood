@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="609.600mm" height="304.800mm" viewBox="0 0 609.600 304.800">
+<g transform="matrix(1 0 0 -1 0 304.800)">
+<line x1="312.640" y1="295.220" x2="3.000" y2="295.220" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="312.640" y1="9.580" x2="3.000" y2="9.580" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="312.640" y1="295.220" x2="312.640" y2="9.580" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="3.000" y1="295.220" x2="3.000" y2="9.580" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="139.320" y1="288.900" x2="166.820" y2="288.900" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="139.320" y1="231.900" x2="166.820" y2="231.900" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="166.820" y1="231.900" x2="166.820" y2="288.900" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="78.320" y1="286.400" x2="139.320" y2="286.400" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="78.320" y1="234.400" x2="139.320" y2="234.400" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="78.320" y1="234.400" x2="78.320" y2="286.400" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="101.440" y1="174.465" x2="139.440" y2="174.465" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="101.440" y1="140.265" x2="139.440" y2="140.265" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="101.440" y1="140.265" x2="101.440" y2="174.465" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="139.440" y1="171.265" x2="162.440" y2="171.265" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="139.440" y1="153.265" x2="162.440" y2="153.265" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="162.440" y1="153.265" x2="162.440" y2="171.265" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="139.320" y1="286.400" x2="139.320" y2="288.900" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="139.320" y1="231.900" x2="139.320" y2="234.400" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="139.440" y1="171.265" x2="139.440" y2="174.465" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="139.440" y1="140.265" x2="139.440" y2="153.265" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<circle cx="14.500" cy="272.400" r="2.525" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<circle cx="14.500" cy="192.400" r="2.525" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<circle cx="14.500" cy="112.400" r="2.525" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<circle cx="14.500" cy="32.400" r="2.525" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<circle cx="301.140" cy="232.400" r="2.525" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<circle cx="301.140" cy="72.400" r="2.525" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+</g>
+</svg>

@@ -236,6 +236,22 @@ Rail A takes the nut's load; B holds the nut laterally; C stops it escaping
 into the box when the screw is out — its hole is smaller than the nut's
 across-flats, so the nut cannot pass but any screw length can.
 
+**Rev 2.3: a doubler, and French cleat holes.** The cover carries a second
+sheet glued to its inside face, in the band between the two rail stacks and
+flush with rail A (z −57.5 to −54.4), so the rails, the cover screws and their
+lengths are unchanged and the doubler drops in between the rail A strips as the
+cover goes on. It is windowed over the Pi 5's port block and cooler and over
+the Colorlight's RJ45 and 5 V terminal, which had only 3–5 mm to the cover.
+Six Ø5.2 holes go through both sheets for an optional French cleat: four at
+y +105.3 (x ±40, ±120), 43.2 mm down from the box's top edge, for the cleat
+strip, and two at y −181.3 (x ±80), 43.2 mm up from the bottom edge, for a
+spacer strip of the same thickness that holds the box plumb off the wall. Drive
+#10 (or 5 mm) pan-head wood screws from inside, cover off, heads on the
+doubler: 6.4 mm of cover, so a 1" (25 mm) screw gives ~18 mm of bite in a
+19 mm strip. Keep both strips 25 mm clear of the box's top and bottom edges,
+where the cover's own screw heads are. The art draws each hole as a plated
+mounting hole.
+
 ### Two mortise rules, both learned by drawing one that could not be cut
 
 **A mortise may not sit within one thickness of an edge.** Tenoning rail A — the
@@ -689,7 +705,7 @@ axis:
 | Side walls ×2 | 60 × 373 |
 | Top / bottom walls, braces, rails, stiffener | ≤ 293 long |
 
-Nested on **12 × 24** sheets that is **four** sheets (rev 2) — laid out, checked and
+Nested on **12 × 24** sheets that is **five** sheets (rev 2.3) — laid out, checked and
 ready to cut in [`hardware/laser/sheets/`](../../hardware/laser/sheets/README.md)
 (`nest_sheets.py`). The P2 cuts only 600 of a 24" sheet's 609.6 mm, and every
 part sits 3 mm inside that and 3 mm from its neighbours:
@@ -701,7 +717,9 @@ part sits 3 mm inside that and 3 mm from its neighbours:
    and a rail C beside them, the spacer rings (with spares) in the corner, and
    the last middle-brace sheet and the top and bottom walls across the end;
 4. bezel inner + the top and bottom doublers, the four A/B rails and the
-   stiffener.
+   stiffener;
+5. the back cover's doubler (rev 2.3), alone: at 286 × 310 nothing else fits
+   beside it.
 
 **Buy six:** four for the box, one 12 × 12 for the test cuts, and one for a
 recut. (Rev 1, single-sheet, was three.) Calipering the sheet width on arrival
