@@ -264,18 +264,20 @@ tag's `enclosure.fs` exactly. Designed, not yet built.
 ### PSU screw heads recessed (2026-10-25, after the `rev-2.3` tag)
 
 - The bottom wall (the outer sheet) is cut **Ø7.5** round each of the PSU's two
-  screws (`PSU_HEAD_RECESS`; 7.35 as cut). The bottom doubler keeps its Ø4.45
-  hole (`#psuHoleDia`, loose on purpose for the PSU's ±1 mm hole tolerance),
-  and the head clamps on that, **no washer**. The screws on hand have heads
-  5.5 round and 3.2 tall: flush with the 3.18 sheet (0.02 proud until it beds
-  in), so the box sits flat on a table. The screw can sit up to 0.65 off centre
-  in its hole; the recess still clears the head then.
+  screws (`PSU_HEAD_RECESS`; 7.35 as cut), and the head clamps on the bottom
+  doubler's hole, **no washer**. The screws on hand have heads 5.5 round and
+  3.2 tall: flush with the 3.18 sheet (0.02 proud until it beds in), so the
+  box sits flat on a table.
+- **`#psuHoleDia` 4.45 → 4.1** (drawn 3.95), half way to an M3 clearance: the
+  head now bears on ~0.8 mm of doubler round the hole instead of ~0.6, and
+  there is still ±0.48 of slack for the PSU's ±1 mm hole tolerance (was ±0.65).
+  The recess clears the head even with the screw hard over. **Re-cut test
+  piece 10** and try it on the PSU before cutting the box; the hole gauge's
+  row 4 now sweeps 3.75–4.35 round it.
 - **Screws: 2 × M3 × 8, no washers** (were M3 × 10 + washers): 3.18 of doubler,
   leaving ~4.8 mm of thread, inside the PSU's 5 mm limit.
-- The head bears on a ring only ~0.6 mm wide round the 4.3 (as cut) hole.
-  Tighten gently: the PSU sits on the doubler and the screws only locate it.
-  If that proves too little, narrowing `#psuHoleDia` toward 3.8 gives ~0.9 mm
-  but only ±0.4 of slack, so re-cut test piece 10 against the PSU first.
+- Tighten gently all the same: the PSU sits on the doubler and the screws only
+  locate it.
 - Only `wall-bottom.dxf` changed (and sheet 3); the nearest other cut is
   ~13 mm from a recess.
 - Standing it flat closes the **intake vents** in the bottom wall: fine for a

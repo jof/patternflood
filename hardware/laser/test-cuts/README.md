@@ -6,7 +6,7 @@ Everything below fits one 12 × 12" sheet (`all-test-cuts.dxf`, 300 × 292 mm), 
 
 **Order:** caliper the sheet's thickness first, then tests 1–2 to settle **#kerf** (everything else is compensated by it), set the variables, re-run this script, and cut the rest.
 
-Values used for this cut: `#kerf` 0.15, `#thickness` 3.18, `#screwDia` 3.05, `#nutAcrossFlats` 5.5, `#boreDia` 7, `#pinHoleDia` 2.95, `#psuHoleDia` 4.45.
+Values used for this cut: `#kerf` 0.15, `#thickness` 3.18, `#screwDia` 3.05, `#nutAcrossFlats` 5.5, `#boreDia` 7, `#pinHoleDia` 2.95, `#psuHoleDia` 4.1.
 
 ![Test sheet](preview.png)
 
@@ -46,7 +46,7 @@ Values used for this cut: `#kerf` 0.15, `#thickness` 3.18, `#screwDia` 3.05, `#n
 
 **Cut:** Row 1: M3 clearance. Row 2: panel registration pin (Ø2.83–2.87). Row 3: EC11 encoder bushing (the knob bore). Row 4: PSU side-screw clearance. Each hole is engraved with the diameter drawn; the cut comes out about one kerf bigger.
 
-**Read:** Row 1: the smallest an M3 passes freely — the model draws 2.9 for the back cover and 3.55 in the rails and braces. Row 2: the one the pin drops into with no play — the model draws 2.8. Row 3: the encoder bushing should pass and not wobble — the model draws 7. Row 4: the model draws 4.3, deliberately loose (±0.75 mm for the PSU's hole tolerance).
+**Read:** Row 1: the smallest an M3 passes freely — the model draws 2.9 for the back cover and 3.55 in the rails and braces. Row 2: the one the pin drops into with no play — the model draws 2.8. Row 3: the encoder bushing should pass and not wobble — the model draws 7. Row 4: the model draws 3.95: loose for the PSU's hole tolerance (±0.48 mm), tight enough for a 5.5 mm screw head to bear on with no washer.
 
 **Sets:** #screwDia, #pinHoleDia, #boreDia, #psuHoleDia
 
@@ -86,7 +86,7 @@ Values used for this cut: `#kerf` 0.15, `#thickness` 3.18, `#screwDia` 3.05, `#n
 
 **Cut:** A strip with the two holes 74 apart, at 10 and 84 from the end the triangle points at — the PSU's terminal end.
 
-**Read:** Hold it on the PSU's threaded side face, that end flush with the terminal end: two M3 x 12 should thread in square.
+**Read:** Hold it on the PSU's threaded side face, that end flush with the terminal end: two M3 x 8 should thread in square.
 
 **Sets:** #psuHoleAX, #psuHoleBX, #psuHoleDia
 

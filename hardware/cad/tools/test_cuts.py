@@ -482,7 +482,7 @@ def main():
              var="#nutAcrossFlats, #screwDia"),
         dict(id=5, file="05-hole-gauge.dxf",
              ents=piece_holes(v, [("1", [3.0, 3.2, 3.4, 3.6, 3.8]), ("2", [2.7, 2.8, 2.9, 3.0, 3.1]),
-                                  ("3", [6.8, 7.0, 7.2, 7.4, 7.6]), ("4", [4.1, 4.3, 4.5, 4.7])]),
+                                  ("3", [6.8, 7.0, 7.2, 7.4, 7.6]), ("4", [3.75, 3.95, 4.15, 4.35])]),
              title="Hole gauge (labels are the DRAWN diameter)",
              test="Row 1: M3 clearance. Row 2: panel registration pin (Ø2.83–2.87). Row 3: EC11 encoder bushing "
                   "(the knob bore). Row 4: PSU side-screw clearance. Each hole is engraved with the diameter "
@@ -491,8 +491,8 @@ def main():
                   f"back cover and {fmt(v['screwDia'] + 0.5)} in the rails and braces. Row 2: the one the pin "
                   f"drops into with no play — the model draws {fmt(v['pinHoleDia'] - k)}. Row 3: the encoder "
                   f"bushing should pass and not wobble — the model draws {fmt(v['boreDia'])}. Row 4: the model "
-                  f"draws {fmt(v['psuHoleDia'] - k)}, deliberately loose (±0.75 mm for the PSU's hole "
-                  "tolerance).",
+                  f"draws {fmt(v['psuHoleDia'] - k)}: loose for the PSU's hole tolerance (±0.48 mm), tight "
+                  "enough for a 5.5 mm screw head to bear on with no washer.",
              var="#screwDia, #pinHoleDia, #boreDia, #psuHoleDia"),
         dict(id=6, file="06-panel-fit-jig.dxf", ents=piece_panel_jig(v),
              title="Panel fit jig",
@@ -538,7 +538,7 @@ def main():
              test=f"A strip with the two holes {fmt(v['psuHoleBX'] - v['psuHoleAX'])} apart, at "
                   f"{fmt(v['psuHoleAX'])} and {fmt(v['psuHoleBX'])} from the end the triangle points at — the "
                   "PSU's terminal end.",
-             read="Hold it on the PSU's threaded side face, that end flush with the terminal end: two M3 x 12 "
+             read="Hold it on the PSU's threaded side face, that end flush with the terminal end: two M3 x 8 "
                   "should thread in square.",
              var="#psuHoleAX, #psuHoleBX, #psuHoleDia"),
         dict(id=11, file="11-push-button-keys.dxf", ents=piece_buttons(v, C, [0.0, 0.1, 0.2, 0.3, 0.4]),

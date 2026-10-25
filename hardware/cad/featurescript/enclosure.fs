@@ -6,7 +6,7 @@ import(path : "onshape/std/decalUtils.fs", version : "3070.0");
 // into, in this document. The PSU proxy merges it in (Detailed on), so the
 // enclosure studio shows the real part rather than an envelope. Re-pin the
 // version if that studio ever changes.
-LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "cc40456c8213d35e9d399f28");
+LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "0de8eecf24220a61c227bf36");
 
 // The etched art, as images for decals on the outer faces (tools/art.py
 // renders them, tools/decals.py uploads them and rewrites this block).
@@ -1056,8 +1056,9 @@ const CLEAT_X_BOTTOM = [-80, 80];           // mm
 // this, and the head clamps on the doubler's #psuHoleDia hole instead, with
 // no washer: the screws on hand have heads 5.5 round and 3.2 tall (measured
 // 2026-10-25), flush with the 3.18 sheet, so the box stands flat on a table.
-// The hole is loose on purpose (see #psuHoleDia), so the screw can sit up to
-// 0.65 off centre and its head's edge reach r 3.4: the recess clears that.
+// The hole is loose on purpose (see #psuHoleDia: 4.1, drawn 3.95), so the
+// screw can sit up to 0.48 off centre and its head's edge reach r 3.23: the
+// recess clears that, and the head bears on ~0.8 mm of doubler round the hole.
 const PSU_HEAD_RECESS = 7.5;     // mm dia, nominal (cut kerf-compensated, 7.35)
 const GAP_BOUNDS       = { (millimeter) : [0, 0.5, 50] } as LengthBoundSpec;
 
