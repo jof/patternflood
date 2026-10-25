@@ -20,8 +20,9 @@ floats.
 
 ## Rev 2 — stiffened, Pi 5, vents, etched art (2026-10-21)
 
-Git tag **`rev-2`**. Onshape version **"Rev 2"** — to be created from the main
-workspace, which holds exactly this revision. Designed, not yet built.
+Git tag **`rev-2`**. No Onshape version: the workspace had moved on to Rev 2.2
+before one was made. To see Rev 2 in Onshape, check out `rev-2` and push it to a
+branch workspace. Designed, not yet built.
 
 | Change | Variable | Why |
 |---|---|---|
@@ -127,6 +128,11 @@ then tag `rev-2.1` and make the Onshape version.
 
 ## Rev 2.2 — push buttons, credits (2026-10-25)
 
+Git tag **`rev-2.2`**. Onshape version **"Rev 2.2"** (`ce56787b0137070520ec6a19`),
+made from the main workspace once it matched `enclosure.fs` exactly. Includes
+Rev 2.1 (the knob light slits), which got no tag or version of its own. Designed,
+not yet built.
+
 **Three push buttons**, a vertical row high on the **left wall**: 12 mm
 waterproof momentaries, the VanMoof S3 boost button (Amazon B07F24Y1TB has the
 drawing): head Ø17.5, 8.1 proud; 9.9 of thread and body behind the panel, then
@@ -157,6 +163,4 @@ compiles, all features OK. `export_dxf.py` then reproduces every DXF: 24 byte
 for byte, and the three that had been patched by script (`bezel-outer` from
 Rev 2.1, `wall-left` and its doubler) geometrically identical (same entities,
 cut length and regions); the exported files are now the ones in the repo.
-`decals.py` re-uploaded all five art images; every decal attaches. Still to do:
-tag `rev-2.2` (and `rev-2.1`, if it is to stay a separate point) once this is on
-main, and make the Onshape versions.
+`decals.py` re-uploaded all five art images; every decal attaches. 
