@@ -76,6 +76,12 @@ from .wallpaper import Wallpaper
 from .droste import Droste
 from .hexpulse import HexPulse
 from .ribbons import Ribbons
+from .moire import Moire
+from .copper import Copper
+from .streams import Streams
+from .girih import Girih
+from .marbling import Marbling
+from .dial import Dial
 
 from .. import upstream
 
@@ -107,7 +113,9 @@ ORIGINALS = [(BitTunnel, "pf 0521"), (Obra, "pf 0522"), (Riso, "pf 0528"), (Stra
              (Glass, "pf 0601"), (Chroma, "pf Retro Digital Tapestry"),
              (Guilloche, "pf Poincaré Sphere"), (Weave, "pf 0511"),
              (Quasi, "pf 0515-4"), (Cyclic, "pf TileWaves"), (Wallpaper, "pf 0619"),
-             (Droste, "pf Chromatic Vortex"), (HexPulse, "pf 0528"), (Ribbons, "pf Wave Saw")]
+             (Droste, "pf Chromatic Vortex"), (HexPulse, "pf 0528"), (Ribbons, "pf Wave Saw"),
+             (Moire, "pf 0515"), (Copper, "pf 0511"), (Streams, "pf Vector Field Flow"),
+             (Girih, "pf 0514"), (Marbling, "pf 0520"), (Dial, "pf 0614")]
 
 
 def _shelf(presets):
