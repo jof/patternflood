@@ -40,10 +40,12 @@
 <line x1="364.820" y1="97.400" x2="329.820" y2="97.400" stroke="#ff0000" stroke-width="0.1" fill="none"/>
 <line x1="364.820" y1="62.400" x2="364.820" y2="97.400" stroke="#ff0000" stroke-width="0.1" fill="none"/>
 <line x1="329.820" y1="62.400" x2="329.820" y2="97.400" stroke="#ff0000" stroke-width="0.1" fill="none"/>
-<line x1="372.640" y1="292.040" x2="413.780" y2="292.040" stroke="#ff0000" stroke-width="0.1" fill="none"/>
 <line x1="372.640" y1="12.760" x2="413.780" y2="12.760" stroke="#ff0000" stroke-width="0.1" fill="none"/>
-<line x1="413.780" y1="292.040" x2="413.780" y2="12.760" stroke="#ff0000" stroke-width="0.1" fill="none"/>
 <line x1="372.640" y1="292.040" x2="372.640" y2="12.760" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="387.870" y1="292.040" x2="387.870" y2="221.540" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="413.780" y1="221.540" x2="387.870" y2="221.540" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="372.640" y1="292.040" x2="387.870" y2="292.040" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="413.780" y1="221.540" x2="413.780" y2="12.760" stroke="#ff0000" stroke-width="0.1" fill="none"/>
 <line x1="416.780" y1="12.760" x2="457.920" y2="12.760" stroke="#ff0000" stroke-width="0.1" fill="none"/>
 <line x1="416.780" y1="292.040" x2="457.920" y2="292.040" stroke="#ff0000" stroke-width="0.1" fill="none"/>
 <line x1="457.920" y1="12.760" x2="457.920" y2="292.040" stroke="#ff0000" stroke-width="0.1" fill="none"/>
@@ -216,6 +218,10 @@
 <line x1="544.920" y1="107.990" x2="571.740" y2="107.990" stroke="#ff0000" stroke-width="0.1" fill="none"/>
 <line x1="571.740" y1="5.900" x2="571.740" y2="12.760" stroke="#ff0000" stroke-width="0.1" fill="none"/>
 <line x1="571.740" y1="107.990" x2="571.740" y2="298.900" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="562.830" y1="24.900" x2="553.830" y2="24.900" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="562.830" y1="24.900" x2="562.830" y2="44.900" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="553.830" y1="24.900" x2="553.830" y2="44.900" stroke="#ff0000" stroke-width="0.1" fill="none"/>
+<line x1="562.830" y1="44.900" x2="553.830" y2="44.900" stroke="#ff0000" stroke-width="0.1" fill="none"/>
 <line x1="562.830" y1="69.900" x2="553.830" y2="69.900" stroke="#ff0000" stroke-width="0.1" fill="none"/>
 <line x1="562.830" y1="69.900" x2="562.830" y2="89.900" stroke="#ff0000" stroke-width="0.1" fill="none"/>
 <line x1="553.830" y1="69.900" x2="553.830" y2="89.900" stroke="#ff0000" stroke-width="0.1" fill="none"/>

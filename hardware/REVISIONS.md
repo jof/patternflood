@@ -187,3 +187,24 @@ Designators now keep off the title block and credits plate. Only the back
 cover's art changed; the bezel's and walls' are byte-identical to `rev-2.2`, and
 so are the cut paths. Art re-run, sheets re-nested, decals re-uploaded: checks
 clean, every QR decodes, every decal attaches.
+
+### Buttons to the top wall; a wire passthrough per knob column (2026-10-25, after the `rev-2.2` tag)
+
+- **The push buttons move to the top wall**, a row along x at its left end
+  (seen from the front, the knob side): x −128.1 / −104.1 / −80.1, still
+  24 mm apart and at z −32.6, between the upper brace's back and rail C. Same
+  keyed hole, flats now front and back, through the top wall; the **top
+  doubler** is notched out of its rear left corner instead (from its left end
+  to 11 mm past the last button, and from its rear edge to 11 mm in front of
+  the row). Under them is open bay over the top-left panel's back.
+- **The left wall is as it was before the buttons**: 14 exhaust slots, a plain
+  doubler. Both DXFs and the left wall's art are byte-identical to `8fcdaa5`
+  again.
+- **The stiffener shelf has a 20 × 9 mm wire passthrough over each knob
+  column**, not just the right one, so either column's wiring can run up past
+  it.
+
+Pushed and exported: only the shelf, top wall,
+top doubler and the left wall + doubler changed. Art re-run (the top wall's
+three buttons get halo rings), sheets re-nested, decals re-uploaded: checks
+clean, every QR decodes, every decal attaches.
