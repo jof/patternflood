@@ -1053,10 +1053,12 @@ const CLEAT_X_BOTTOM = [-80, 80];           // mm
 
 // The PSU's two screws come up through the bottom wall, and their heads were
 // all that stood proud of it. The outer sheet is now cut away round each to
-// this, and the head and washer clamp on the doubler's #psuHoleDia hole
-// instead: an M3 pan head (<= 2.4) on a 0.5 washer sits below the 3.18 sheet,
-// so the box stands flat on a table.
-const PSU_HEAD_RECESS = 8.0;     // mm dia, as cut: an M3 washer (7 OD) with room to centre
+// this, and the head clamps on the doubler's #psuHoleDia hole instead, with
+// no washer: the screws on hand have heads 5.5 round and 3.2 tall (measured
+// 2026-10-25), flush with the 3.18 sheet, so the box stands flat on a table.
+// The hole is loose on purpose (see #psuHoleDia), so the screw can sit up to
+// 0.65 off centre and its head's edge reach r 3.4: the recess clears that.
+const PSU_HEAD_RECESS = 7.5;     // mm dia, nominal (cut kerf-compensated, 7.35)
 const GAP_BOUNDS       = { (millimeter) : [0, 0.5, 50] } as LengthBoundSpec;
 
 function fingerCount(extent is ValueWithUnits, target is ValueWithUnits) returns number
@@ -2239,7 +2241,7 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         // 2.5mm off centre, so these are not symmetric either. Rev 2 seats the
         // PSU straight on the doubler (psuStandoff 0) and against the bezel
         // stack, in the corner: screw path is 2 sheets + a washer + up to 5mm
-        // of thread, i.e. M3 x 10 — rev 2.4: M3 x 8, heads recessed (PSU_HEAD_RECESS).
+        // of thread, i.e. M3 x 10; since rev 2.3, M3 x 8 with the heads recessed (PSU_HEAD_RECESS).
         // Datum is the TERMINAL end. Both views on the spec sheet dimension
         // from it, and the terminals have to face +x toward the IEC inlet or
         // the mains run crosses the whole box — so these come off the HIGH-x
@@ -2264,7 +2266,7 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 "targets"       : wallStack("wallB"),
                 "operationType" : BooleanOperationType.SUBTRACTION });
         // and the head recesses, through the outer sheet only (PSU_HEAD_RECESS):
-        // the screw path is now doubler + washer + thread, i.e. M3 x 8
+        // the screw path is now doubler + thread, i.e. M3 x 8 with no washer (4.8 of thread)
         var psuRecesses = [];
         for (var ph = 0; ph < 2; ph += 1)
         {

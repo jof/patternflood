@@ -263,14 +263,20 @@ tag's `enclosure.fs` exactly. Designed, not yet built.
 
 ### PSU screw heads recessed (2026-10-25, after the `rev-2.3` tag)
 
-- The bottom wall (the outer sheet) is cut **Ø8** round each of the PSU's two
-  screws (`PSU_HEAD_RECESS`); the bottom doubler keeps its Ø4.45 hole
-  (`#psuHoleDia`), and the head and washer clamp on that. An M3 pan head
-  (≤ 2.4) on a 0.5 washer sits below the 3.18 sheet, so nothing stands proud of
-  the bottom and the box sits flat on a table.
-- **Screws: 2 × M3 × 8 + washers** (was M3 × 10): the path is now 3.18 of
-  doubler + 0.5 washer, leaving ~4.3 mm of thread, inside the PSU's 5 mm limit.
+- The bottom wall (the outer sheet) is cut **Ø7.5** round each of the PSU's two
+  screws (`PSU_HEAD_RECESS`; 7.35 as cut). The bottom doubler keeps its Ø4.45
+  hole (`#psuHoleDia`, loose on purpose for the PSU's ±1 mm hole tolerance),
+  and the head clamps on that, **no washer**. The screws on hand have heads
+  5.5 round and 3.2 tall: flush with the 3.18 sheet (0.02 proud until it beds
+  in), so the box sits flat on a table. The screw can sit up to 0.65 off centre
+  in its hole; the recess still clears the head then.
+- **Screws: 2 × M3 × 8, no washers** (were M3 × 10 + washers): 3.18 of doubler,
+  leaving ~4.8 mm of thread, inside the PSU's 5 mm limit.
+- The head bears on a ring only ~0.6 mm wide round the 4.3 (as cut) hole.
+  Tighten gently: the PSU sits on the doubler and the screws only locate it.
+  If that proves too little, narrowing `#psuHoleDia` toward 3.8 gives ~0.9 mm
+  but only ±0.4 of slack, so re-cut test piece 10 against the PSU first.
 - Only `wall-bottom.dxf` changed (and sheet 3); the nearest other cut is
-  12.8 mm from a recess.
+  ~13 mm from a recess.
 - Standing it flat closes the **intake vents** in the bottom wall: fine for a
   while, but for long runs at brightness keep it on feet ≥ 8 mm as before.
