@@ -5,8 +5,8 @@
 
 Every sheet part in this box is a through-cut of one 3 mm sheet, so one planar
 face of each part carries its whole cut path: outline, holes, slots, finger
-notches, hex pockets. A FeatureScript eval (over REST, with ~/.netrc, like
-push.py) walks that face's edges; this script projects them onto the part's
+notches, hex pockets. A FeatureScript eval (over REST through onshape_http.py,
+like push.py) walks that face's edges; this script projects them onto the part's
 own plane, moves the part to the origin and writes true LINE / ARC / CIRCLE
 entities in millimetres, DXF R12 for the widest importer support.
 
@@ -22,9 +22,9 @@ import json
 import math
 import os
 import re
-import subprocess
 import sys
-import tempfile
+
+import onshape_http
 
 DID, WID, PS = "8cfb8d4f799392c05f62f6ad", "b5dfed0b24d2121a79e8b1a8", "06ba580a80083894ed24609b"
 API = "https://cad.onshape.com/api/v10"
@@ -91,13 +91,7 @@ FRAME = {0: (2, 1), 1: (0, 2), 2: (0, 1)}
 
 
 def curl(method, url, body=None):
-    cmd = ["curl", "-s", "--netrc", "-X", method]
-    if body is not None:
-        fd, path = tempfile.mkstemp(suffix=".json")
-        with os.fdopen(fd, "w") as f:
-            json.dump(body, f)
-        cmd += ["-H", "Content-Type: application/json", "--data-binary", "@" + path]
-    return json.loads(subprocess.run(cmd + [url], capture_output=True).stdout)
+    return json.loads(onshape_http.request(method, url, body)[1])
 
 
 def plain(v):

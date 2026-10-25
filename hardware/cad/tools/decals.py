@@ -22,6 +22,8 @@ import re
 import subprocess
 import sys
 
+import onshape_http
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 API = "https://cad.onshape.com/api/v10"
 DID, WID = "8cfb8d4f799392c05f62f6ad", "b5dfed0b24d2121a79e8b1a8"
@@ -34,11 +36,8 @@ STEMS = {"bezel-outer": "ArtBezelOuter", "wall-left": "ArtWallLeft", "wall-right
 
 
 def curl(method, url, form=None):
-    cmd = ["curl", "-s", "--netrc", "-X", method, "-w", "\n%{http_code}"]
-    for k, v in (form or {}).items():
-        cmd += ["-F", f"{k}={v}"]
-    out = subprocess.run(cmd + [url], capture_output=True).stdout.decode()
-    b, code = out.rsplit("\n", 1)
+    code, b = onshape_http.request(method, url, form=form)
+    b = b.decode()
     try:
         return (json.loads(b) if b.strip() else {}), code
     except json.JSONDecodeError:

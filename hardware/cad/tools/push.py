@@ -12,14 +12,14 @@ referencing those parts comes back with partId:"" - a dead instance that
 still shows its old name and renders nothing. Updating in place keeps part
 identity, so the assembly survives a push.
 """
-import json,os,re,subprocess,sys,tempfile,time
+import json,os,re,sys,time
+import onshape_http
 DID="8cfb8d4f799392c05f62f6ad"; WID="b5dfed0b24d2121a79e8b1a8"
 PS="06ba580a80083894ed24609b"; FSEID="3c1a0a201f41714feba73536"
 API="https://cad.onshape.com/api/v10"
 HERE=os.path.dirname(os.path.abspath(__file__))
 F=os.path.join(HERE,"..","featurescript","enclosure.fs")
 DEFS=os.path.join(HERE,"featuredefs.json")
-S=tempfile.mkdtemp(prefix="pfpush-")
 # Proxy studios that instance the same features standalone. Every feature in
 # them whose type is pushed here is refreshed with the same parameters; panel
 # proxies are forced to a single 1 x 1 panel.
@@ -27,14 +27,8 @@ PROXY_STUDIOS={"9aacde0e7a6103be9fff46fd":"Panel P2 (proxy)",
                "d1c871ec149418978f2eb283":"Proxies (view only)",
                "f9604c88ee037028910ba08a":"IEC AC-14-F16A (proxy)"}
 
-def curl(method,url,body=None,out=None):
-    cmd=["curl","-s","--netrc","-X",method]
-    if body is not None:
-        open(f"{S}/_p.json","w").write(json.dumps(body))
-        cmd+=["-H","Content-Type: application/json","--data-binary",f"@{S}/_p.json"]
-    cmd.append(url)
-    r=subprocess.run(cmd,capture_output=True).stdout
-    return r
+def curl(method,url,body=None):
+    return onshape_http.request(method,url,body)[1]
 
 # Onshape re-pins document imports (`NS::import(path : "<element>", version :
 # "<microversion>")`) to the target's latest microversion on save, so compare
