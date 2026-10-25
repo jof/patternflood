@@ -70,6 +70,12 @@ from .glass import Glass
 from .chroma import Chroma
 from .guilloche import Guilloche
 from .weave import Weave
+from .quasi import Quasi
+from .cyclic import Cyclic
+from .wallpaper import Wallpaper
+from .droste import Droste
+from .hexpulse import HexPulse
+from .ribbons import Ribbons
 
 from .. import upstream
 
@@ -99,7 +105,9 @@ ORIGINALS = [(BitTunnel, "pf 0521"), (Obra, "pf 0522"), (Riso, "pf 0528"), (Stra
              (Clock, "pf 0515-4"),
              (Truchet, "pf 0514"), (Isobands, "pf 0531"),
              (Glass, "pf 0601"), (Chroma, "pf Retro Digital Tapestry"),
-             (Guilloche, "pf Poincaré Sphere"), (Weave, "pf 0511")]
+             (Guilloche, "pf Poincaré Sphere"), (Weave, "pf 0511"),
+             (Quasi, "pf 0515-4"), (Cyclic, "pf TileWaves"), (Wallpaper, "pf 0619"),
+             (Droste, "pf Chromatic Vortex"), (HexPulse, "pf 0528"), (Ribbons, "pf Wave Saw")]
 
 
 def _shelf(presets):
