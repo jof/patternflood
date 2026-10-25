@@ -215,8 +215,9 @@ clean, every QR decodes, every decal attaches.
 
 ## Rev 2.3 — back cover doubler, French cleat holes (2026-10-25)
 
-Not yet tagged or versioned: the Onshape main workspace holds it. Designed, not
-yet built.
+Git tag **`rev-2.3`**. Onshape version **"Rev 2.3"**
+(`f1e44685512a7a748a065ae3`), made from the main workspace once it matched the
+tag's `enclosure.fs` exactly. Designed, not yet built.
 
 - **The back cover is two sheets.** A doubler is glued to its inside face, in
   the band between the two rail stacks and flush with rail A: 285.6 × 309.6,
