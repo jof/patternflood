@@ -131,9 +131,10 @@ then tag `rev-2.1` and make the Onshape version.
 Git tag **`rev-2.2`**. Onshape version **"Rev 2.2"** (`ce56787b0137070520ec6a19`),
 made from the main workspace once it matched `enclosure.fs` exactly. Includes
 Rev 2.1 (the knob light slits), which got no tag or version of its own, and the
-etch font below. The Onshape version was made just before the font change, so
-it shows the old plate lettering; the geometry is the same, and the main
-workspace has the new decals. Designed, not yet built.
+two changes below it: the etch font, and the buttons moved to the top wall with
+a second shelf passthrough. **The Onshape version predates both**: it has the
+buttons on the left wall, 4 left vents and the old plate lettering. The tag
+and the main workspace have the final design. Designed, not yet built.
 
 **Three push buttons**, a vertical row high on the **left wall**: 12 mm
 waterproof momentaries, the VanMoof S3 boost button (Amazon B07F24Y1TB has the
@@ -188,7 +189,7 @@ cover's art changed; the bezel's and walls' are byte-identical to `rev-2.2`, and
 so are the cut paths. Art re-run, sheets re-nested, decals re-uploaded: checks
 clean, every QR decodes, every decal attaches.
 
-### Buttons to the top wall; a wire passthrough per knob column (2026-10-25, after the `rev-2.2` tag)
+### Buttons to the top wall; a wire passthrough per knob column (2026-10-25)
 
 - **The push buttons move to the top wall**, a row along x at its left end
   (seen from the front, the knob side): x −128.1 / −104.1 / −80.1, still
