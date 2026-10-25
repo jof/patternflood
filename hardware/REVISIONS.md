@@ -165,7 +165,7 @@ Rev 2.1, `wall-left` and its doubler) geometrically identical (same entities,
 cut length and regions); the exported files are now the ones in the repo.
 `decals.py` re-uploaded all five art images; every decal attaches. 
 
-### Etch font (2026-10-25, after the `rev-2.2` tag)
+### Etch font (2026-10-25)
 
 `artfont.py` now sets text in two faces, by size:
 
