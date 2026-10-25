@@ -241,7 +241,9 @@ sheet glued to its inside face, in the band between the two rail stacks and
 flush with rail A (z −57.5 to −54.4), so the rails, the cover screws and their
 lengths are unchanged and the doubler drops in between the rail A strips as the
 cover goes on. It is windowed over the Pi 5's port block and cooler and over
-the Colorlight's RJ45 and 5 V terminal, which had only 3–5 mm to the cover.
+the Colorlight's RJ45 and 5 V terminal, which had only 3–5 mm to the cover,
+and over the Colorlight's 5 V power header and JTAG header, whose plugs stand
+up toward the cover.
 Six Ø5.2 holes go through both sheets for an optional French cleat: four at
 y +105.3 (x ±40, ±120), 43.2 mm down from the box's top edge, for the cleat
 strip, and two at y −181.3 (x ±80), 43.2 mm up from the bottom edge, for a

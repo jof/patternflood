@@ -225,9 +225,17 @@ yet built.
   between the rail A strips as the cover goes on, and lifts away with it.
 - **Relief windows in the doubler** over the Pi 5's port block and cooler and
   over the Colorlight's RJ45 and 5 V terminal (each part's footprint grown
-  2 mm, so each board's windows merge into one). They had only 3.2–5.3 mm to
-  the cover, and the Pi's stacked USB would have touched the doubler. Every
-  body inside is now ≥ 2 mm from it (checked with `evDistance`).
+  2 mm, so overlapping windows merge). They had only 3.2–5.3 mm to the cover,
+  and the Pi's stacked USB would have touched the doubler. Two more over what
+  gets plugged in from the back: the Colorlight's **5 V power header** (merged
+  with the terminal's window; 8.5 mm from its top to the cover, for the mated
+  plug and its wires) and its **JTAG header**, new in the model: J27 J31 J32
+  J30, the 1 × 4 row by the FPGA (`CL_JTAG`, off the back scan ±0.5 mm), as a
+  straight 2.54 header 8.5 mm tall. Through its window the cover is 19.1 mm
+  off the board, which takes a row of jumper housings (~16.5 mm) but not
+  wires leaving them straight up: leave the Glasgow plugged in only with the
+  leads bent flat, or fit a right-angle header. Every body inside is ≥ 2 mm
+  from the doubler (checked with `evDistance`).
 - **Six French cleat holes**, Ø5.2 through cover and doubler (`CLEAT_*` in
   `enclosure.fs`): four at y +105.3 (x ±40, ±120) for the cleat strip, two at
   y −181.3 (x ±80) for a spacer strip of the same thickness, each row 43.2 mm

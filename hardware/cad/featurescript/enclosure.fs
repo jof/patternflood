@@ -99,6 +99,11 @@ const CL_RJ45 = [29.5, 117.0, 63.5, 147.2];   // dual ganged jack, overhangs the
 const CL_TERM = [66.0, 130.0, 86.5, 144.0];   // 2-way barrier terminal, 5 V in
 const CL_JST_SMALL = [2.5, 110.0, 9.0, 124.5];    // white 4-pin, signal
 const CL_JST_BIG   = [83.5, 113.0, 91.5, 128.0];  // 4-pin power header, GND GND D5V D5V
+// JTAG: the 1 x 4 row of holes by the FPGA, J27 J31 J32 J30 (TCK TMS TDI TDO),
+// fitted with a straight 2.54 pin header for the Glasgow (firmware/colorlight).
+// Hole centres x 42.2-49.8, y 72.0, off the back scan (+/-0.5 mm, 2026-10-25).
+const CL_JTAG = [40.9, 70.7, 51.1, 73.3];
+const CL_JTAG_H = 8.5;           // mm, plastic + pins above the component face
 
 // Raspberry Pi 5, from the official mechanical drawing (85 x 56, the same
 // 58 x 49 hole pattern as every full-size Pi since the B+). Board frame:
@@ -941,6 +946,7 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
         clPart(id + "clTerm", CL_TERM,      cComp, definition.clTermH,    "Colorlight 5 V terminal");
         clPart(id + "clJstB", CL_JST_BIG,   cComp, definition.clJstBigH,  "Colorlight 5 V header (big JST)");
         clPart(id + "clJstS", CL_JST_SMALL, cComp, definition.clJstSmallH, "Colorlight JST (small)");
+        clPart(id + "clJtag", CL_JTAG,      cComp, CL_JTAG_H * mm,         "Colorlight JTAG header");
 
         // ── Raspberry Pi 5 ──────────────────────────────────────────────
         const piX = definition.piX;
@@ -2002,7 +2008,10 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         // the 3.2 mm the Pi 5's stacked USB had to the cover, and these four
         // came within 3 mm of its face (2026-10-25: the Pi's USB/Ethernet
         // block 0, its cooler 2.0, the card's RJ45 2.1, its 5 V terminal
-        // 1.1). A window round each, its footprint grown 2 mm, leaves them
+        // 1.1). And two more, for what gets plugged in from the back: the
+        // card's 5 V power header, whose mated plug and wires stand up toward
+        // the cover, and its JTAG header, so the Glasgow's jumpers can stay
+        // on. A window round each, its footprint grown 2 mm, leaves them
         // what they had in rev 2.2; the windows over each board merge.
         const reliefGrow = 2 * millimeter;
         const reliefBoxes = [
@@ -2013,7 +2022,11 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             [clToBox(definition.clX, definition.clY, CL_RJ45[0], CL_RJ45[1]),
              clToBox(definition.clX, definition.clY, CL_RJ45[2], CL_RJ45[3])],
             [clToBox(definition.clX, definition.clY, CL_TERM[0], CL_TERM[1]),
-             clToBox(definition.clX, definition.clY, CL_TERM[2], CL_TERM[3])]];
+             clToBox(definition.clX, definition.clY, CL_TERM[2], CL_TERM[3])],
+            [clToBox(definition.clX, definition.clY, CL_JST_BIG[0], CL_JST_BIG[1]),
+             clToBox(definition.clX, definition.clY, CL_JST_BIG[2], CL_JST_BIG[3])],
+            [clToBox(definition.clX, definition.clY, CL_JTAG[0], CL_JTAG[1]),
+             clToBox(definition.clX, definition.clY, CL_JTAG[2], CL_JTAG[3])]];
         var reliefs = [];
         for (var rw = 0; rw < size(reliefBoxes); rw += 1)
         {
