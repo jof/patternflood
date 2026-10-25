@@ -1,6 +1,6 @@
 """Pixel Sort: a glowing landscape, melted by sorting runs of its pixels by brightness.
 
-The glitch artist's trick, after Lee's 0519-2 RGB stripes and 0521 tear. Along
+The glitch artist's trick, after SeungHun's 0519-2 RGB stripes and 0521 tear. Along
 each column (or row), every run of pixels brighter than a threshold is sorted by
 brightness, so light pours downhill in streaks while the dark parts stay sharp.
 The threshold sweeps on its own (or with the music), and the picture under it
@@ -20,7 +20,7 @@ SCENES = ["sunset", "aurora", "orbs"]
 
 class PixelSort(Original):
     name = "Pixel Sort"
-    blurb = "A landscape melted by sorting its bright runs (after Lee's 0519-2 and 0521 glitches). k0 threshold, k1 direction, k2 drift speed, k3 colours. Click k0 auto sweep, k1 next scene, k2 reverse sort."
+    blurb = "A landscape melted by sorting its bright runs (after SeungHun's 0519-2 and 0521 glitches). k0 threshold, k1 direction, k2 drift speed, k3 colours. Click k0 auto sweep, k1 next scene, k2 reverse sort."
 
     def __init__(self, rt):
         super().__init__(rt)

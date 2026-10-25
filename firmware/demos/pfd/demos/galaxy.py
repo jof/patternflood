@@ -1,6 +1,6 @@
 """Galaxy: a spiral galaxy turning, its arms made of stars that flow through them.
 
-After Lee's Chromatic Vortex. The arms are a density wave, as in real spirals:
+After SeungHun's Chromatic Vortex. The arms are a density wave, as in real spirals:
 every star rides its own closed orbit, slightly out of round, and the orbits'
 shapes twist a little with radius. Where neighbouring orbits crowd together,
 stars pile up, and the crowding makes the arms. The pattern turns slowly while
@@ -22,7 +22,7 @@ R_CORE = 0.05
 
 class Galaxy(Inked):
     name = "Galaxy"
-    blurb = "A spiral galaxy whose arms are a density wave, dithered (after Lee's Chromatic Vortex). k0 arm twist, k1 tilt, k2 screen, k3 inks. Click k0 arm count, k1 bar, k2 chunky."
+    blurb = "A spiral galaxy whose arms are a density wave, dithered (after SeungHun's Chromatic Vortex). k0 arm twist, k1 tilt, k2 screen, k3 inks. Click k0 arm count, k1 bar, k2 chunky."
     palette, screen_kind = "nebula", "blue"
 
     def __init__(self, rt):

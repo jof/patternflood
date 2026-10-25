@@ -1,6 +1,6 @@
 """Caustics: sunlight through moving water, gathering into bright nets on a pool floor.
 
-After Lee's 0530, whose glowing net looks like them. The water's surface is a
+After SeungHun's 0530, whose glowing net looks like them. The water's surface is a
 few crossing waves plus the rings from dropped pebbles. Light through each
 point of the surface bends by the surface's slope and lands on the floor
 somewhere else; counting where it all lands (each point's light spread over
@@ -20,7 +20,7 @@ NWAVES = 6
 
 class Caustics(Inked):
     name = "Caustics"
-    blurb = "Sunlight through water, netting a pool floor; dithered (after Lee's 0530). k0 chop, k1 depth (focus), k2 screen, k3 inks. Click k0 drop a pebble, k1 tiles, k2 chunky."
+    blurb = "Sunlight through water, netting a pool floor; dithered (after SeungHun's 0530). k0 chop, k1 depth (focus), k2 screen, k3 inks. Click k0 drop a pebble, k1 tiles, k2 chunky."
     palette, screen_kind = "pool", "bayer4"
 
     def __init__(self, rt):

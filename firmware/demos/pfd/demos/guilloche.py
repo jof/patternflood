@@ -1,6 +1,6 @@
 """Guilloche: banknote rosettes, fine lines woven in colour, turning.
 
-After Lee's Poincaré Sphere, its petals of lines. Each ring of the rosette is
+After SeungHun's Poincaré Sphere, its petals of lines. Each ring of the rosette is
 a family of curves r = R(theta) + A sin(n theta + phi), one for each of K
 evenly spaced phases phi, so they cross and recross into the woven band seen
 on banknotes and certificates. Rather than drawing the K curves one by one,
@@ -27,7 +27,7 @@ LAYOUTS = [
 
 class Guilloche(Chromatic):
     name = "Guilloche"
-    blurb = "Banknote rosettes: fine lines woven in colour, turning (after Lee's Poincaré Sphere). k0 lobes, k1 lines, k2 amplitude, k3 colour. Click k0 next rosette, k1 hold still, k3 next palette."
+    blurb = "Banknote rosettes: fine lines woven in colour, turning (after SeungHun's Poincaré Sphere). k0 lobes, k1 lines, k2 amplitude, k3 colour. Click k0 next rosette, k1 hold still, k3 next palette."
     palette = 3
 
     def __init__(self, rt):

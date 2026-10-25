@@ -1,6 +1,6 @@
 """Quasicrystal: plane waves at evenly spaced angles, adding into a pattern that never repeats.
 
-After Lee's 0515-4, its interlocking marks. n waves of one wavelength, each
+After SeungHun's 0515-4, its interlocking marks. n waves of one wavelength, each
 pointing a step of 180/n degrees round from the last, are summed. With n = 4
 the sum tiles like a carpet; with 5, 7 or more it never repeats, a
 quasicrystal, with the rotational order of a Penrose tiling. Every wave's phase
@@ -17,7 +17,7 @@ from .original import Chromatic
 
 class Quasi(Chromatic):
     name = "Quasicrystal"
-    blurb = "Plane waves at evenly spaced angles, summing into a pattern that never repeats (after Lee's 0515-4). k0 scale, k1 symmetry, k2 phase speed, k3 colour. Click k0 bands or steps, k1 hold still, k3 next palette."
+    blurb = "Plane waves at evenly spaced angles, summing into a pattern that never repeats (after SeungHun's 0515-4). k0 scale, k1 symmetry, k2 phase speed, k3 colour. Click k0 bands or steps, k1 hold still, k3 next palette."
 
     def __init__(self, rt):
         super().__init__(rt)

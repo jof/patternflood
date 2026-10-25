@@ -6,7 +6,7 @@ its normal, which turns into the world's own latitude and longitude for its
 surface. The crater rims are bump-mapped, and the rings take the planet's
 shadow and cast their own on it. The light circles slowly, so the terminator
 sweeps from full to new. It all goes through a dither screen onto a palette of
-inks, over a field of twinkling one-pixel stars. After Lee's Poincaré Sphere.
+inks, over a field of twinkling one-pixel stars. After SeungHun's Poincaré Sphere.
 """
 import math
 
@@ -45,7 +45,7 @@ def _noise(q, dirs, freqs, phases):
 
 class Moon(Original):
     name = "Moon"
-    blurb = "A world in the dark, lit through its phases, dithered into inks (after Lee's Poincaré Sphere). k0 turns it, k1 moves the sun, k2 screen, k3 inks. Click k0 next world, k1 auto phase, k2 chunky."
+    blurb = "A world in the dark, lit through its phases, dithered into inks (after SeungHun's Poincaré Sphere). k0 turns it, k1 moves the sun, k2 screen, k3 inks. Click k0 next world, k1 auto phase, k2 chunky."
 
     def __init__(self, rt):
         super().__init__(rt)

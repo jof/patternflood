@@ -1,6 +1,6 @@
 """Fireworks: shells launched over a town, bursting into peonies, willows, rings and crackle.
 
-After Lee's a big hit. Rockets climb on a sparking trail and burst at the top
+After SeungHun's a big hit. Rockets climb on a sparking trail and burst at the top
 into a shell of stars, thrown out evenly over a sphere and seen flat, so the
 burst is a disc that's denser at its rim. Each kind moves its own way:
 peonies fall and fade quickly, willows hang and droop with long trails,
@@ -23,7 +23,7 @@ G = 22.0
 
 class Fireworks(Inked):
     name = "Fireworks"
-    blurb = "Shells bursting over a town: peonies, willows, rings and crackle, dithered (after Lee's a big hit). k0 launch rate, k1 shell size, k2 screen, k3 inks. Click k0 a volley, k1 the finale, k2 chunky."
+    blurb = "Shells bursting over a town: peonies, willows, rings and crackle, dithered (after SeungHun's a big hit). k0 launch rate, k1 shell size, k2 screen, k3 inks. Click k0 a volley, k1 the finale, k2 chunky."
     palette, screen_kind = "synth", "bayer4"
 
     def __init__(self, rt):

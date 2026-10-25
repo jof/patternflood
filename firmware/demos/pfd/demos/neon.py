@@ -1,6 +1,6 @@
 """Neon: a neon sign buzzing on a brick wall at night, dithered in three glowing inks.
 
-After Lee's 0622, its bright outlines on black. Each sign is a few glass tubes
+After SeungHun's 0622, its bright outlines on black. Each sign is a few glass tubes
 (polylines) in pink, cyan or amber. Every colour is its own plate, as in Riso:
 the tubes' cores and their soft glow are dithered onto that plate separately,
 and the plates add up where they overlap. The glow lights the bricks nearby.
@@ -62,7 +62,7 @@ def _blur(a, passes=3):
 
 class Neon(Inked):
     name = "Neon"
-    blurb = "A neon sign buzzing on a brick wall, each colour its own dithered plate (after Lee's 0622). k0 glow, k1 sign, k2 screen, k3 wall inks. Click k0 a failing tube, k1 lights out, k2 chunky."
+    blurb = "A neon sign buzzing on a brick wall, each colour its own dithered plate (after SeungHun's 0622). k0 glow, k1 sign, k2 screen, k3 wall inks. Click k0 a failing tube, k1 lights out, k2 chunky."
     palette, screen_kind = "silver", "bayer4"
 
     def __init__(self, rt):

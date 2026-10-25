@@ -1,6 +1,6 @@
 """Copper: Amiga copper bars bouncing over a plasma, with a sine scroller.
 
-After Lee's Retro Digital Tapestry, in the demoscene's own idiom. Horizontal
+After SeungHun's Retro Digital Tapestry, in the demoscene's own idiom. Horizontal
 bars, each a vertical gradient bright in the middle and dark at the edges (as
 the Amiga's copper chip changed the colour register line by line), swing up
 and down on sine paths with staggered phases. The ones in front pass over the
@@ -15,12 +15,12 @@ from .. import draw
 from ..draw import N, X, Y
 from .original import Chromatic
 
-MESSAGE = "    PATTERNFLOOD  *  GREETINGS TO SEUNGHUN LEE AND PATTERNFLOW  *  COPPER BARS FOREVER  *  "
+MESSAGE = "    PATTERNFLOOD  *  GREETINGS TO SEUNGHUN AND PATTERNFLOW  *  COPPER BARS FOREVER  *  "
 
 
 class Copper(Chromatic):
     name = "Copper"
-    blurb = "Amiga copper bars bouncing over a plasma, with a sine scroller (after Lee's Retro Digital Tapestry). k0 bars, k1 bounce speed, k2 scroll speed, k3 colour. Click k0 plasma, k2 scroller, k3 next palette."
+    blurb = "Amiga copper bars bouncing over a plasma, with a sine scroller (after SeungHun's Retro Digital Tapestry). k0 bars, k1 bounce speed, k2 scroll speed, k3 colour. Click k0 plasma, k2 scroller, k3 next palette."
 
     def __init__(self, rt):
         super().__init__(rt)

@@ -1,6 +1,6 @@
 """Stained Glass: panes of coloured glass in lead, lit from behind by a moving sun.
 
-After Lee's 0601, its blocks of colour. The panes are the cells of a Voronoi
+After SeungHun's 0601, its blocks of colour. The panes are the cells of a Voronoi
 pattern: every point belongs to its nearest seed, and where two seeds are
 nearly equally near, a lead line runs. The seeds drift slowly, so panes grow,
 shrink and trade neighbours. Each pane has its own colour from the palette,
@@ -17,7 +17,7 @@ from .original import Chromatic
 
 class Glass(Chromatic):
     name = "Stained Glass"
-    blurb = "Panes of coloured glass in lead, lit by a moving sun behind (after Lee's 0601). k0 panes, k1 drift, k2 lead width, k3 colour. Click k0 a new window, k1 hold still, k3 next palette."
+    blurb = "Panes of coloured glass in lead, lit by a moving sun behind (after SeungHun's 0601). k0 panes, k1 drift, k2 lead width, k3 colour. Click k0 a new window, k1 hold still, k3 next palette."
     palette = 2
 
     def __init__(self, rt):

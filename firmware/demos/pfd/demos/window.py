@@ -1,6 +1,6 @@
 """Window: rain on the glass, a city's lights out of focus behind it, dithered.
 
-After Lee's 0609, its soft blob seen through a screen. The city is bokeh:
+After SeungHun's 0609, its soft blob seen through a screen. The city is bokeh:
 discs of light, out of focus, some twinkling, all drifting very slowly as if
 we're on a bus. On the glass, drops: a mist of tiny ones, and larger ones
 that are lenses, each showing the city behind it small and upside down, with
@@ -21,7 +21,7 @@ MAX_DROPS = 40
 
 class Window(Inked):
     name = "Window"
-    blurb = "Rain on the glass, a city's lights blurred behind it, dithered (after Lee's 0609). k0 rain, k1 focus, k2 screen, k3 inks. Click k0 wiper, k1 lightning, k2 chunky."
+    blurb = "Rain on the glass, a city's lights blurred behind it, dithered (after SeungHun's 0609). k0 rain, k1 focus, k2 screen, k3 inks. Click k0 wiper, k1 lightning, k2 chunky."
     palette, screen_kind = "night", "bayer8"
 
     def __init__(self, rt):

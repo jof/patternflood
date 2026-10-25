@@ -1,6 +1,6 @@
 """Radar: a phosphor radar scope sweeping a coastline, rain and air traffic.
 
-After Lee's 0614, its rings. The beam turns once every few seconds and paints
+After SeungHun's 0614, its rings. The beam turns once every few seconds and paints
 what it sees as it passes: a coastline and islands (fixed returns, with
 speckle), rain cells that drift and change, and aircraft, each a bright blip
 that moves a little between sweeps and leaves a trail of older echoes. The
@@ -21,7 +21,7 @@ NPLANES = 7
 
 class Radar(Inked):
     name = "Radar"
-    blurb = "A phosphor radar scope: coastline, rain and aircraft, painted by the sweep (after Lee's 0614). k0 sweep speed, k1 range, k2 screen, k3 inks. Click k0 new traffic, k1 rain, k2 chunky."
+    blurb = "A phosphor radar scope: coastline, rain and aircraft, painted by the sweep (after SeungHun's 0614). k0 sweep speed, k1 range, k2 screen, k3 inks. Click k0 new traffic, k1 rain, k2 chunky."
     palette, screen_kind = "phosphor", "bayer4"
 
     def __init__(self, rt):

@@ -1,6 +1,6 @@
 """Flock: a murmuration of starlings at dusk, and the falcon that shapes it, dithered.
 
-After Lee's Vector Field Flow. Eighteen hundred birds follow three rules,
+After SeungHun's Vector Field Flow. Eighteen hundred birds follow three rules,
 each taken from the birds near it: steer the way they're flying (alignment),
 towards where they are (cohesion), and away from where they're crowded
 (separation). "Near" is a grid of cells averaged together, so it costs little
@@ -34,7 +34,7 @@ def _spread(a):
 
 class Flock(Inked):
     name = "Flock"
-    blurb = "A murmuration of starlings at dusk, and the falcon that shapes it, dithered (after Lee's Vector Field Flow). k0 cohesion, k1 the falcon's hunger, k2 screen, k3 inks. Click k0 scatter, k1 the falcon stoops, k2 chunky."
+    blurb = "A murmuration of starlings at dusk, and the falcon that shapes it, dithered (after SeungHun's Vector Field Flow). k0 cohesion, k1 the falcon's hunger, k2 screen, k3 inks. Click k0 scatter, k1 the falcon stoops, k2 chunky."
     palette, screen_kind = "dusk", "bayer4"
 
     def __init__(self, rt):

@@ -1,6 +1,6 @@
 """Marbling: ink dropped on water, pushed into rings and combed into feathers.
 
-After Lee's 0520, its soft blobs, and the paper marbler's tray (ebru,
+After SeungHun's 0520, its soft blobs, and the paper marbler's tray (ebru,
 suminagashi). Every drop of ink spreads as a disc and pushes all the ink
 already on the water outward, keeping its area, so earlier drops become
 rings round later ones. A comb dragged across draws everything along with
@@ -21,7 +21,7 @@ MAX_OPS = 48
 
 class Marbling(Chromatic):
     name = "Marbling"
-    blurb = "Ink dropped on water, pushed into rings and combed into feathers (after Lee's 0520). k0 drop size, k1 drop rate, k2 comb spacing, k3 colour. Click k0 fresh tray, k1 a big drop, k2 comb it, k3 next palette."
+    blurb = "Ink dropped on water, pushed into rings and combed into feathers (after SeungHun's 0520). k0 drop size, k1 drop rate, k2 comb spacing, k3 colour. Click k0 fresh tray, k1 a big drop, k2 comb it, k3 next palette."
     palette = 3
 
     def __init__(self, rt):

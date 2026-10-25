@@ -1,6 +1,6 @@
 """Hex Pulse: a honeycomb of tiles that ripples with waves of colour.
 
-After Lee's 0528, its dots in a grid. The screen is tiled with hexagons; each
+After SeungHun's 0528, its dots in a grid. The screen is tiled with hexagons; each
 takes one colour, read from a wave field at its centre, so the waves move
 across the honeycomb tile by tile. The field is rings spreading from points
 that wander, or plane waves crossing, or a turning spiral. Each tile is
@@ -21,7 +21,7 @@ FIELDS = ["rings", "planes", "spiral"]
 
 class HexPulse(Chromatic):
     name = "Hex Pulse"
-    blurb = "A honeycomb rippling with waves of colour (after Lee's 0528). k0 tile size, k1 wave speed, k2 wave kind, k3 colour. Click k0 gaps, k1 drop a ripple, k3 next palette."
+    blurb = "A honeycomb rippling with waves of colour (after SeungHun's 0528). k0 tile size, k1 wave speed, k2 wave kind, k3 colour. Click k0 gaps, k1 drop a ripple, k3 next palette."
     palette = 3
 
     def __init__(self, rt):

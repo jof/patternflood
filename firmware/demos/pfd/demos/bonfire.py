@@ -1,6 +1,6 @@
 """Bonfire: flames over a pile of logs, sparks going up into the dark, dithered.
 
-After Lee's Firefly Hollow. The flame is a teardrop of heat over the logs,
+After SeungHun's Firefly Hollow. The flame is a teardrop of heat over the logs,
 eaten away by fractal noise that streams upward faster than the flame
 itself, so the tongues lick, split and break off at the top; wind leans
 the tips. (Doom's row-by-row fire, tried first, smeared into horizontal
@@ -23,7 +23,7 @@ NSPARKS = 70
 
 class Bonfire(Inked):
     name = "Bonfire"
-    blurb = "Flames over logs, sparks rising into the dark, dithered (after Lee's Firefly Hollow). k0 fire size, k1 wind, k2 screen, k3 inks. Click k0 stoke, k1 calm, k2 chunky."
+    blurb = "Flames over logs, sparks rising into the dark, dithered (after SeungHun's Firefly Hollow). k0 fire size, k1 wind, k2 screen, k3 inks. Click k0 stoke, k1 calm, k2 chunky."
     palette, screen_kind = "ember", "bayer4"
 
     def __init__(self, rt):

@@ -1,6 +1,6 @@
 """Base for our own patterns on the Patternflow shelf.
 
-They sit among Lee's presets and follow the shelf's rules: four knobs, each
+They sit among SeungHun's presets and follow the shelf's rules: four knobs, each
 turning one quality of a pattern that runs by itself. The menu's "audio knobs"
 switch (k2 on that shelf) works for them too. With it on, `self.sound` holds
 four envelopes (mid, level, bass, treble, as upstream's audio edition reads

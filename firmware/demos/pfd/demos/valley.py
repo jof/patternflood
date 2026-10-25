@@ -1,6 +1,6 @@
 """Valley: low flight over mountains at dawn, dithered.
 
-After Lee's 0624, the isometric landscape. The land is a ridged fractal
+After SeungHun's 0624, the isometric landscape. The land is a ridged fractal
 heightmap that tiles, so the flight never ends. It's drawn the way Comanche
 drew it: each screen column is a ray across the map, sampled from near to far,
 and each row shows the nearest sample that rises to it. The land is shaded by
@@ -44,7 +44,7 @@ def _terrain(seed):
 
 class Valley(Inked):
     name = "Valley"
-    blurb = "Low flight over mountains at dawn, dusk or night, dithered (after Lee's 0624). k0 steers, k1 altitude, k2 screen, k3 inks. Click k0 autopilot, k1 time of day, k2 chunky, k3 new land."
+    blurb = "Low flight over mountains at dawn, dusk or night, dithered (after SeungHun's 0624). k0 steers, k1 altitude, k2 screen, k3 inks. Click k0 autopilot, k1 time of day, k2 chunky, k3 new land."
     palette, screen_kind = "dusk", "bayer8"
 
     def __init__(self, rt):

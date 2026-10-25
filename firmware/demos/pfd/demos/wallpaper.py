@@ -1,6 +1,6 @@
 """Wallpaper: a moving colour field folded through the wallpaper groups.
 
-After Lee's 0619, its repeating patterned lines. A plane can be tiled
+After SeungHun's 0619, its repeating patterned lines. A plane can be tiled
 symmetrically in exactly seventeen ways (the wallpaper groups); here are five.
 Each folds every point back into one small fundamental region, by mirrors
 and turns, before reading a flowing colour field there, so whatever the field
@@ -38,7 +38,7 @@ def _hex_centre(x, y, size):
 
 class Wallpaper(Chromatic):
     name = "Wallpaper"
-    blurb = "A moving colour field folded through the wallpaper groups (after Lee's 0619). k0 tile size, k1 group, k2 field speed, k3 colour. Click k1 hold still, k3 next palette."
+    blurb = "A moving colour field folded through the wallpaper groups (after SeungHun's 0619). k0 tile size, k1 group, k2 field speed, k3 colour. Click k1 hold still, k3 next palette."
     palette = 2
 
     def __init__(self, rt):

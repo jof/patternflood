@@ -1,6 +1,6 @@
 """Shore: waves rolling onto a beach, seen from straight above, dithered.
 
-After Lee's Midsummer Sea, from the air. Swells come in from the top, their
+After SeungHun's Midsummer Sea, from the air. Swells come in from the top, their
 crests bending to follow the seabed, steepening and breaking into white as
 they reach the shallows. Each breaker's water runs up the sand as a sheet
 (the swash) with a lacy foam edge, slows, and slides back, leaving a dark
@@ -20,7 +20,7 @@ PERIOD = 6.5                    # seconds between waves
 
 class Shore(Inked):
     name = "Shore"
-    blurb = "Waves rolling onto a beach, seen from above, dithered (after Lee's Midsummer Sea). k0 swell, k1 tide, k2 screen, k3 inks. Click k0 a set of big waves, k2 chunky."
+    blurb = "Waves rolling onto a beach, seen from above, dithered (after SeungHun's Midsummer Sea). k0 swell, k1 tide, k2 screen, k3 inks. Click k0 a set of big waves, k2 chunky."
     palette, screen_kind = "beach", "blue"
 
     def __init__(self, rt):

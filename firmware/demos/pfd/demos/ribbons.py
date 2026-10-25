@@ -1,6 +1,6 @@
 """Ribbons: saturated colour stripes warped by travelling waves.
 
-After Lee's Wave Saw, its bending stripes, and Bridget Riley's colour stripe
+After SeungHun's Wave Saw, its bending stripes, and Bridget Riley's colour stripe
 paintings. A repeating run of stripes in a few palette colours is bent by
 sine waves whose phase slides along them, so the curves travel down the
 ribbons and the colours seem to shimmer where they crowd. Stripes can run up
@@ -18,7 +18,7 @@ LAYOUTS = ["vertical", "horizontal", "rings"]
 
 class Ribbons(Chromatic):
     name = "Ribbons"
-    blurb = "Saturated colour stripes warped by travelling waves (after Lee's Wave Saw). k0 stripe width, k1 wave height, k2 wave length, k3 colour. Click k1 up, across or rings, k2 hold still, k3 next palette."
+    blurb = "Saturated colour stripes warped by travelling waves (after SeungHun's Wave Saw). k0 stripe width, k1 wave height, k2 wave length, k3 colour. Click k1 up, across or rings, k2 hold still, k3 next palette."
     palette = 2
 
     def __init__(self, rt):

@@ -1,4 +1,4 @@
-"""A wave pool of isometric pillars, after Lee's 0624 (isometric pillars waving
+"""A wave pool of isometric pillars, after SeungHun's 0624 (isometric pillars waving
 in 3D). Each knob drives a wave paddle on one side, in the same seats as
 Squash (k0 left, k3 right, k1 near, k2 far). Every detent is a push, so spinning
 faster makes bigger waves: the rate of turn is the input.
@@ -20,7 +20,7 @@ CX, CY = 64, 34             # screen position of the far corner's top
 
 class Pool(Demo):
     name = "Pool"
-    blurb = "Wave pool, after Lee's 0624. Each knob is a paddle on one side; spin faster for bigger waves. Click a knob for one big push."
+    blurb = "Wave pool, after SeungHun's 0624. Each knob is a paddle on one side; spin faster for bigger waves. Click a knob for one big push."
 
     def __init__(self, rt):
         super().__init__(rt)

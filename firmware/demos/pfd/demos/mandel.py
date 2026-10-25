@@ -1,6 +1,6 @@
 """Mandel: an endless dive into the Mandelbrot set, dithered.
 
-After Lee's Retro Digital Tapestry. The view zooms in on one of a few deep
+After SeungHun's Retro Digital Tapestry. The view zooms in on one of a few deep
 places on the set's edge (seahorse valley, an elephant, a spiral, a mini-brot),
 about a million times, then eases back out and heads for the next. Each
 pixel is iterated only until it escapes (the ones still inside are carried on
@@ -27,7 +27,7 @@ SLOW_S = 0.014                  # past this a frame (deep in, or a slower machin
 
 class Mandel(Inked):
     name = "Mandel"
-    blurb = "An endless dive into the Mandelbrot set, dithered (after Lee's Retro Digital Tapestry). k0 zoom (take over), k1 colour flow, k2 screen, k3 inks. Click k0 next place, k1 turn the view, k2 chunky."
+    blurb = "An endless dive into the Mandelbrot set, dithered (after SeungHun's Retro Digital Tapestry). k0 zoom (take over), k1 colour flow, k2 screen, k3 inks. Click k0 next place, k1 turn the view, k2 chunky."
     palette, screen_kind = "dusk", "bayer8"
 
     def __init__(self, rt):

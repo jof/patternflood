@@ -1,6 +1,6 @@
 """Chroma Waves: a ripple tank in colour, rings from a few drifting sources interfering.
 
-After Lee's Retro Digital Tapestry, its rings crossing. Each source sends out
+After SeungHun's Retro Digital Tapestry, its rings crossing. Each source sends out
 circular waves in its own colour from the palette, and the sources drift on
 slow Lissajous paths. Where waves add, colours mix the way light does, so the
 crossing rings make a moiré that shimmers through every hue; where crests meet
@@ -17,7 +17,7 @@ from .original import Chromatic
 
 class Chroma(Chromatic):
     name = "Chroma Waves"
-    blurb = "A ripple tank in colour: rings from drifting sources interfering (after Lee's Retro Digital Tapestry). k0 wavelength, k1 drift, k2 sources, k3 colour. Click k0 sharp or soft, k1 hold still, k3 next palette."
+    blurb = "A ripple tank in colour: rings from drifting sources interfering (after SeungHun's Retro Digital Tapestry). k0 wavelength, k1 drift, k2 sources, k3 colour. Click k0 sharp or soft, k1 hold still, k3 next palette."
 
     def __init__(self, rt):
         super().__init__(rt)

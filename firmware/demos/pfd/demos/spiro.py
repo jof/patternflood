@@ -1,6 +1,6 @@
 """Spiro: a spirograph drawing on a page that slowly fades.
 
-After Lee's Lissajous Weave. A wheel of r teeth rolls round inside a ring of
+After SeungHun's Lissajous Weave. A wheel of r teeth rolls round inside a ring of
 R teeth, and a pen in one of its holes traces a hypotrochoid: a rosette that
 closes after r / gcd(R, r) trips round the ring. The pen draws quickly onto
 a page that fades, so fresh ink is bright and the trace ages down through
@@ -22,7 +22,7 @@ STEPS = 520                     # pen samples per frame
 
 class Spiro(Inked):
     name = "Spiro"
-    blurb = "A spirograph drawing onto a fading page (after Lee's Lissajous Weave). k0 pen speed, k1 wheel size (teeth), k2 screen, k3 inks. Click k0 clear the page, k1 a new figure, k2 chunky."
+    blurb = "A spirograph drawing onto a fading page (after SeungHun's Lissajous Weave). k0 pen speed, k1 wheel size (teeth), k2 screen, k3 inks. Click k0 clear the page, k1 a new figure, k2 chunky."
     palette, screen_kind = "synth", "bayer4"
 
     def __init__(self, rt):

@@ -1,6 +1,6 @@
 """Gears: a clockwork train of meshing gears, engraved.
 
-After Lee's Origin, its tiles of rings. Gears of one tooth size are laid out
+After SeungHun's Origin, its tiles of rings. Gears of one tooth size are laid out
 in a chain, each touching the last, so their teeth mesh: a gear with fewer
 teeth turns faster, every neighbour turns the other way, and each is set at
 the angle that slots its teeth into its neighbour's gaps. They're drawn from
@@ -21,7 +21,7 @@ MODULE = 2.6                    # pitch radius per tooth: every gear meshes with
 
 class Gears(Inked):
     name = "Gears"
-    blurb = "A clockwork train of meshing gears, engraved (after Lee's Origin). k0 crank speed, k1 a new train, k2 screen, k3 inks. Click k0 reverse, k2 chunky."
+    blurb = "A clockwork train of meshing gears, engraved (after SeungHun's Origin). k0 crank speed, k1 a new train, k2 screen, k3 inks. Click k0 reverse, k2 chunky."
     palette, screen_kind = "obra", "hatch"
 
     def __init__(self, rt):

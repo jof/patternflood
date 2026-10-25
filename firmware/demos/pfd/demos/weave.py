@@ -1,6 +1,6 @@
 """Weave: cloth coming off the loom, coloured threads over and under.
 
-After Lee's Lissajous Weave and 0511's striped tiles. Warp threads run down,
+After SeungHun's Lissajous Weave and 0511's striped tiles. Warp threads run down,
 weft threads across, and the weave structure says which is on top at each
 crossing: plain (alternating), twill (stepping into diagonals), basket (in
 pairs) or satin (long floats). Both sets of threads are dyed in a repeating
@@ -21,7 +21,7 @@ STRUCTURES = ["plain", "twill", "basket", "satin"]
 
 class Weave(Chromatic):
     name = "Weave"
-    blurb = "Cloth coming off the loom, coloured threads over and under (after Lee's Lissajous Weave). k0 thread size, k1 weave, k2 ripple, k3 colour. Click k1 a new plaid, k2 hold still, k3 next palette."
+    blurb = "Cloth coming off the loom, coloured threads over and under (after SeungHun's Lissajous Weave). k0 thread size, k1 weave, k2 ripple, k3 colour. Click k1 a new plaid, k2 hold still, k3 next palette."
     palette = 2
 
     def __init__(self, rt):

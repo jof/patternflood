@@ -4,7 +4,7 @@ Interactive demos for the 2×2 (128 × 128), written once and run in either plac
 There are 139: 91 of ours, plus all 48 of upstream Patternflow's patterns, run
 natively ([below](#upstream-patternflow-presets)). That's the 34 firmware presets and
 our ports of the 14 that upstream only had as web sources. Fifty-six of ours are
-[Patternflow-style originals](#our-originals-on-the-patternflow-shelf), shelved among Lee's.
+[Patternflow-style originals](#our-originals-on-the-patternflow-shelf), shelved among SeungHun's.
 
 | | Knobs | Frames | Renders on |
 |---|---|---|---|
@@ -96,10 +96,10 @@ Added on 2026-10-23, each testing something the first eight don't:
 | **Vault** | each knob rolls its own tumbler; click to try | **Feedback through the knob alone:** each cap warms as its number gets close, the same within ±1, so the last step is a guess. One knob, one tumbler, in the row's order. | Whether people find the warmth readable without being told; whether the ±1 ambiguity is tension or annoyance. |
 | **Mandala** | k0 orbits the pen, k1 radius, k2 colour, k3 symmetry | **Polar against Cartesian:** the same drawing toy as Etch, but turning the angle knob literally orbits the pen. | Compare with Etch. Which do people draw more with, and which knob do they reach for first? |
 
-Five more, each taking one of Seunghun Lee's visual ideas from upstream and making it
+Five more, each taking one of SeungHun's visual ideas from upstream and making it
 something you play rather than tune:
 
-| Demo | After Lee's | Knobs | Hypothesis | Watch for |
+| Demo | After SeungHun's | Knobs | Hypothesis | Watch for |
 |---|---|---|---|---|
 | **Droplet** | 0524-2 droplet refraction, 0530 water surface | each knob a dropper: turn to slide, click to drip, hold to rain | **A click as a physical event:** a real wave equation, refracting a tiled pool floor, with caustics. Four droppers, so ripples from different hands interfere. | Whether people play together, timing drops to make patterns, or each just pokes at their own. |
 | **Terrain** | 0519-1 isocontours, 0529 contour lines | k0/k1 brush, k2 piles or digs earth, k3 sea level | **Turning moves earth,** and **a global reveal knob** (sea level) gives what you sculpted a meaning. | Whether k3 makes people go back and sculpt more: dig a channel, then flood it. |
@@ -336,7 +336,7 @@ Upstream turns JavaScript into firmware headers with an AI prompt (`web/src/lib/
 We did the same, following that prompt and the knob conventions of upstream's existing ports,
 into `upstream_host/web_ports/preset_*.h`. `build.py` adds them to the library.
 
-- **They're derived from CC BY-SA 4.0 sources,** so they carry that licence and Lee's
+- **They're derived from CC BY-SA 4.0 sources,** so they carry that licence and SeungHun's
   attribution in their headers, and they are committed here (share-alike).
 - **Every port was checked against the original.**
   `upstream_host/tools/compare.py` runs the JavaScript in Node and the C++ side by side, for
@@ -363,7 +363,7 @@ same way: drop it in `upstream_host/web_ports/`.
 
 Thirty-eight patterns of ours, in Patternflow's manner: each runs by itself, and the four knobs turn
 its qualities, not a game. They're in our own style, which is print-shop and demoscene,
-and each sits on the shelf right after the preset of Lee's it riffs on.
+and each sits on the shelf right after the preset of SeungHun's it riffs on.
 
 | Demo | After | What it is | Knobs (turn; click) |
 |---|---|---|---|

@@ -1,6 +1,6 @@
 """Droplets on a pool: a wave-equation surface refracting a tiled floor.
 
-After Seunghun Lee's 0524-2 (droplet ripple refraction) and 0530 (liquid water
+After SeungHun's 0524-2 (droplet ripple refraction) and 0530 (liquid water
 surface), made playable: four droppers, one per knob. Turn to slide a dropper
 along its lane, click to drip, hold to rain. Ripples from different droppers
 cross and interfere.
@@ -39,7 +39,7 @@ FLOOR = _floor()
 
 class Droplet(Demo):
     name = "Droplet"
-    blurb = "A pool, after Lee's 0524-2. Each knob owns a dropper: turn to slide it, click to drip, hold to rain."
+    blurb = "A pool, after SeungHun's 0524-2. Each knob owns a dropper: turn to slide it, click to drip, hold to rain."
 
     def __init__(self, rt):
         super().__init__(rt)

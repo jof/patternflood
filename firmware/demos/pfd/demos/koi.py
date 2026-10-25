@@ -1,6 +1,6 @@
 """Koi: carp circling a dark pond under lily pads, dithered.
 
-After Lee's 0614-2, its spotted tiles. Each koi is a spine of linked
+After SeungHun's 0614-2, its spotted tiles. Each koi is a spine of linked
 segments: the head steers towards a target that wanders round the pond, and
 every segment after it is pulled along at a fixed distance, so the body
 bends through each turn and the tail sweeps. The body is drawn as discs
@@ -24,7 +24,7 @@ PAD_VEIN = (0.06, 0.26, 0.08)
 
 class Koi(Inked):
     name = "Koi"
-    blurb = "Koi circling a dark pond under lily pads, dithered (after Lee's 0614-2). k0 swim speed, k1 food (click), k2 screen, k3 inks. Click k1 drop food, k2 chunky."
+    blurb = "Koi circling a dark pond under lily pads, dithered (after SeungHun's 0614-2). k0 swim speed, k1 food (click), k2 screen, k3 inks. Click k1 drop food, k2 chunky."
     palette, screen_kind = "koi", "bayer4"
 
     def __init__(self, rt):

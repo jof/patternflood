@@ -7,7 +7,7 @@ A cloud of points is stepped through the map every frame and each landing is
 counted, so the picture is the attractor's density, glowing and coloured by the
 direction each point jumped. The counts fade quickly, so when a knob moves a, b,
 c or d the shape visibly bends into its next form instead of smearing.
-After Lee's flow-field and Lissajous patterns; here the field is chaos.
+After SeungHun's flow-field and Lissajous patterns; here the field is chaos.
 """
 import math
 

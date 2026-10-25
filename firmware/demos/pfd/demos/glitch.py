@@ -1,4 +1,4 @@
-"""A clock you can glitch, after Lee's glitch work (0519-2 glitch typography,
+"""A clock you can glitch, after SeungHun's glitch work (0519-2 glitch typography,
 0511 sliding rows, 0602 colour separation, 0521 bitwise cascades).
 
 Each knob is one unmistakable effect, and each springs back like a whammy bar:
@@ -21,7 +21,7 @@ SHOWS = ["clock", "PATTERN", "FLOOD", "date"]
 
 class Glitch(Demo):
     name = "Glitch"
-    blurb = "A clock, after Lee's glitch type. k0 tears, k1 splits colour, k2 smears, k3 crushes; each springs back. Hold to pin. Click k0 to change the text."
+    blurb = "A clock, after SeungHun's glitch type. k0 tears, k1 splits colour, k2 smears, k3 crushes; each springs back. Hold to pin. Click k0 to change the text."
 
     def __init__(self, rt):
         super().__init__(rt)

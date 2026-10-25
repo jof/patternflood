@@ -1,6 +1,6 @@
 """Life: Conway's Game of Life, with the ghosts of the dead, dithered.
 
-After Lee's TileWaves, its grid of lit squares. The rules are Conway's: a
+After SeungHun's TileWaves, its grid of lit squares. The rules are Conway's: a
 cell with three neighbours is born, one with two or three lives on, and the
 rest die. The grid wraps at the edges. Newborn cells blaze, and the long-lived
 dim to a steady glow. Dead cells leave ghosts that fade through the dither,
@@ -21,7 +21,7 @@ SEEDS = ["soup", "gliders", "r-pentomino", "acorn"]
 
 class Life(Inked):
     name = "Life"
-    blurb = "Conway's Life with fading ghosts, dithered (after Lee's TileWaves). k0 speed, k1 ghost length, k2 screen, k3 inks. Click k0 pause, k1 reseed, k2 big cells."
+    blurb = "Conway's Life with fading ghosts, dithered (after SeungHun's TileWaves). k0 speed, k1 ghost length, k2 screen, k3 inks. Click k0 pause, k1 reseed, k2 big cells."
     palette, screen_kind = "gameboy", "bayer4"
 
     def __init__(self, rt):

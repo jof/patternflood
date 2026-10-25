@@ -1,6 +1,6 @@
 """Plankton: a dark sea full of bioluminescence that lights where it's stirred.
 
-After Lee's 0526, its glowing vortex. Three
+After SeungHun's 0526, its glowing vortex. Three
 thousand plankton drift on a slow current. Each is dark until something
 disturbs it, then flares blue and fades over a second or two. A hand trails
 through the water (k0 and k1 steer it, as on an Etch A Sketch; left alone it
@@ -20,7 +20,7 @@ COUNT = 6000
 
 class Plankton(Inked):
     name = "Plankton"
-    blurb = "A dark sea of bioluminescence that lights where you stir it (after Lee's 0526). k0/k1 steer your hand, k2 screen, k3 inks. Click k0 splash, k1 a wave over all of it, k2 chunky."
+    blurb = "A dark sea of bioluminescence that lights where you stir it (after SeungHun's 0526). k0/k1 steer your hand, k2 screen, k3 inks. Click k0 splash, k1 a wave over all of it, k2 chunky."
     palette, screen_kind = "ice", "blue"
 
     def __init__(self, rt):

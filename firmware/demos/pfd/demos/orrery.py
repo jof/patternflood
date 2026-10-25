@@ -1,6 +1,6 @@
 """Orrery: a little solar system turning, every world lit from its sun, dithered.
 
-After Lee's 0513, its rings of tiles. A sun burns in the middle; five planets
+After SeungHun's 0513, its rings of tiles. A sun burns in the middle; five planets
 circle it at speeds that fall off with distance, as Kepler's third law has
 it (the period grows as the orbit's radius to the power 1.5). One has rings,
 two have moons. The orbits are tilted towards us, so planets pass in front
@@ -23,7 +23,7 @@ PLANETS = [(15, 3.2, 0.8, 0, False), (24, 4.8, 0.9, 0, False), (34, 5.4, 0.75, 1
 
 class Orrery(Inked):
     name = "Orrery"
-    blurb = "A little solar system, each world lit from its sun, dithered (after Lee's 0513). k0 time, k1 tilt, k2 screen, k3 inks. Click k0 reverse time, k1 orbits on or off, k2 chunky."
+    blurb = "A little solar system, each world lit from its sun, dithered (after SeungHun's 0513). k0 time, k1 tilt, k2 screen, k3 inks. Click k0 reverse time, k1 orbits on or off, k2 chunky."
     palette, screen_kind = "dusk", "bayer4"
 
     def __init__(self, rt):

@@ -1,6 +1,6 @@
 """Moiré: fine coloured gratings turning against each other.
 
-After Lee's Retro Digital Tapestry and 0515-4. Two or three layers of thin
+After SeungHun's Retro Digital Tapestry and 0515-4. Two or three layers of thin
 lines (or rings, or dots), each in its own colour of the palette, lie over
 one another and turn at slightly different speeds. Where their lines nearly
 agree, broad fringes appear that are in none of the layers. They sweep and
@@ -19,7 +19,7 @@ KINDS = ["lines", "rings", "dots"]
 
 class Moire(Chromatic):
     name = "Moiré"
-    blurb = "Fine coloured gratings turning against each other into sweeping fringes (after Lee's Retro Digital Tapestry). k0 pitch, k1 turn speed, k2 pattern, k3 colour. Click k0 thick lines, k1 a third layer, k3 next palette."
+    blurb = "Fine coloured gratings turning against each other into sweeping fringes (after SeungHun's Retro Digital Tapestry). k0 pitch, k1 turn speed, k2 pattern, k3 colour. Click k0 thick lines, k1 a third layer, k3 next palette."
 
     def __init__(self, rt):
         super().__init__(rt)

@@ -1,6 +1,6 @@
 """Clock: the real time, on an engraved dial, dithered.
 
-After Lee's 0515-4, its tick marks round a grid. A wall clock showing the
+After SeungHun's 0515-4, its tick marks round a grid. A wall clock showing the
 local time: twelve hour bars (heavier at the quarters) and sixty minute ticks
 on a dial lit from the upper left, with a bevelled rim and a curve of light
 on the glass. The hands are tapered blades with drop shadows; the second
@@ -25,7 +25,7 @@ FACES = ["bars", "dots", "minimal"]
 
 class Clock(Inked):
     name = "Clock"
-    blurb = "The real time on an engraved dial (after Lee's 0515-4). k0 face, k1 tick or sweep, k2 screen, k3 inks. Click k1 tick on the beat (with music), k2 chunky."
+    blurb = "The real time on an engraved dial (after SeungHun's 0515-4). k0 face, k1 tick or sweep, k2 screen, k3 inks. Click k1 tick on the beat (with music), k2 chunky."
     palette, screen_kind = "obra", "hatch"
 
     def __init__(self, rt):

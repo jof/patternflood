@@ -1,6 +1,6 @@
 """Cumulus: clouds drifting across a low sun, rays fanning through the gaps, dithered.
 
-After Lee's 0517, its slow purple haze. The clouds are fractal noise (four
+After SeungHun's 0517, its slow purple haze. The clouds are fractal noise (four
 octaves, each drifting at its own speed, so they billow and change shape as
 they go), cut off softly below a cover level. Each point is shaded by how much
 cloud lies between it and the sun, sampled a few steps sunward, so the sun's
@@ -18,7 +18,7 @@ RAY_STEPS = 14
 
 class Cumulus(Inked):
     name = "Cumulus"
-    blurb = "Clouds drifting across a low sun, rays fanning through the gaps, dithered (after Lee's 0517). k0 wind, k1 cloud cover, k2 screen, k3 inks. Click k0 time-lapse, k1 move the sun, k2 chunky."
+    blurb = "Clouds drifting across a low sun, rays fanning through the gaps, dithered (after SeungHun's 0517). k0 wind, k1 cloud cover, k2 screen, k3 inks. Click k0 time-lapse, k1 move the sun, k2 chunky."
     palette, screen_kind = "dusk", "bayer8"
 
     def __init__(self, rt):

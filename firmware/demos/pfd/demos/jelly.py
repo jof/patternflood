@@ -1,6 +1,6 @@
 """Jellyfish: glowing jellies pulsing up through the deep, dithered.
 
-After Lee's 0529, its glowing curves on black. Each jelly is a bell that
+After SeungHun's 0529, its glowing curves on black. Each jelly is a bell that
 pulses: it squeezes (narrower, taller) and shoves itself upward, then
 relaxes and drifts, sinking a little, so they climb in fits. Their tentacles
 trail behind as chains that follow the bell with a lag, each link easing
@@ -23,7 +23,7 @@ NSNOW = 60
 
 class Jelly(Inked):
     name = "Jellyfish"
-    blurb = "Glowing jellyfish pulsing up through the deep, dithered (after Lee's 0529). k0 pulse rate, k1 current, k2 screen, k3 inks. Click k0 all pulse at once, k2 chunky."
+    blurb = "Glowing jellyfish pulsing up through the deep, dithered (after SeungHun's 0529). k0 pulse rate, k1 current, k2 screen, k3 inks. Click k0 all pulse at once, k2 chunky."
     palette, screen_kind = "ice", "blue"
 
     def __init__(self, rt):

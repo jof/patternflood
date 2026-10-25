@@ -1,6 +1,6 @@
 """Bit Tunnel: a flight down a tunnel papered with bitwise texture.
 
-After Lee's bitwise patterns (0521's XOR masks, 0522's quad-fold gate). The
+After SeungHun's bitwise patterns (0521's XOR masks, 0522's quad-fold gate). The
 demoscene XOR texture, (u ^ v), is wrapped round a tunnel. Its cross-section
 morphs from round to square to diamond to petals, and its mouth wanders. Depth
 fades it into the dark through a dither screen, and a mask on the texture's
@@ -20,7 +20,7 @@ SHAPES = ["round", "square", "diamond", "petals"]
 
 class BitTunnel(Original):
     name = "Bit Tunnel"
-    blurb = "Down a tunnel of XOR texture (after Lee's 0521 bit masks). k0 speed (and reverse), k1 roll, k2 bit pattern, k3 inks. Click k0 stop, k1 shape, k2 chunky, k3 screen."
+    blurb = "Down a tunnel of XOR texture (after SeungHun's 0521 bit masks). k0 speed (and reverse), k1 roll, k2 bit pattern, k3 inks. Click k0 stop, k1 shape, k2 chunky, k3 screen."
 
     def __init__(self, rt):
         super().__init__(rt)

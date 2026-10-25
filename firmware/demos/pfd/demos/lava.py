@@ -1,6 +1,6 @@
 """Lava: a lava lamp, wax blobs rising and sinking, merging and pinching apart.
 
-After Lee's 0520, whose soft blobs drift in pink. Each blob carries a
+After SeungHun's 0520, whose soft blobs drift in pink. Each blob carries a
 temperature: the lamp's bulb heats it near the bottom, so it expands, grows
 buoyant and rises; near the top it cools, grows heavy and sinks. Blobs stretch
 along their motion, and the wax is drawn as metaballs, so blobs that meet
@@ -20,7 +20,7 @@ MAX_BLOBS = 10
 
 class Lava(Inked):
     name = "Lava"
-    blurb = "A lava lamp: blobs warm, rise, cool and sink, merging as they meet (after Lee's 0520). k0 heat, k1 how much wax, k2 screen, k3 inks. Click k0 shake, k2 chunky."
+    blurb = "A lava lamp: blobs warm, rise, cool and sink, merging as they meet (after SeungHun's 0520). k0 heat, k1 how much wax, k2 screen, k3 inks. Click k0 shake, k2 chunky."
     palette, screen_kind = "dusk", "bayer8"
 
     def __init__(self, rt):

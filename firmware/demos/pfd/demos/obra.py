@@ -1,6 +1,6 @@
 """Obra: a solid lit object, printed in two to five inks through a dither screen.
 
-After the 1-bit dithering of Lee's 0521 and 0522, and Obra Dinn's look. Here the
+After the 1-bit dithering of SeungHun's 0521 and 0522, and Obra Dinn's look. Here the
 thing being dithered is a real 3D object: a raymarched signed-distance shape
 that turns, morphs from one form to the next, and is lit by a light that circles it.
 Its tone goes through an ordered or blue-noise screen (or prints as halftone
@@ -123,7 +123,7 @@ def _rot(yaw, pitch):
 
 class Obra(Original):
     name = "Obra"
-    blurb = "A lit solid, dithered into inks (after Lee's 0521/0522 dither). k0 turns it, k1 morphs the form, k2 screen, k3 inks. Click k0 spin, k2 chunky, k3 outline."
+    blurb = "A lit solid, dithered into inks (after SeungHun's 0521/0522 dither). k0 turns it, k1 morphs the form, k2 screen, k3 inks. Click k0 spin, k2 chunky, k3 outline."
 
     def __init__(self, rt):
         super().__init__(rt)

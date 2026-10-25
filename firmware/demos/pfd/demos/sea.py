@@ -1,6 +1,6 @@
 """Sea: open water at night, a moon's glitter path across it, dithered.
 
-After Lee's Midsummer Sea. The water is eight deep-water waves (each travels
+After SeungHun's Midsummer Sea. The water is eight deep-water waves (each travels
 at the speed its length gives it, so long swells outrun the chop), seen from a
 boat that rides them. Each screen column is raycast: the sea is sampled at
 depths from the bow to the horizon, and every row shows the nearest sample
@@ -34,7 +34,7 @@ def _pal(name):
 
 class Sea(Original):
     name = "Sea"
-    blurb = "Open water at night, the moon's glitter on it, dithered (after Lee's Midsummer Sea). k0 swell, k1 moves the moon, k2 screen, k3 inks. Click k0 storm, k1 sunset, k2 chunky."
+    blurb = "Open water at night, the moon's glitter on it, dithered (after SeungHun's Midsummer Sea). k0 swell, k1 moves the moon, k2 screen, k3 inks. Click k0 storm, k1 sunset, k2 chunky."
 
     def __init__(self, rt):
         super().__init__(rt)

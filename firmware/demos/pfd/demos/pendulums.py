@@ -1,6 +1,6 @@
 """Pendulums: the pendulum wave, a row of swinging balls falling in and out of step.
 
-After Lee's Wave Saw. Eighteen pendulums hang from one bar; their lengths are
+After SeungHun's Wave Saw. Eighteen pendulums hang from one bar; their lengths are
 chosen so that, in one cycle of the dance, the first swings 51 times, the
 next 52, and so on. Released together they make a travelling snake, then two
 interleaved lines, three, a scatter, and at the end of the cycle they all line
@@ -24,7 +24,7 @@ BAR = 40.0                      # the bar's height above the balls' rest
 
 class Pendulums(Inked):
     name = "Pendulums"
-    blurb = "The pendulum wave: a row of pendulums falling in and out of step (after Lee's Wave Saw). k0 speed, k1 view, k2 screen, k3 inks. Click k0 release them together, k2 chunky."
+    blurb = "The pendulum wave: a row of pendulums falling in and out of step (after SeungHun's Wave Saw). k0 speed, k1 view, k2 screen, k3 inks. Click k0 release them together, k2 chunky."
     palette, screen_kind = "riso", "bayer4"
 
     def __init__(self, rt):

@@ -1,6 +1,6 @@
 """Smoke: incense smoke curling up through still air, dithered.
 
-After Lee's Vector Field Flow. Dye rises from a source near the bottom and is
+After SeungHun's Vector Field Flow. Dye rises from a source near the bottom and is
 carried by a flow with no divergence (the curl of a few drifting waves of
 "stream function"), so it swirls without bunching up or thinning out. The
 swirl grows with height: the plume leaves the source as a smooth ribbon and
@@ -38,7 +38,7 @@ def _advect(f, sx, sy):
 
 class Smoke(Original):
     name = "Smoke"
-    blurb = "Incense smoke curling up, dithered (after Lee's Vector Field Flow). k0 turbulence, k1 moves the source, k2 screen, k3 inks. Click k0 gust, k1 puff, k2 chunky, k3 second source."
+    blurb = "Incense smoke curling up, dithered (after SeungHun's Vector Field Flow). k0 turbulence, k1 moves the source, k2 screen, k3 inks. Click k0 gust, k1 puff, k2 chunky, k3 second source."
 
     def __init__(self, rt):
         super().__init__(rt)

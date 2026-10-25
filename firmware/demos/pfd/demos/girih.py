@@ -1,6 +1,6 @@
 """Girih: an eight-pointed star tiling with strapwork, in flowing colour.
 
-After Lee's 0514, its crosses in a grid, and the zellij of Moroccan tilework.
+After SeungHun's 0514, its crosses in a grid, and the zellij of Moroccan tilework.
 Every square cell holds an eight-pointed star whose tips touch its
 neighbours', leaving cross-shaped spaces between. Each point is folded into
 one sixteenth of its cell (mirrors across the axes and the diagonals), where
@@ -19,7 +19,7 @@ from .original import Chromatic
 
 class Girih(Chromatic):
     name = "Girih"
-    blurb = "An eight-pointed star tiling with strapwork, in flowing colour (after Lee's 0514). k0 tile size, k1 star depth, k2 strap width, k3 colour. Click k1 inner rosettes, k3 next palette."
+    blurb = "An eight-pointed star tiling with strapwork, in flowing colour (after SeungHun's 0514). k0 tile size, k1 star depth, k2 strap width, k3 colour. Click k1 inner rosettes, k3 next palette."
     palette = 1
 
     def __init__(self, rt):

@@ -1,6 +1,6 @@
 """Op Art: black and white lines bent until they seem to move by themselves.
 
-After Lee's Warped Wave, and Bridget Riley's paintings. Five fields, each a
+After SeungHun's Warped Wave, and Bridget Riley's paintings. Five fields, each a
 signed wave sharpened into hard black and white, with a pixel of dithered
 grey where the edges fall between pixels:
     current   wavy lines whose spacing breathes across the frame
@@ -22,7 +22,7 @@ MODES = ["current", "squares", "bulge", "rings", "twist"]
 
 class OpArt(Inked):
     name = "Op Art"
-    blurb = "Black and white lines bent until they seem to move (after Lee's Warped Wave and Bridget Riley). k0 line spacing, k1 warp, k2 picture, k3 inks. Click k0 invert, k1 hold still, k2 screen, k3 chunky."
+    blurb = "Black and white lines bent until they seem to move (after SeungHun's Warped Wave and Bridget Riley). k0 line spacing, k1 warp, k2 picture, k3 inks. Click k0 invert, k1 hold still, k2 screen, k3 chunky."
     palette, screen_kind = "mac", "bayer4"
 
     def __init__(self, rt):

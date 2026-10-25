@@ -1,6 +1,6 @@
 """Streams: thousands of coloured particles tracing silky trails through a flow.
 
-After Lee's Vector Field Flow. The flow is the curl of a slowly changing sum
+After SeungHun's Vector Field Flow. The flow is the curl of a slowly changing sum
 of waves (so it swirls without sources or sinks), and eighteen hundred particles
 ride it, each leaving a trail on a canvas that fades. Each particle carries a
 colour from the palette, by where it was born or by which way it's heading,
@@ -20,7 +20,7 @@ NWAVES = 5
 
 class Streams(Chromatic):
     name = "Streams"
-    blurb = "Thousands of coloured particles tracing silky trails through a flow (after Lee's Vector Field Flow). k0 speed, k1 swirl size, k2 trail length, k3 colour. Click k0 a new flow, k1 colour by heading or birthplace, k3 next palette."
+    blurb = "Thousands of coloured particles tracing silky trails through a flow (after SeungHun's Vector Field Flow). k0 speed, k1 swirl size, k2 trail length, k3 colour. Click k0 a new flow, k1 colour by heading or birthplace, k3 next palette."
     palette = 0
 
     def __init__(self, rt):

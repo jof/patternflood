@@ -1,6 +1,6 @@
 """Warp: a starfield at cruise, and the jump to hyperspace, dithered.
 
-After Lee's 0510's scattered points. Stars sit in a 3D box ahead and stream
+After SeungHun's 0510's scattered points. Stars sit in a 3D box ahead and stream
 past the ship. Each is drawn as a streak from where it is now to where it
 was a moment ago, so at cruise they're points and at speed they stretch into
 lines. A jump (click k0, or a big hit in the music) winds the speed up until
@@ -23,7 +23,7 @@ SAMPLES = 10                    # points along each streak
 
 class Warp(Inked):
     name = "Warp"
-    blurb = "Stars streaming past, and the jump to hyperspace, dithered (after Lee's 0510). k0 throttle, k1 steer, k2 screen, k3 inks. Click k0 jump, k2 chunky."
+    blurb = "Stars streaming past, and the jump to hyperspace, dithered (after SeungHun's 0510). k0 throttle, k1 steer, k2 screen, k3 inks. Click k0 jump, k2 chunky."
     palette, screen_kind = "ice", "bayer4"
 
     def __init__(self, rt):

@@ -1,6 +1,6 @@
 """Aurora: the northern lights over mountains and a still lake, dithered.
 
-After Lee's 0602, its bands of colour rippling. Two or three curtains hang in
+After SeungHun's 0602, its bands of colour rippling. Two or three curtains hang in
 the sky, each a ribbon whose hem folds slowly from side to side. A curtain is
 brightest at its hem and fades upward, and it's made of fine vertical rays
 that flicker and travel along it. Now and then a substorm (click k0, or a new
@@ -21,7 +21,7 @@ NCURTAINS = 3
 
 class Aurora(Inked):
     name = "Aurora"
-    blurb = "The northern lights over mountains and a lake, dithered (after Lee's 0602). k0 activity, k1 curtain height, k2 screen, k3 inks. Click k0 substorm, k1 the lake, k2 chunky."
+    blurb = "The northern lights over mountains and a lake, dithered (after SeungHun's 0602). k0 activity, k1 curtain height, k2 screen, k3 inks. Click k0 substorm, k1 the lake, k2 chunky."
     palette, screen_kind = "aurora", "bayer8"
 
     def __init__(self, rt):

@@ -1,4 +1,4 @@
-"""Sculpt a landscape, then flood it. Topographic contours after Lee's 0519-1 and 0529.
+"""Sculpt a landscape, then flood it. Topographic contours after SeungHun's 0519-1 and 0529.
 
 k0 and k1 move the brush, as in Etch. k2 moves earth: clockwise piles it up
 under the brush, anticlockwise digs. k3 is sea level, the reveal: turn it to
@@ -30,7 +30,7 @@ def _tint(h):
 
 class Terrain(Demo):
     name = "Terrain"
-    blurb = "After Lee's contour maps. k0/k1 move the brush, k2 piles earth (anticlockwise digs), k3 sea level. Click k0 smooth, k1 new land, k2 brush size."
+    blurb = "After SeungHun's contour maps. k0/k1 move the brush, k2 piles earth (anticlockwise digs), k3 sea level. Click k0 smooth, k1 new land, k2 brush size."
 
     def __init__(self, rt):
         super().__init__(rt)

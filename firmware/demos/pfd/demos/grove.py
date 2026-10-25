@@ -1,6 +1,6 @@
 """Grove: trees growing and swaying through the seasons, in silhouette, dithered.
 
-After Lee's 0601, its stepped columns of colour. Each tree is a branching
+After SeungHun's 0601, its stepped columns of colour. Each tree is a branching
 fractal: a trunk that forks, and forks again, seven times, each fork turned a
 little at random and a little shorter. They grow from saplings a level at a
 time. Wind sways every branch, more towards the tips, since each sways on top
@@ -25,7 +25,7 @@ YEAR = 64.0                     # seconds round the seasons
 
 class Grove(Inked):
     name = "Grove"
-    blurb = "Trees growing and swaying through the seasons, in silhouette (after Lee's 0601). k0 wind, k1 season, k2 screen, k3 inks. Click k0 a gust, k1 grow a new grove, k2 chunky."
+    blurb = "Trees growing and swaying through the seasons, in silhouette (after SeungHun's 0601). k0 wind, k1 season, k2 screen, k3 inks. Click k0 a gust, k1 grow a new grove, k2 chunky."
     palette, screen_kind = "dusk", "bayer8"
 
     def __init__(self, rt):

@@ -1,6 +1,6 @@
 """Zen: a raked sand garden, slowly raked again, dithered.
 
-After Lee's 0619, its patterned lines. Grooves run straight across the
+After SeungHun's 0619, its patterned lines. Grooves run straight across the
 gravel, and near each stone they bend into rings around it, as a karesansui
 garden is raked. The grooves are a height field lit by a low sun, so each
 ridge has a bright face and a shadowed one. A rake crosses the garden top to
@@ -20,7 +20,7 @@ PETAL_INK = (1.0, 0.68, 0.78)
 
 class Zen(Inked):
     name = "Zen"
-    blurb = "A raked sand garden, slowly raked anew (after Lee's 0619). k0 rake speed, k1 groove spacing for the next raking, k2 screen, k3 inks. Click k0 rake now, k1 move the stones, k2 chunky."
+    blurb = "A raked sand garden, slowly raked anew (after SeungHun's 0619). k0 rake speed, k1 groove spacing for the next raking, k2 screen, k3 inks. Click k0 rake now, k1 move the stones, k2 chunky."
     palette, screen_kind = "sand", "bayer8"     # the sand inks sit close, so ridges are a fine grain
 
     def __init__(self, rt):

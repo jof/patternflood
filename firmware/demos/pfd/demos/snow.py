@@ -1,6 +1,6 @@
 """Snow: a village at night in falling snow, dithered.
 
-After Lee's 0515-3, its soft glow. Snow falls in three layers: far flakes
+After SeungHun's 0515-3, its soft glow. Snow falls in three layers: far flakes
 small, slow and dim; near ones bigger, faster, swaying more. Under it a row of
 houses, roofs and chimneys in silhouette, windows lit warm (now and then one
 goes dark, or comes on). Smoke curls from the chimneys and drifts with the
@@ -20,7 +20,7 @@ GROUND = 116
 
 class Snow(Inked):
     name = "Snow"
-    blurb = "A village at night in falling snow, dithered (after Lee's 0515-3). k0 snowfall, k1 wind, k2 screen, k3 inks. Click k0 clear the drifts, k1 lights on or off, k2 chunky."
+    blurb = "A village at night in falling snow, dithered (after SeungHun's 0515-3). k0 snowfall, k1 wind, k2 screen, k3 inks. Click k0 clear the drifts, k1 lights on or off, k2 chunky."
     palette, screen_kind = "ice", "bayer4"
     WINDOW_INK = (1.0, 0.62, 0.22)              # a spot ink, printed over whatever the palette is
 

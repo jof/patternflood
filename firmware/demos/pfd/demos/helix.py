@@ -1,6 +1,6 @@
 """Helix: a DNA double helix, turning and rising forever, dithered.
 
-After Lee's 0512, its flower of lines turning on a centre. Two backbones
+After SeungHun's 0512, its flower of lines turning on a centre. Two backbones
 wind round a common axis, joined by base pairs. Every atom is a shaded
 sphere drawn as an impostor (each pixel of its disc knows its own normal and
 depth), and a depth buffer sorts them, so the strands pass behind and in front
@@ -22,7 +22,7 @@ RADIUS = 25.0
 
 class Helix(Inked):
     name = "Helix"
-    blurb = "A DNA double helix turning and rising, dithered (after Lee's 0512). k0 spin, k1 tilt, k2 screen, k3 inks. Click k0 unzip, k2 chunky."
+    blurb = "A DNA double helix turning and rising, dithered (after SeungHun's 0512). k0 spin, k1 tilt, k2 screen, k3 inks. Click k0 unzip, k2 chunky."
     palette, screen_kind = "ember", "bayer4"
 
     def __init__(self, rt):

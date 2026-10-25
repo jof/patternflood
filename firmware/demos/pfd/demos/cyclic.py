@@ -1,6 +1,6 @@
 """Cyclic: a cellular automaton that organizes noise into rainbow spirals.
 
-After Lee's TileWaves, its grid of coloured cells. Each cell holds one of N
+After SeungHun's TileWaves, its grid of coloured cells. Each cell holds one of N
 colours, in a cycle. A cell moves on to the next colour when enough of its
 neighbours already have it; nothing else ever happens. From random noise this
 one rule first makes blotches, then waves, and finally a field of spirals that
@@ -21,7 +21,7 @@ NEIGHBOURHOODS = [
 
 class Cyclic(Chromatic):
     name = "Cyclic"
-    blurb = "A cellular automaton that grows rainbow spirals out of noise (after Lee's TileWaves). k0 speed, k1 colours, k2 neighbourhood, k3 colour. Click k0 reseed, k1 big cells, k2 drop a seed, k3 next palette."
+    blurb = "A cellular automaton that grows rainbow spirals out of noise (after SeungHun's TileWaves). k0 speed, k1 colours, k2 neighbourhood, k3 colour. Click k0 reseed, k1 big cells, k2 drop a seed, k3 next palette."
 
     def __init__(self, rt):
         super().__init__(rt)

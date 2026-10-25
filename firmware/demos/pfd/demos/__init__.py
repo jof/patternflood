@@ -89,7 +89,7 @@ OURS = [Classic, Etch, Squash, Cycles, Sand, Harmono, Rewind, Reaction, Rotor, E
         Droplet, Terrain, Glitch, Kaleido, Pool, Resort]
 AUDIO = [Milk, MilkTunnel, MilkFlame, MilkMirror, MilkEcho, Superscope, Pulse, Spectrum, Scope, Waterfall, Prism, Rain, Spores, Lissajous, NightDrive, Tempo]
 OURS = OURS + AUDIO
-# Our own patterns on the Patternflow shelf, each placed after the preset of Lee's it riffs on
+# Our own patterns on the Patternflow shelf, each placed after the preset of SeungHun's it riffs on
 ORIGINALS = [(BitTunnel, "pf 0521"), (Obra, "pf 0522"), (Riso, "pf 0528"), (Strange, "pf Lissajous Weave"), (PixelSort, "pf 0519-2"),
              (Moon, "pf Poincaré Sphere"), (Smoke, "pf Vector Field Flow"),
              (Sea, "pf Midsummer Sea"),

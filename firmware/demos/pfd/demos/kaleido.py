@@ -1,6 +1,6 @@
 """A kaleidoscope you twist: k0 turns the barrel, and the beads inside tumble.
 
-After Lee's mirror-fold patterns (0522 quad-fold, 0526 kaleidoscopic vortex,
+After SeungHun's mirror-fold patterns (0522 quad-fold, 0526 kaleidoscopic vortex,
 0622 mirror grid). Here the source isn't a formula. It is a cell of beads
 under gravity, and turning k0 turns the cell, so they fall and roll as in the
 real toy. The mirrors stay put.
@@ -20,7 +20,7 @@ NBEADS = 48
 
 class Kaleido(Demo):
     name = "Kaleido"
-    blurb = "After Lee's mirror folds. Twist k0 like the barrel and the beads tumble. k1 zoom, k2 mirrors, k3 colours. Click k0 shake, k2 new beads, k3 oil."
+    blurb = "After SeungHun's mirror folds. Twist k0 like the barrel and the beads tumble. k1 zoom, k2 mirrors, k3 colours. Click k0 shake, k2 new beads, k3 oil."
 
     def __init__(self, rt):
         super().__init__(rt)

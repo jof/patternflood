@@ -3,7 +3,7 @@
 A palette is colour(t) = a + b * cos(2 pi (c t + d)), per channel (Inigo
 Quilez's recipe): four vectors give a smooth, endlessly repeating gradient,
 and sliding t (or d) cycles it. These are tuned bright and saturated, as the
-panels and Lee's patterns like them.
+panels and SeungHun's patterns like them.
 """
 import math
 

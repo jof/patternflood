@@ -1,6 +1,6 @@
 """Tesla: a plasma globe. Filaments crackle from the electrode out to the glass.
 
-After Lee's MagVortex, its lines bursting from a centre. Each filament is a
+After SeungHun's MagVortex, its lines bursting from a centre. Each filament is a
 jagged path from the electrode to the glass: a straight line bent sideways
 by a few octaves of wiggle that swell in the middle and pin at both ends,
 re-drawn every frame so it writhes, with a fork or two off it. The far ends
@@ -29,7 +29,7 @@ def _blur(a):
 
 class Tesla(Inked):
     name = "Tesla"
-    blurb = "A plasma globe, dithered (after Lee's MagVortex). k0 moves your finger round the glass (hold it to touch), k1 filaments, k2 screen, k3 inks. Click k1 forks, k2 chunky."
+    blurb = "A plasma globe, dithered (after SeungHun's MagVortex). k0 moves your finger round the glass (hold it to touch), k1 filaments, k2 screen, k3 inks. Click k1 forks, k2 chunky."
     palette, screen_kind = "nebula", "bayer4"
 
     def __init__(self, rt):

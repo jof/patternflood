@@ -1,6 +1,6 @@
 """Isobands: a flowing field cut into terraces of flat colour.
 
-After Lee's 0531 posterized thermal gradient and 0519-1's contours. A smooth
+After SeungHun's 0531 posterized thermal gradient and 0519-1's contours. A smooth
 field (sine waves, each bent by the others: a cheap domain warp) flows and
 folds over time. It's cut into bands of equal height, each a flat colour from
 the palette, stepping round it, so the field reads as a contour map in bold
@@ -15,7 +15,7 @@ from .original import Chromatic
 
 class Isobands(Chromatic):
     name = "Isobands"
-    blurb = "A flowing field cut into terraces of flat colour (after Lee's 0531). k0 bands, k1 warp, k2 flow speed, k3 colour. Click k0 contour lines, k1 hold still, k2 terraces, k3 next palette."
+    blurb = "A flowing field cut into terraces of flat colour (after SeungHun's 0531). k0 bands, k1 warp, k2 flow speed, k3 colour. Click k0 contour lines, k1 hold still, k2 terraces, k3 next palette."
     palette = 1
 
     def __init__(self, rt):

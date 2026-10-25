@@ -1,6 +1,6 @@
 """Droste: a spiral of colour bands, zooming in for ever.
 
-After Lee's Chromatic Vortex. In log-polar coordinates (the logarithm of the
+After SeungHun's Chromatic Vortex. In log-polar coordinates (the logarithm of the
 distance from the centre, and the angle) a zoom is just a slide and a spiral
 is just a sloping line, so bands that slope across that plane become
 logarithmic spirals, and sliding them makes an endless zoom: each band grows
@@ -18,7 +18,7 @@ from .original import Chromatic
 
 class Droste(Chromatic):
     name = "Droste"
-    blurb = "Spiral bands of colour zooming in for ever (after Lee's Chromatic Vortex). k0 zoom speed (and reverse), k1 arms, k2 twist, k3 colour. Click k0 stop, k1 checker, k3 next palette."
+    blurb = "Spiral bands of colour zooming in for ever (after SeungHun's Chromatic Vortex). k0 zoom speed (and reverse), k1 arms, k2 twist, k3 colour. Click k0 stop, k1 checker, k3 next palette."
     palette = 4
 
     def __init__(self, rt):

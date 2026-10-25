@@ -1,6 +1,6 @@
 """Dial: concentric rings of coloured segments, turning like a combination lock.
 
-After Lee's 0614, its rings. Eight rings, each cut into its own number of
+After SeungHun's 0614, its rings. Eight rings, each cut into its own number of
 segments in a run of palette colours, turn at their own speeds, some each
 way, so the segments slide past each other in shifting patterns. Every so
 often (click k0, or each phrase of the music) the lock "opens": every ring
@@ -19,7 +19,7 @@ RINGS = 8
 
 class Dial(Chromatic):
     name = "Dial"
-    blurb = "Concentric rings of coloured segments turning like a combination lock (after Lee's 0614). k0 speed, k1 segments, k2 rings, k3 colour. Click k0 open the lock, k3 next palette."
+    blurb = "Concentric rings of coloured segments turning like a combination lock (after SeungHun's 0614). k0 speed, k1 segments, k2 rings, k3 colour. Click k0 open the lock, k3 next palette."
     palette = 4
 
     def __init__(self, rt):

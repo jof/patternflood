@@ -1,6 +1,6 @@
 """Truchet: a maze of arc tiles whose paths reroute as tiles spin.
 
-After Lee's 0513, its grid of tile motifs. Each square holds two quarter
+After SeungHun's 0513, its grid of tile motifs. Each square holds two quarter
 circles joining the midpoints of its edges, one of two ways round, so across
 the grid the arcs join into endless winding paths. The regions between the
 paths take two colours that alternate in a way that stays continuous across
@@ -19,7 +19,7 @@ from .original import Chromatic
 
 class Truchet(Chromatic):
     name = "Truchet"
-    blurb = "A maze of arc tiles whose paths reroute as tiles spin (after Lee's 0513). k0 tile size, k1 spin rate, k2 ribbon width, k3 colour. Click k0 a wave of spins, k1 hold still, k2 fills, k3 next palette."
+    blurb = "A maze of arc tiles whose paths reroute as tiles spin (after SeungHun's 0513). k0 tile size, k1 spin rate, k2 ribbon width, k3 colour. Click k0 a wave of spins, k1 hold still, k2 fills, k3 next palette."
 
     def __init__(self, rt):
         super().__init__(rt)

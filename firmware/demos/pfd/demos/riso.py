@@ -1,6 +1,6 @@
 """Riso: a moving colour field, printed as halftone in three inks that never quite register.
 
-Lee's dithers are 1-bit; this is the print shop's version of the same idea.
+SeungHun's dithers are 1-bit; this is the print shop's version of the same idea.
 Each ink is a grid of dots at its own screen angle, every dot sized by the
 field's value at that cell's centre (area-true, so tones stay honest). The
 grids turn slowly against each other, so the rosettes and moiré between them
