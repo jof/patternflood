@@ -261,7 +261,22 @@ tag's `enclosure.fs` exactly. Designed, not yet built.
   4 spares).
 - **Five cut sheets**: the doubler has sheet 5 to itself.
 
-### PSU screw heads recessed (2026-10-25, after the `rev-2.3` tag)
+## Rev 2.4 — for cutting (2026-10-25)
+
+Git tag **`rev-2.4`**. Onshape version **"Rev 2.4 - for cutting"** (VERSION_ID),
+made from the main workspace once it matched the tag's `enclosure.fs` exactly.
+Rev 2.3 plus the PSU screw-head recesses below. This is the one to cut.
+
+**Before cutting it:** cut [`laser/test-cuts/since-rev-1/`](laser/test-cuts/since-rev-1/README.md)
+(`test_cuts_delta.py`, one 300 × 114 mm sheet). The full test set was last cut
+on 2026-10-18 and Rev 1 was built on it, so that sheet covers only what has
+changed since: the two-sheet knob stack with its light slits and dial (real
+bezel geometry), the Pi 5 template and M2.5 rings, the push-button keys, the
+PSU strip and its head-recess strip, a gauge for the new holes, and an etch
+sampler (the back cover's credits plate and QR code) to set the Score process
+on. Its README lists every change since rev 1 and what covers it.
+
+### PSU screw heads recessed
 
 - The bottom wall (the outer sheet) is cut **Ø7.5** round each of the PSU's two
   screws (`PSU_HEAD_RECESS`; 7.35 as cut), and the head clamps on the bottom

@@ -1106,12 +1106,14 @@ def generate(name, seed):
                      power=rng.random() < 0.05)
     pours(b, list(EGGS))
     QR_FOUND[name] = b.qrs
+    PLATES_FOUND[name] = b.plates
     return ents, allowed, b.score + vector_dots(b.engrave), []
 
 
 BEAM = 0.15          # what one scored line burns, roughly
 QR_FILL = 0.12       # QR dark-module fill pitch: a little under BEAM, so it burns in solid
 QR_FOUND = {}        # part -> [(message, box)], filled by generate(), checked by verify_qr()
+PLATES_FOUND = {}    # part -> [box of each plate (title block, credits)], filled by generate()
 # one real QR code per part: (text, module size mm). Phone cameras read 0.8 mm modules fine.
 QR_MESSAGES = {
     "back-cover.dxf": ("PATTERNFLOOD DESKTOP / REV 2.3 / 2026 - 128x128 P2 GOB - RASPBERRY PI 5 + COLORLIGHT 5A-75B "

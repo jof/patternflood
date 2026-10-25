@@ -497,10 +497,14 @@ def main():
           "colour**: **red = Cut**, **blue = Score** — all of the art, dots included (they are tight "
           "concentric circles that burn in solid: a raster engrave of thousands of dots would run "
           "line by line over the whole part). Make sure the score runs **before** the cut, so nothing "
-          "has moved when the art goes on; check the order in the processing list. It is a lot of "
-          "line: ~94 m on the back cover, ~24 m on the bezel, ~9–12 m per wall — budget roughly "
-          "20–30 min for sheet 2 and 5–15 for sheets 1 and 3 at a typical score speed. Try the score "
-          "settings on an offcut of the same stock first: you want a fine, even, light line. The art faces up on the bed, which "
+          "has moved when the art goes on: each colour imports as its own layer, so drag the blue "
+          "layer above the red one and set the processing order to **by layer**. XCS does not keep "
+          "settings with a colour, only with the objects, so set both layers up once per sheet and "
+          "save that as a project (.xcs) to reopen, rather than re-importing. It is a lot of "
+          "line: ~101 m on the back cover, ~23 m on the bezel, ~10–12 m per wall — budget roughly "
+          "20–30 min for sheet 2 and 5–15 for sheets 1 and 3 at a typical score speed. Set the score "
+          "settings on test piece 16 first (`../test-cuts/since-rev-1/`): you want a fine, even, light "
+          "line and a QR code that scans. The art faces up on the bed, which "
           "is the outside face. Skip it by loading the DXF instead: same cuts.",
           "- **Cut the test sheet first** ([`../test-cuts/`](../test-cuts/README.md), a 12 × 12) if you "
           "haven't, or after any change of stock.",
