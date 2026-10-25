@@ -10,9 +10,9 @@ a dense, generated circuit board meant to be looked at for a long time: on a
 1.27 mm grid, QFP / BGA / SOIC chips with their fan-out, passives, headers,
 crystals, test points, fiducials, spiral inductors, Hilbert meanders,
 length-matched serpentines, wide power traces, parallel buses, silkscreen
-designators in a single-stroke font (artfont.py), and the leftover space
-filled with hatch, cross-hatch, topographic contours or stipple — or left empty
-on purpose. Hidden in it: a real QR code per part (it scans; see QR_MESSAGES), a space
+designators in a single-stroke plotter font and plates in IBM Plex Mono
+(artfont.py), and the leftover space filled with hatch, cross-hatch,
+topographic contours or stipple — or left empty on purpose. Hidden in it: a real QR code per part (it scans; see QR_MESSAGES), a space
 invader, a Lissajous figure, and tiny words in some of the empty spaces. The back cover
 carries a credits plate with a QR code to patternflow.work, and each push button on
 the left wall gets a halo ring just outside its head. On the
@@ -35,8 +35,9 @@ and art/preview.png. nest_sheets.py picks the etch files up and puts the art on
 the sheets, in sheets/sheet-N.svg.
 
 Seeded per part: re-running gives the same art. Change SEED to re-roll.
-Needs shapely, Pillow and segno (QR encoding); zxing-cpp, if installed, checks
-that every QR code decodes from the score lines actually drawn.
+Needs shapely, Pillow, fontTools (artfont) and segno (QR encoding); zxing-cpp,
+if installed, checks that every QR code decodes from the score lines actually
+drawn.
 """
 import math
 import os
@@ -664,6 +665,7 @@ class Board:
         x1, y1 = self.xy((i + cw, j + ch))
         self.rect(x0, y0, x1, y1)
         self.rect(x0 + 0.6, y0 + 0.6, x1 - 0.6, y1 - 0.6)
+        self.geoms.append(box(x0, y0, x1, y1))                      # pours keep out of the block
         y = y1 - 2.4 - h
         for s in lines:
             self.label(s, x0 + 2, y, h)
@@ -833,8 +835,8 @@ def generate(name, seed):
     if name.startswith("back-cover"):
         b.title_block(["PATTERNFLOOD / DESKTOP", "REV 2.2  2026-10", "128 X 128  P2 GOB X4", "PI 5 + 5A-75B",
                        "LRS-50-5  5V 10A", "BIRCH 3.18  KERF 0.15"])
-        b.credits(["MADE BY JOF", "JOF@THEJOF.COM", "INSPIRED BY PATTERNFLOW", "BY SEUNGHUN LEE",
-                   "PATTERNFLOW.WORK"], "https://patternflow.work/")
+        b.credits(["Made by jof", "jof@thejof.com", "Inspired by Patternflow", "by SeungHun Lee",
+                   "patternflow.work"], "https://patternflow.work/")
     if name.startswith("bezel"):
         b.lissajous(11)
     msg, mod = QR_MESSAGES.get(name, ("PATTERNFLOOD", 0.8))
