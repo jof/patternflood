@@ -130,8 +130,10 @@ then tag `rev-2.1` and make the Onshape version.
 
 Git tag **`rev-2.2`**. Onshape version **"Rev 2.2"** (`ce56787b0137070520ec6a19`),
 made from the main workspace once it matched `enclosure.fs` exactly. Includes
-Rev 2.1 (the knob light slits), which got no tag or version of its own. Designed,
-not yet built.
+Rev 2.1 (the knob light slits), which got no tag or version of its own, and the
+etch font below. The Onshape version was made just before the font change, so
+it shows the old plate lettering; the geometry is the same, and the main
+workspace has the new decals. Designed, not yet built.
 
 **Three push buttons**, a vertical row high on the **left wall**: 12 mm
 waterproof momentaries, the VanMoof S3 boost button (Amazon B07F24Y1TB has the
