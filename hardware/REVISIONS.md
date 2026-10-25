@@ -164,19 +164,24 @@ for byte, and the three that had been patched by script (`bezel-outer` from
 Rev 2.1, `wall-left` and its doubler) geometrically identical (same entities,
 cut length and regions); the exported files are now the ones in the repo.
 `decals.py` re-uploaded all five art images; every decal attaches. 
+
 ### Etch font (2026-10-25, after the `rev-2.2` tag)
 
-The 4 × 6-grid stroke font is gone. `artfont.py` now sets text in two faces:
+`artfont.py` now sets text in two faces, by size:
 
-- **IBM Plex Mono Medium** (SIL OFL), for anything 1.3 mm tall or more: the
-  title block and the credits plate, now in mixed case. Each glyph outline is
-  filled solid with score lines 0.12 mm apart, like the QR codes, plus one pass
+- **Under 1.3 mm** (the silkscreen designators, chip names, hidden words): the
+  original 4 × 6-grid single-stroke font, unchanged, one beam pass per stroke.
+  Ideal that small, where any filled face breaks up.
+- **1.3 mm and up** (the title block and the credits plate, now in mixed
+  case): **JetBrains Mono Medium** (SIL OFL), filled solid. Each glyph outline
+  is filled with score lines 0.12 mm apart, like the QR codes, plus one pass
   round its edge, inset half a beam so the burn lands on the drawn outline.
-- **Hershey Sans 1-stroke**, below 1.3 mm: the silkscreen designators, chip
-  names and hidden words. A filled face breaks up at that size, so these use a
-  single-stroke plotter font, the way real PCB silkscreen does.
+  Fills follow the nonzero rule, as TrueType does (the variable font's 8 is
+  two self-intersecting contours).
 
-Both files are in `hardware/cad/tools/fonts/` with their licences. To try
-another face (Berkeley Mono, if bought), point `artfont.FONT` at its file. Art
-re-run, then the sheets re-nested and the decals re-uploaded, all with clean
-checks and every QR decoding. Only the etching changed; the cut paths did not.
+The font file is in `hardware/cad/tools/fonts/` with its licence. To try
+another face (Berkeley Mono, if bought), point `artfont.FONT` at its file.
+Designators now keep off the title block and credits plate. Only the back
+cover's art changed; the bezel's and walls' are byte-identical to `rev-2.2`, and
+so are the cut paths. Art re-run, sheets re-nested, decals re-uploaded: checks
+clean, every QR decodes, every decal attaches.

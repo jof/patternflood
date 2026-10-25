@@ -1,39 +1,93 @@
-"""Laser-scored text: IBM Plex Mono Medium for anything 1.3 mm tall or more,
-Hershey Sans 1-stroke below that.
+"""Laser-scored text in two faces, by size.
 
-Each glyph's outline (fonts/, SIL OFL) is flattened and filled with horizontal
-score lines FILL apart, a little closer than the beam is wide, so it burns in
-solid like the QR codes, with one pass round its edge for a crisp outline. The
-fill is inset half a beam so the burn lands on the drawn outline. Strokes too
-thin to survive that inset (small text) are filled without it, both ways, so
-they burn a touch bold rather than vanish.
+Under BIG (1.3 mm cap height), a tiny single-stroke font on a 4 x 6 grid
+(y up; each glyph a list of polylines; characters advance 6 units, 4 wide + 2
+space, so text of height h is h per char). Scored, a stroke is one pass of the
+beam: legible down to ~0.8 mm on birch, where any filled face breaks up. The
+silkscreen designators, chip names and hidden words are this size.
 
-Under STROKE_BELOW a filled face is only a few scan lines tall and breaks up, so
-small text (the silkscreen designators, the hidden words) is set the way a real
-PCB's silkscreen is: in a single-stroke plotter font, one beam pass per stroke
-(Hershey Sans 1-stroke, fonts/HersheySans1.svg, its acknowledgements in the
-file). Legible down to ~0.8 mm.
+From BIG up, JetBrains Mono Medium (fonts/, SIL OFL): each glyph's outline is
+flattened and filled with horizontal score lines FILL apart, a little closer
+than the beam is wide, so it burns in solid like the QR codes, with one pass
+round its edge. The fill is inset half a beam so the burn lands on the drawn
+outline; strokes too thin for that inset are filled without it, both ways. The
+title block and the credits plate are this size.
 
-Same interface as before: text() returns score segments [("L", p, q)], width()
-the advance. To try another face, point FONT at any TTF/OTF (a variable font
-takes AXES); the layout follows its metrics.
+text() returns score segments [("L", p, q)], width() the rendered width. To try
+another face, point FONT at any TTF/OTF (a variable font takes AXES).
 """
 import functools
 import os
-import re
 
 from fontTools.pens.basePen import BasePen
 from fontTools.ttLib import TTFont
 from shapely.geometry import LineString, Polygon
-from shapely.ops import unary_union
+from shapely.ops import polygonize, unary_union
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-FONT = os.path.join(HERE, "fonts", "IBMPlexMono-Medium.ttf")
-AXES = {}                # e.g. {"wght": 450, "wdth": 100} for a variable font
-STROKE = os.path.join(HERE, "fonts", "HersheySans1.svg")
-STROKE_BELOW = 1.3       # mm cap height: smaller text is set in the stroke font
+FONT = os.path.join(HERE, "fonts", "JetBrainsMono.ttf")
+AXES = {"wght": 500}     # Medium
+BIG = 1.3                # mm cap height: from here up, text is set in FONT
 BEAM = 0.15              # what one scored line burns (art.py's BEAM)
 FILL = 0.12              # fill pitch: under the beam, so it burns in solid
+
+G = {
+    "0": [[(0, 1), (0, 5), (1, 6), (3, 6), (4, 5), (4, 1), (3, 0), (1, 0), (0, 1)], [(0, 1), (4, 5)]],
+    "1": [[(1, 5), (2, 6), (2, 0)], [(1, 0), (3, 0)]],
+    "2": [[(0, 5), (1, 6), (3, 6), (4, 5), (4, 4), (0, 0), (4, 0)]],
+    "3": [[(0, 5), (1, 6), (3, 6), (4, 5), (4, 4), (3, 3), (1, 3)],
+          [(3, 3), (4, 2), (4, 1), (3, 0), (1, 0), (0, 1)]],
+    "4": [[(3, 0), (3, 6), (0, 2), (4, 2)]],
+    "5": [[(4, 6), (0, 6), (0, 3), (3, 3), (4, 2), (4, 1), (3, 0), (0, 0)]],
+    "6": [[(4, 5), (3, 6), (1, 6), (0, 5), (0, 1), (1, 0), (3, 0), (4, 1), (4, 2), (3, 3), (0, 3)]],
+    "7": [[(0, 6), (4, 6), (1, 0)]],
+    "8": [[(1, 3), (0, 4), (0, 5), (1, 6), (3, 6), (4, 5), (4, 4), (3, 3), (1, 3), (0, 2), (0, 1), (1, 0),
+           (3, 0), (4, 1), (4, 2), (3, 3)]],
+    "9": [[(0, 1), (1, 0), (3, 0), (4, 1), (4, 5), (3, 6), (1, 6), (0, 5), (0, 4), (1, 3), (4, 3)]],
+    "A": [[(0, 0), (0, 4), (2, 6), (4, 4), (4, 0)], [(0, 3), (4, 3)]],
+    "B": [[(0, 0), (0, 6), (3, 6), (4, 5), (4, 4), (3, 3), (0, 3)], [(3, 3), (4, 2), (4, 1), (3, 0), (0, 0)]],
+    "C": [[(4, 5), (3, 6), (1, 6), (0, 5), (0, 1), (1, 0), (3, 0), (4, 1)]],
+    "D": [[(0, 0), (0, 6), (2, 6), (4, 4), (4, 2), (2, 0), (0, 0)]],
+    "E": [[(4, 6), (0, 6), (0, 0), (4, 0)], [(0, 3), (3, 3)]],
+    "F": [[(4, 6), (0, 6), (0, 0)], [(0, 3), (3, 3)]],
+    "G": [[(4, 5), (3, 6), (1, 6), (0, 5), (0, 1), (1, 0), (3, 0), (4, 1), (4, 3), (2, 3)]],
+    "H": [[(0, 0), (0, 6)], [(4, 0), (4, 6)], [(0, 3), (4, 3)]],
+    "I": [[(1, 6), (3, 6)], [(2, 6), (2, 0)], [(1, 0), (3, 0)]],
+    "J": [[(4, 6), (4, 1), (3, 0), (1, 0), (0, 1)]],
+    "K": [[(0, 0), (0, 6)], [(4, 6), (0, 2)], [(1, 3), (4, 0)]],
+    "L": [[(0, 6), (0, 0), (4, 0)]],
+    "M": [[(0, 0), (0, 6), (2, 3), (4, 6), (4, 0)]],
+    "N": [[(0, 0), (0, 6), (4, 0), (4, 6)]],
+    "O": [[(1, 0), (0, 1), (0, 5), (1, 6), (3, 6), (4, 5), (4, 1), (3, 0), (1, 0)]],
+    "P": [[(0, 0), (0, 6), (3, 6), (4, 5), (4, 4), (3, 3), (0, 3)]],
+    "Q": [[(1, 0), (0, 1), (0, 5), (1, 6), (3, 6), (4, 5), (4, 1), (3, 0), (1, 0)], [(2, 2), (4, 0)]],
+    "R": [[(0, 0), (0, 6), (3, 6), (4, 5), (4, 4), (3, 3), (0, 3)], [(2, 3), (4, 0)]],
+    "S": [[(4, 5), (3, 6), (1, 6), (0, 5), (0, 4), (1, 3), (3, 3), (4, 2), (4, 1), (3, 0), (1, 0), (0, 1)]],
+    "T": [[(0, 6), (4, 6)], [(2, 6), (2, 0)]],
+    "U": [[(0, 6), (0, 1), (1, 0), (3, 0), (4, 1), (4, 6)]],
+    "V": [[(0, 6), (2, 0), (4, 6)]],
+    "W": [[(0, 6), (1, 0), (2, 3), (3, 0), (4, 6)]],
+    "X": [[(0, 0), (4, 6)], [(0, 6), (4, 0)]],
+    "Y": [[(0, 6), (2, 3), (4, 6)], [(2, 3), (2, 0)]],
+    "Z": [[(0, 6), (4, 6), (0, 0), (4, 0)]],
+    "-": [[(1, 3), (3, 3)]],
+    ".": [[(1.6, 0), (2.4, 0), (2.4, 0.8), (1.6, 0.8), (1.6, 0)]],
+    "/": [[(0, 0), (4, 6)]],
+    ":": [[(1.6, 1), (2.4, 1), (2.4, 1.8), (1.6, 1.8), (1.6, 1)], [(1.6, 4), (2.4, 4), (2.4, 4.8), (1.6, 4.8), (1.6, 4)]],
+    "#": [[(1, 0), (1, 6)], [(3, 0), (3, 6)], [(0, 2), (4, 2)], [(0, 4), (4, 4)]],
+    "+": [[(2, 1), (2, 5)], [(0, 3), (4, 3)]],
+    "_": [[(0, 0), (4, 0)]],
+    "=": [[(0, 2), (4, 2)], [(0, 4), (4, 4)]],
+    ">": [[(0, 6), (4, 3), (0, 0)]],
+    "<": [[(4, 6), (0, 3), (4, 0)]],
+    "[": [[(3, 6), (1, 6), (1, 0), (3, 0)]],
+    "]": [[(1, 6), (3, 6), (3, 0), (1, 0)]],
+    "*": [[(2, 1), (2, 5)], [(0, 2), (4, 4)], [(0, 4), (4, 2)]],
+    "'": [[(2, 6), (2, 4.5)]],
+    "@": [[(3, 2), (3, 4), (1.5, 4), (1, 3.5), (1, 2.5), (1.5, 2), (3, 2), (4, 2.5), (4, 5), (3, 6), (1, 6),
+           (0, 5), (0, 1), (1, 0), (4, 0)]],
+    " ": [],
+}
 
 
 class _Flatten(BasePen):
@@ -102,6 +156,31 @@ def _hatch(region, vertical=False):
     return out
 
 
+def _winding(p, ring):
+    """Winding number of closed ring round point p."""
+    w = 0
+    x, y = p
+    for (x0, y0), (x1, y1) in zip(ring, ring[1:] + ring[:1]):
+        if y0 <= y < y1 and (x1 - x0) * (y - y0) - (x - x0) * (y1 - y0) > 0:
+            w += 1
+        elif y1 <= y < y0 and (x1 - x0) * (y - y0) - (x - x0) * (y1 - y0) < 0:
+            w -= 1
+    return w
+
+
+def _nonzero(rings):
+    """The area a set of contours fills under the nonzero rule, as TrueType does.
+
+    A variable font keeps overlapping and even self-intersecting contours (its
+    8 is two of them), so node every edge into faces and keep each face whose
+    winding number is not zero."""
+    if not rings:
+        return Polygon()
+    edges = unary_union([LineString(r + r[:1]) for r in rings])
+    keep = [f for f in polygonize(edges) if sum(_winding(f.representative_point().coords[0], r) for r in rings)]
+    return unary_union(keep) if keep else Polygon()
+
+
 @functools.lru_cache(maxsize=None)
 def _glyph(ch, h):
     """Score segments for one character at cap height h, origin at its baseline-left."""
@@ -110,9 +189,8 @@ def _glyph(ch, h):
     pen = _Flatten(gs)
     gs[name].draw(pen)
     k = h / cap
-    shape = Polygon()
-    for ring in pen.rings:            # nonzero/even-odd alike for these fonts: XOR the contours
-        shape = shape.symmetric_difference(Polygon([(x * k, y * k) for x, y in ring]).buffer(0))
+    rings = [[(x * k, y * k) for x, y in ring] for ring in pen.rings]
+    shape = _nonzero(rings)
     if shape.is_empty:
         return ()
     core = shape.buffer(-BEAM / 2)
@@ -130,73 +208,28 @@ def _glyph(ch, h):
     return tuple(segs)
 
 
-class _Lines(_Flatten):
-    """A stroke glyph's path -> open polylines (font units)."""
-
-    def _closePath(self):
-        if len(self.cur) > 1:
-            self.rings.append(self.cur)
-        self.cur = []
-
-    _endPath = _closePath
-
-    def _moveTo(self, p):
-        self._closePath()
-        self.cur = [p]
-
-
-@functools.lru_cache(maxsize=None)
-def _stroke_font():
-    """{char: (polylines in font units, advance)}, and the cap height (the H's top)."""
-    from fontTools.svgLib.path import parse_path
-    src = open(STROKE).read()
-    ents = {"&amp;": "&", "&quot;": '"', "&lt;": "<", "&gt;": ">", "&apos;": "'"}
-    glyphs = {}
-    for m in re.finditer(r"<glyph\b([^>]*)>", src):
-        a = m.group(1)
-        u = re.search(r'unicode="([^"]*)"', a)
-        if not u:
-            continue
-        ch = ents.get(u.group(1), u.group(1))
-        if len(ch) != 1:
-            continue
-        d = re.search(r'\bd="([^"]*)"', a)
-        pen = _Lines(None, steps=6)
-        if d:
-            parse_path(d.group(1), pen)
-            pen._closePath()
-        lines = pen.rings
-        if ch in ".,:;":      # Hershey's sit 94.5 up, reading as a middle dot: drop them onto the baseline
-            lines = [[(px, py - 94.5) for px, py in line] for line in lines]
-        glyphs[ch] = (lines, float(re.search(r'horiz-adv-x="([\d.]+)"', a).group(1)))
-    cap = max(p[1] for line in glyphs["H"][0] for p in line)
-    return glyphs, cap
-
-
-def _stroked(s, x, y, h):
-    glyphs, cap = _stroke_font()
-    k = h / cap
+def _grid_text(s, x, y, h):
+    k = h / 6
     out = []
-    for ch in s:
-        lines, adv = glyphs.get(ch, glyphs["?"])
-        for line in lines:
-            pts = [(x + px * k, y + py * k) for px, py in line]
+    for i, ch in enumerate(s.upper()):
+        for stroke in G.get(ch, G["*"]):
+            pts = [(x + (6 * i + px) * k, y + py * k) for px, py in stroke]
             out += [("L", a, b) for a, b in zip(pts, pts[1:])]
-        x += adv * k
     return out
 
 
 def advance(h):
-    """Distance from one character to the next at cap height h (the filled, monospaced face)."""
+    """Distance from one character to the next at cap height h."""
+    if h < BIG:
+        return h
     _, _, cap, adv = _font()
     return adv * h / cap
 
 
 def width(s, h):
     """Rendered width of s at cap height h (no trailing space)."""
-    if h < STROKE_BELOW:
-        glyphs, cap = _stroke_font()
-        return sum(glyphs.get(ch, glyphs["?"])[1] for ch in s) * h / cap
+    if h < BIG:
+        return max(0.0, (6 * len(s) - 2) * h / 6)
     return max(0.0, (len(s) - 0.15) * advance(h))
 
 
@@ -205,8 +238,8 @@ def text(s, x, y, h, anchor="left"):
     if anchor == "center":
         x -= width(s, h) / 2
         y -= h / 2
-    if h < STROKE_BELOW:
-        return _stroked(s, x, y, h)
+    if h < BIG:
+        return _grid_text(s, x, y, h)
     a = advance(h)
     out = []
     for i, ch in enumerate(s):

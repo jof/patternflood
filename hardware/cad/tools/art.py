@@ -175,6 +175,7 @@ class Board:
         self.geoms = []                       # what the pours must keep clear of
         self.refs = {}
         self.qrs = []                         # (message, box) of each QR code, to verify
+        self.plates = []                      # title block, credits: labels keep off them
 
     # ── primitives ──
     def xy(self, n):
@@ -223,7 +224,8 @@ class Board:
 
     def label_fits(self, s, x, y, h):
         w = artfont.width(s, h)
-        return self.pcore.contains(box(x, y, x + w, y + h))
+        b = box(x, y, x + w, y + h)
+        return self.pcore.contains(b) and not any(p.intersects(b.buffer(0.3)) for p in self.plates)
 
     # ── cells ──
     def cells_free(self, i0, j0, i1, j1):
@@ -666,6 +668,7 @@ class Board:
         self.rect(x0, y0, x1, y1)
         self.rect(x0 + 0.6, y0 + 0.6, x1 - 0.6, y1 - 0.6)
         self.geoms.append(box(x0, y0, x1, y1))                      # pours keep out of the block
+        self.plates.append(box(x0, y0, x1, y1))
         y = y1 - 2.4 - h
         for s in lines:
             self.label(s, x0 + 2, y, h)
@@ -696,6 +699,7 @@ class Board:
         self.rect(x0, y0, x1, y1)
         self.rect(x0 + 0.6, y0 + 0.6, x1 - 0.6, y1 - 0.6)
         self.geoms.append(box(x0, y0, x1, y1))                      # nothing else inside the plate
+        self.plates.append(box(x0, y0, x1, y1))
         self.qr_at(url, x0 + 1.2, (y0 + y1 - side) / 2, module, quiet)
         tx = x0 + 1.2 + side
         y = (y0 + y1) / 2 + (len(lines) * h * 1.7 - 0.7 * h) / 2 - h

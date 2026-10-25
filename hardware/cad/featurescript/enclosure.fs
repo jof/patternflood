@@ -11,11 +11,11 @@ LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "cc40456c8213d35e9d39
 // The etched art, as images for decals on the outer faces (tools/art.py
 // renders them, tools/decals.py uploads them and rewrites this block).
 // ART IMPORTS BEGIN — written by tools/decals.py
-ArtBezelOuter::import(path : "669f5ff90ec051aa8533859d", version : "a84f4f3aba8ae351f0512659");
-ArtWallLeft::import(path : "6770a70595bb6770e346f98b", version : "d8c56eaa3adfcd24ad40f7ef");
-ArtWallRight::import(path : "f594dee1c28d8c4c2048360d", version : "4c7742da00dff7f5c047fed2");
-ArtWallTop::import(path : "d58d302d5216cc1a0cdf491c", version : "53a43e1d3b33d79d8cc65e58");
-ArtBackCover::import(path : "7d8f74de8d66542a9f28ae5b", version : "88a2cd949f6a4e2da4aec160");
+ArtBezelOuter::import(path : "669f5ff90ec051aa8533859d", version : "cb27543b828657485f99ede7");
+ArtWallLeft::import(path : "6770a70595bb6770e346f98b", version : "731af26e067a077d199d563f");
+ArtWallRight::import(path : "f594dee1c28d8c4c2048360d", version : "149220be834bf5b3d0d62657");
+ArtWallTop::import(path : "d58d302d5216cc1a0cdf491c", version : "8b1b712edb57a806db236e25");
+ArtBackCover::import(path : "7d8f74de8d66542a9f28ae5b", version : "dd9d8f6e82c7453988e736a8");
 // ART IMPORTS END
 
 /**
