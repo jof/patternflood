@@ -445,8 +445,8 @@ changes palette when clicked. The palettes are `pfd/hues.py`'s cosine gradients
 | **Moiré** | pf 0515 | Two or three gratings of thin lines (or rings, or dots), each in its own colour, turning together but a few degrees apart, so broad fringes in none of the layers sweep across, and colours add where lines coincide. | k0 pitch; k1 turn speed; k2 pattern; k3 colour. Click: k0 thick lines, k1 a third layer, k3 next palette. |
 | **Copper** | pf 0511 | Amiga copper bars, each a bright-centred gradient, rolling on staggered sine paths (front ones drawn over back ones) over a dim plasma, with a rainbow sine scroller sending greetings. | k0 bars; k1 bounce speed; k2 scroll speed; k3 colour. Click: k0 plasma, k2 scroller, k3 next palette. |
 | **Streams** | pf Vector Field Flow | Eighteen hundred particles riding a curl-noise flow, each leaving a trail on a fading canvas in its colour (by birthplace, or by heading), so the flow is drawn as silky combed strands. | k0 speed; k1 swirl size; k2 trail length; k3 colour. Click: k0 a new flow, k1 colour by heading or birthplace, k3 next palette. |
-| **Girih** | pf 0514 | A zellij of eight-pointed stars ({8/3}, or the star-and-cross {8/2}) with white strapwork and inner rosettes. Each pixel is folded into one sixteenth of its cell, where the star is a single edge; colours flow over the tiles in a diagonal wave. | k0 tile size; k1 star; k2 strap width; k3 colour. Click: k1 inner rosettes, k3 next palette. |
-| **Marbling** | pf 0520 | Paper marbling, exactly (Jaffer and Lu): each ink drop spreads and pushes the older ink out into rings, keeping its area; combs drag it all into feathered chevrons. The tray keeps its history of drops and strokes, and each pixel is traced back through them. | k0 drop size; k1 drop rate; k2 comb spacing; k3 colour. Click: k0 fresh tray, k1 a big drop, k2 comb it, k3 next palette. |
+| **Girih** | pf 0514 | Star tilings with white strapwork and inner rosettes that morph from one star to the next: {n/k} stars of 8, 16, 4, 6, 12 and 10 points, on a square or hexagonal lattice to suit. Each pixel is folded into one mirrored wedge, where the star is a single edge, so k (sharpness) turns smoothly from polygon to spike and a change of star blends the outlines (or dissolves, when the lattice changes). Left alone it moves on every 12 s. | k0 tile size; k1 star (morphs); k2 sharpness; k3 colour. Click: k0 strap width, k1 auto morph, k2 inner rosettes, k3 next palette. |
+| **Marbling** | pf 0520 | Paper marbling, exactly (Jaffer and Lu): each ink drop spreads and pushes the older ink out into rings, keeping its area; combs drag it all into feathered chevrons. The tray keeps its recent drops and strokes (older ones are baked into a stored picture, so nothing pops), each pixel is traced back through them at four sample points for smooth edges, and new drops swell into place. | k0 drop size; k1 drop rate; k2 comb spacing; k3 colour. Click: k0 fresh tray, k1 a big drop, k2 comb it, k3 next palette. |
 | **Dial** | pf 0614 | Eight rings of coloured segments turning each their own way, like a combination lock; now and then (click k0, or each phrase) every ring eases round until its seams line up, and it flashes open. | k0 speed; k1 segments; k2 rings; k3 colour. Click: k0 open the lock, k3 next palette. |
 
 ## Speed
@@ -462,14 +462,13 @@ Measured per frame on ash:
   0.6 ms, Orrery 0.6 ms, Quasicrystal 0.6 ms, Ribbons 0.6 ms, Spiro 0.6 ms, Bit Tunnel 0.7 ms,
   Droste 0.7 ms, Isobands 0.7 ms, Chroma Waves 0.8 ms, Grove 0.8 ms, Jellyfish 0.8 ms, Flock
   0.9 ms, Wallpaper 0.9 ms, Guilloche 1.0 ms, Gears 1.1 ms, Pendulums 1.1 ms, Plankton 1.1 ms,
-  Hex Pulse 1.2 ms, Radar 1.2 ms, Tesla 1.2 ms, Marbling 1.5 ms, Zen 1.5 ms, Clock 1.6 ms,
-  Galaxy 1.6 ms, Girih 1.6 ms, Smoke 1.6 ms, Window 1.7 ms, Copper 1.8 ms, Dial 1.8 ms, Moon
-  1.9 ms, Riso 1.9 ms, Pixel Sort 2.0 ms, Caustics 2.1 ms, Weave 2.1 ms, Neon 2.2 ms, Strange
-  2.2 ms, Shore 2.3 ms, Truchet 2.3 ms, Cumulus 2.4 ms, Koi 2.5 ms, Valley 2.7 ms, Bonfire 2.8
-  ms, Sea 2.9 ms and Stained Glass 3.7 ms. **Helix takes 5.7 ms** (a hundred-odd sphere
-  impostors), **Obra 2.6–5.3 ms** depending on the form (octahedron fastest, metaballs
-  slowest), and **Mandel averages 8 ms**, rising with depth as more points take hundreds of
-  iterations.
+  Hex Pulse 1.2 ms, Radar 1.2 ms, Tesla 1.2 ms, Zen 1.5 ms, Clock 1.6 ms, Galaxy 1.6 ms, Smoke
+  1.6 ms, Window 1.7 ms, Copper 1.8 ms, Dial 1.8 ms, Moon 1.9 ms, Riso 1.9 ms, Pixel Sort 2.0
+  ms, Caustics 2.1 ms, Weave 2.1 ms, Neon 2.2 ms, Strange 2.2 ms, Shore 2.3 ms, Truchet 2.3 ms,
+  Cumulus 2.4 ms, Koi 2.5 ms, Valley 2.7 ms, Bonfire 2.8 ms, Girih 2.8 ms, Sea 2.9 ms, Stained
+  Glass 3.7 ms and Marbling 4.1 ms. **Helix takes 5.7 ms** (a hundred-odd sphere impostors),
+  **Obra 2.6–5.3 ms** depending on the form (octahedron fastest, metaballs slowest), and
+  **Mandel averages 8 ms**, rising with depth as more points take hundreds of iterations.
 
 The Pi 5 has 16.7 ms a frame at 60 fps and is a few times slower per core, so it should fit
 everything. If Reaction doesn't, turn its k2 (speed) down. Obra watches its own time: if

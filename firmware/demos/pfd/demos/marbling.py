@@ -7,7 +7,11 @@ rings round later ones. A comb dragged across draws everything along with
 it, most strongly near its tines, into feathered chevrons. All of it is
 exact (Jaffer and Lu's mathematical marbling): the tray keeps the list of
 drops and strokes, and each pixel is traced backwards through them to find
-which drop's ink it holds.
+which drop's ink it holds. Drops swell into place over a moment rather than
+appearing whole, so the ink around them is pushed aside smoothly, and the
+oldest operations are baked into a stored picture of the tray (traced into
+just the same way) instead of being forgotten, so nothing ever pops. Each
+pixel is traced at four points and averaged, so the ink's edges are smooth.
 """
 import math
 
@@ -16,7 +20,12 @@ import numpy as np
 from ..draw import N, X, Y
 from .original import Chromatic
 
-MAX_OPS = 48
+MAX_OPS = 14                # beyond this the oldest is baked into the stored tray
+SWELL_S = 0.3               # how fast a new drop swells to its size
+PAPER = (0.9, 0.88, 0.8)
+# four sample points per pixel (2 x 2), for smooth edges
+_SUB = (np.arange(N * 2, dtype=np.float32) + 0.5) / 2 - 0.5
+SX, SY = np.meshgrid(_SUB, _SUB)
 
 
 class Marbling(Chromatic):
@@ -28,7 +37,8 @@ class Marbling(Chromatic):
         super().__init__(rt)
         self.rng = np.random.default_rng()
         self.size, self.rate, self.spacing = 1.0, 1.0, 16.0
-        self.ops = []                       # ("drop", cx, cy, r, hue) or ("comb", angle, spacing, z, z_to, phase)
+        self.ops = []                       # ["drop", cx, cy, r, hue, r_now] or ["comb", angle, spacing, z, z_to, phase]
+        self.base = np.full((N, N), -1.0, np.float32)   # the tray before the oldest op still kept: ink hue, -1 paper
         self.n = 0
         self.t = 0.0
         self.next_drop = 0.0
@@ -40,7 +50,7 @@ class Marbling(Chromatic):
         cx, cy = r.uniform(10, 118), r.uniform(10, 118)
         rad = (r.uniform(9, 20) * self.size) * (2.0 if big else 1.0)
         self.n += 1
-        self.ops.append(("drop", cx, cy, rad, (self.n * 0.137) % 1))
+        self.ops.append(["drop", float(cx), float(cy), float(rad), (self.n * 0.137) % 1, 0.0])
         self.trim()
 
     def comb(self):
@@ -49,8 +59,13 @@ class Marbling(Chromatic):
         self.trim()
 
     def trim(self):
-        while len(self.ops) > MAX_OPS:      # the oldest ink is by now thin rings at the edges
-            self.ops.pop(0)
+        """Bake the oldest operations into the stored tray, so the list stays short without any ink
+        disappearing: the new base is the old base seen through the op being retired."""
+        while len(self.ops) > MAX_OPS:
+            op = self.ops.pop(0)
+            if op[0] == "drop":
+                op[5] = op[3]                # retire it at full size
+            self.base = self.trace([op], X.astype(np.float32).copy(), Y.astype(np.float32).copy())
 
     def turn(self, k, d):
         self.touch(k)
@@ -69,6 +84,7 @@ class Marbling(Chromatic):
         self.touch(k)
         if k == 0:
             self.ops = []
+            self.base[:] = -1
             for _ in range(4):
                 self.drop()
         elif k == 1:
@@ -92,16 +108,22 @@ class Marbling(Chromatic):
             self.drop()
         if self.on_phrase:
             self.comb()
-        for op in self.ops:                 # strokes are dragged through over a second or so
-            if op[0] == "comb" and op[3] < op[4]:
-                op[3] = min(op[4], op[3] + dt * 14)
-
-    def render(self):
-        px, py = X.astype(np.float32).copy(), Y.astype(np.float32).copy()
-        hue = np.full((N, N), -1.0, np.float32)
-        for op in reversed(self.ops):       # trace each pixel back through the tray's history
+        for op in self.ops:                 # drops swell into place; strokes are dragged through, easing
             if op[0] == "drop":
-                _, cx, cy, r, h = op
+                op[5] += (op[3] - op[5]) * (1 - math.exp(-dt / SWELL_S))
+            elif op[3] < op[4]:
+                op[3] += (op[4] - op[3]) * (1 - math.exp(-dt / 0.6)) + 0.5 * dt
+                op[3] = min(op[3], op[4])
+
+    def trace(self, ops, px, py):
+        """The ink hue (-1 for bare paper) at points (px, py): traced back through ops, newest
+        first, until a drop claims them; whatever's left is read from the stored tray."""
+        hue = np.full(px.shape, -1.0, np.float32)
+        for op in reversed(ops):
+            if op[0] == "drop":
+                _, cx, cy, _, h, r = op
+                if r < 0.05:
+                    continue
                 dx, dy = px - cx, py - cy
                 d2 = dx * dx + dy * dy
                 inside = (d2 < r * r) & (hue < 0)
@@ -116,9 +138,21 @@ class Marbling(Chromatic):
                 d = np.abs(dist - np.floor(dist) - 0.5) * lam    # distance to the nearest tine
                 shift = z * 0.5 ** (d / 3.0)
                 px, py = px - shift * mx, py - shift * my
-        paper = hue < 0
-        img = self.colour(np.where(paper, 0.0, hue))
-        img[paper] = (0.9, 0.88, 0.8)
+        left = hue < 0
+        xi, yi = np.rint(px[left]).astype(int), np.rint(py[left]).astype(int)
+        ok = (xi >= 0) & (xi < N) & (yi >= 0) & (yi < N)
+        from_base = np.full(xi.shape, -1.0, np.float32)
+        from_base[ok] = self.base[yi[ok], xi[ok]]
+        hue[left] = from_base
+        return hue
+
+    def render(self):
+        hue = self.trace(self.ops, SX.copy(), SY.copy())
+        # colours from a small table (256 hues and the paper) rather than per sample
+        lut = np.concatenate([self.colour(np.arange(256, dtype=np.float32) / 256), np.array([PAPER], np.float32)])
+        idx = np.where(hue < 0, 256, (hue * 256).astype(np.int32) % 256)
+        s = lut[idx]
+        img = (s[0::2, 0::2] + s[1::2, 0::2] + s[0::2, 1::2] + s[1::2, 1::2]) * 0.25   # four samples a pixel: smooth edges
         return np.clip(img * (1 + 0.15 * self.beat), 0, 1)
 
     def lights(self):
