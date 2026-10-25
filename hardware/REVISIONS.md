@@ -260,3 +260,17 @@ tag's `enclosure.fs` exactly. Designed, not yet built.
   NeoPixel through the whole ring of light slits. 8 on one small sheet (4 +
   4 spares).
 - **Five cut sheets**: the doubler has sheet 5 to itself.
+
+### PSU screw heads recessed (2026-10-25, after the `rev-2.3` tag)
+
+- The bottom wall (the outer sheet) is cut **Ø8** round each of the PSU's two
+  screws (`PSU_HEAD_RECESS`); the bottom doubler keeps its Ø4.45 hole
+  (`#psuHoleDia`), and the head and washer clamp on that. An M3 pan head
+  (≤ 2.4) on a 0.5 washer sits below the 3.18 sheet, so nothing stands proud of
+  the bottom and the box sits flat on a table.
+- **Screws: 2 × M3 × 8 + washers** (was M3 × 10): the path is now 3.18 of
+  doubler + 0.5 washer, leaving ~4.3 mm of thread, inside the PSU's 5 mm limit.
+- Only `wall-bottom.dxf` changed (and sheet 3); the nearest other cut is
+  12.8 mm from a recess.
+- Standing it flat closes the **intake vents** in the bottom wall: fine for a
+  while, but for long runs at brightness keep it on feet ≥ 8 mm as before.
