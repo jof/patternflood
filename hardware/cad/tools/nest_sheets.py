@@ -27,7 +27,10 @@ the laser cuts every path it is given. The labels are in the PNGs and README.
 If art.py has written etch art for a part (art/<part>.etch.dxf), it rides
 along with that part, turned and moved exactly as the part is, into
 sheet-N.svg: cut paths red, score lines blue, engraved dots filled black —
-one file, so the art cannot drift off its part. The DXFs stay cut-only.
+one file, so the art cannot drift off its part. The DXFs stay cut-only. For
+software that wants the cuts and the art as separate imports, the same sheet is
+also split into sheet-N-cut.svg and sheet-N-score.svg, each with identical
+registration marks at the corners of the cut area (reg_marks).
 
 Re-run after export_dxf.py whenever the model changes. If a part has grown and
 no longer fits, this fails loudly; fix the layout below.
@@ -387,11 +390,38 @@ def write_dxf(path, ents):
         fh.write("\n".join(L) + "\n")
 
 
+REG = 2.0           # mm, arm of each registration mark
+REG_COLOUR = "#00a000"
+
+
+def reg_marks(W, H):
+    """An L at each corner of the W x H working area, pointing in: the same in a
+    sheet's cut file and its score file, so both have the same bounding box and
+    line up exactly when aligned in the laser software. Inside the margin every
+    part keeps from the edge, so they touch nothing."""
+    out = []
+    for cx, cy, sx, sy in ((0, 0, 1, 1), (W, 0, -1, 1), (0, H, 1, -1), (W, H, -1, -1)):
+        for dx, dy in ((REG * sx, 0), (0, REG * sy)):
+            out.append(f'<line x1="{cx:.3f}" y1="{cy:.3f}" x2="{cx + dx:.3f}" y2="{cy + dy:.3f}" '
+                       f'stroke="{REG_COLOUR}" stroke-width="0.1" fill="none"/>')
+    return out
+
+
+def write_split_svgs(stem, page, area, cut, score, engrave):
+    """stem-cut.svg and stem-score.svg: the cuts alone and the art alone, on the
+    same page, each with the same registration marks round `area` (W, H)."""
+    from art import svg_body, write_svg       # art.py imports this module; import late
+    write_svg(stem + "-cut.svg", *page, svg_body(cut, [], []) + reg_marks(*area))
+    write_svg(stem + "-score.svg", *page, svg_body([], score, engrave) + reg_marks(*area))
+
+
 def write_sheet_svg(path, ents, arts):
     from art import svg_body, write_svg       # art.py imports this module; import late
     score = [e[:3] for a in arts for e in a if e[3] == "SCORE"]
     engrave = [e[:3] for a in arts for e in a if e[3] == "ENGRAVE"]
     write_svg(path, SHEET_L, SHEET_W, svg_body(ents, score, engrave))
+    if score or engrave:
+        write_split_svgs(path[:-4], (SHEET_L, SHEET_W), (CUT_L, USE_W), ents, score, engrave)
 
 
 def preview(path, title, placed, labels, arts=None):
@@ -500,7 +530,12 @@ def main():
           "has moved when the art goes on: each colour imports as its own layer, so drag the blue "
           "layer above the red one and set the processing order to **by layer**. XCS does not keep "
           "settings with a colour, only with the objects, so set both layers up once per sheet and "
-          "save that as a project (.xcs) to reopen, rather than re-importing. It is a lot of "
+          "save that as a project (.xcs) to reopen, rather than re-importing. **Or import the cuts and "
+          "the art separately**, `sheet-N-cut.svg` and `sheet-N-score.svg`: both carry the same green "
+          "L-marks at the corners of the cut area, so the two imports are the same size — select both, "
+          "**align left** and **align bottom**, and they are registered; then delete the green marks "
+          "(they sit in the 3 mm border, clear of every part, so nothing is lost if one is left in). "
+          "It is a lot of "
           "line: ~101 m on the back cover, ~23 m on the bezel, ~10–12 m per wall — budget roughly "
           "20–30 min for sheet 2 and 5–15 for sheets 1 and 3 at a typical score speed. Set the score "
           "settings on test piece 16 first (`../test-cuts/since-rev-1/`): you want a fine, even, light "

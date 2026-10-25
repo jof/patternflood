@@ -34,7 +34,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import art  # noqa: E402
 import test_cuts as T  # noqa: E402
-from nest_sheets import read_art, read_dxf  # noqa: E402
+from nest_sheets import read_art, read_dxf, write_split_svgs  # noqa: E402
 
 LASER = os.path.join(HERE, "..", "..", "laser")
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(LASER, "test-cuts", "since-rev-1")
@@ -206,9 +206,14 @@ def main():
         x, y, rot = placed[i]
         sheet += T.shift(T.rotate90(p["ents"])[0] if rot else p["ents"], x, y)
     T.write_dxf(os.path.join(OUT, "all-since-rev-1.dxf"), cut_only(sheet))
-    cut = [e[:-1] for e in sheet if e[-1] == CUT]
-    score = [e[:-1] for e in sheet if e[-1] in (SCORE, ART)]
-    art.write_svg(os.path.join(OUT, "all-since-rev-1.svg"), T.SHEET, used, art.svg_body(cut, score, []))
+    # the SVGs get a 3 mm border, so the registration marks clear the pieces packed to the edge
+    m = 3.0
+    page = (T.SHEET + 2 * m, used + 2 * m)
+    framed = T.shift(sheet, m, m)
+    cut = [e[:-1] for e in framed if e[-1] == CUT]
+    score = [e[:-1] for e in framed if e[-1] in (SCORE, ART)]
+    art.write_svg(os.path.join(OUT, "all-since-rev-1.svg"), *page, art.svg_body(cut, score, []))
+    write_split_svgs(os.path.join(OUT, "all-since-rev-1"), page, page, cut, score, [])
     T.render(os.path.join(OUT, "preview.png"), T.shift(sheet, 1.5, 1.5), (T.SHEET + 3, used + 3), k=4.0)
 
     changes = [
@@ -241,7 +246,9 @@ def main():
           "its own layer — set **red = Cut** and **blue = Score**, put the blue layer above the red one and "
           "process **by layer**, so all the scoring runs before anything is cut loose. XCS keeps those "
           "settings with the objects, not the colour: save the set-up as a project (.xcs) and reuse the "
-          "settings you settle on here for the box's sheets. The DXF "
+          "settings you settle on here for the box's sheets. Or import `all-since-rev-1-cut.svg` and "
+          "`all-since-rev-1-score.svg` separately: both have the same green corner marks, so select both, "
+          "align left and align bottom, and they register; then delete the marks. The DXF "
           "(`all-since-rev-1.dxf`) has the cuts and engraved labels only, no art, and is safe to cut even if "
           "the software ignores layers.", "",
           "Same 3 mm Baltic birch and the same settings as the box, or the results mean nothing.", "",
