@@ -114,8 +114,8 @@ back-cover art and sheet 2's SVG/PNG changed; the other parts regenerate
 byte-identical, and every QR still decodes. The back-cover decal is part of the
 `decals.py` step below.
 
-**Model sync pending.** The model
-change is in `enclosure.fs` but not pushed, and `bezel-outer.dxf` was patched to
+**Model sync: done 2026-10-25 with Rev 2.2, below.** At first the model
+change was in `enclosure.fs` but not pushed, and `bezel-outer.dxf` was patched to
 match it by a one-off script mirroring the FeatureScript exactly. To sync:
 
     python3 hardware/cad/tools/push.py          # the slits into the model
@@ -152,9 +152,11 @@ ends onto line ends when it finds holes (odd-angle arcs like the keyed holes
 were left open by the DXF's rounding). The bezel, right and top walls
 regenerate byte-identical.
 
-**Model sync.** `wall-left.dxf` and `wall-left-doubler.dxf` were patched by a
-script mirroring the FeatureScript, then
-`art.py` and `nest_sheets.py` re-run: sheets 2 and 3 changed. To sync: push
-`enclosure.fs`, re-export (must reproduce both left-wall DXFs: check git
-diff), run `decals.py` for the left-wall and back-cover decals, then tag
-`rev-2.2`.
+**Model sync — done (2026-10-25).** `push.py`: the studio
+compiles, all features OK. `export_dxf.py` then reproduces every DXF: 24 byte
+for byte, and the three that had been patched by script (`bezel-outer` from
+Rev 2.1, `wall-left` and its doubler) geometrically identical (same entities,
+cut length and regions); the exported files are now the ones in the repo.
+`decals.py` re-uploaded all five art images; every decal attaches. Still to do:
+tag `rev-2.2` (and `rev-2.1`, if it is to stay a separate point) once this is on
+main, and make the Onshape versions.
