@@ -263,7 +263,7 @@ tag's `enclosure.fs` exactly. Designed, not yet built.
 
 ## Rev 2.4 — for cutting (2026-10-25)
 
-Git tag **`rev-2.4`**. Onshape version **"Rev 2.4 - for cutting"** (VERSION_ID),
+Git tag **`rev-2.4`**. Onshape version **"Rev 2.4 - for cutting"** (`d0e91de0dd2db59d3d79cb53`),
 made from the main workspace once it matched the tag's `enclosure.fs` exactly.
 Rev 2.3 plus the PSU screw-head recesses below. This is the one to cut.
 
