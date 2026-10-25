@@ -13,7 +13,9 @@ length-matched serpentines, wide power traces, parallel buses, silkscreen
 designators in a single-stroke font (artfont.py), and the leftover space
 filled with hatch, cross-hatch, topographic contours or stipple — or left empty
 on purpose. Hidden in it: a real QR code per part (it scans; see QR_MESSAGES), a space
-invader, a Lissajous figure, and tiny words in some of the empty spaces. On the
+invader, a Lissajous figure, and tiny words in some of the empty spaces. The back cover
+carries a credits plate with a QR code to patternflow.work, and each push button on
+the left wall gets a halo ring just outside its head. On the
 bezel each knob gets a real dial: a 270-degree scale 0-10 with fine ticks,
 numerals, and the knob's name.
 
@@ -60,6 +62,8 @@ G = 1.27             # trace grid pitch: real PCB pitch (0.05")
 DIAL_R = 19.4        # dial scale radius: outside the knob's light slits (r 13-16.5, cut in the bezel)
 DIAL_KEEP = 22.5     # the dial, its numerals and name own r < this round each knob
 PAD = 0.9            # nodes and traces keep this far inside the allowed area (via ring 0.55)
+BTN_HALO = 9.8       # push buttons (BTN_* in enclosure.fs): rings just outside the 17.5 mm head
+BTN_KEEP = 11.5      # and the halo owns r < this round each button
 
 # part file -> seed. The bottom wall is the base: never seen, not etched.
 PARTS = {"bezel-outer.dxf": 11, "wall-left.dxf": 12, "wall-right-iec.dxf": 13,
@@ -79,9 +83,34 @@ def sampled(e, step=0.5):
             for k in range(n + 1)]
 
 
+def button_centres(holes):
+    """Centres of the push buttons' keyed holes: a 12.2 circle with flats 11.2 apart."""
+    out = []
+    for h in holes:
+        x0, y0, x1, y1 = h.bounds
+        w, ht = sorted([x1 - x0, y1 - y0])
+        if 10.5 < w < 11.5 and 11.5 < ht < 12.5:
+            out.append(((x0 + x1) / 2, (y0 + y1) / 2))
+    return out
+
+
 def part_regions(ents):
     """(outline polygon, [hole polygons], [knob centres])."""
-    lines = [LineString(sampled(e)) for e in ents]
+    # An arc at an odd angle (a keyed button hole, a knob slit) ends a hair off
+    # the line it meets, from the DXF's 4-decimal rounding: snap its ends onto
+    # the nearest line end, or polygonize leaves the hole open.
+    ends = [p for e in ents if e[0] == "L" for p in (e[1], e[2])]
+
+    def snap(p):
+        q = min(ends, key=lambda q: math.dist(p, q), default=p)
+        return q if math.dist(p, q) < 1e-3 else p
+
+    lines = []
+    for e in ents:
+        pts = sampled(e)
+        if e[0] == "A":
+            pts = [snap(pts[0])] + pts[1:-1] + [snap(pts[-1])]
+        lines.append(LineString(pts))
     rings = sorted((Polygon(p.exterior) for p in polygonize(unary_union(lines))), key=lambda p: -p.area)
     outline = rings[0]
     holes = [h for h in rings[1:] if h.within(outline.buffer(0.01))]
@@ -554,10 +583,7 @@ class Board:
         """A real, scannable QR code (segno, error correction M). Dark modules
         are filled solid with horizontal score lines a little closer than the
         beam is wide; the quiet zone round it is kept clear of every other mark."""
-        import segno
-        mat = [list(row) for row in segno.make(message, error="m", micro=False).matrix]
-        n = len(mat)
-        side = (n + 2 * quiet) * module
+        side = qr_side(message, module, quiet)
         cells = math.ceil(side / G) + 1
         at = self.spot(cells, cells, margin=1, tries=4000)
         if not at:
@@ -565,7 +591,14 @@ class Board:
             return
         i, j = at
         self.reserve(i - 1, j - 1, i + cells + 1, j + cells + 1)
-        x0, y0 = self.xy((i, j))
+        self.qr_at(message, *self.xy((i, j)), module, quiet)
+
+    def qr_at(self, message, x0, y0, module, quiet):
+        """Draw a QR code with its quiet zone's lower-left corner at (x0, y0)."""
+        import segno
+        mat = [list(row) for row in segno.make(message, error="m", micro=False).matrix]
+        n = len(mat)
+        side = (n + 2 * quiet) * module
         self.geoms.append(box(x0, y0, x0 + side, y0 + side))       # quiet zone: pours keep out
         ox, oy = x0 + quiet * module, y0 + quiet * module
         pitch = QR_FILL
@@ -643,6 +676,42 @@ class Board:
             for t in range(int(wbar / 0.2)):
                 self.seg((bx + t * 0.2, y0 + 1.6), (bx + t * 0.2, y0 + 6.0))
             bx += wbar + self.rng.choice([0.3, 0.5, 0.7])
+
+    def credits(self, lines, url, h=2.0, module=0.9, quiet=4):
+        """A framed maker's plate: a QR code to `url` on the left, the lines beside it."""
+        side = qr_side(url, module, quiet)
+        w = 1.2 + side + max(artfont.width(s, h) for s in lines) + 2
+        ht = max(side + 2.4, len(lines) * h * 1.7 + 4)
+        cw, ch = math.ceil(w / G), math.ceil(ht / G)
+        at = self.spot(cw, ch, margin=2, tries=4000)
+        if not at:
+            print("  (no room for the credits)")
+            return
+        i, j = at
+        self.reserve(i, j, i + cw, j + ch)
+        x0, y0 = self.xy((i, j))
+        x1, y1 = self.xy((i + cw, j + ch))
+        self.rect(x0, y0, x1, y1)
+        self.rect(x0 + 0.6, y0 + 0.6, x1 - 0.6, y1 - 0.6)
+        self.geoms.append(box(x0, y0, x1, y1))                      # nothing else inside the plate
+        self.qr_at(url, x0 + 1.2, (y0 + y1 - side) / 2, module, quiet)
+        tx = x0 + 1.2 + side
+        y = (y0 + y1) / 2 + (len(lines) * h * 1.7 - 0.7 * h) / 2 - h
+        for s in lines:
+            self.label(s, tx, y, h)
+            y -= h * 1.7
+
+
+def qr_side(message, module, quiet):
+    """Width of a QR code with its quiet zone, mm."""
+    import segno
+    return (len(segno.make(message, error="m", micro=False).matrix) + 2 * quiet) * module
+
+
+def button_halo(board, c):
+    """Two rings just outside a push button's 17.5 mm head."""
+    board.ring(c, BTN_HALO)
+    board.ring(c, BTN_HALO + 0.8)
 
 
 def dial(board, c, name):
@@ -749,17 +818,23 @@ def pours(b, eggs):
 def generate(name, seed):
     ents = read_dxf(os.path.join(LASER, name))
     outline, holes, knobs = part_regions(ents)
-    keep_out = [h.buffer(HOLE) for h in holes] + [Point(k).buffer(DIAL_KEEP) for k in knobs]
+    buttons = button_centres(holes)
+    keep_out = ([h.buffer(HOLE) for h in holes] + [Point(k).buffer(DIAL_KEEP) for k in knobs]
+                + [Point(c).buffer(BTN_KEEP) for c in buttons])
     allowed = outline.buffer(-EDGE).difference(unary_union(keep_out)) if keep_out else outline.buffer(-EDGE)
     rng = random.Random(SEED * 100 + seed)
     b = Board(allowed, rng)
     knobs = sorted(knobs, key=lambda c: (-round(c[1]), c[0]))        # reading order: K1..K4
     for k, c in enumerate(knobs):
         dial(b, c, KNOB_NAMES[k] if k < len(KNOB_NAMES) else f"K{k + 1}")
+    for c in buttons:
+        button_halo(b, c)
     A = allowed.area
     if name.startswith("back-cover"):
-        b.title_block(["PATTERNFLOOD / DESKTOP", "REV 2.1  2026-10", "128 X 128  P2 GOB X4", "PI 5 + 5A-75B",
+        b.title_block(["PATTERNFLOOD / DESKTOP", "REV 2.2  2026-10", "128 X 128  P2 GOB X4", "PI 5 + 5A-75B",
                        "LRS-50-5  5V 10A", "BIRCH 3.18  KERF 0.15"])
+        b.credits(["MADE BY JOF", "JOF@THEJOF.COM", "INSPIRED BY PATTERNFLOW", "BY SEUNGHUN LEE",
+                   "PATTERNFLOW.WORK"], "https://patternflow.work/")
     if name.startswith("bezel"):
         b.lissajous(11)
     msg, mod = QR_MESSAGES.get(name, ("PATTERNFLOOD", 0.8))
@@ -810,7 +885,7 @@ QR_FILL = 0.12       # QR dark-module fill pitch: a little under BEAM, so it bur
 QR_FOUND = {}        # part -> [(message, box)], filled by generate(), checked by verify_qr()
 # one real QR code per part: (text, module size mm). Phone cameras read 0.8 mm modules fine.
 QR_MESSAGES = {
-    "back-cover.dxf": ("PATTERNFLOOD DESKTOP / REV 2.1 / 2026 - 128x128 P2 GOB - RASPBERRY PI 5 + COLORLIGHT 5A-75B "
+    "back-cover.dxf": ("PATTERNFLOOD DESKTOP / REV 2.2 / 2026 - 128x128 P2 GOB - RASPBERRY PI 5 + COLORLIGHT 5A-75B "
                        "- LRS-50-5 - BALTIC BIRCH 3.18 - IF YOU CAN READ THIS, YOU LOOKED CLOSE ENOUGH", 1.0),
     "bezel-outer.dxf": ("TURN THE KNOBS", 0.8),
     "wall-left.dxf": ("LOOK CLOSER", 0.8),
@@ -991,7 +1066,9 @@ def check(name, ents, allowed, score, engrave):
     """(marks outside the allowed area, marks within 1.5 mm of any cut path)."""
     region = prep(allowed.buffer(0.05))
     outline, holes, knobs = part_regions(ents)
-    dials = prep(unary_union([Point(k).buffer(DIAL_KEEP + 0.05) for k in knobs])) if knobs else None
+    owned = [Point(k).buffer(DIAL_KEEP + 0.05) for k in knobs] + \
+        [Point(c).buffer(BTN_KEEP + 0.05) for c in button_centres(holes)]
+    dials = prep(unary_union(owned)) if owned else None
     shape = lambda e, filled: (LineString([e[1], e[2]]) if e[0] == "L"
                                else Point(e[1]).buffer(e[2], 8) if filled else Point(e[1]).buffer(e[2], 8).exterior)
     bad = 0

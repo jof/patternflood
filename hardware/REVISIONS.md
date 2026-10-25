@@ -124,3 +124,37 @@ match it by a one-off script mirroring the FeatureScript exactly. To sync:
 
 then tag `rev-2.1` and make the Onshape version.
 
+
+## Rev 2.2 — push buttons, credits (2026-10-25)
+
+**Three push buttons**, a vertical row high on the **left wall**: 12 mm
+waterproof momentaries, the VanMoof S3 boost button (Amazon B07F24Y1TB has the
+drawing): head Ø17.5, 8.1 proud; 9.9 of thread and body behind the panel, then
+3.6 of solder lugs. The thread has two flats 11 mm apart that key it.
+
+| | |
+|---|---|
+| Where | y 130.1 / 106.1 / 82.1 (box frame; 24 mm pitch, 6.5 mm between heads), z −32.6: midway between the upper brace's back and the doubler's rear end. Inside, the nearest thing is the top-left panel's HUB75 plug ~40 mm in; the Pi's GPIO header is just below |
+| Wall | a **keyed hole**: Ø12.2 with flats 11.2 apart (0.2 clearance on each, kerf-compensated), flats top and bottom |
+| Doubler | **cut away** behind the row: a notch out of its rear top corner (from 11 mm below the lowest button to the top, and from its rear edge to 11 mm in front of the buttons). The thread is only ~6.4 mm, the same as wall + doubler, so each nut clamps the outer wall alone, like the encoders |
+| Vents | the left wall's exhaust moves down under the buttons: **4 slots** (was 14), between the notch and the middle brace's mortise, just above the Pi. The right wall keeps its 14 |
+| Model | constants `BTN_*` in `enclosure.fs`; a mate connector per button on the wall's outer face |
+
+Check before cutting: the key's fit (0.2 clearance) on a test hole, and that
+the nut turns in the notch.
+
+**Etched art.** The back cover gets a framed **credits plate**: "MADE BY JOF /
+JOF@THEJOF.COM / INSPIRED BY PATTERNFLOW / BY SEUNGHUN LEE / PATTERNFLOW.WORK"
+beside a real QR code to `https://patternflow.work/` (it decodes from the drawn
+score lines). The title block reads REV 2.2. Each button gets a double halo
+ring just outside its head. `artfont.py` gained `@`. `art.py` now snaps arc
+ends onto line ends when it finds holes (odd-angle arcs like the keyed holes
+were left open by the DXF's rounding). The bezel, right and top walls
+regenerate byte-identical.
+
+**Model sync.** `wall-left.dxf` and `wall-left-doubler.dxf` were patched by a
+script mirroring the FeatureScript, then
+`art.py` and `nest_sheets.py` re-run: sheets 2 and 3 changed. To sync: push
+`enclosure.fs`, re-export (must reproduce both left-wall DXFs: check git
+diff), run `decals.py` for the left-wall and back-cover decals, then tag
+`rev-2.2`.

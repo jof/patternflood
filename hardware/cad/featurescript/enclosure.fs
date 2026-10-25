@@ -1013,7 +1013,24 @@ const KNOB_SLITS = 36;
 const KNOB_SLIT_R0 = 13.0;       // mm
 const KNOB_SLIT_R1 = 16.5;       // mm
 const KNOB_SLIT_W = 0.7;         // mm, as cut
-const GAP_BOUNDS        = { (millimeter) : [0, 0.5, 50] } as LengthBoundSpec;
+
+// Three push buttons in a vertical row, high on the LEFT wall: 12 mm
+// waterproof momentaries (the VanMoof S3 boost button; Amazon B07F24Y1TB's
+// drawing): head 17.5 dia, 8.1 proud of the panel; 9.9 of thread and body
+// behind it, then 3.6 of solder lugs. The thread has two flats, 11 apart,
+// that key it against turning. It has only ~6.4 mm of thread, the same as
+// wall + doubler, so like the encoders it clamps the OUTER sheet alone: the
+// keyed hole goes through the wall, and the doubler is cut away round the
+// whole row — a notch out of its rear top corner, open to both edges so it
+// leaves no thin strips. Facts about a bought part, so constants (cf. the
+// board data).
+const BTN_COUNT = 3;
+const BTN_THREAD = 12.0;         // mm, thread dia
+const BTN_FLATS = 11.0;          // mm, across the key flats
+const BTN_CLEAR = 0.2;           // mm, on the dia and on the flats: a snug key
+const BTN_NUT_ROOM = 11.0;       // mm, doubler cut back this far from each button centre: the nut and fingers
+const BTN_PITCH = 24.0;          // mm, centre to centre: 6.5 between heads
+const GAP_BOUNDS       = { (millimeter) : [0, 0.5, 50] } as LengthBoundSpec;
 
 function fingerCount(extent is ValueWithUnits, target is ValueWithUnits) returns number
 {
@@ -2313,6 +2330,20 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 "operationType" : BooleanOperationType.SUBTRACTION });
         opDeleteBodies(context, id + "trayCutLeft", { "entities" : qUnion(frontCuts) });
 
+        // ── push buttons, left wall (see BTN_*) ─────────────────────────
+        // A vertical row, top one a pitch's half below the top doubler. In z,
+        // midway between the upper brace's back and the doubler's rear end,
+        // where the bay is open: the nearest thing inside is the top-left
+        // panel's HUB75 plug, ~40 mm in, and the Pi's GPIO header is just
+        // below. They take the place of most of this wall's exhaust slots.
+        const btnZ = (zBraceB + dz1) / 2;
+        var btnYs = [];
+        for (var k = 0; k < BTN_COUNT; k += 1)
+        {
+            btnYs = append(btnYs, top - tw - (k + 0.5) * BTN_PITCH * millimeter);
+        }
+        const btnNotchY0 = btnYs[BTN_COUNT - 1] - BTN_NUT_ROOM * millimeter;
+
         // ── ventilation (rev 2): in through the bottom, out high on the sides ──
         // The box is closed, with a 50 W PSU, a Pi 5 and the card inside, and
         // it breathes like a chimney: in low, out high. Not through the back
@@ -2323,7 +2354,8 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
         //     sits flat on it). Stand the box on feet >= 8 mm so air gets in.
         //   * EXHAUST high on both side walls, wall and doubler, from the tray's
         //     top edge up to the top doubler, behind the upper brace's mortise
-        //     and in front of rail C's.
+        //     and in front of rail C's. On the left the push buttons take the
+        //     top, so that wall's few slots sit lower, under the buttons.
         // Drawn uncompensated: a vent's exact width does not matter.
         {
             const vW = definition.ventSlotW;
@@ -2394,13 +2426,20 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 }
             }
 
-            // exhaust: high on both side walls
+            // exhaust: high on both side walls. The left wall's top is the
+            // buttons', so its slots move down to fill the gap between the
+            // button notch and the middle brace's mortise, one slot web clear
+            // of each: fewer, just above the Pi's top end.
             for (var yc in rowsIn(definition.trayY1 + 8 * millimeter, top - tw - 6 * millimeter))
+            {
+                vents.wallR = concatenateArrays([vents.wallR, zSlot(id + ("vent" ~ (ventN + 1)), true,
+                        right - tw - over, right + over, yc, dz1 + 3 * millimeter, zBraceB - 3 * millimeter)]);
+                ventN += 2;
+            }
+            for (var yc in rowsIn(braceSpans[trayBrace][1] + vP - vW, btnNotchY0 - (vP - vW)))
             {
                 vents.wallL = concatenateArrays([vents.wallL, zSlot(id + ("vent" ~ ventN), true,
                         left - over, left + tw + over, yc, dz1 + 3 * millimeter, zBraceB - 3 * millimeter)]);
-                vents.wallR = concatenateArrays([vents.wallR, zSlot(id + ("vent" ~ (ventN + 1)), true,
-                        right - tw - over, right + over, yc, dz1 + 3 * millimeter, zBraceB - 3 * millimeter)]);
                 ventN += 2;
             }
             for (var w in ["wallL", "wallR", "wallB"])
@@ -2412,6 +2451,49 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                             "targets"       : wallStack(w),
                             "operationType" : BooleanOperationType.SUBTRACTION });
                 }
+            }
+        }
+
+        // The buttons: a keyed hole through the wall for each — a circle with
+        // its top and bottom cut flat — and the doubler notched away behind
+        // the row, so each nut pulls against the wall alone.
+        {
+            const br = (BTN_THREAD + BTN_CLEAR) / 2 * millimeter - kerf / 2;
+            const bf = (BTN_FLATS + BTN_CLEAR) / 2 * millimeter - kerf / 2;
+            var btnHoles = [];
+            for (var k = 0; k < BTN_COUNT; k += 1)
+            {
+                const by = btnYs[k];
+                fCylinder(context, id + ("btnHole" ~ k), {
+                        "topCenter"    : vector(left + t + over, by, btnZ),
+                        "bottomCenter" : vector(left - over,     by, btnZ),
+                        "radius"       : br });
+                fCuboid(context, id + ("btnFlatA" ~ k), {
+                        "corner1" : vector(left - 2 * over, by + bf,           btnZ - br - over),
+                        "corner2" : vector(left + t + 2 * over, by + br + over, btnZ + br + over) });
+                fCuboid(context, id + ("btnFlatB" ~ k), {
+                        "corner1" : vector(left - 2 * over, by - br - over,     btnZ - br - over),
+                        "corner2" : vector(left + t + 2 * over, by - bf,       btnZ + br + over) });
+                opBoolean(context, id + ("btnKey" ~ k), {
+                        "tools"         : qUnion([qCreatedBy(id + ("btnFlatA" ~ k), EntityType.BODY),
+                                                  qCreatedBy(id + ("btnFlatB" ~ k), EntityType.BODY)]),
+                        "targets"       : qCreatedBy(id + ("btnHole" ~ k), EntityType.BODY),
+                        "operationType" : BooleanOperationType.SUBTRACTION });
+                btnHoles = append(btnHoles, qCreatedBy(id + ("btnHole" ~ k), EntityType.BODY));
+            }
+            opBoolean(context, id + "btnHoleCut", {
+                    "tools"         : qUnion(btnHoles),
+                    "targets"       : qCreatedBy(id + "wallL", EntityType.BODY),
+                    "operationType" : BooleanOperationType.SUBTRACTION });
+            if (nw > 1)
+            {
+                fCuboid(context, id + "btnNotch", {
+                        "corner1" : vector(left + t - over,  btnNotchY0, dz1 - over),
+                        "corner2" : vector(left + tw + over, top + over, btnZ + BTN_NUT_ROOM * millimeter) });
+                opBoolean(context, id + "btnNotchCut", {
+                        "tools"         : qCreatedBy(id + "btnNotch", EntityType.BODY),
+                        "targets"       : qUnion(dbl.wallL),
+                        "operationType" : BooleanOperationType.SUBTRACTION });
             }
         }
 
@@ -2678,4 +2760,13 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 "coordSystem" : coordSystem(vector(right, definition.iecY, definition.iecZ),
                                             vector(0, 1, 0), vector(1, 0, 0)),
                 "owner"       : qCreatedBy(id + "wallR", EntityType.BODY) });
+
+        // Button datums, top to bottom: hole centre on the left wall's outer
+        // face, x along the key flats (+z), z pointing out of the box.
+        for (var k = 0; k < BTN_COUNT; k += 1)
+        {
+            opMateConnector(context, id + ("mcBtn" ~ k), {
+                    "coordSystem" : coordSystem(vector(left, btnYs[k], btnZ), vector(0, 0, 1), vector(-1, 0, 0)),
+                    "owner"       : qCreatedBy(id + "wallL", EntityType.BODY) });
+        }
     });
