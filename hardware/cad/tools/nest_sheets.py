@@ -27,7 +27,8 @@ the laser cuts every path it is given. The labels are in the PNGs and README.
 If art.py has written etch art for a part (art/<part>.etch.dxf), it rides
 along with that part, turned and moved exactly as the part is, into
 sheet-N.svg: cut paths red, score lines blue, engraved dots filled black —
-one file, so the art cannot drift off its part. The DXFs stay cut-only. For
+one file, so the art cannot drift off its part: a score group, then a cut group,
+a group per part in each, and every outline one closed path. The DXFs stay cut-only. For
 software that wants the cuts and the art as separate imports, the same sheet is
 also split into sheet-N-cut.svg and sheet-N-score.svg, each with identical
 registration marks at the corners of the cut area (reg_marks).
@@ -222,11 +223,14 @@ LAYOUT = [
 # space-filling curves), so the three walls that carry art go again; their
 # doublers and the bottom wall have none and stand. Rev 2.7 (the sleep
 # button) adds the top doubler: it needs a second notch, at its right end.
+# Stacked tight, all four along the sheet from its start edge, so they take
+# the first ~380 mm and leave the rest as one full-width offcut (or fit a
+# 16 x 10" piece). Plywood, so turning the top wall and its doubler to lie
+# along the sheet costs nothing (enclosure-lasercut.md §1).
 RECUT = {"stem": "recut-walls",
          "title": "Re-cut — the three walls with art, and the top doubler",
-         "walls": ["wall-left.dxf", "wall-right-iec.dxf"],
-         "along_after_walls": [("wall-top.dxf", True), ("wall-top-doubler.dxf", True)],
-         "gap": 15.0}
+         "stack": [("wall-left.dxf", True), ("wall-right-iec.dxf", True),
+                   ("wall-top.dxf", False), ("wall-top-doubler.dxf", False)]}
 
 
 ART_DIR = os.path.join(LASER, "art")
@@ -293,6 +297,14 @@ def build(spec):
 
     x = MARGIN
     g = spec.get("gap", GAP)
+    if "stack" in spec:
+        # across the sheet from its long edge, each part's length along it
+        y = SIDE
+        for name, turn in spec["stack"]:
+            e = load(name, turn)
+            put(name, e, x, y)
+            y += size(e)[1] + g
+        return placed
     if "along" in spec:
         for name, turn in spec["along"]:
             e = load(name, turn)
@@ -425,13 +437,101 @@ def write_split_svgs(stem, page, area, cut, score, engrave):
     write_svg(stem + "-score.svg", *page, svg_body([], score, engrave) + reg_marks(*area))
 
 
-def write_sheet_svg(path, ents, arts):
+def chains(ents):
+    """A part's cut entities joined end to end: [[(entity, reversed), ...], ...],
+    each chain one continuous path (a closed loop, for every outline and hole
+    export_dxf.py writes). Circles are closed already and left out."""
+    tol = 0.005
+    cell = lambda p: (round(p[0] / 0.01), round(p[1] / 0.01))
+    segs = [e for e in ents if e[0] != "C"]
+    grid = {}
+    for i, e in enumerate(segs):
+        for p in ends(e):
+            grid.setdefault(cell(p), []).append(i)
+
+    def near(p):
+        cx, cy = cell(p)
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                yield from grid.get((cx + dx, cy + dy), [])
+
+    same = lambda a, b: abs(a[0] - b[0]) < tol and abs(a[1] - b[1]) < tol
+    used, out = set(), []
+    for i, e in enumerate(segs):
+        if i in used:
+            continue
+        used.add(i)
+        chain = [(e, False)]
+        start, cur = ends(e)
+        while not same(cur, start):
+            j = next((j for j in near(cur) if j not in used), None)
+            if j is None:
+                break
+            a, b = ends(segs[j])
+            used.add(j)
+            if same(a, cur):
+                chain.append((segs[j], False))
+                cur = b
+            else:
+                chain.append((segs[j], True))
+                cur = a
+        out.append(chain)
+    return out
+
+
+def cut_paths(ents):
+    """SVG for a part's cuts: one <path> per chain (closed with Z when it
+    returns to its start), arcs as true SVG arcs, circles as <circle>."""
+    f = lambda p: f"{p[0]:.3f},{p[1]:.3f}"
+    out = []
+    for chain in chains(ents):
+        e0, r0 = chain[0]
+        first = ends(e0)[1 if r0 else 0]
+        d = ["M" + f(first)]
+        last = first
+        for e, rev in chain:
+            a, b = ends(e)
+            if rev:
+                a, b = b, a
+            if e[0] == "L":
+                d.append("L" + f(b))
+            else:
+                span = (e[4] - e[3]) % 360
+                d.append(f"A{e[2]:.3f},{e[2]:.3f} 0 {1 if span > 180 else 0},{0 if rev else 1} " + f(b))
+            last = b
+        if abs(last[0] - first[0]) < 0.005 and abs(last[1] - first[1]) < 0.005:
+            d.append("Z")
+        out.append(f'<path d="{" ".join(d)}" stroke="#ff0000" stroke-width="0.1" fill="none"/>')
+    for e in ents:
+        if e[0] == "C":
+            out.append(f'<circle cx="{e[1][0]:.3f}" cy="{e[1][1]:.3f}" r="{e[2]:.3f}" '
+                       'stroke="#ff0000" stroke-width="0.1" fill="none"/>')
+    return out
+
+
+def write_sheet_svg(path, placed, arts):
+    """sheet-N.svg, and for a sheet with art its -cut/-score pair. Laid out for
+    importing as is: a "score" group then a "cut" group, so the art comes
+    first in the file as it must on the laser, and inside each a group per part
+    (id p<N>-<part>, N as in the README's table). Every outline and hole is one
+    closed path, so the laser software sees shapes, can cut inner ones first,
+    and cuts each in one pass rather than segment by segment."""
     from art import svg_body, write_svg       # art.py imports this module; import late
-    score = [e[:3] for a in arts for e in a if e[3] == "SCORE"]
-    engrave = [e[:3] for a in arts for e in a if e[3] == "ENGRAVE"]
-    write_svg(path, SHEET_L, SHEET_W, svg_body(ents, score, engrave))
-    if score or engrave:
-        write_split_svgs(path[:-4], (SHEET_L, SHEET_W), (CUT_L, USE_W), ents, score, engrave)
+    score, cut = [], []
+    for i, (name, ents) in enumerate(placed):
+        tag = f"p{i + 1}-{name[:-4]}"
+        art = arts.get(i)
+        if art:
+            s = [e[:3] for e in art if e[3] == "SCORE"]
+            g = [e[:3] for e in art if e[3] == "ENGRAVE"]
+            score += [f'<g id="score-{tag}">'] + svg_body([], s, g) + ["</g>"]
+        cut += [f'<g id="cut-{tag}">'] + cut_paths(ents) + ["</g>"]
+    sg = ['<g id="score">'] + score + ["</g>"] if score else []
+    cg = ['<g id="cut">'] + cut + ["</g>"]
+    write_svg(path, SHEET_L, SHEET_W, sg + cg)
+    if score:
+        write_svg(path[:-4] + "-cut.svg", SHEET_L, SHEET_W, cg + reg_marks(CUT_L, USE_W))
+        write_svg(path[:-4] + "-score.svg", SHEET_L, SHEET_W, sg + reg_marks(CUT_L, USE_W))
 
 
 def preview(path, title, placed, labels, arts=None):
@@ -526,17 +626,22 @@ def write_recut(spec):
     all_ents = [e for _, ents in placed for e in ents]
     write_dxf(os.path.join(OUT, stem + ".dxf"), all_ents)
     arts = SHEET_ART.get(spec["title"], {})
-    write_sheet_svg(os.path.join(OUT, stem + ".svg"), all_ents, list(arts.values()))
+    write_sheet_svg(os.path.join(OUT, stem + ".svg"), placed, arts)
     preview(os.path.join(OUT, stem + ".png"), spec["title"], placed, [str(i + 1) for i in range(len(placed))], arts)
     x1 = max(b[2] for _, b in boxes)
     print(f"{stem}.dxf: {len(placed)} parts, {len(all_ents)} entities, span {x1:.1f}")
-    md = [f"## {spec['title']} — `{stem}-cut.svg` + `{stem}-score.svg`", "",
+    md = [f"## {spec['title']} — `{stem}.svg` (or `{stem}-cut.svg` + `{stem}-score.svg`)", "",
           "Not part of the set above: parts that were cut once and have to go again. The art "
           "changed after sheet 3 was cut (2026-10-26: no space-filling curves any more), so the "
           "three walls that carry art are re-cut here; from the first sheet 3 keep the two side "
           "doublers and the bottom wall, which have none. Rev 2.7 added the sleep button at the "
           "top wall's right end, so the top doubler goes again too, with a second notch there: "
           "the one from sheet 4 is notched for the left row only.", "",
+          f"Packed tight into the corner at the sheet's start edge, {x1 - MARGIN:.0f} × "
+          f"{max(b[3] for _, b in boxes) - SIDE:.0f} mm of parts, so the rest comes off as one "
+          f"full-width offcut, ~{SHEET_L - x1 - GAP:.0f} × {SHEET_W:.0f} mm. Or cut it from an offcut of "
+          f"at least {x1 + MARGIN:.0f} × {max(b[3] for _, b in boxes) + SIDE:.0f} mm, its corner at the "
+          "cut area's corner.", "",
           f"![{spec['title']}]({stem}.png)", "", "| # | Part | Qty | From |", "|---|---|---|---|"]
     md += [f"| {i + 1} | {PART.get(n, n)} | 1 | `{n}` |" for i, (n, _) in enumerate(placed)]
     return md + [""]
@@ -573,7 +678,11 @@ def main():
           "has moved when the art goes on: each colour imports as its own layer, so drag the blue "
           "layer above the red one and set the processing order to **by layer**. XCS does not keep "
           "settings with a colour, only with the objects, so set both layers up once per sheet and "
-          "save that as a project (.xcs) to reopen, rather than re-importing. **Or import the cuts and "
+          "save that as a project (.xcs) to reopen, rather than re-importing. The file holds a "
+          "`score` group and then a `cut` group, and inside each a group per part (`p<N>-<part>`, N as "
+          "in the tables below), so the parts come in as separate objects and the art comes first. "
+          "Every outline and hole is one closed path, so XCS sees shapes (it needs them to cut inner "
+          "ones first) and cuts each one in a single pass. **Or import the cuts and "
           "the art separately**, `sheet-N-cut.svg` and `sheet-N-score.svg`: both carry the same green "
           "L-marks at the corners of the cut area, so the two imports are the same size — select both, "
           "**align left** and **align bottom**, and they are registered; then delete the green marks "
@@ -599,7 +708,7 @@ def main():
         dxf = f"sheet-{si}.dxf"
         write_dxf(os.path.join(OUT, dxf), all_ents)
         arts = SHEET_ART.get(spec["title"], {})
-        write_sheet_svg(os.path.join(OUT, f"sheet-{si}.svg"), all_ents, list(arts.values()))
+        write_sheet_svg(os.path.join(OUT, f"sheet-{si}.svg"), placed, arts)
         counts, order = {}, []
         for name, _ in placed:
             if name not in counts:
