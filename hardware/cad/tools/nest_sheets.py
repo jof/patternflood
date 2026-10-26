@@ -48,6 +48,7 @@ CUT_L, CUT_W = 600.0, 305.0      # xTool P2 cut area, mm
 SHEET_L, SHEET_W = 609.6, 304.8  # 12 x 24" sheet; only 600 of its length is cuttable
 MARGIN = 6.0                     # from the start edge and the far end of the cut area (the 600 axis)
 GAP = 4.0                        # between parts
+RING_PITCH = 16.0                # mm, spacer rings centre to centre on their grid (8 mm rings: 8 apart)
 SIDE = 5.5                       # from the sheet's long edges: a 293 part across the 304.8 sheet leaves 5.9
 USE_W = min(CUT_W, SHEET_W)
 
@@ -178,20 +179,14 @@ LAYOUT = [
                ("electronics-tray-front-sheet.dxf", True),
                ("panel-brace-middle-middle-sheet-tray-nuts.dxf", True)]},
     {"title": "Sheet 3 — walls",
-     # the two 373 mm side walls and their doublers lie along the sheet...
+     # the two 373 mm side walls and their doublers lie along the sheet,
+     # spread evenly across it (~30 mm apart), and the top and bottom walls
+     # stand across the far end. Nothing else: it was too crowded.
      "walls": ["wall-left.dxf", "wall-right-iec.dxf",
                "wall-left-doubler.dxf", "wall-right-doubler-iec.dxf"],
-     # ...with the short strips stacked beside them, also lying along...
-     "beside": ["panel-brace-lower.dxf", "rail-c-tenoned.dxf"],
-     # ...the spacer rings in the corner the shorter strips leave free...
-     "rings": ["spacer-ring-tray-to-brace.dxf"] * 4 + ["spacer-ring-colorlight.dxf"] * 4
-              + ["spacer-ring-pi-m2.5.dxf"] * 4,
-     # plus spares: the 7 mm board ring is only 1.8 mm of wood round its hole
-     "spares": ["spacer-ring-tray-to-brace.dxf"] * 2 + ["spacer-ring-colorlight.dxf"] * 2
-               + ["spacer-ring-pi-m2.5.dxf"] * 2,
-     # ...and the rest across the far end.
      "along_after_walls": [("wall-top.dxf", True),
-                           ("wall-bottom.dxf", True)]},
+                           ("wall-bottom.dxf", True)],
+     "gap": 15.0},
     {"title": "Sheet 4 — inner bezel and doublers",
      "along": [("bezel-inner.dxf", True),
                ("wall-top-doubler.dxf", True),
@@ -202,12 +197,22 @@ LAYOUT = [
                ("rail-b-upper-hex-pocket.dxf", True)],
      # the knob ribs, in the inner bezel's display aperture
      "inside": [("knob-rib-1.dxf", False), ("knob-rib-2.dxf", False)]},
-    # 286 x 310, with strips moved off sheets 2, 3 and 4 to give those margin
+    # 286 x 310, with strips moved off sheets 2, 3 (rev 2.5) and 4 to give those margin
     {"title": "Sheet 5 — back cover doubler, braces, shelf",
      "along": [("back-cover-doubler.dxf", True),
                ("panel-brace-upper.dxf", True),
                ("panel-brace-middle.dxf", True),
                ("stiffener-shelf.dxf", True)]},
+    # what used to share sheet 3 with the walls, with room round it
+    {"title": "Sheet 6 — lower brace, rail C, spacer rings",
+     "along": [("panel-brace-lower.dxf", True),
+               ("rail-c-tenoned.dxf", True)],
+     "rings": ["spacer-ring-tray-to-brace.dxf"] * 4 + ["spacer-ring-colorlight.dxf"] * 4
+              + ["spacer-ring-pi-m2.5.dxf"] * 4,
+     # plus spares: the 7 mm board ring is only 1.8 mm of wood round its hole
+     "spares": ["spacer-ring-tray-to-brace.dxf"] * 2 + ["spacer-ring-colorlight.dxf"] * 2
+               + ["spacer-ring-pi-m2.5.dxf"] * 2,
+     "gap": 15.0},
 ]
 
 
@@ -274,12 +279,21 @@ def build(spec):
             SHEET_ART[spec["title"]][len(placed) - 1] = art_xform(art, lambda q: (q[0] + x, q[1] + y))
 
     x = MARGIN
+    g = spec.get("gap", GAP)
     if "along" in spec:
         for name, turn in spec["along"]:
             e = load(name, turn)
             w, h = size(e)
             put(name, e, x, (USE_W - h) / 2)
-            x += w + GAP
+            x += w + g
+        # spacer rings: a grid, RING_PITCH apart, centred across the sheet after the strips
+        rings = spec.get("rings", []) + spec.get("spares", [])
+        if rings:
+            per = 6
+            rows = -(-len(rings) // per)
+            ry0 = (USE_W - rows * RING_PITCH) / 2
+            for i, name in enumerate(rings):
+                put(name, load(name, False), x + (i % per) * RING_PITCH, ry0 + (i // per) * RING_PITCH)
         if "inside" in spec:
             ap = holes(placed[0][1])[0]          # the host's biggest hole
             INSIDE[spec["title"]] = {}
@@ -295,40 +309,22 @@ def build(spec):
                 rowh = max(rowh, h)
         return placed
 
-    # Sheet 3
+    # Sheet 3: the long walls along the sheet, spread evenly across it
+    walls = [load(n, True) for n in spec["walls"]]
+    spread = (USE_W - 2 * MARGIN - sum(size(e)[1] for e in walls)) / max(1, len(walls) - 1)
     y = MARGIN
     wall_len = 0
-    for name in spec["walls"]:
-        e = load(name, True)
+    for name, e in zip(spec["walls"], walls):
         w, h = size(e)
         put(name, e, x, y)
-        y += h + GAP
+        y += h + spread
         wall_len = max(wall_len, w)
-    strip_len = 0
-    for name in spec["beside"]:
-        e = load(name, False)
-        w, h = size(e)
-        put(name, e, x, y)
-        y += h + GAP
-        strip_len = max(strip_len, w)
-    # rings: a grid in the corner past the strips' ends, above the walls
-    walls_top = MARGIN + sum(size(load(n, True))[1] + GAP for n in spec["walls"])
-    rx0, rx1 = MARGIN + strip_len + GAP, MARGIN + wall_len
-    rx, ry, rowh = rx0, walls_top, 0
-    for name in spec["rings"] + spec.get("spares", []):
-        e = load(name, False)
-        w, h = size(e)
-        if rx + w > rx1:
-            rx, ry, rowh = rx0, ry + rowh + GAP, 0
-        put(name, e, rx, ry)
-        rx += w + GAP
-        rowh = max(rowh, h)
-    x = MARGIN + wall_len + GAP
+    x = MARGIN + wall_len + g
     for name, turn in spec["along_after_walls"]:
         e = load(name, turn)
         w, h = size(e)
         put(name, e, x, (USE_W - h) / 2)
-        x += w + GAP
+        x += w + g
     return placed
 
 

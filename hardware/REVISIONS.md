@@ -310,7 +310,10 @@ so the Onshape version still matches): every part ≥ 6 mm from the sheet's star
 edge and the cut area's far end (was 3), 5.9 from the long edges (all a 293 mm
 part allows), 4 mm between parts (was 3), and ≥ 16 mm spare at the far end of
 every sheet. To make room the upper brace, one middle-brace sheet and the
-stiffener shelf moved to sheet 5, beside the back cover doubler.
+stiffener shelf moved to sheet 5, beside the back cover doubler. Then sheet 3
+was split: it holds the walls alone, the long ones spread ~30 mm apart, and the
+lower brace, a rail C and the spacer rings went to a new **sheet 6** (181 ×
+293, so a 12 × 12 does). Six sheets.
 
 ### Test-cut results; the button hole fits the lip
 

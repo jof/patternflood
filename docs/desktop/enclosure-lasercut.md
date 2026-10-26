@@ -707,7 +707,7 @@ axis:
 | Side walls ×2 | 60 × 373 |
 | Top / bottom walls, braces, rails, stiffener | ≤ 293 long |
 
-Nested on **12 × 24** sheets that is **five** sheets (rev 2.3) — laid out, checked and
+Nested on **12 × 24** sheets that is **six** sheets (rev 2.5) — laid out, checked and
 ready to cut in [`hardware/laser/sheets/`](../../hardware/laser/sheets/README.md)
 (`nest_sheets.py`). The P2 cuts only 600 of a 24" sheet's 609.6 mm. Every part
 sits at least 6 mm from the sheet's start edge and the cut area's far end,
@@ -716,15 +716,16 @@ from its neighbours (rev 2.5; was 3 and 3):
 
 1. bezel outer + electronics tray rear sheet + one middle-brace sheet + a rail C;
 2. back cover + tray front sheet + the middle brace's middle sheet;
-3. both side walls and both side-wall doublers along the sheet, the lower brace
-   and a rail C beside them, the spacer rings (with spares) in the corner, and
-   the top and bottom walls across the end;
+3. the walls alone: both side walls and both side-wall doublers along the
+   sheet, spread ~30 mm apart, and the top and bottom walls across the end;
 4. bezel inner + the top and bottom doublers and the four A/B rails;
 5. the back cover's doubler, the upper brace, the last middle-brace sheet and
-   the stiffener shelf.
+   the stiffener shelf;
+6. the lower brace, a rail C and the spacer rings (with spares): 181 × 293 mm,
+   so it also fits a 12 × 12.
 
-**Buy six:** four for the box, one 12 × 12 for the test cuts, and one for a
-recut. (Rev 1, single-sheet, was three.) Calipering the sheet width on arrival
+**Buy eight:** six for the box (or five and a 12 × 12 for sheet 6), one 12 × 12
+for the test cuts, and one for a recut. (Rev 1, single-sheet, was three.) Calipering the sheet width on arrival
 is still worth it: "12 × 24" is sometimes cut a hair under 12".
 
 ### 13.6 What changes in the model
