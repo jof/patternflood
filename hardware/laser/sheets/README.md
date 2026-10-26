@@ -131,14 +131,15 @@ Parts span 175.3 × 293.0 mm.
 
 **40 parts on 6 sheets**, plus 6 spare spacer rings on sheet 6 (the 7 mm board ring is only 1.8 mm of wood round its hole).
 
-## Re-cut — the three walls with art — `recut-walls-cut.svg` + `recut-walls-score.svg`
+## Re-cut — the three walls with art, and the top doubler — `recut-walls-cut.svg` + `recut-walls-score.svg`
 
-Not part of the set above: parts that were cut once and have to go again. The art changed after sheet 3 was cut (2026-10-26: no space-filling curves any more), so the three walls that carry art are re-cut here; from the first sheet 3 keep the two side doublers and the bottom wall, which have none.
+Not part of the set above: parts that were cut once and have to go again. The art changed after sheet 3 was cut (2026-10-26: no space-filling curves any more), so the three walls that carry art are re-cut here; from the first sheet 3 keep the two side doublers and the bottom wall, which have none. Rev 2.7 added the sleep button at the top wall's right end, so the top doubler goes again too, with a second notch there: the one from sheet 4 is notched for the left row only.
 
-![Re-cut — the three walls with art](recut-walls.png)
+![Re-cut — the three walls with art, and the top doubler](recut-walls.png)
 
 | # | Part | Qty | From |
 |---|---|---|---|
 | 1 | Wall left | 1 | `wall-left.dxf` |
 | 2 | Wall right (IEC cutout) | 1 | `wall-right-iec.dxf` |
 | 3 | Wall top | 1 | `wall-top.dxf` |
+| 4 | Wall top doubler (glued inside) | 1 | `wall-top-doubler.dxf` |

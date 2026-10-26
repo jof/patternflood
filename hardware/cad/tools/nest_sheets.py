@@ -220,11 +220,12 @@ LAYOUT = [
 # their own sheet so the full set above stays as it was. Not counted against
 # MANIFEST.md. 2026-10-26: the art changed after sheet 3 was cut (no more
 # space-filling curves), so the three walls that carry art go again; their
-# doublers and the bottom wall have none and stand.
+# doublers and the bottom wall have none and stand. Rev 2.7 (the sleep
+# button) adds the top doubler: it needs a second notch, at its right end.
 RECUT = {"stem": "recut-walls",
-         "title": "Re-cut — the three walls with art",
+         "title": "Re-cut — the three walls with art, and the top doubler",
          "walls": ["wall-left.dxf", "wall-right-iec.dxf"],
-         "along_after_walls": [("wall-top.dxf", True)],
+         "along_after_walls": [("wall-top.dxf", True), ("wall-top-doubler.dxf", True)],
          "gap": 15.0}
 
 
@@ -533,7 +534,9 @@ def write_recut(spec):
           "Not part of the set above: parts that were cut once and have to go again. The art "
           "changed after sheet 3 was cut (2026-10-26: no space-filling curves any more), so the "
           "three walls that carry art are re-cut here; from the first sheet 3 keep the two side "
-          "doublers and the bottom wall, which have none.", "",
+          "doublers and the bottom wall, which have none. Rev 2.7 added the sleep button at the "
+          "top wall's right end, so the top doubler goes again too, with a second notch there: "
+          "the one from sheet 4 is notched for the left row only.", "",
           f"![{spec['title']}]({stem}.png)", "", "| # | Part | Qty | From |", "|---|---|---|---|"]
     md += [f"| {i + 1} | {PART.get(n, n)} | 1 | `{n}` |" for i, (n, _) in enumerate(placed)]
     return md + [""]

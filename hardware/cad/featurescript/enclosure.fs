@@ -11,11 +11,11 @@ LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "0de8eecf24220a61c227
 // The etched art, as images for decals on the outer faces (tools/art.py
 // renders them, tools/decals.py uploads them and rewrites this block).
 // ART IMPORTS BEGIN — written by tools/decals.py
-ArtBezelOuter::import(path : "669f5ff90ec051aa8533859d", version : "67405a66b7adbc9d31342c97");
-ArtWallLeft::import(path : "6770a70595bb6770e346f98b", version : "dca51d5213a63f4b64654a95");
-ArtWallRight::import(path : "f594dee1c28d8c4c2048360d", version : "3b8b6976cffc54e2560bab18");
-ArtWallTop::import(path : "d58d302d5216cc1a0cdf491c", version : "683951c8b880b56a7f2c225e");
-ArtBackCover::import(path : "7d8f74de8d66542a9f28ae5b", version : "f89d164ae777b88a2f272641");
+ArtBezelOuter::import(path : "669f5ff90ec051aa8533859d", version : "f47affaf488fcf90469eb80e");
+ArtWallLeft::import(path : "6770a70595bb6770e346f98b", version : "6b0d6df1d080f30a0b703afb");
+ArtWallRight::import(path : "f594dee1c28d8c4c2048360d", version : "78fefb4f2b6e148385512b34");
+ArtWallTop::import(path : "d58d302d5216cc1a0cdf491c", version : "806359e6a6da033e96284976");
+ArtBackCover::import(path : "7d8f74de8d66542a9f28ae5b", version : "53eaaf073ca620ec0e133925");
 // ART IMPORTS END
 
 /**
@@ -1020,7 +1020,7 @@ const KNOB_SLIT_R0 = 13.0;       // mm
 const KNOB_SLIT_R1 = 16.5;       // mm
 const KNOB_SLIT_W = 0.7;         // mm, as cut
 
-// Three push buttons in a row along the TOP wall, at its left end: 12 mm
+// Four push buttons on the TOP wall (rev 2.7; three until rev 2.6): 12 mm
 // waterproof momentaries (the VanMoof S3 boost button; Amazon B07F24Y1TB's
 // drawing): head 17.5 dia, 8.1 proud of the panel; 9.9 of thread and body
 // behind it, then 3.6 of solder lugs. The thread has two flats, 11 apart.
@@ -1034,7 +1034,19 @@ const KNOB_SLIT_W = 0.7;         // mm, as cut
 // round the whole row — a notch out of its rear left corner, open to both
 // edges so it leaves no thin strips. Facts about a bought part, so constants
 // (cf. the board data).
-const BTN_COUNT = 3;
+//
+// Where they go and what they do: previous / select / next in a row at the
+// left end, over the knobs, and sleep alone at the right end, where a hand
+// on the row can't hit it by mistake. Left to right seen from the front;
+// GPIO as wired (docs/desktop/wiring-pi-controller.md §7). The row is blue
+// and orange, as asked; sleep is black, from the pack's five (white, black,
+// red, yellow, green): it reads as "off" and keeps the eye on the row.
+const BTN_ROW = 3;               // the row at the left end; the rest stand alone at the right end
+const BTN_ROLES = ["previous", "select", "next", "sleep"];
+const BTN_GPIO = [17, 27, 22, 23];
+const BTN_COLOURS = [["blue", [0.08, 0.32, 0.80]], ["orange", [1.00, 0.45, 0.05]],
+                     ["blue", [0.08, 0.32, 0.80]], ["black", [0.06, 0.06, 0.07]]];
+const BTN_COUNT = 4;
 const BTN_THREAD = 12.0;         // mm, thread dia (passes inside the lip's hole)
 const BTN_FLATS = 11.0;          // mm, across the thread's flats (no longer the key)
 const BTN_LIP = 13.0;            // mm, the lip's dia
@@ -1162,6 +1174,149 @@ function hexPrism(context is Context, id is Id, cx is ValueWithUnits, cy is Valu
             "operationType" : BooleanOperationType.INTERSECTION });
 
     return qCreatedBy(id, EntityType.BODY);
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// Hardware: screws, nuts, washers, push buttons (rev 2.7)
+// ────────────────────────────────────────────────────────────────────────
+// Bought parts, drawn so the model shows what goes where and how long it
+// is. Visual only: nothing is cut by them, and their names never match
+// export_dxf.py's part pattern. Each is built along +z at the origin, then
+// moved: `at` is the point the part bears on (under a screw's head, a nut's
+// or washer's bearing face), `dir` the way it points into the work. ISO 4762
+// socket caps and ISO 4032 nuts: what the box takes everywhere.
+
+const HW_STEEL = [0.62, 0.63, 0.66];
+const HW_PLASTIC = [0.10, 0.10, 0.11];       // the buttons' bodies and nuts
+const HW_WASHER_T = 0.5;                     // mm, ISO 7089
+const HW_WASHER_OD = 7.0;                    // mm, M3
+
+function hwLook(context is Context, q is Query, name is string, rgb is array)
+{
+    setProperty(context, { "entities" : q, "propertyType" : PropertyType.NAME, "value" : name });
+    setProperty(context, { "entities" : q, "propertyType" : PropertyType.APPEARANCE,
+                           "value" : color(rgb[0], rgb[1], rgb[2]) });
+}
+
+// local +z onto dir, the origin onto at; xDir fixes the turn about it
+function hwPlace(context is Context, id is Id, q is Query, at is Vector, dir is Vector, xDir is Vector)
+{
+    opTransform(context, id, {
+            "bodies"    : q,
+            "transform" : toWorld(coordSystem(at, normalize(xDir), normalize(dir))) });
+}
+
+function hwScrew(context is Context, id is Id, at is Vector, dir is Vector, len is ValueWithUnits,
+                 d is ValueWithUnits, dk is ValueWithUnits, k is ValueWithUnits, name is string)
+{
+    fCylinder(context, id + "head", { "topCenter" : vector(0 * meter, 0 * meter, 0 * meter),
+                                      "bottomCenter" : vector(0 * meter, 0 * meter, -k), "radius" : dk / 2 });
+    fCylinder(context, id + "shank", { "topCenter" : vector(0 * meter, 0 * meter, len),
+                                       "bottomCenter" : vector(0 * meter, 0 * meter, 0 * meter), "radius" : d / 2 });
+    opBoolean(context, id + "join", {
+            "tools"         : qUnion([qCreatedBy(id + "head", EntityType.BODY), qCreatedBy(id + "shank", EntityType.BODY)]),
+            "operationType" : BooleanOperationType.UNION });
+    const q = qCreatedBy(id, EntityType.BODY);
+    hwPlace(context, id + "place", q, at, dir, perpendicularVector(dir));
+    hwLook(context, q, name, HW_STEEL);
+}
+
+function hwNut(context is Context, id is Id, at is Vector, dir is Vector, af is ValueWithUnits,
+               m is ValueWithUnits, bore is ValueWithUnits, name is string)
+{
+    const q = hexPrism(context, id + "hex", 0 * meter, 0 * meter, af, 0 * meter, m);
+    fCylinder(context, id + "bore", { "topCenter" : vector(0 * meter, 0 * meter, m + 1 * millimeter),
+                                      "bottomCenter" : vector(0 * meter, 0 * meter, -1 * millimeter), "radius" : bore / 2 });
+    opBoolean(context, id + "cut", {
+            "tools"         : qCreatedBy(id + "bore", EntityType.BODY),
+            "targets"       : q,
+            "operationType" : BooleanOperationType.SUBTRACTION });
+    hwPlace(context, id + "place", q, at, dir, perpendicularVector(dir));
+    hwLook(context, q, name, HW_STEEL);
+}
+
+function hwWasher(context is Context, id is Id, at is Vector, dir is Vector, od is ValueWithUnits,
+                  bore is ValueWithUnits, name is string)
+{
+    fCylinder(context, id + "disc", { "topCenter" : vector(0 * meter, 0 * meter, HW_WASHER_T * millimeter),
+                                      "bottomCenter" : vector(0 * meter, 0 * meter, 0 * meter), "radius" : od / 2 });
+    fCylinder(context, id + "bore", { "topCenter" : vector(0 * meter, 0 * meter, 1 * millimeter),
+                                      "bottomCenter" : vector(0 * meter, 0 * meter, -1 * millimeter), "radius" : bore / 2 });
+    opBoolean(context, id + "cut", {
+            "tools"         : qCreatedBy(id + "bore", EntityType.BODY),
+            "targets"       : qCreatedBy(id + "disc", EntityType.BODY),
+            "operationType" : BooleanOperationType.SUBTRACTION });
+    const q = qCreatedBy(id + "disc", EntityType.BODY);
+    hwPlace(context, id + "place", q, at, dir, perpendicularVector(dir));
+    hwLook(context, q, name, HW_STEEL);
+}
+
+// One push button (BTN_*), at the hole's centre on the wall's outer face,
+// `dir` into the box, `flatDir` toward the lip's flat. Three bodies: the cap
+// (the head, in the button's colour: an envelope, Ø17.5 x 8.1, stepped where
+// the real one is domed), the body (lip, thread with its two flats, solder
+// lugs) and the nut, which clamps the outer wall alone (the doubler is
+// notched away). The nut is drawn as a thin hex, 16 AF x 2: VERIFY on the part.
+function hwButton(context is Context, id is Id, at is Vector, dir is Vector, flatDir is Vector,
+                  wallT is ValueWithUnits, name is string, rgb is array)
+{
+    const mm = millimeter;
+    const o = 0 * meter;
+    const xDir = cross(flatDir, dir);       // local y = dir x xDir = flatDir
+    fCylinder(context, id + "capA", { "topCenter" : vector(o, o, o), "bottomCenter" : vector(o, o, -3 * mm),
+                                      "radius" : 17.5 / 2 * mm });
+    fCylinder(context, id + "capB", { "topCenter" : vector(o, o, -3 * mm), "bottomCenter" : vector(o, o, -8.1 * mm),
+                                      "radius" : 14.0 / 2 * mm });
+    opBoolean(context, id + "capJoin", {
+            "tools"         : qUnion([qCreatedBy(id + "capA", EntityType.BODY), qCreatedBy(id + "capB", EntityType.BODY)]),
+            "operationType" : BooleanOperationType.UNION });
+    const cap = qUnion([qCreatedBy(id + "capA", EntityType.BODY), qCreatedBy(id + "capB", EntityType.BODY)]);
+
+    // the lip, in the wall: Ø13, its one flat BTN_LIP_FLAT from the far side
+    fCylinder(context, id + "lip", { "topCenter" : vector(o, o, wallT), "bottomCenter" : vector(o, o, o),
+                                     "radius" : BTN_LIP / 2 * mm });
+    fCuboid(context, id + "lipFlat", { "corner1" : vector(-8 * mm, (BTN_LIP_FLAT - BTN_LIP / 2) * mm, -1 * mm),
+                                       "corner2" : vector(8 * mm, 8 * mm, wallT + 1 * mm) });
+    opBoolean(context, id + "lipCut", {
+            "tools"         : qCreatedBy(id + "lipFlat", EntityType.BODY),
+            "targets"       : qCreatedBy(id + "lip", EntityType.BODY),
+            "operationType" : BooleanOperationType.SUBTRACTION });
+    // thread and body to 9.9 behind the outer face, flats BTN_FLATS apart
+    fCylinder(context, id + "thread", { "topCenter" : vector(o, o, 9.9 * mm), "bottomCenter" : vector(o, o, wallT),
+                                        "radius" : BTN_THREAD / 2 * mm });
+    fCuboid(context, id + "flatA", { "corner1" : vector(-8 * mm, BTN_FLATS / 2 * mm, wallT - 1 * mm),
+                                     "corner2" : vector(8 * mm, 8 * mm, 11 * mm) });
+    fCuboid(context, id + "flatB", { "corner1" : vector(-8 * mm, -8 * mm, wallT - 1 * mm),
+                                     "corner2" : vector(8 * mm, -BTN_FLATS / 2 * mm, 11 * mm) });
+    opBoolean(context, id + "flatCut", {
+            "tools"         : qUnion([qCreatedBy(id + "flatA", EntityType.BODY), qCreatedBy(id + "flatB", EntityType.BODY)]),
+            "targets"       : qCreatedBy(id + "thread", EntityType.BODY),
+            "operationType" : BooleanOperationType.SUBTRACTION });
+    // two solder lugs, 3.6 long
+    var lugs = [];
+    for (var s = 0; s < 2; s += 1)
+    {
+        const lx = (s * 2 - 1) * 3 * mm;
+        fCuboid(context, id + ("lug" ~ s), { "corner1" : vector(lx - 0.25 * mm, -1.25 * mm, 9.9 * mm),
+                                             "corner2" : vector(lx + 0.25 * mm, 1.25 * mm, 13.5 * mm) });
+        lugs = append(lugs, qCreatedBy(id + ("lug" ~ s), EntityType.BODY));
+    }
+    const bodyParts = qUnion(concatenateArrays([[qCreatedBy(id + "lip", EntityType.BODY),
+                                                 qCreatedBy(id + "thread", EntityType.BODY)], lugs]));
+    opBoolean(context, id + "bodyJoin", { "tools" : bodyParts, "operationType" : BooleanOperationType.UNION });
+
+    const nut = hexPrism(context, id + "nut", o, o, 16 * mm, wallT, wallT + 2 * mm);
+    fCylinder(context, id + "nutBore", { "topCenter" : vector(o, o, wallT + 3 * mm), "bottomCenter" : vector(o, o, wallT - 1 * mm),
+                                         "radius" : BTN_THREAD / 2 * mm });
+    opBoolean(context, id + "nutCut", {
+            "tools"         : qCreatedBy(id + "nutBore", EntityType.BODY),
+            "targets"       : nut,
+            "operationType" : BooleanOperationType.SUBTRACTION });
+
+    hwPlace(context, id + "place", qUnion([cap, bodyParts, nut]), at, dir, xDir);
+    hwLook(context, cap, name, rgb);
+    hwLook(context, bodyParts, name ~ " — body", HW_PLASTIC);
+    hwLook(context, nut, name ~ " — nut", HW_PLASTIC);
 }
 
 // ────────────────────────────────────────────────────────────────────────
@@ -2454,15 +2609,23 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
 
         // ── push buttons, top wall (see BTN_*) ──────────────────────────
         // A row along x from the left end, the first a pitch's half in from
-        // the left doubler. In z, midway between the upper brace's back and
-        // the doubler's rear end, where the bay is open: below them is only
-        // air over the top-left panel's back, the brace in front and rail C
-        // behind both clear of the bodies.
+        // the left doubler; the rest the same from the right end, inward. In
+        // z, midway between the upper brace's back and the doubler's rear
+        // end, where the bay is open: below them is only air over the top
+        // panels' backs, the brace in front and rail C behind both clear of
+        // the bodies.
         const btnZ = (zBraceB + dz1) / 2;
         var btnXs = [];
         for (var k = 0; k < BTN_COUNT; k += 1)
         {
-            btnXs = append(btnXs, left + tw + (k + 0.5) * BTN_PITCH * millimeter);
+            if (k < BTN_ROW)
+            {
+                btnXs = append(btnXs, left + tw + (k + 0.5) * BTN_PITCH * millimeter);
+            }
+            else
+            {
+                btnXs = append(btnXs, right - tw - (BTN_COUNT - k - 0.5) * BTN_PITCH * millimeter);
+            }
         }
 
         // ── ventilation (rev 2): in through the bottom, out high on the sides ──
@@ -2596,12 +2759,22 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                     "operationType" : BooleanOperationType.SUBTRACTION });
             if (nw > 1)
             {
+                // one notch per end: the left one under the row, the right
+                // one under the buttons that stand alone there
                 fCuboid(context, id + "btnNotch", {
                         "corner1" : vector(left + t, top - tw - over, dz1 - over),
-                        "corner2" : vector(btnXs[BTN_COUNT - 1] + BTN_NUT_ROOM * millimeter, top - t + over,
+                        "corner2" : vector(btnXs[BTN_ROW - 1] + BTN_NUT_ROOM * millimeter, top - t + over,
                                            btnZ + BTN_NUT_ROOM * millimeter) });
+                var notches = [qCreatedBy(id + "btnNotch", EntityType.BODY)];
+                if (BTN_COUNT > BTN_ROW)
+                {
+                    fCuboid(context, id + "btnNotchR", {
+                            "corner1" : vector(btnXs[BTN_ROW] - BTN_NUT_ROOM * millimeter, top - tw - over, dz1 - over),
+                            "corner2" : vector(right - t, top - t + over, btnZ + BTN_NUT_ROOM * millimeter) });
+                    notches = append(notches, qCreatedBy(id + "btnNotchR", EntityType.BODY));
+                }
                 opBoolean(context, id + "btnNotchCut", {
-                        "tools"         : qCreatedBy(id + "btnNotch", EntityType.BODY),
+                        "tools"         : qUnion(notches),
                         "targets"       : qUnion(dbl.wallT),
                         "operationType" : BooleanOperationType.SUBTRACTION });
             }
@@ -2880,5 +3053,171 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             opMateConnector(context, id + ("mcBtn" ~ k), {
                     "coordSystem" : coordSystem(vector(btnXs[k], top, btnZ), vector(1, 0, 0), vector(0, 1, 0)),
                     "owner"       : qCreatedBy(id + "wallT", EntityType.BODY) });
+        }
+
+        // ── hardware (rev 2.7): screws, nuts, washers, buttons ──────────
+        // Every machine screw in the box with its nut or washer, where it
+        // goes and at the length the build uses (see the hw* helpers). Not
+        // the French cleat's wood screws: until a cleat goes on there are
+        // none. Hardware is decoration as far as the box is concerned, so a
+        // failure here is caught and reported on the origin datum, like the
+        // decals, and never fails the wood.
+        try
+        {
+            const mm = millimeter;
+            const m3 = 3 * mm;
+            const nutAF = definition.nutAcrossFlats;
+            const up = vector(0, 0, 1);
+
+            // back cover: through the cover and rail A into the nut in rail B,
+            // which bears on rail A's front face. M3 x 10 ends 1.2 past the
+            // nut, inside rail C's clearance hole.
+            for (var ri = 0; ri < 2; ri += 1)
+            {
+                const ym = railY0[ri] + railW / 2;
+                for (var k = 0; k < definition.screwsPerRail; k += 1)
+                {
+                    var sx = 0 * meter;
+                    if (definition.screwsPerRail > 1)
+                    {
+                        sx = -definition.screwXSpan + k * (2 * definition.screwXSpan / (definition.screwsPerRail - 1));
+                    }
+                    const n = ri * definition.screwsPerRail + k + 1;
+                    hwScrew(context, id + ("hwCov" ~ n), vector(sx, ym, zBc0), up, 10 * mm, m3, 5.5 * mm, 3 * mm,
+                            "Screw M3 x 10 — back cover " ~ n);
+                    hwNut(context, id + ("hwCovNut" ~ n), vector(sx, ym, railZ[1]), up, nutAF, 2.4 * mm, m3,
+                          "Nut M3 — back cover " ~ n);
+                }
+            }
+
+            // panels: from behind each brace, through a washer and the brace's
+            // slot into the panel's insert, ~4 mm of thread in it. M3 x 8 through
+            // the single braces, M3 x 14 through the three-sheet middle one.
+            var pn = 0;
+            for (var s = 0; s < size(braceSpans); s += 1)
+            {
+                const lo = braceSpans[s][0];
+                const hi = braceSpans[s][1];
+                var zRear = zBraceB;
+                var len = 8;
+                if (s == trayBrace)
+                {
+                    zRear = zBraceB - 2 * t;
+                    len = 14;
+                }
+                for (var r = 0; r < nRows; r += 1)
+                {
+                    const rc = ((nRows - 1) / 2 - r) * definition.panelH;
+                    for (var pi = 0; pi < nCols; pi += 1)
+                    {
+                        const pc = (pi - (nCols - 1) / 2) * definition.panelW;
+                        for (var j = 0; j < 2; j += 1)
+                        {
+                            const py = rc + (1 - 2 * j) * definition.braceYOffset;
+                            if (py <= lo || py >= hi)
+                            {
+                                continue;
+                            }
+                            for (var k = 0; k < 2; k += 1)
+                            {
+                                const px = pc + (1 - 2 * k) * definition.postXOffset;
+                                pn += 1;
+                                hwWasher(context, id + ("hwPanW" ~ pn), vector(px, py, zRear - HW_WASHER_T * mm), up,
+                                         HW_WASHER_OD * mm, 3.2 * mm, "Washer M3 — panel screw " ~ pn);
+                                hwScrew(context, id + ("hwPan" ~ pn), vector(px, py, zRear - HW_WASHER_T * mm), up,
+                                        len * mm, m3, 5.5 * mm, 3 * mm, "Screw M3 x " ~ len ~ " — panel " ~ pn);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // tray: M3 x 16 from behind, through the tray and its ring into the
+            // nut in the middle brace's middle sheet, which bears on its rear sheet
+            for (var k = 0; k < size(trayScrews); k += 1)
+            {
+                const sx = trayScrews[k][0];
+                const sy = trayScrews[k][1];
+                hwScrew(context, id + ("hwTray" ~ (k + 1)), vector(sx, sy, trayB), up, 16 * mm, m3, 5.5 * mm, 3 * mm,
+                        "Screw M3 x 16 — tray " ~ (k + 1));
+                hwNut(context, id + ("hwTrayNut" ~ (k + 1)), vector(sx, sy, zBraceB - t), up, nutAF, 2.4 * mm, m3,
+                      "Nut M3 — tray " ~ (k + 1));
+            }
+
+            // boards: from the component side, through the board and its ring
+            // into the nut in the tray's rear sheet, which bears on the ring.
+            // M3 x 8 for the Colorlight, M2.5 x 8 for the Pi. PCBs 1.7 and 1.6
+            // (#clPcbT, #piPcbT, which this feature isn't passed).
+            for (var k = 0; k < size(boardSites); k += 1)
+            {
+                const sx = boardSites[k][0];
+                const sy = boardSites[k][1];
+                var pcbT = 1.7 * mm;
+                var d = m3;
+                var dk = 5.5 * mm;
+                var hk = 3 * mm;
+                var nm = 2.4 * mm;
+                var size_ = "M3";
+                if (k >= size(CL_HOLES))
+                {
+                    pcbT = 1.6 * mm;
+                    d = 2.5 * mm;
+                    dk = 4.5 * mm;
+                    hk = 2.5 * mm;
+                    nm = 2 * mm;
+                    size_ = "M2.5";
+                }
+                hwScrew(context, id + ("hwBoard" ~ (k + 1)), vector(sx, sy, trayB - br - pcbT), up, 8 * mm, d, dk, hk,
+                        "Screw " ~ size_ ~ " x 8 — " ~ boardSites[k][2]);
+                hwNut(context, id + ("hwBoardNut" ~ (k + 1)), vector(sx, sy, trayB), up, boardSites[k][4], nm, d,
+                      "Nut " ~ size_ ~ " — " ~ boardSites[k][2]);
+            }
+
+            // PSU: M3 x 8 up through the bottom doubler, heads in the outer
+            // sheet's recesses (PSU_HEAD_RECESS), no washers
+            for (var ph = 0; ph < 2; ph += 1)
+            {
+                hwScrew(context, id + ("hwPsu" ~ (ph + 1)),
+                        vector(psuHoleXs[ph], bottom + t, definition.psuZFront - definition.psuHoleZ), vector(0, 1, 0),
+                        8 * mm, m3, 5.5 * mm, 3.2 * mm, "Screw M3 x 8 — PSU " ~ (ph + 1));
+            }
+
+            // IEC flange: from outside, heads on the 3.5 mm flange (#iecFlangeThk,
+            // which this feature isn't passed), washer and nut inside. The front
+            // screw goes through wall and doubler (M3 x 16), the rear one, behind
+            // the doubler's end, through the wall alone (M3 x 12).
+            for (var us = 0; us < 2; us += 1)
+            {
+                const uz = definition.iecZ + (2 * us - 1) * definition.iecScrewSpacing / 2;
+                var xin = right - t;
+                var len = 12;
+                if (uz > dz1 && uz < dz0)
+                {
+                    xin = right - tw;
+                    len = 16;
+                }
+                const iecIn = vector(-1, 0, 0);
+                hwScrew(context, id + ("hwIec" ~ (us + 1)), vector(right + 3.5 * mm, definition.iecY, uz), iecIn,
+                        len * mm, m3, 5.5 * mm, 3 * mm, "Screw M3 x " ~ len ~ " — IEC " ~ (us + 1));
+                hwWasher(context, id + ("hwIecW" ~ (us + 1)), vector(xin, definition.iecY, uz), iecIn,
+                         HW_WASHER_OD * mm, 3.2 * mm, "Washer M3 — IEC " ~ (us + 1));
+                hwNut(context, id + ("hwIecNut" ~ (us + 1)), vector(xin - HW_WASHER_T * mm, definition.iecY, uz), iecIn,
+                      nutAF, 2.4 * mm, m3, "Nut M3 — IEC " ~ (us + 1));
+            }
+
+            // the push buttons, lip's flat toward the front as cut
+            for (var k = 0; k < BTN_COUNT; k += 1)
+            {
+                hwButton(context, id + ("hwBtn" ~ (k + 1)), vector(btnXs[k], top, btnZ), vector(0, -1, 0), vector(0, 0, 1), t,
+                         "Button " ~ (k + 1) ~ " — " ~ BTN_ROLES[k] ~ " (" ~ BTN_COLOURS[k][0] ~ ", GPIO" ~ BTN_GPIO[k] ~ ")",
+                         BTN_COLOURS[k][1]);
+            }
+        }
+        catch (e)
+        {
+            setProperty(context, {
+                    "entities"     : qCreatedBy(id + "mcOrigin", EntityType.BODY),
+                    "propertyType" : PropertyType.NAME,
+                    "value"        : "Origin (hardware failed: " ~ toString(e) ~ ")" });
         }
     });

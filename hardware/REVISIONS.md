@@ -356,3 +356,50 @@ etched art.
 - **Re-cut** (`sheets/recut-walls*`, one 12 × 24): the three walls with art —
   left, right (IEC) and top. From the first sheet 3 keep both side doublers and
   the bottom wall (no art). Sheets 4, 5 and 6 as cut stand.
+
+## Rev 2.7 — sleep button; screws and buttons in the model (2026-10-26)
+
+Git tag **`rev-2.7`**. Onshape version **"Rev 2.7 - for cutting"** (`48712a22bdd30c3712d9adbe`),
+made from the main workspace once it matched the tag's `enclosure.fs` exactly.
+Rev 2.6 plus a fourth push button. Only the top wall and the top doubler changed.
+
+- **A fourth button, for sleep (blackout)**, alone at the top wall's **right**
+  end: x +128.1, mirroring the row's first button, z −32.6 like the row. A hand on
+  the row can't hit it by mistake. It has the same keyed hole, and the **top
+  doubler gets a second notch**, out of its rear right corner, so its nut clamps
+  the outer wall alone like the others. Every button part is ≥ 1.76 mm from
+  everything else in the model (the nearest is its notch's edge, as for the row).
+  `BTN_ROW` 3 (the row at the left end), `BTN_COUNT` 4.
+- **The buttons have roles and colours** (`BTN_ROLES`, `BTN_COLOURS`, `BTN_GPIO`):
+  previous (blue, GPIO17), select (orange, GPIO27), next (blue, GPIO22), left to
+  right seen from the front, and sleep (black, GPIO23). Wiring and what they do:
+  [`wiring-pi-controller.md` §7](../docs/desktop/wiring-pi-controller.md).
+- **Hardware in the model**, in the Enclosure shell, in situ and coloured: 88 bodies,
+  visual only. Nothing cuts by them, their names don't match `export_dxf.py`'s
+  part pattern, and a failure in them is caught (it renames the origin datum)
+  rather than failing the box.
+
+  | Where | Screw | With |
+  |---|---|---|
+  | Back cover, 6 | M3 × 10 socket cap | nut in rail B, bearing on rail A |
+  | Panels to upper / lower brace, 4 + 4 | **M3 × 8** | M3 washer |
+  | Panels to middle brace (three sheets), 8 | **M3 × 14** | M3 washer |
+  | Tray to middle brace, 4 | M3 × 16 | nut in the brace's middle sheet |
+  | Colorlight to tray, 4 | M3 × 8 | nut in the tray's rear sheet |
+  | Pi 5 to tray, 4 | M2.5 × 8 | M2.5 nut in the tray's rear sheet |
+  | PSU through the bottom, 2 | M3 × 8, heads in the recesses | — |
+  | IEC flange, front / rear | M3 × 16 / M3 × 12 | washer + nut inside |
+  | Push buttons, 4 | cap in its colour, body, nut | — |
+
+  The back cover and panel screw lengths weren't written down before; these
+  are derived from the stack. M3 × 10 puts 1.2 mm past the cover nut, inside rail
+  C's clearance. The panel screws give ~4 mm of thread in the panel's insert
+  (its depth is unmeasured). The button nut is drawn 16 AF × 2 thick:
+  **VERIFY** on the part. The French cleat's wood screws aren't drawn: there are
+  none until a cleat goes on.
+- **Cut:** the top doubler goes on the **re-cut sheet** (`sheets/recut-walls*`),
+  beside the three art walls. The one cut on sheet 4 is notched for the row only.
+  Sheets 1 and 2 are unchanged.
+- Pushed, exported, art re-run and re-nested, decals re-uploaded. Only `wall-top.dxf`, `wall-top-doubler.dxf` and the top wall's art
+  changed (it gets a fourth halo). The other parts and their art regenerate
+  byte-identical. Checks clean, every QR decodes, every decal attaches.
