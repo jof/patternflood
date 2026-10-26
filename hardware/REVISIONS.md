@@ -300,7 +300,7 @@ on. Its README lists every change since rev 1 and what covers it.
 
 ## Rev 2.5 — test-cut fixes; for cutting (2026-10-25)
 
-Git tag **`rev-2.5`**. Onshape version **"Rev 2.5 - for cutting"** (VERSION_ID),
+Git tag **`rev-2.5`**. Onshape version **"Rev 2.5 - for cutting"** (`40f4d6594f676c359a84be50`),
 made from the main workspace once it matched the tag's `enclosure.fs` exactly.
 Rev 2.4 plus the one fix the `since-rev-1` test cuts called for: the push-button
 hole. Everything on that sheet now checks out. This is the one to cut.
