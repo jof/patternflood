@@ -309,23 +309,23 @@ def piece_psu(v):
 
 
 def keyed_hole(cx, cy, d, f, layer=CUT):
-    """A circle of diameter d with its top and bottom cut flat, f apart: the push buttons' key."""
-    r, h = d / 2, f / 2
+    """A circle of diameter d with ONE flat, on top, f from the flat across to the
+    round side: the push button's lip, which keys it."""
+    r, h = d / 2, f - d / 2
     dx = math.sqrt(r * r - h * h)
     a = math.degrees(math.atan2(h, dx))
-    return [("A", (cx, cy), r, -a, a, layer), ("A", (cx, cy), r, 180 - a, 180 + a, layer),
-            ("L", (cx - dx, cy + h), (cx + dx, cy + h), layer), ("L", (cx - dx, cy - h), (cx + dx, cy - h), layer)]
+    return [("A", (cx, cy), r, 180 - a, 360 + a, layer), ("L", (cx - dx, cy + h), (cx + dx, cy + h), layer)]
 
 
 def piece_buttons(v, C, clears):
-    """Keyed holes for the push buttons, one per clearance, drawn as the left wall cuts them."""
+    """Keyed holes for the push buttons, one per clearance, drawn as the top wall cuts them."""
     k, pitch = v["kerf"], 20.0
     W, H = 8 + len(clears) * pitch, 26
     ents = rect(0, 0, W, H)
     ents += text("11", 4.5, 2, centre=False)
     for i, c in enumerate(clears):
         cx = 8 + pitch / 2 + i * pitch
-        ents += keyed_hole(cx, 15, C["BTN_THREAD"] + c - k, C["BTN_FLATS"] + c - k)
+        ents += keyed_hole(cx, 15, C["BTN_LIP"] + c - k, C["BTN_LIP_FLAT"] + c - k)
         ents += text(fmt(c), cx, 2, h=2.4)
     return ents
 
@@ -437,7 +437,7 @@ def board_consts():
     src = open(FS).read()
     return {n: fs_const(src, n) for n in ("CL_W", "CL_H", "CL_HOLES", "CL_HUBS", "CL_HUB_L", "CL_HUB_W",
                                          "CL_RJ45", "PI_W", "PI_H", "PI_HOLES",
-                                         "BTN_THREAD", "BTN_FLATS", "BTN_CLEAR")}
+                                         "BTN_THREAD", "BTN_FLATS", "BTN_LIP", "BTN_LIP_FLAT", "BTN_CLEAR")}
 
 
 def all_pieces(v, C):
@@ -545,14 +545,16 @@ def all_pieces(v, C):
              read="Hold it on the PSU's threaded side face, that end flush with the terminal end: two M3 x 8 "
                   "should thread in square.",
              var="#psuHoleAX, #psuHoleBX, #psuHoleDia"),
-        dict(id=11, file="11-push-button-keys.dxf", ents=piece_buttons(v, C, [0.0, 0.1, 0.2, 0.3, 0.4]),
-             title="Push buttons: keyed hole sweep",
-             test=f"Five keyed holes for the 12 mm push buttons (Ø{fmt(C['BTN_THREAD'])} thread, flats "
-                  f"{fmt(C['BTN_FLATS'])} apart), each drawn as the top wall cuts it: thread and flats plus the "
-                  "engraved clearance, minus kerf. The flats run horizontally.",
-             read="Push a button through each. You want the smallest clearance it goes through by hand, flats "
-                  f"engaged, and doesn't turn when the nut is tightened. The model uses {fmt(C['BTN_CLEAR'])}; "
-                  "set BTN_CLEAR in enclosure.fs to the label that fits.",
+        dict(id=11, file="11-push-button-keys.dxf", ents=piece_buttons(v, C, [0.1, 0.2, 0.3, 0.4, 0.5]),
+             title="Push buttons: keyed hole sweep (the lip)",
+             test=f"Five keyed holes for the 12 mm push buttons, shaped to the lip between head and thread: "
+                  f"Ø{fmt(C['BTN_LIP'])} with one flat {fmt(C['BTN_LIP_FLAT'])} across to the round side, plus "
+                  "the engraved clearance, minus kerf, each drawn as the top wall cuts it. The flat is at the "
+                  "top, and small: 0.12 deep, ~2.5 long. (2026-10-25: thread-sized holes didn't take the lip; "
+                  "the thread alone needed 0.4.)",
+             read="Push a button in from the face side, lip into the hole. You want the smallest clearance the "
+                  "lip seats in by hand, flat to flat, and that doesn't turn when the nut is tightened. The "
+                  f"model uses {fmt(C['BTN_CLEAR'])}; set BTN_CLEAR in enclosure.fs to the label that fits.",
              var="BTN_CLEAR (a constant in enclosure.fs)"),
     ]
     return pieces

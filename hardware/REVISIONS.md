@@ -297,3 +297,22 @@ on. Its README lists every change since rev 1 and what covers it.
   ~13 mm from a recess.
 - Standing it flat closes the **intake vents** in the bottom wall: fine for a
   while, but for long runs at brightness keep it on feet ≥ 8 mm as before.
+
+### Test-cut results; the button hole fits the lip (2026-10-25, after the `rev-2.4` tag)
+
+From the `since-rev-1` sheet:
+
+- **Scoring, fonts, QR codes (16), art and the dial (12): good** as drawn.
+- **Push buttons (11): only 0.4 took the thread,** and none took the button
+  seated: between the head and the thread is a **lip, Ø13 with one flat, 12.88
+  from the flat across to the round side**, and it is the lip that sits in the
+  wall. The keyed hole is now the lip's shape (`BTN_LIP`, `BTN_LIP_FLAT`), one
+  flat, toward the front, with `BTN_CLEAR` 0.3 on both; the lip's flat keys it,
+  and the thread (Ø12, 11 flats) passes inside. Drawn Ø13.15 with the flat
+  6.455 off centre (the flat is small: 0.12 deep, 2.5 long). Only
+  `wall-top.dxf`, sheet 3 and the top wall's etch changed (its halos find the
+  buttons by the lip's arc now). **Follow-up test cut:** piece 11
+  (`test-cuts/since-rev-1/11-push-button-keys.dxf`, 108 × 26) now sweeps the
+  lip at clearances 0.1–0.5; set `BTN_CLEAR` to the one that seats by hand and
+  doesn't turn.
+- PSU (10 + 14): still being checked.

@@ -92,11 +92,11 @@ Values used for this cut: `#kerf` 0.15, `#thickness` 3.18, `#screwDia` 3.05, `#n
 
 **Sets:** #psuHoleAX, #psuHoleBX, #psuHoleDia
 
-## 11. Push buttons: keyed hole sweep — `11-push-button-keys.dxf`
+## 11. Push buttons: keyed hole sweep (the lip) — `11-push-button-keys.dxf`
 
-**Cut:** Five keyed holes for the 12 mm push buttons (Ø12 thread, flats 11 apart), each drawn as the top wall cuts it: thread and flats plus the engraved clearance, minus kerf. The flats run horizontally.
+**Cut:** Five keyed holes for the 12 mm push buttons, shaped to the lip between head and thread: Ø13 with one flat 12.88 across to the round side, plus the engraved clearance, minus kerf, each drawn as the top wall cuts it. The flat is at the top, and small: 0.12 deep, ~2.5 long. (2026-10-25: thread-sized holes didn't take the lip; the thread alone needed 0.4.)
 
-**Read:** Push a button through each. You want the smallest clearance it goes through by hand, flats engaged, and doesn't turn when the nut is tightened. The model uses 0.2; set BTN_CLEAR in enclosure.fs to the label that fits.
+**Read:** Push a button in from the face side, lip into the hole. You want the smallest clearance the lip seats in by hand, flat to flat, and that doesn't turn when the nut is tightened. The model uses 0.3; set BTN_CLEAR in enclosure.fs to the label that fits.
 
 **Sets:** BTN_CLEAR (a constant in enclosure.fs)
 

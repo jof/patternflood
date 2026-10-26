@@ -90,15 +90,10 @@ def sampled(e, step=0.5):
             for k in range(n + 1)]
 
 
-def button_centres(holes):
-    """Centres of the push buttons' keyed holes: a 12.2 circle with flats 11.2 apart."""
-    out = []
-    for h in holes:
-        x0, y0, x1, y1 = h.bounds
-        w, ht = sorted([x1 - x0, y1 - y0])
-        if 10.5 < w < 11.5 and 11.5 < ht < 12.5:
-            out.append(((x0 + x1) / 2, (y0 + y1) / 2))
-    return out
+def button_centres(ents):
+    """Centres of the push buttons' keyed holes: the arc of the lip's ~13.2 circle
+    (BTN_LIP in enclosure.fs), which runs all the way round but for its one flat."""
+    return [e[1] for e in ents if e[0] == "A" and 6.3 < e[2] < 6.9 and (e[4] - e[3]) % 360 > 300]
 
 
 def mount_centres(ents):
@@ -1044,7 +1039,7 @@ def pours(b, eggs):
 def generate(name, seed):
     ents = read_dxf(os.path.join(LASER, name))
     outline, holes, knobs = part_regions(ents)
-    buttons = button_centres(holes)
+    buttons = button_centres(ents)
     mounts = mount_centres(ents)
     keep_out = ([h.buffer(HOLE) for h in holes] + [Point(k).buffer(DIAL_KEEP) for k in knobs]
                 + [Point(c).buffer(BTN_KEEP) for c in buttons] + [Point(c).buffer(MNT_KEEP) for c in mounts])
@@ -1298,7 +1293,7 @@ def check(name, ents, allowed, score, engrave):
     region = prep(allowed.buffer(0.05))
     outline, holes, knobs = part_regions(ents)
     owned = [Point(k).buffer(DIAL_KEEP + 0.05) for k in knobs] + \
-        [Point(c).buffer(BTN_KEEP + 0.05) for c in button_centres(holes)] + \
+        [Point(c).buffer(BTN_KEEP + 0.05) for c in button_centres(ents)] + \
         [Point(c).buffer(MNT_KEEP + 0.05) for c in mount_centres(ents)]
     dials = prep(unary_union(owned)) if owned else None
     shape = lambda e, filled: (LineString([e[1], e[2]]) if e[0] == "L"

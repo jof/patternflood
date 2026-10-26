@@ -1023,17 +1023,23 @@ const KNOB_SLIT_W = 0.7;         // mm, as cut
 // Three push buttons in a row along the TOP wall, at its left end: 12 mm
 // waterproof momentaries (the VanMoof S3 boost button; Amazon B07F24Y1TB's
 // drawing): head 17.5 dia, 8.1 proud of the panel; 9.9 of thread and body
-// behind it, then 3.6 of solder lugs. The thread has two flats, 11 apart,
-// that key it against turning. It has only ~6.4 mm of thread, the same as
-// wall + doubler, so like the encoders it clamps the OUTER sheet alone: the
-// keyed hole goes through the wall, and the doubler is cut away round the
-// whole row — a notch out of its rear left corner, open to both edges so it
-// leaves no thin strips. Facts about a bought part, so constants (cf. the
-// board data).
+// behind it, then 3.6 of solder lugs. The thread has two flats, 11 apart.
+// Between the head and the thread is a LIP, 13 round with ONE flat, 12.88
+// from the flat across to the round side (measured 2026-10-25, when the rev
+// 2.4 test cut's thread-sized holes wouldn't take it): it is what sits in
+// the wall, so the hole is the lip's shape and the lip's flat keys it
+// against turning; the thread passes inside. It has only ~6.4 mm of thread,
+// the same as wall + doubler, so like the encoders it clamps the OUTER sheet
+// alone: the keyed hole goes through the wall, and the doubler is cut away
+// round the whole row — a notch out of its rear left corner, open to both
+// edges so it leaves no thin strips. Facts about a bought part, so constants
+// (cf. the board data).
 const BTN_COUNT = 3;
-const BTN_THREAD = 12.0;         // mm, thread dia
-const BTN_FLATS = 11.0;          // mm, across the key flats
-const BTN_CLEAR = 0.2;           // mm, on the dia and on the flats: a snug key
+const BTN_THREAD = 12.0;         // mm, thread dia (passes inside the lip's hole)
+const BTN_FLATS = 11.0;          // mm, across the thread's flats (no longer the key)
+const BTN_LIP = 13.0;            // mm, the lip's dia
+const BTN_LIP_FLAT = 12.88;      // mm, from the lip's one flat across to its round side
+const BTN_CLEAR = 0.3;           // mm, on the dia and on the flat; the thread needed 0.4 in the test cut
 const BTN_NUT_ROOM = 11.0;       // mm, doubler cut back this far from each button centre: the nut and fingers
 const BTN_PITCH = 24.0;          // mm, centre to centre: 6.5 between heads
 
@@ -2561,12 +2567,12 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             }
         }
 
-        // The buttons: a keyed hole through the wall for each — a circle with
-        // its front and back cut flat — and the doubler notched away under
-        // the row, so each nut pulls against the wall alone.
+        // The buttons: a keyed hole through the wall for each — the lip's
+        // circle with its one flat, toward the front — and the doubler notched
+        // away under the row, so each nut pulls against the wall alone.
         {
-            const br = (BTN_THREAD + BTN_CLEAR) / 2 * millimeter - kerf / 2;
-            const bf = (BTN_FLATS + BTN_CLEAR) / 2 * millimeter - kerf / 2;
+            const br = (BTN_LIP + BTN_CLEAR) / 2 * millimeter - kerf / 2;
+            const bf = (BTN_LIP_FLAT + BTN_CLEAR - (BTN_LIP + BTN_CLEAR) / 2) * millimeter - kerf / 2;
             var btnHoles = [];
             for (var k = 0; k < BTN_COUNT; k += 1)
             {
@@ -2578,12 +2584,8 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 fCuboid(context, id + ("btnFlatA" ~ k), {
                         "corner1" : vector(bx - br - over, top - t - 2 * over, btnZ + bf),
                         "corner2" : vector(bx + br + over, top + 2 * over,     btnZ + br + over) });
-                fCuboid(context, id + ("btnFlatB" ~ k), {
-                        "corner1" : vector(bx - br - over, top - t - 2 * over, btnZ - br - over),
-                        "corner2" : vector(bx + br + over, top + 2 * over,     btnZ - bf) });
                 opBoolean(context, id + ("btnKey" ~ k), {
-                        "tools"         : qUnion([qCreatedBy(id + ("btnFlatA" ~ k), EntityType.BODY),
-                                                  qCreatedBy(id + ("btnFlatB" ~ k), EntityType.BODY)]),
+                        "tools"         : qCreatedBy(id + ("btnFlatA" ~ k), EntityType.BODY),
                         "targets"       : qCreatedBy(id + ("btnHole" ~ k), EntityType.BODY),
                         "operationType" : BooleanOperationType.SUBTRACTION });
                 btnHoles = append(btnHoles, qCreatedBy(id + ("btnHole" ~ k), EntityType.BODY));
