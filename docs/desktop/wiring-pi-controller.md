@@ -15,7 +15,7 @@ it goes to the Pi's 40-pin header.
 | STEMMA QT wire | Signal | Pi header pin | Pi name |
 |---|---|---|---|
 | **Red** | V+ | **pin 1** | **3V3** (not 5 V) |
-| **Black** | GND | **pin 6** (or 9, 14) | GND |
+| **Black** | GND | **pin 6** (or 14) | GND |
 | **Blue** | SDA | **pin 3** | GPIO2 / SDA1 |
 | **Yellow** | SCL | **pin 5** | GPIO3 / SCL1 |
 
@@ -27,7 +27,7 @@ it goes to the Pi's 40-pin header.
   Yellow ──  SCL   (5) (6)   GND  ── Black
                    (7) (8)
              GND   (9) (10)
-                  ...
+                  ...          buttons: §7
 ```
 
 Pin 1 is the square pad, at the SD-card end of the header, on the row nearer
@@ -96,8 +96,8 @@ assumed: an Anker RTL8153 measured **0.41 A** on a PC with no link. Budget about
 ## 4. Serial console
 
 `enable_uart=1` puts the Pi's console on the header: GPIO14 TXD (pin 8) and GPIO15
-RXD (pin 10), 115200. Free grounds are pins 9, 14, 20, 25, 30, 34 and 39; pin 6 is the
-knob chain's. With a Glasgow on port B, Pi TXD → B0 and Pi RXD → B1:
+RXD (pin 10), 115200. Free grounds are pins 14, 20, 25, 30, 34 and 39; pin 6 is the
+knob chain's and pin 9 the buttons' (§7). With a Glasgow on port B, Pi TXD → B0 and Pi RXD → B1:
 
     glasgow run uart -V B=3.3 --rx B0 --tx B1 -b 115200 tty
 
@@ -140,3 +140,56 @@ solid once enumerated), for cable-flex tests.
 3. `i2cdetect -y 1` should show 37, 38, 39 and 3a.
 4. `journalctl -u patternflood -f` should show the `knobs:` line, then a
    frames-per-second line every 5 s.
+5. Buttons (§7), once the overlay is in: `evtest` lists `btn0`–`btn2`, and each
+   press shows up as a key event.
+
+## 7. Buttons (GPIO)
+
+Three momentary buttons for switching patterns without the k0 + k3 chord, on
+GPIO the knob chain and the console don't use. Each button joins its GPIO to
+ground. There are no resistors: the Pi's internal pull-up holds the line high,
+and a press pulls it low.
+
+| Button | Pi header pin | Pi name | Other side |
+|---|---|---|---|
+| **btn0** | **pin 11** | GPIO17 | GND |
+| **btn1** | **pin 13** | GPIO27 | GND |
+| **btn2** | **pin 15** | GPIO22 | GND |
+| common ground | **pin 9** | GND | all three buttons |
+
+```
+            Pi Zero W 40-pin header (top view, SD-card end at the left)
+
+                    (7) (8)   TXD     console (§4)
+  common ── GND     (9) (10)  RXD     console (§4)
+    btn0 ── GPIO17 (11) (12)
+    btn1 ── GPIO27 (13) (14)  GND
+    btn2 ── GPIO22 (15) (16)  GPIO23  ┐
+                   (17) (18)  GPIO24  │ kept free for btn3–btn5
+                   (19) (20)  GND     │
+                   (21) (22)  GPIO25  ┘
+```
+
+Pins 9, 11, 13 and 15 sit next to each other in the odd-numbered column, so a
+single 4-way female header (or a 4-pin Dupont housing) carries the ground and all
+three buttons.
+
+- **⚠ 3.3 V only, and switch to ground.** Never wire a button to 5 V. If the
+  buttons have built-in LEDs, power those separately, not through these pins.
+- **Room for six.** GPIO23 (pin 16), GPIO24 (pin 18) and GPIO25 (pin 22), with
+  GND on pin 20, are the next three, all in the even-numbered column. Counting these, the knobs
+  (GPIO2/3) and the console (GPIO14/15) leave 22 GPIO for buttons. Past that,
+  MCP23017 expanders on the knob chain (0x20–0x27) don't clash with the knobs.
+- **Software (not set up yet).** `dtoverlay=gpio-key` in `config.txt`, one line
+  per button, turns each into a key on `/dev/input`, debounced by the kernel.
+  Pull-up and active-low are its defaults:
+  ```
+  dtoverlay=gpio-key,gpio=17,keycode=59,label=btn0
+  dtoverlay=gpio-key,gpio=27,keycode=60,label=btn1
+  dtoverlay=gpio-key,gpio=22,keycode=61,label=btn2
+  ```
+  The keycodes are F1–F3 (neutral codes), so the renderer, not the wiring,
+  decides what each button does. The renderer's user, `patternflood`, needs
+  group `input` as well as `i2c`.
+- **Roles aren't settled.** See the demos' menu
+  ([`firmware/demos/README.md`](../../firmware/demos/README.md#menu)).
