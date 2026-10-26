@@ -3071,7 +3071,10 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
 
             // back cover: through the cover and rail A into the nut in rail B,
             // which bears on rail A's front face. M3 x 10 ends 1.2 past the
-            // nut, inside rail C's clearance hole.
+            // nut, inside rail C's clearance hole. Ultra-low heads, 5.5 x 1.0,
+            // so the back stands only 1 mm proud: a recess like the PSU's
+            // can't work here, because the cover is one sheet at the rails
+            // and a recessed head would bear on rail A, clamping nothing.
             for (var ri = 0; ri < 2; ri += 1)
             {
                 const ym = railY0[ri] + railW / 2;
@@ -3083,8 +3086,8 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                         sx = -definition.screwXSpan + k * (2 * definition.screwXSpan / (definition.screwsPerRail - 1));
                     }
                     const n = ri * definition.screwsPerRail + k + 1;
-                    hwScrew(context, id + ("hwCov" ~ n), vector(sx, ym, zBc0), up, 10 * mm, m3, 5.5 * mm, 3 * mm,
-                            "Screw M3 x 10 — back cover " ~ n);
+                    hwScrew(context, id + ("hwCov" ~ n), vector(sx, ym, zBc0), up, 10 * mm, m3, 5.5 * mm, 1 * mm,
+                            "Screw M3 x 10 ultra-low head — back cover " ~ n);
                     hwNut(context, id + ("hwCovNut" ~ n), vector(sx, ym, railZ[1]), up, nutAF, 2.4 * mm, m3,
                           "Nut M3 — back cover " ~ n);
                 }

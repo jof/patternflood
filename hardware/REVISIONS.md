@@ -381,7 +381,7 @@ Rev 2.6 plus a fourth push button. Only the top wall and the top doubler changed
 
   | Where | Screw | With |
   |---|---|---|
-  | Back cover, 6 | M3 × 10 socket cap | nut in rail B, bearing on rail A |
+  | Back cover, 6 | M3 × 10 socket cap (ultra-low heads since, below) | nut in rail B, bearing on rail A |
   | Panels to upper / lower brace, 4 + 4 | **M3 × 8** | M3 washer |
   | Panels to middle brace (three sheets), 8 | **M3 × 14** | M3 washer |
   | Tray to middle brace, 4 | M3 × 16 | nut in the brace's middle sheet |
@@ -403,3 +403,19 @@ Rev 2.6 plus a fourth push button. Only the top wall and the top doubler changed
 - Pushed, exported, art re-run and re-nested, decals re-uploaded. Only `wall-top.dxf`, `wall-top-doubler.dxf` and the top wall's art
   changed (it gets a fourth halo). The other parts and their art regenerate
   byte-identical. Checks clean, every QR decodes, every decal attaches.
+
+### After the tag: back cover screws with ultra-low heads (2026-10-26, model only)
+
+- The six back cover screws are now **M3 × 10 ultra-low socket heads, Ø5.5 × 1.0**
+  (e.g. Accu ZUL602 series), not 3 mm socket caps, so the back stands 1 mm proud at
+  each screw instead of 3. Same length (it's measured under the head) and the same
+  M2 hex key. If ultra-lows can't be found at 10 mm, DIN 7984 low heads
+  (Ø5.5 × 2.0) are the easy fallback.
+- **Not a PSU-style recess**, though that was the first idea: the cover is a single
+  sheet at the rails (its doubler only fills the band between them), so a head
+  recessed through it would bear on rail A, which belongs to the box, and clamp
+  nothing. Truly flush would need a third, outer back sheet (+3.18 mm of depth
+  and a seventh 12 × 24); decided against, 2026-10-26.
+- No cut path changed and nothing to re-cut. Only the hardware model
+  (`hwCov*` in `enclosure.fs`) changed, pushed to the main workspace. The `rev-2.7`
+  tag and its Onshape version still draw socket caps.
