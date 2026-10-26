@@ -1010,7 +1010,7 @@ def generate(name, seed):
         mounting_hole(b, c)
     A = allowed.area
     if name.startswith("back-cover"):
-        b.title_block(["PATTERNFLOOD / DESKTOP", "REV 2.3  2026-10", "128 X 128  P2 GOB X4", "PI 5 + 5A-75B",
+        b.title_block(["PATTERNFLOOD / DESKTOP", "REV 2.7  2026-10", "128 X 128  P2 GOB X4", "PI 5 + 5A-75B",
                        "LRS-50-5  5V 10A", "BIRCH 3.18  KERF 0.15"])
         b.credits(["Made by jof", "jof@thejof.com", "Inspired by Patternflow", "by SeungHun Lee",
                    "patternflow.work"], "https://patternflow.work/")
@@ -1068,7 +1068,7 @@ QR_FOUND = {}        # part -> [(message, box)], filled by generate(), checked b
 PLATES_FOUND = {}    # part -> [box of each plate (title block, credits)], filled by generate()
 # one real QR code per part: (text, module size mm). Phone cameras read 0.8 mm modules fine.
 QR_MESSAGES = {
-    "back-cover.dxf": ("PATTERNFLOOD DESKTOP / REV 2.3 / 2026 - 128x128 P2 GOB - RASPBERRY PI 5 + COLORLIGHT 5A-75B "
+    "back-cover.dxf": ("PATTERNFLOOD DESKTOP / REV 2.7 / 2026 - 128x128 P2 GOB - RASPBERRY PI 5 + COLORLIGHT 5A-75B "
                        "- LRS-50-5 - BALTIC BIRCH 3.18 - IF YOU CAN READ THIS, YOU LOOKED CLOSE ENOUGH", 1.0),
     "bezel-outer.dxf": ("TURN THE KNOBS", 0.8),
     "wall-left.dxf": ("LOOK CLOSER", 0.8),

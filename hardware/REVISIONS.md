@@ -419,3 +419,12 @@ Rev 2.6 plus a fourth push button. Only the top wall and the top doubler changed
 - No cut path changed and nothing to re-cut. Only the hardware model
   (`hwCov*` in `enclosure.fs`) changed, pushed to the main workspace. The `rev-2.7`
   tag and its Onshape version still draw socket caps.
+
+### After the tag: back cover etch reads REV 2.7 (2026-10-26, art only)
+
+- The back cover's title block and its QR code said REV 2.3. Both now say
+  **REV 2.7** (`art.py`). The strings are the same length, so nothing else on the
+  cover moved, and the QR decodes as "PATTERNFLOOD DESKTOP / REV 2.7 / 2026 - …".
+- Only the back cover's art and `sheet-2-score.svg` (with its previews) changed.
+  The cut paths, `sheet-2-cut.svg` and the other parts' art are byte-identical.
+  Decal re-uploaded, and every decal attaches.
