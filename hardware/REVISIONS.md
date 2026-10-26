@@ -298,7 +298,14 @@ on. Its README lists every change since rev 1 and what covers it.
 - Standing it flat closes the **intake vents** in the bottom wall: fine for a
   while, but for long runs at brightness keep it on feet ≥ 8 mm as before.
 
-### Test-cut results; the button hole fits the lip (2026-10-25, after the `rev-2.4` tag)
+## Rev 2.5 — test-cut fixes; for cutting (2026-10-25)
+
+Git tag **`rev-2.5`**. Onshape version **"Rev 2.5 - for cutting"** (VERSION_ID),
+made from the main workspace once it matched the tag's `enclosure.fs` exactly.
+Rev 2.4 plus the one fix the `since-rev-1` test cuts called for: the push-button
+hole. Everything on that sheet now checks out. This is the one to cut.
+
+### Test-cut results; the button hole fits the lip
 
 From the `since-rev-1` sheet:
 
@@ -307,12 +314,11 @@ From the `since-rev-1` sheet:
   seated: between the head and the thread is a **lip, Ø13 with one flat, 12.88
   from the flat across to the round side**, and it is the lip that sits in the
   wall. The keyed hole is now the lip's shape (`BTN_LIP`, `BTN_LIP_FLAT`), one
-  flat, toward the front, with `BTN_CLEAR` 0.3 on both; the lip's flat keys it,
-  and the thread (Ø12, 11 flats) passes inside. Drawn Ø13.15 with the flat
-  6.455 off centre (the flat is small: 0.12 deep, 2.5 long). Only
+  flat, toward the front; the lip's flat keys it, and the thread (Ø12, 11
+  flats) passes inside. The flat is small: 0.12 deep, ~2.5 long. Only
   `wall-top.dxf`, sheet 3 and the top wall's etch changed (its halos find the
-  buttons by the lip's arc now). **Follow-up test cut:** piece 11
-  (`test-cuts/since-rev-1/11-push-button-keys.dxf`, 108 × 26) now sweeps the
-  lip at clearances 0.1–0.5; set `BTN_CLEAR` to the one that seats by hand and
-  doesn't turn.
-- PSU (10 + 14): still being checked.
+  buttons by the lip's arc now).
+- **Follow-up cut, piece 11 swept the lip at 0.1–0.5: 0.2 is the ideal fit,**
+  so `BTN_CLEAR` 0.2: drawn Ø13.05, flat to round side 12.93 (cuts to 13.2 /
+  13.08).
+- **PSU (10 + 14): checks out** — M3 × 8 thread in square, heads recessed.

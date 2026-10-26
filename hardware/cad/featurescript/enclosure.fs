@@ -1039,7 +1039,7 @@ const BTN_THREAD = 12.0;         // mm, thread dia (passes inside the lip's hole
 const BTN_FLATS = 11.0;          // mm, across the thread's flats (no longer the key)
 const BTN_LIP = 13.0;            // mm, the lip's dia
 const BTN_LIP_FLAT = 12.88;      // mm, from the lip's one flat across to its round side
-const BTN_CLEAR = 0.3;           // mm, on the dia and on the flat; the thread needed 0.4 in the test cut
+const BTN_CLEAR = 0.2;           // mm, on the dia and on the flat: the lip sweep (test piece 11) fit best at 0.2, 2026-10-25
 const BTN_NUT_ROOM = 11.0;       // mm, doubler cut back this far from each button centre: the nut and fingers
 const BTN_PITCH = 24.0;          // mm, centre to centre: 6.5 between heads
 
