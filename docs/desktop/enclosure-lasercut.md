@@ -709,19 +709,19 @@ axis:
 
 Nested on **12 × 24** sheets that is **five** sheets (rev 2.3) — laid out, checked and
 ready to cut in [`hardware/laser/sheets/`](../../hardware/laser/sheets/README.md)
-(`nest_sheets.py`). The P2 cuts only 600 of a 24" sheet's 609.6 mm, and every
-part sits 3 mm inside that and 3 mm from its neighbours:
+(`nest_sheets.py`). The P2 cuts only 600 of a 24" sheet's 609.6 mm. Every part
+sits at least 6 mm from the sheet's start edge and the cut area's far end,
+5.9 from the long edges (all a 293 mm part leaves on a 304.8 sheet), and 4 mm
+from its neighbours (rev 2.5; was 3 and 3):
 
 1. bezel outer + electronics tray rear sheet + one middle-brace sheet + a rail C;
-2. back cover + tray front sheet + the middle brace's middle sheet + the upper
-   brace;
+2. back cover + tray front sheet + the middle brace's middle sheet;
 3. both side walls and both side-wall doublers along the sheet, the lower brace
    and a rail C beside them, the spacer rings (with spares) in the corner, and
-   the last middle-brace sheet and the top and bottom walls across the end;
-4. bezel inner + the top and bottom doublers, the four A/B rails and the
-   stiffener;
-5. the back cover's doubler (rev 2.3), alone: at 286 × 310 nothing else fits
-   beside it.
+   the top and bottom walls across the end;
+4. bezel inner + the top and bottom doublers and the four A/B rails;
+5. the back cover's doubler, the upper brace, the last middle-brace sheet and
+   the stiffener shelf.
 
 **Buy six:** four for the box, one 12 × 12 for the test cuts, and one for a
 recut. (Rev 1, single-sheet, was three.) Calipering the sheet width on arrival

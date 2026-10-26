@@ -305,6 +305,13 @@ made from the main workspace once it matched the tag's `enclosure.fs` exactly.
 Rev 2.4 plus the one fix the `since-rev-1` test cuts called for: the push-button
 hole. Everything on that sheet now checks out. This is the one to cut.
 
+**Sheets re-packed for margin** (the tag includes this; the model is unchanged,
+so the Onshape version still matches): every part ≥ 6 mm from the sheet's start
+edge and the cut area's far end (was 3), 5.9 from the long edges (all a 293 mm
+part allows), 4 mm between parts (was 3), and ≥ 16 mm spare at the far end of
+every sheet. To make room the upper brace, one middle-brace sheet and the
+stiffener shelf moved to sheet 5, beside the back cover doubler.
+
 ### Test-cut results; the button hole fits the lip
 
 From the `since-rev-1` sheet:

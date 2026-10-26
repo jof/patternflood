@@ -46,8 +46,9 @@ OUT = os.path.join(LASER, "sheets")
 
 CUT_L, CUT_W = 600.0, 305.0      # xTool P2 cut area, mm
 SHEET_L, SHEET_W = 609.6, 304.8  # 12 x 24" sheet; only 600 of its length is cuttable
-MARGIN = 3.0                     # from the cut-area edge
-GAP = 3.0                        # between parts
+MARGIN = 6.0                     # from the start edge and the far end of the cut area (the 600 axis)
+GAP = 4.0                        # between parts
+SIDE = 5.5                       # from the sheet's long edges: a 293 part across the 304.8 sheet leaves 5.9
 USE_W = min(CUT_W, SHEET_W)
 
 
@@ -175,8 +176,7 @@ LAYOUT = [
     {"title": "Sheet 2 — back cover",
      "along": [("back-cover.dxf", True),
                ("electronics-tray-front-sheet.dxf", True),
-               ("panel-brace-middle-middle-sheet-tray-nuts.dxf", True),
-               ("panel-brace-upper.dxf", True)]},
+               ("panel-brace-middle-middle-sheet-tray-nuts.dxf", True)]},
     {"title": "Sheet 3 — walls",
      # the two 373 mm side walls and their doublers lie along the sheet...
      "walls": ["wall-left.dxf", "wall-right-iec.dxf",
@@ -190,8 +190,7 @@ LAYOUT = [
      "spares": ["spacer-ring-tray-to-brace.dxf"] * 2 + ["spacer-ring-colorlight.dxf"] * 2
                + ["spacer-ring-pi-m2.5.dxf"] * 2,
      # ...and the rest across the far end.
-     "along_after_walls": [("panel-brace-middle.dxf", True),
-                           ("wall-top.dxf", True),
+     "along_after_walls": [("wall-top.dxf", True),
                            ("wall-bottom.dxf", True)]},
     {"title": "Sheet 4 — inner bezel and doublers",
      "along": [("bezel-inner.dxf", True),
@@ -200,13 +199,15 @@ LAYOUT = [
                ("rail-a-screw-clearance.dxf", True),
                ("rail-a-screw-clearance.dxf", True),
                ("rail-b-lower-hex-pocket.dxf", True),
-               ("rail-b-upper-hex-pocket.dxf", True),
-               ("stiffener-shelf.dxf", True)],
+               ("rail-b-upper-hex-pocket.dxf", True)],
      # the knob ribs, in the inner bezel's display aperture
      "inside": [("knob-rib-1.dxf", False), ("knob-rib-2.dxf", False)]},
-    # 286 x 310: nothing else of that size has room left on sheets 1-4
-    {"title": "Sheet 5 — back cover doubler",
-     "along": [("back-cover-doubler.dxf", True)]},
+    # 286 x 310, with strips moved off sheets 2, 3 and 4 to give those margin
+    {"title": "Sheet 5 — back cover doubler, braces, shelf",
+     "along": [("back-cover-doubler.dxf", True),
+               ("panel-brace-upper.dxf", True),
+               ("panel-brace-middle.dxf", True),
+               ("stiffener-shelf.dxf", True)]},
 ]
 
 
@@ -350,7 +351,7 @@ def check(sheets, qty):
             used[name] = used.get(name, 0) + 1
             b = bbox(ents)
             boxes.append((name, b))
-            if b[0] < MARGIN - 1e-6 or b[1] < MARGIN - 1e-6 or b[2] > CUT_L - MARGIN + 1e-6 or b[3] > USE_W - MARGIN + 1e-6:
+            if b[0] < MARGIN - 1e-6 or b[1] < SIDE - 1e-6 or b[2] > CUT_L - MARGIN + 1e-6 or b[3] > USE_W - SIDE + 1e-6:
                 errs.append(f"sheet {si}: {name} outside the cut area: {[round(v, 1) for v in b]}")
         for i in range(len(boxes)):
             for j in range(i + 1, len(boxes)):
@@ -513,8 +514,8 @@ def main():
           f"- **Material:** 3 mm Baltic birch, B/BB, 12 × 24\" (304.8 × 609.6 mm). Caliper it: the "
           f"model is cut for `#thickness` 3.18 and `#kerf` 0.15, as set from the test cuts.",
           f"- **Placement:** the P2 cuts {CUT_L:.0f} × {CUT_W:.0f} mm, so a 24\" sheet overhangs the "
-          f"cut area by {SHEET_L - CUT_L:.1f} mm at one end. Every part is at least {MARGIN:.0f} mm inside "
-          f"the cut area and {GAP:.0f} mm from its neighbours. Each DXF's origin is the corner of the "
+          f"cut area by {SHEET_L - CUT_L:.1f} mm at one end. Every part is at least {MARGIN:.0f} mm from the "
+          f"sheet's start edge and the cut area's far end, {SIDE:.1f} from the long edges, and {GAP:.0f} mm from its neighbours. Each DXF's origin is the corner of the "
           "cut area; put the sheet's corner there.",
           "- **Inner shapes first.** The knob ribs are nested inside the inner bezel's display "
           "aperture on sheet 4. xTool Creative Space cuts inner shapes before outer ones by default; "
@@ -534,7 +535,7 @@ def main():
           "the art separately**, `sheet-N-cut.svg` and `sheet-N-score.svg`: both carry the same green "
           "L-marks at the corners of the cut area, so the two imports are the same size — select both, "
           "**align left** and **align bottom**, and they are registered; then delete the green marks "
-          "(they sit in the 3 mm border, clear of every part, so nothing is lost if one is left in). "
+          "(they sit in the margin, clear of every part, so nothing is lost if one is left in). "
           "It is a lot of "
           "line: ~101 m on the back cover, ~23 m on the bezel, ~10–12 m per wall — budget roughly "
           "20–30 min for sheet 2 and 5–15 for sheets 1 and 3 at a typical score speed. Set the score "
