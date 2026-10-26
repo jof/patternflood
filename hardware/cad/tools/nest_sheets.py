@@ -216,6 +216,18 @@ LAYOUT = [
 ]
 
 
+# Re-cuts: parts cut once already that have to be cut again, laid out on
+# their own sheet so the full set above stays as it was. Not counted against
+# MANIFEST.md. 2026-10-26: the art changed after sheet 3 was cut (no more
+# space-filling curves), so the three walls that carry art go again; their
+# doublers and the bottom wall have none and stand.
+RECUT = {"stem": "recut-walls",
+         "title": "Re-cut — the three walls with art",
+         "walls": ["wall-left.dxf", "wall-right-iec.dxf"],
+         "along_after_walls": [("wall-top.dxf", True)],
+         "gap": 15.0}
+
+
 ART_DIR = os.path.join(LASER, "art")
 ART_OF = {}        # id(part entities as loaded) -> its art, in the same frame
 SHEET_ART = {}     # sheet title -> {placed index: art in sheet coordinates}
@@ -496,6 +508,37 @@ PART = {  # file -> what to call it on the cut sheet
 }
 
 
+def write_recut(spec):
+    """The re-cut sheet: built, checked for margins and gaps, written like the
+    others (DXF, SVG and the -cut/-score pair, PNG). -> its README section."""
+    placed = build(spec)
+    boxes = [(n, bbox(e)) for n, e in placed]
+    for name, b in boxes:
+        if b[0] < MARGIN - 1e-6 or b[1] < SIDE - 1e-6 or b[2] > CUT_L - MARGIN + 1e-6 or b[3] > USE_W - SIDE + 1e-6:
+            sys.exit(f"{spec['stem']}: {name} outside the cut area: {[round(v, 1) for v in b]}")
+    for i in range(len(boxes)):
+        for j in range(i + 1, len(boxes)):
+            a, b = boxes[i][1], boxes[j][1]
+            if max(b[0] - a[2], a[0] - b[2], b[1] - a[3], a[1] - b[3]) < GAP - 1e-6:
+                sys.exit(f"{spec['stem']}: {boxes[i][0]} and {boxes[j][0]} too close")
+    stem = spec["stem"]
+    all_ents = [e for _, ents in placed for e in ents]
+    write_dxf(os.path.join(OUT, stem + ".dxf"), all_ents)
+    arts = SHEET_ART.get(spec["title"], {})
+    write_sheet_svg(os.path.join(OUT, stem + ".svg"), all_ents, list(arts.values()))
+    preview(os.path.join(OUT, stem + ".png"), spec["title"], placed, [str(i + 1) for i in range(len(placed))], arts)
+    x1 = max(b[2] for _, b in boxes)
+    print(f"{stem}.dxf: {len(placed)} parts, {len(all_ents)} entities, span {x1:.1f}")
+    md = [f"## {spec['title']} — `{stem}-cut.svg` + `{stem}-score.svg`", "",
+          "Not part of the set above: parts that were cut once and have to go again. The art "
+          "changed after sheet 3 was cut (2026-10-26: no space-filling curves any more), so the "
+          "three walls that carry art are re-cut here; from the first sheet 3 keep the two side "
+          "doublers and the bottom wall, which have none.", "",
+          f"![{spec['title']}]({stem}.png)", "", "| # | Part | Qty | From |", "|---|---|---|---|"]
+    md += [f"| {i + 1} | {PART.get(n, n)} | 1 | `{n}` |" for i, (n, _) in enumerate(placed)]
+    return md + [""]
+
+
 def main():
     qty = manifest()
     sheets = [build(s) for s in LAYOUT]
@@ -584,8 +627,10 @@ def main():
     for name, n in qty.items():
         md.append(f"| {PART.get(name, name)} | {n} | {', '.join(map(str, where[name]))} |")
     nsp = sum(len(s.get("spares", [])) for s in LAYOUT)
-    md += ["", f"**{sum(qty.values())} parts on {len(LAYOUT)} sheets**, plus {nsp} spare spacer rings on sheet 3 "
-           "(the 7 mm board ring is only 1.8 mm of wood round its hole).", ""]
+    ring_sheet = next(i for i, s in enumerate(LAYOUT, 1) if s.get("spares"))
+    md += ["", f"**{sum(qty.values())} parts on {len(LAYOUT)} sheets**, plus {nsp} spare spacer rings on sheet "
+           f"{ring_sheet} (the 7 mm board ring is only 1.8 mm of wood round its hole).", ""]
+    md += write_recut(RECUT)
     with open(os.path.join(OUT, "README.md"), "w") as fh:
         fh.write("\n".join(md))
 

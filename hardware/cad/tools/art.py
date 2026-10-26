@@ -9,9 +9,9 @@ is the outer face), works out where etching is allowed, and fills it with
 a dense, generated circuit board meant to be looked at for a long time: on a
 1.27 mm grid, QFP / BGA / SOIC chips with their fan-out, passives, headers,
 crystals, test points, fiducials, spiral inductors (square, octagonal, round,
-bifilar), space-filling meanders (Hilbert, Moore, Peano, a Minkowski fractal
-loop), meander-line and dipole antennas, strain-gauge serpentines,
-length-matched serpentines, wide power traces, parallel buses, silkscreen
+bifilar), PCB trace antennas (meandered inverted-F, meandered dipole, zig-zag),
+strain gauges, length-matched differential pairs and buses (chamfered tuning
+bumps), wide power traces, parallel buses, silkscreen
 designators in a single-stroke plotter font and plates in JetBrains Mono
 (artfont.py), and the leftover space filled with hatch, cross-hatch,
 topographic contours or stipple — or left empty on purpose. Hidden in it: a real QR code per part (it scans; see QR_MESSAGES), a space
@@ -128,8 +128,8 @@ def part_regions(ents):
 # ── generator (v2: dense) ─────────────────────────────────────────────────
 # Composition, in order, on a 1.27 mm grid (real PCB pitch):
 #   dials (bezel) -> title block (back cover) -> components (QFP, BGA, SOIC,
-#   headers, passives, crystals, test points, fiducials, inductors, Hilbert
-#   meanders, serpentines, a data matrix that really encodes a message) ->
+#   headers, passives, crystals, test points, fiducials, inductors, PCB
+#   antennas, length-matched pairs and buses, a data matrix that really encodes a message) ->
 #   their escape routing -> parallel buses -> free traces -> "pours" in the
 #   leftover space (hatch, cross-hatch, topographic contours, stipple, or left
 #   empty on purpose) -> tiny hidden text in some of the empty ones.
@@ -138,57 +138,6 @@ KNOB_NAMES = ["BRIGHT", "NETWORK", "VALUES", "PATTERN"]        # K1..K4, reading
 EGGS = ["LOOK CLOSER", "HELLO FROM INSIDE", "MADE OF LIGHT", "PATTERNFLOOD", "NO USER SERVICEABLE PARTS",
         "128 X 128", "IN LOW OUT HIGH", "KERF 0.15", "FM6124", "RUC7258", "5A-75B", "WAS HERE",
         "TURN ME", "SEE YOU IN THE GRID", "GND IS A STATE OF MIND"]
-
-
-def hilbert(order):
-    """Points of a Hilbert curve on an n x n grid, n = 2**order."""
-    n = 2 ** order
-    pts = []
-    for d in range(n * n):
-        rx = ry = 0
-        x = y = 0
-        t = d
-        s = 1
-        while s < n:
-            rx = 1 & (t // 2)
-            ry = 1 & (t ^ rx)
-            if ry == 0:
-                if rx == 1:
-                    x, y = s - 1 - x, s - 1 - y
-                x, y = y, x
-            x += s * rx
-            y += s * ry
-            t //= 4
-            s *= 2
-        pts.append((x, y))
-    return pts
-
-
-def lsystem(axiom, rules, n):
-    """Grid points of an L-system curve: F steps one unit, + and - turn 90 degrees."""
-    s = axiom
-    for _ in range(n):
-        s = "".join(rules.get(ch, ch) for ch in s)
-    x = y = d = 0
-    pts = [(0, 0)]
-    for ch in s:
-        if ch == "F":
-            x, y = x + (1, 0, -1, 0)[d], y + (0, 1, 0, -1)[d]
-            pts.append((x, y))
-        elif ch == "+":
-            d = (d + 1) % 4
-        elif ch == "-":
-            d = (d - 1) % 4
-    mx, my = min(q[0] for q in pts), min(q[1] for q in pts)
-    return [(px - mx, py - my) for px, py in pts]
-
-
-# name -> (axiom, rules, iterations to pick from)
-CURVES = {
-    "moore": ("LFL+F+LFL", {"L": "-RF+LFL+FR-", "R": "+LF-RFR-FL+"}, (2, 3)),
-    "peano": ("X", {"X": "XFYFX+F+YFXFY-F-XFYFX", "Y": "YFXFY-F-XFYFX+F+YFXFY"}, (2, 3)),
-    "minkowski": ("F+F+F+F", {"F": "F+F-F-FF+F+F-F"}, (2,)),
-}
 
 
 def square_spiral(x0, y0, s, sp, lo=0.0):
@@ -600,45 +549,30 @@ class Board:
         if self.label_fits(r, x0, y0 + s + 0.9, 0.9):
             self.label(r, x0, y0 + s + 0.9, 0.9)
 
-    def meander(self, order):
-        k = 2 ** order
-        cells = math.ceil(k * 0.5)
-        at = self.spot(cells, cells, margin=1)
-        if not at:
-            return
-        i, j = at
-        self.reserve(i, j, i + cells, j + cells)
-        x0, y0 = self.xy((i, j))
-        step = cells * G / k
-        pts = [(x0 + (px + 0.5) * step, y0 + (py + 0.5) * step) for px, py in hilbert(order)]
-        self.poly(pts)
-
     def serpentine(self):
-        n = self.rng.randint(5, 12)
-        horiz = self.rng.random() < 0.5
-        w, h = (2 * n + 2, 3) if horiz else (3, 2 * n + 2)
-        at = self.spot(w, h, margin=1)
-        if not at:
+        """A differential pair, length-matched the way a router does it: two
+        traces side by side, the longer way round on one of them taken up by a
+        few small chamfered bumps where it runs on the outside of the pair."""
+        n = self.rng.randint(2, 5)                       # skew bumps
+        run = self.rng.randint(14, 30)                   # mm
+        pair, h, w, c = 0.8, 0.7, 0.7, 0.22              # mm: pair pitch, bump height, width, chamfer
+        f = self.block(run + 2, pair + h + 2, 1.0)
+        if not f:
             return
-        i, j = at
-        self.reserve(i, j, i + w, j + h)
-        x0, y0 = self.xy((i, j))
-        pts = []
-        amp = 3 * G
-        for k in range(n + 1):
-            u = (1 + 2 * k) * G
-            v0, v1 = (0.0, amp) if k % 2 == 0 else (amp, 0.0)
-            pts += [(u, v0), (u, v1)] if k < n else [(u, v0)]
-            if k < n:
-                pts.append((u + 2 * G, v1))
-        pts = [(x0 + u, y0 + v) for u, v in pts] if horiz else [(x0 + v, y0 + u) for u, v in pts]
+        v0, v1 = 1.0, 1.0 + pair
+        self.poly([f(1, v0), f(run + 1, v0)])
+        s0 = 1 + run / 2 - n * w                         # bumps centred on the run, 2w apart
+        pts = [f(1, v1)]
+        for k in range(n):
+            x = s0 + 2 * k * w
+            pts += [f(x, v1), f(x, v1 + h - c), f(x + c, v1 + h), f(x + w - c, v1 + h),
+                    f(x + w, v1 + h - c), f(x + w, v1)]
+        pts.append(f(run + 1, v1))
         self.poly(pts)
-        for p in (pts[0], pts[-1]):
-            self.ring(p, 0.5)
-        r = self.ref("DIFF")
-        lx, ly = pts[0][0], pts[0][1] - 1.6
-        if self.label_fits(r, lx, ly, 0.8):
-            self.label(r, lx, ly, 0.8)
+        for u in (1, run + 1):
+            for v in (v0, v1):
+                self.ring(f(u, v), 0.38)
+        self.tag("DIFF", pts)
 
     def block(self, wu, hu, un, margin=1):
         """Reserve room for a figure wu x hu units of un mm, at one of four turns.
@@ -674,31 +608,52 @@ class Board:
             x += sp
 
     def antenna(self):
-        """One of the meander family, picked for variety."""
-        kind = self.rng.choices(["hilbert", "moore", "peano", "minkowski", "mifa", "dipole", "gauge"],
-                                [2, 2, 2, 2, 3, 3, 2])[0]
-        if kind == "hilbert":
-            self.meander(self.rng.choice([3, 4]))
-        elif kind in CURVES:
-            self.curve(kind)
-        else:
-            getattr(self, kind)()
+        """One of the antenna family: PCB trace antennas, and the strain gauge."""
+        getattr(self, self.rng.choices(["mifa", "dipole", "zigzag", "gauge"], [4, 3, 3, 2])[0])()
 
-    def curve(self, name):
-        """A space-filling or fractal curve: Moore (open, fed at both ends),
-        Peano, or a Minkowski island (a fractal loop antenna, one feed via)."""
-        axiom, rules, orders = CURVES[name]
-        pts = lsystem(axiom, rules, self.rng.choice(orders))
-        n = max(max(q) for q in pts) + 1
-        f = self.block(n, n, G / 2)
+    def zigzag(self):
+        """A zig-zag trace antenna, as on 433/868 MHz modules: a feed via, a short
+        lead, then a triangle wave running on, open at its end."""
+        n = self.rng.randint(8, 18)                      # half waves
+        a = self.rng.randint(2, 4)                       # amplitude, units
+        f = self.block(n + 5, 2 * a + 2, G / 2)
         if not f:
             return
-        q = [f(px + 0.5, py + 0.5) for px, py in pts]
-        closed = name == "minkowski"
-        self.poly(q, closed=closed)
-        for e in ([q[0]] if closed else [q[0], q[-1]]):
-            self.ring(e, 0.45)
-            self.dot(e, 0.18)
+        mid = a + 1
+        pts = [f(1, mid), f(3, mid)]
+        for k in range(n):
+            pts.append(f(4 + k, mid + (a if k % 2 == 0 else -a)))
+        self.poly(pts)
+        self.ring(pts[0], 0.45)
+        self.dot(pts[0], 0.18)
+        self.tag("ANT", pts)
+
+    def tuned_bus(self):
+        """Parallel traces length-matched: each lane has its own run of chamfered
+        U bumps (a trombone), staggered along the bus so no two sit side by
+        side, and more bumps on the lanes that had less far to go."""
+        n = self.rng.randint(2, 4)
+        S, h, w, c = 2.54, 1.5, 0.7, 0.25                # mm: lane pitch, bump height, U width, chamfer
+        bumps = [self.rng.randint(2, 6) for _ in range(n)]
+        lens = [2 * w * m for m in bumps]
+        run = 3 + sum(L + 1.6 for L in lens) + 3
+        f = self.block(run, (n - 1) * S + h + 2, 1.0)
+        if not f:
+            return
+        x = 3.0
+        for i in range(n):
+            v = 1.0 + i * S
+            pts = [f(0.5, v)]
+            for k in range(bumps[i]):
+                u = x + 2 * k * w
+                pts += [f(u, v), f(u, v + h - c), f(u + c, v + h), f(u + w - c, v + h),
+                        f(u + w, v + h - c), f(u + w, v)]
+            pts.append(f(run - 0.5, v))
+            self.poly(pts)
+            self.ring(pts[0], 0.45)
+            self.dot(pts[0], 0.18)
+            self.dot(pts[-1], 0.38)
+            x += lens[i] + 1.6
 
     def mifa(self):
         """A meandered inverted-F antenna, as on every 2.4 GHz module: a ground
@@ -1080,6 +1035,8 @@ def generate(name, seed):
         b.antenna()
     for _ in range(int(A / 9000)):
         b.serpentine()
+    for _ in range(max(1, int(A / 9000))):
+        b.tuned_bus()
     if rng.random() < 0.7 or name.startswith("back"):
         b.invader()
     for _ in range(3):

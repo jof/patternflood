@@ -129,4 +129,16 @@ Parts span 175.3 × 293.0 mm.
 | Spacer ring, Colorlight (7 mm, M3 bore) | 4 | 6 |
 | Spacer ring, Pi 5 (7 mm, M2.5 bore) | 4 | 6 |
 
-**40 parts on 6 sheets**, plus 6 spare spacer rings on sheet 3 (the 7 mm board ring is only 1.8 mm of wood round its hole).
+**40 parts on 6 sheets**, plus 6 spare spacer rings on sheet 6 (the 7 mm board ring is only 1.8 mm of wood round its hole).
+
+## Re-cut — the three walls with art — `recut-walls-cut.svg` + `recut-walls-score.svg`
+
+Not part of the set above: parts that were cut once and have to go again. The art changed after sheet 3 was cut (2026-10-26: no space-filling curves any more), so the three walls that carry art are re-cut here; from the first sheet 3 keep the two side doublers and the bottom wall, which have none.
+
+![Re-cut — the three walls with art](recut-walls.png)
+
+| # | Part | Qty | From |
+|---|---|---|---|
+| 1 | Wall left | 1 | `wall-left.dxf` |
+| 2 | Wall right (IEC cutout) | 1 | `wall-right-iec.dxf` |
+| 3 | Wall top | 1 | `wall-top.dxf` |

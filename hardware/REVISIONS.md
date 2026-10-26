@@ -332,3 +332,27 @@ From the `since-rev-1` sheet:
   so `BTN_CLEAR` 0.2: drawn Ø13.05, flat to round side 12.93 (cuts to 13.2 /
   13.08).
 - **PSU (10 + 14): checks out** — M3 × 8 thread in square, heads recessed.
+
+## Rev 2.6 — art without space-filling curves; re-cut the art walls (2026-10-26)
+
+Git tag **`rev-2.6`**. Onshape version **"Rev 2.6 - for cutting"** (VERSION_ID),
+made from the main workspace once it matched the tag's `enclosure.fs` exactly
+(only the art decals' imports moved). No cut path changed on any sheet: only the
+etched art.
+
+- **Gone from the art: every space-filling and fractal curve** — Minkowski
+  islands, Moore, Peano and the Hilbert meanders. Cut on sheet 3, the
+  Minkowski island read as a hooked pinwheel, a swastika, which is not
+  something to have on the box. In their place, PCB wiggles that read as what
+  they are:
+  - **length-matched buses** (`tuned_bus`): 2–4 parallel traces, each with its
+    own run of chamfered U bumps, staggered along the bus;
+  - **differential pairs** (`serpentine`, DIFF): two traces side by side, a few
+    small chamfered skew bumps on the outer one (was a bare square wave);
+  - **zig-zag trace antennas**, alongside the meandered inverted-F antennas and
+    meandered dipoles; the strain gauge and the spirals stay.
+- Every part's art re-rolled; checks clean, every QR decodes, decals
+  re-uploaded.
+- **Re-cut** (`sheets/recut-walls*`, one 12 × 24): the three walls with art —
+  left, right (IEC) and top. From the first sheet 3 keep both side doublers and
+  the bottom wall (no art). Sheets 4, 5 and 6 as cut stand.
