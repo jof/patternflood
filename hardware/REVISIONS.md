@@ -335,7 +335,7 @@ From the `since-rev-1` sheet:
 
 ## Rev 2.6 — art without space-filling curves; re-cut the art walls (2026-10-26)
 
-Git tag **`rev-2.6`**. Onshape version **"Rev 2.6 - for cutting"** (VERSION_ID),
+Git tag **`rev-2.6`**. Onshape version **"Rev 2.6 - for cutting"** (`e9d0b9293ae99c190243f27e`),
 made from the main workspace once it matched the tag's `enclosure.fs` exactly
 (only the art decals' imports moved). No cut path changed on any sheet: only the
 etched art.
