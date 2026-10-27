@@ -1,6 +1,6 @@
 # Point-to-point gigabit link to the Colorlight card (receiver75 at 192.168.75.39).
-# No interface-name: applies to whichever USB Ethernet adapter is plugged in.
-# The 5A-75B will not link at 100 Mbit, so the adapter must be gigabit.
+# No interface-name: applies to whichever wired port the card is on (the Pi 5's own,
+# or a USB adapter on the Zero W). The 5A-75B will not link at 100 Mbit, so it must be gigabit.
 [connection]
 id=colorlight
 type=ethernet

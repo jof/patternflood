@@ -1,5 +1,5 @@
 #cloud-config
-# Patternflood controller (Pi Zero W). First-boot setup by cloud-init (NoCloud,
+# Patternflood controller (Pi 5, or Pi Zero W). First-boot setup by cloud-init (NoCloud,
 # seeded from /boot/firmware). The user is created by userconf.txt (pi -> jof),
 # not here, so the two first-boot mechanisms don't collide; Wi-Fi is in
 # network-config. Everything else lives in the rootfs, written by provision_card.py.

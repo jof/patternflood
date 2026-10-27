@@ -19,7 +19,8 @@
  * root's udev can still rename it and NetworkManager finds it as it was).
  *
  * Freestanding (raw syscalls, no libc): Ubuntu's armhf libc is built for ARMv7,
- * and the Zero W is ARMv6. It also builds for x86-64, for testing on a PC.
+ * and the Zero W is ARMv6. It also builds for AArch64 (the Pi 5) and for x86-64,
+ * for testing on a PC.
  *
  * Exit status: 0 sent, 1 no wired link before the timeout, 2 bad arguments.
  */
@@ -44,6 +45,27 @@ static long sys6(long n, long a, long b, long c, long d, long e, long f)
 
 __asm__(".text\n.global _start\n_start:\n"
         "  mov r0, sp\n"
+        "  bl cstart\n");
+#elif defined(__aarch64__)
+enum { SYS_write = 64, SYS_close = 57, SYS_ioctl = 29, SYS_nanosleep = 101,
+       SYS_exit_group = 94, SYS_socket = 198, SYS_sendto = 206 };
+
+static long sys6(long n, long a, long b, long c, long d, long e, long f)
+{
+    register long x8 __asm__("x8") = n;
+    register long x0 __asm__("x0") = a;
+    register long x1 __asm__("x1") = b;
+    register long x2 __asm__("x2") = c;
+    register long x3 __asm__("x3") = d;
+    register long x4 __asm__("x4") = e;
+    register long x5 __asm__("x5") = f;
+    __asm__ volatile("svc #0" : "+r"(x0)
+                     : "r"(x8), "r"(x1), "r"(x2), "r"(x3), "r"(x4), "r"(x5) : "memory");
+    return x0;
+}
+
+__asm__(".text\n.global _start\n_start:\n"
+        "  mov x0, sp\n"
         "  bl cstart\n");
 #elif defined(__x86_64__)
 enum { SYS_write = 1, SYS_close = 3, SYS_ioctl = 16, SYS_nanosleep = 35,

@@ -7,3 +7,7 @@ dtparam=i2c_arm_baudrate=100000
 dtoverlay=disable-bt
 # Serial console on GPIO14/15 (pins 8/10), 115200; cmdline.txt already has console=serial0.
 enable_uart=1
+# The Pi 5's serial0 is its own debug connector; move the console back to pins 8/10.
+[pi5]
+dtparam=uart0_console
+[all]

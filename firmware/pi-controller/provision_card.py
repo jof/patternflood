@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Turn a freshly written Raspberry Pi OS Lite (trixie, armhf) card into the patternflood controller.
+"""Turn a freshly written Raspberry Pi OS Lite (trixie) card into the patternflood controller.
 
 Run as root against the card's mounted partitions:
 
     sudo ./provision_card.py --boot /mnt/boot --root /mnt/root \\
         --userconf userconf.txt --wifi-ssid YOUR_SSID --wifi-pass-file wifi.pass \\
         --ssh-key ~/.ssh/id_ed25519.pub
+
+The image picks the board: armhf for the Pi Zero W, arm64 for the Pi 5.
 
 Secrets (the userconf.txt password hash, the Wi-Fi passphrase) come from files
 and are never part of the repo. Safe to re-run: config.txt is only appended once.
@@ -86,8 +88,12 @@ def main():
     boot, root = args.boot, args.root
     assert (boot / "cmdline.txt").exists() and (root / "etc/os-release").exists(), "not a Pi OS card"
     assert os.geteuid() == 0, "run as root (files are written root-owned)"
-    # The boot splash sender, cross-built for the Zero's ARMv6 (needs arm-linux-gnueabihf-gcc).
-    subprocess.run(["make", "-C", str(HERE / "pf-splash")], check=True)
+    # The boot splash sender, cross-built for the image: ARMv6 for the Zero W (needs
+    # arm-linux-gnueabihf-gcc), AArch64 for the Pi 5 (needs aarch64-linux-gnu-gcc).
+    arm64 = (root / "usr/lib/aarch64-linux-gnu").is_dir()
+    splash = "pf-splash-arm64" if arm64 else "pf-splash"
+    print(f"image: {'arm64' if arm64 else 'armhf'}")
+    subprocess.run(["make", "-C", str(HERE / "pf-splash"), splash], check=True)
 
     print("boot partition:")
     install(args.userconf, boot / "userconf.txt", 0o600)
@@ -125,7 +131,7 @@ def main():
                 mode = 0o644
             install(src, root / rel, mode)
     install_payload(root / "opt/patternflood")
-    install(HERE / "pf-splash/pf-splash", root / "usr/local/sbin/pf-splash", 0o755)
+    install(HERE / "pf-splash" / splash, root / "usr/local/sbin/pf-splash", 0o755)
     for unit, target in UNITS.items():
         wants = root / f"etc/systemd/system/{target}.wants" / unit
         wants.parent.mkdir(parents=True, exist_ok=True)

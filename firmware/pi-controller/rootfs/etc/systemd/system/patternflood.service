@@ -16,8 +16,8 @@ Environment=PF_ONLY= PF_DEMO=0 PF_FPS=30 PF_BRIGHT=0.3 PF_KNOBS=i2c:1 PF_OUT=udp
 EnvironmentFile=-/etc/default/patternflood
 # Boot splash step 5: the renderer is starting (importing numpy takes a while).
 ExecStartPre=-+/usr/local/sbin/pf-splash -t 10 5
-# Steady frame timing on the single-core Zero W.
-ExecStartPre=+/bin/sh -c 'echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor || true'
+# Steady frame timing: no clocking down between frames.
+ExecStartPre=+/bin/sh -c 'for g in /sys/devices/system/cpu/cpufreq/policy*/scaling_governor; do echo performance > $$g; done || true'
 # numpy arrives with cloud-init's first-boot package install; until then, retry.
 ExecStartPre=/usr/bin/python3 -c "import numpy"
 # The upstream presets compile on the first start after g++ lands (a few minutes on a
