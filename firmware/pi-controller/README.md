@@ -1,8 +1,9 @@
 # Pi Zero W controller appliance
 
-Raspberry Pi OS Lite (trixie, armhf), set up to boot straight into the knob
-renderer: knobs on I²C, frames over a USB gigabit adapter to receiver75 on
-the Colorlight card. Wiring: [`docs/desktop/wiring-pi-controller.md`](../../docs/desktop/wiring-pi-controller.md).
+Raspberry Pi OS Lite (trixie, armhf), set up to boot straight into the demos
+([`../demos`](../demos/README.md)): knobs on I²C, frames over a USB gigabit adapter
+to receiver75 on the Colorlight card. Hold k0 and k3 for a second for the menu
+that switches demos. The same layout is meant to carry over to the Pi 5. Wiring: [`docs/desktop/wiring-pi-controller.md`](../../docs/desktop/wiring-pi-controller.md).
 
 ## Making a card
 
@@ -32,16 +33,17 @@ the Colorlight card. Wiring: [`docs/desktop/wiring-pi-controller.md`](../../docs
 | I²C | `i2c_arm` on at 100 kHz, `i2c-dev` loaded; Bluetooth off |
 | Serial console | `enable_uart=1`: GPIO14 TXD (pin 8), GPIO15 RXD (pin 10), 115200. With a Glasgow on port B: `glasgow run uart -V 3.3 --rx B0 --tx B1 -b 115200 tty` |
 | Login | `update-motd.d/05-patternflood`: wordmark, plus renderer, card link and power (under-voltage) status |
-| First boot | cloud-init installs `python3-numpy` and `i2c-tools` |
-| Service | `patternflood.service` runs `/opt/patternflood/knob_renderer.py --knobs i2c --res 64 --fps 30` as user `patternflood` (group i2c), CPU governor `performance`, restarts forever |
+| First boot | cloud-init installs `python3-numpy`, `i2c-tools`, `python3-pil` and `g++` |
+| Code | `/opt/patternflood/demos` (`run.py`, `pfd/`, the upstream presets' build files and source tree) and `/opt/patternflood/colorlight` (`knob_renderer`, `r75_frame`, `seesaw`), as in the repo |
+| Service | `patternflood.service` runs `demos/run.py --knobs i2c:1 --out udp:192.168.75.39 --fps 30 --audio none` as user `patternflood` (group i2c), CPU governor `performance`, restarts forever. On its first start after g++ lands it compiles upstream's presets (a few minutes on a Zero W, behind splash step 5) |
+| Settings | `/etc/default/patternflood`: start demo, fps, brightness, knob and frame specs. Edit it, then `sudo systemctl restart patternflood` |
 | Boot splash | `pf-splash` moves the card's progress bar on (below); needs `arm-linux-gnueabihf-gcc` on the provisioning host |
 
-To update the renderer on a running Pi:
+To update the demos and the renderer on a running Pi (keeps its `/etc/default/patternflood`):
 
 ```sh
-scp ../colorlight/{knob_renderer,r75_frame,seesaw}.py jof@patternflood.local:/tmp/
-ssh jof@patternflood.local 'sudo install -m 644 /tmp/{r75_frame,seesaw}.py /opt/patternflood/ \
-    && sudo install -m 755 /tmp/knob_renderer.py /opt/patternflood/ && sudo systemctl restart patternflood'
+./update_pi.py                                                    # jof@patternflood.local
+./update_pi.py jof@ADDRESS -o HostKeyAlias=patternflood.local   # when mDNS fails
 ```
 
 ## Boot splash

@@ -13,6 +13,9 @@ one .so with a C API that pfd/upstream.py drives through ctypes:
     ./build.py --size 128x64                # just one size
     ./build.py --tree-only --out /tmp/pfup  # a self-contained source tree to build elsewhere (Pi 5)
 
+With no upstream clone, an existing build/tree is compiled as it is: that's how
+the controller card, which carries only the tree, builds on first boot.
+
 The patterns are CC BY-SA 4.0 (upstream's licence). They are read from the
 upstream clone at build time and are not copied into this repository.
 """
@@ -32,8 +35,11 @@ def default_upstream():
     local = HERE.parents[2] / "upstream"
     if local.exists():
         return local
-    common = subprocess.run(["git", "-C", str(HERE), "rev-parse", "--path-format=absolute", "--git-common-dir"],
-                            capture_output=True, text=True).stdout.strip()
+    try:
+        common = subprocess.run(["git", "-C", str(HERE), "rev-parse", "--path-format=absolute", "--git-common-dir"],
+                                capture_output=True, text=True).stdout.strip()
+    except FileNotFoundError:   # no git (the controller card): no clone either
+        return local
     return Path(common).parent / "upstream" if common else local
 
 
@@ -145,8 +151,12 @@ def main():
 
     sizes = [tuple(int(v) for v in s.lower().split("x")) for s in (args.size or ["128x128", "128x64"])]
     tree = args.out or HERE / "build" / "tree"
-    found, rev = write_tree(args.upstream or default_upstream(), tree)
-    print(f"{len(found)} presets from upstream {rev} -> {tree}")
+    upstream = args.upstream or default_upstream()
+    if upstream.exists() or not (tree / "pf_host.cpp").exists():
+        found, rev = write_tree(upstream, tree)
+        print(f"{len(found)} presets from upstream {rev} -> {tree}")
+    else:                       # a card: no clone, just the tree provision_card.py wrote with --tree-only
+        print(f"no upstream clone at {upstream}; building the tree already at {tree}")
     if args.tree_only:
         return
     for size in sizes:

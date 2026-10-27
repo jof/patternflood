@@ -1,0 +1,19 @@
+# Patternflood demos: settings for patternflood.service (firmware/demos/run.py).
+# Edit, then: sudo systemctl restart patternflood
+#
+# Switch demos live by holding the two outer knobs (k0 and k3) for a second: the
+# menu opens. k1 picks the shelf, k0 the demo, k3 sets brightness; a click on
+# any knob closes it.
+
+# Demo to start on, by name or index (see: python3 /opt/patternflood/demos/run.py --list).
+PF_DEMO=0
+# Frame rate to aim for. The Zero W falls well short; the Pi 5 can take 60.
+PF_FPS=30
+# Starting brightness, 0..1 (k3 changes it in the menu).
+PF_BRIGHT=0.3
+# Knobs: i2c[:BUS] (the 4991 chain on the header), or none.
+PF_KNOBS=i2c:1
+# Frames: udp[:IP], straight to the card on this Pi's Ethernet.
+PF_OUT=udp:192.168.75.39
+# Audio for the visualizers: none, alsa[:DEVICE] or pulse[:SOURCE]. The box has no microphone yet.
+PF_AUDIO=none

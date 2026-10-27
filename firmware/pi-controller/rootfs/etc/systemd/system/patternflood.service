@@ -1,5 +1,5 @@
 [Unit]
-Description=Patternflood knob renderer (2x2 P2 panels via Colorlight 5A-75B / receiver75)
+Description=Patternflood demos (2x2 P2 panels via Colorlight 5A-75B / receiver75)
 # Not After=cloud-final.service: cloud-final runs after multi-user.target, which waits
 # for this unit, so that's an ordering cycle and systemd drops this unit's start job.
 # The numpy check below retries until cloud-init's first-boot install lands.
@@ -9,14 +9,22 @@ StartLimitIntervalSec=0
 [Service]
 User=patternflood
 Group=patternflood
-WorkingDirectory=/opt/patternflood
+WorkingDirectory=/opt/patternflood/demos
+# Settings: the defaults here, overridden by /etc/default/patternflood (edit it, then
+# `sudo systemctl restart patternflood`).
+Environment=PF_DEMO=0 PF_FPS=30 PF_BRIGHT=0.3 PF_KNOBS=i2c:1 PF_OUT=udp:192.168.75.39 PF_AUDIO=none
+EnvironmentFile=-/etc/default/patternflood
 # Boot splash step 5: the renderer is starting (importing numpy takes a while).
 ExecStartPre=-+/usr/local/sbin/pf-splash -t 10 5
 # Steady frame timing on the single-core Zero W.
 ExecStartPre=+/bin/sh -c 'echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor || true'
 # numpy arrives with cloud-init's first-boot package install; until then, retry.
 ExecStartPre=/usr/bin/python3 -c "import numpy"
-ExecStart=/usr/bin/python3 -u /opt/patternflood/knob_renderer.py --knobs i2c --eth-ip 192.168.75.39 --res 64 --fps 30
+# The upstream presets compile on the first start after g++ lands (a few minutes on a
+# Zero W, behind splash step 5), into a directory the renderer owns.
+ExecStartPre=+/bin/chown -R patternflood:patternflood /opt/patternflood/demos/upstream_host/build
+ExecStart=/usr/bin/python3 -u /opt/patternflood/demos/run.py --knobs ${PF_KNOBS} --out ${PF_OUT} \
+    --demo ${PF_DEMO} --fps ${PF_FPS} --bright ${PF_BRIGHT} --audio ${PF_AUDIO}
 # Back to the card's spinner while stopped or restarting, rather than a dark box.
 ExecStopPost=-+/usr/local/sbin/pf-splash -t 5 --show 5
 Nice=-5

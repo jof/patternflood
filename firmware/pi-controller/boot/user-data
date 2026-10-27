@@ -13,6 +13,9 @@ package_update: true
 packages:
   - python3-numpy
   - i2c-tools
+  # The demo suite: Pillow draws its text, g++ compiles upstream's presets on the first start.
+  - python3-pil
+  - g++
 
 runcmd:
   - systemctl disable --now hciuart.service || true

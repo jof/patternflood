@@ -73,19 +73,27 @@ class Seesaw:
         self.write(NEOPIXEL, NEO_SHOW)
 
 
-def find_encoders(bus=1, addrs=range(0x36, 0x3E)):
-    """Return Seesaw objects for every 4991 encoder found, in address order."""
+def find_encoders(bus=1, addrs=range(0x36, 0x3E), expect=range(0x37, 0x3B), tries=5):
+    """Return Seesaw objects for every 4991 encoder found, in address order.
+
+    Knobs are numbered by their place in this list, so one that misses its probe
+    shifts every role after it. The addresses we expect (k0-k3) get several tries:
+    on the Zero W, a probe during the renderer's busy start-up has missed a knob
+    that answered every probe on a quiet bus.
+    """
     found = []
     for addr in addrs:
         ss = Seesaw(bus, addr)
-        try:
-            if ss.product_id() != PID_4991:
-                ss.close()
-                continue
-            ss.reset()
-            ss.setup_encoder()
-        except OSError:                 # nothing at this address (NACK)
+        for attempt in range(tries if addr in expect else 1):
+            try:
+                if ss.product_id() != PID_4991:
+                    break
+                ss.reset()
+                ss.setup_encoder()
+                found.append(ss)
+                break
+            except OSError:             # nothing at this address (NACK), or a glitch: try again
+                time.sleep(0.05)
+        if not found or found[-1] is not ss:
             ss.close()
-            continue
-        found.append(ss)
     return found

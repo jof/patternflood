@@ -15,11 +15,16 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 RENDERER = HERE.parent / "colorlight"
 RENDERER_FILES = ["knob_renderer.py", "r75_frame.py", "seesaw.py"]
+DEMOS = HERE.parent / "demos"
+# The demo suite, as laid out in the repo (run.py finds ../colorlight). upstream_host
+# carries only what builds the presets; the preset tree itself is written by build.py.
+DEMO_FILES = ["run.py", "pfd", "upstream_host/build.py", "upstream_host/shim", "upstream_host/web_ports"]
 MARKER = "# --- patternflood controller ---"
 FIRST_UID = 1000                        # the image's "pi" user, renamed by userconf.txt
 # unit -> the target that pulls it in
@@ -30,12 +35,33 @@ UNITS = {
 }
 
 
-def install(src, dst, mode, uid=0, gid=0):
+def install(src, dst, mode, uid=0, gid=0, quiet=False):
     dst.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(src, dst)
-    os.chown(dst, uid, gid)
+    if os.geteuid() == 0:               # update_pi.py stages as a user; tar makes it root-owned
+        os.chown(dst, uid, gid)
     os.chmod(dst, mode)
-    print(f"  {dst}  {oct(mode)}")
+    if not quiet:
+        print(f"  {dst}  {oct(mode)}")
+
+
+def install_payload(opt):
+    """The renderer and the demo suite into OPT (/opt/patternflood on the card)."""
+    for name in RENDERER_FILES:
+        install(RENDERER / name, opt / "colorlight" / name, 0o644)
+    n = 0
+    for entry in DEMO_FILES:
+        src = DEMOS / entry
+        for f in sorted(src.rglob("*")) if src.is_dir() else [src]:
+            if f.is_file() and "__pycache__" not in f.parts:
+                install(f, opt / "demos" / f.relative_to(DEMOS), 0o755 if f.name in ("run.py", "build.py") else 0o644,
+                        quiet=True)
+                n += 1
+    print(f"  {opt / 'demos'}  ({n} files)")
+    # The presets' self-contained source tree (from the upstream clone); the Pi compiles it with g++.
+    tree = opt / "demos/upstream_host/build/tree"
+    subprocess.run([sys.executable, str(DEMOS / "upstream_host/build.py"), "--tree-only", "--out", str(tree)],
+                   check=True)
 
 
 def write(dst, text, mode, uid=0, gid=0):
@@ -97,8 +123,7 @@ def main():
             else:
                 mode = 0o644
             install(src, root / rel, mode)
-    for name in RENDERER_FILES:
-        install(RENDERER / name, root / "opt/patternflood" / name, 0o755 if name == "knob_renderer.py" else 0o644)
+    install_payload(root / "opt/patternflood")
     install(HERE / "pf-splash/pf-splash", root / "usr/local/sbin/pf-splash", 0o755)
     for unit, target in UNITS.items():
         wants = root / f"etc/systemd/system/{target}.wants" / unit
