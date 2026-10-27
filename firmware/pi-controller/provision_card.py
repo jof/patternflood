@@ -38,6 +38,7 @@ UNITS = {
 def install(src, dst, mode, uid=0, gid=0, quiet=False):
     dst.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(src, dst)
+    shutil.copystat(src, dst)           # keep mtimes: the Pi rebuilds the presets only if their sources changed
     if os.geteuid() == 0:               # update_pi.py stages as a user; tar makes it root-owned
         os.chown(dst, uid, gid)
     os.chmod(dst, mode)
