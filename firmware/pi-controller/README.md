@@ -72,9 +72,8 @@ The initramfs hook is picked up by cloud-init's `update-initramfs -u` on first
 boot, so step 2 first shows on the second boot. Steps out of order (2 arriving
 after 3) are ignored: the bar only moves forward.
 
-**Blocked, 2026-10-22: the USB gigabit adapter doesn't work on the Zero's bare port.**
-That leaves the Pi with no link to the card, so steps 2–5 and the renderer can't
-reach it. See [`wiring-pi-controller.md` §5](../../docs/desktop/wiring-pi-controller.md);
-the fix to try is §2.1, powering the adapter from the PSU.
+The USB gigabit adapter needs a micro-B-to-A OTG **cable**. A plug-style dongle
+failed (2026-10-22); a plain cable links at 1000 Mb/s (2026-10-26). Plug the
+adapter in with the Pi off. See [`wiring-pi-controller.md` §5](../../docs/desktop/wiring-pi-controller.md).
 
 Not done yet: a read-only root filesystem (overlayfs) before the box is closed.

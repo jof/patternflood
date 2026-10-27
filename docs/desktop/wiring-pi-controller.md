@@ -52,17 +52,19 @@ the board edge.
 
 ```
   Pi Zero W "USB" port (micro-USB OTG, the one nearer the middle)
-     └─ micro-USB OTG adapter ─ USB gigabit Ethernet adapter ─ Cat6 ─ 5A-75B (either RJ45)
+     └─ micro-B-to-A OTG cable ─ USB gigabit Ethernet adapter ─ Cat6 ─ 5A-75B (either RJ45)
 ```
 
 - **The adapter must be gigabit** (e.g. RTL8153 or ASIX AX88179). The 5A-75B
   won't link at 100 Mbit. Over the Zero's USB 2.0 it runs at about 300 Mbit/s,
   far more than the frames need.
-- **⚠ Don't power the adapter from the Zero's port.** On 2026-10-22 two RTL8153
-  adapters (a generic one and an Anker) never worked on the bare port. Details are
-  in §5. Give the adapter its own 5 V (§2.1), or use a Pi with Ethernet on board.
+- **Use an OTG cable, not a plug-style OTG dongle.** On 2026-10-22 two RTL8153
+  adapters never worked through a dongle. On 2026-10-26 a plain micro-B-to-A OTG
+  cable (no power input) ran the generic one at high speed, powered from the
+  Zero's port (§5).
+- **⚠ Plug the adapter in with the Pi off.** Hot-plugging it browns the Pi out.
 
-### 2.1 Power-injected USB extension (the fix to try)
+### 2.1 Power-injected USB extension (fallback, not needed so far)
 
 Open a USB-A extension's jacket partway along, between the OTG dongle and the
 adapter:
@@ -127,6 +129,18 @@ Kernel 6.18.50, `dwc_otg` in host mode through a micro-B-to-A OTG dongle:
 - The supply level at the Pi is fine.
 - The mechanism isn't pinned down without a scope; candidates are the dongle's contacts under load, and latch-up after the brown-outs. `dwc_otg.speed=1` doesn't help, because full speed already fails, and it's too slow for frames anyway.
 - **Next:** replace the dongle with a proper micro-B-to-A OTG cable, ideally a "Y" one with a separate power input. Or use §2.1, or a powered hub. Don't hot-plug adapters on the Zero.
+
+**Resolved, 2026-10-26: it was the dongle.** The fix was a plain micro-B-to-A OTG cable, with no power input. On the Zero W, with the same card, the generic RTL8153 plugged in and a cold boot:
+
+| Check | Result |
+|---|---|
+| Enumeration | `usb 1-1: new high-speed USB device` at 5.6 s; r8152 binds it as `eth0` |
+| Supply | `throttled=0x0` |
+| Link to the 5A-75B (direct Cat6) | **1000 Mb/s full duplex**; `colorlight` profile up at 192.168.75.1; card at .39 in ARP |
+| Renderer (`--res 64 --fps 30`) | Frames go out: 27k packets, 0 TX errors. **10–15 fps**, CPU-bound (0 % idle: python 63 %, sys + softirq 30 %) |
+
+- Still plug the adapter in before power-on.
+- `pf-splash` step 5 in `ExecStartPre` fails with `no wired link` if the Cat6 isn't in at boot. It's harmless; the renderer starts anyway.
 
 `~/patternflood-debug/` on ash keeps the UART console log and `usb-flex.sh`. That
 script shows the port's state on the ACT LED at 20 Hz (off / blinking for D+ pulled up /
