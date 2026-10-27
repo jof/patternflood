@@ -124,7 +124,7 @@ class SerialKnobs(_QueueSource):
 
 class I2CKnobs(_QueueSource):
     """4991 seesaw encoders on a local I2C bus, polled; lights set over I2C."""
-    POLL_S = 0.01
+    POLL_S = 0.02                       # ~33 Hz with bus time: the seesaw counts detents, so this is only latency
     MAX_STEP = 24                       # bigger jumps between polls are bus glitches: resync
 
     def __init__(self, bus):

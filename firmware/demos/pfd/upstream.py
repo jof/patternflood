@@ -109,9 +109,14 @@ class Upstream(Demo):
                                 int(self.rt.t * 1000) & 0xFFFFFFFF, self.audio_on, self.audio_val)
         for k in range(4):
             self.deltas[k] = self.pressed[k] = 0
-        img = np.ctypeslib.as_array(buf, shape=(self.h, self.w, 3)).astype(np.float32) / 255.0
-        y = img @ LUMA
-        img = np.clip(y[..., None] + (img - y[..., None]) * SAT_BOOST, 0, 1)
+        # The saturation boost, in place, with the /255 folded in. No clip: the runtime clips
+        # every demo's render to 0..1 straight away.
+        img = np.ctypeslib.as_array(buf, shape=(self.h, self.w, 3)).astype(np.float32)
+        y = (img @ LUMA)[..., None]
+        img -= y
+        img *= np.float32(SAT_BOOST / 255.0)
+        y *= np.float32(1 / 255.0)
+        img += y
         if self.turn_upright:
             img = np.rot90(img)                 # the panel's right edge becomes the top
         if img.shape[:2] == (N, N):

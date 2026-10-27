@@ -39,18 +39,24 @@ def show_bank(sock, ip, bank):
     poke(sock, ip, CSR_BASE_ADDR, bank * SLOTS * WORDS_PER_SLOT)
 
 
+WORD = struct.Struct("<i")
+ROWS_PER_PACKET = 4                     # 4 rows (768 bytes) a packet, as sender75 does
+PACKET = ROWS_PER_PACKET * 64 * 3
+
+
 def send_slot(sock, ip, im, slot, bank=0):
+    """im: one panel's 64x64 RGB (any strides: tobytes() packs it in row order)."""
     base = (bank * SLOTS + slot) * WORDS_PER_SLOT
-    for r in range(16):                 # 4 rows (768 bytes) a packet, as sender75 does
-        sock.sendto(struct.pack("<i", base + r * 4 * 48) + im[r * 4:r * 4 + 4].tobytes(), (ip, 4343))
+    data, addr = im.tobytes(), (ip, 4343)
+    for r in range(64 // ROWS_PER_PACKET):
+        sock.sendto(WORD.pack(base + r * ROWS_PER_PACKET * 48) + data[r * PACKET:(r + 1) * PACKET], addr)
 
 
 def send_frame(sock, ip, frame, blank_unused=False, bank=0):
     """frame: uint8 array (128, 128, 3), RGB, row 0 at the top as seen from the front."""
     assert frame.shape == (128, 128, 3) and frame.dtype == np.uint8
     for (qr, qc), slot in QUADRANT_SLOTS.items():
-        send_slot(sock, ip, np.ascontiguousarray(frame[qr * 64:qr * 64 + 64, qc * 64:qc * 64 + 64]),
-                  slot, bank)
+        send_slot(sock, ip, frame[qr * 64:qr * 64 + 64, qc * 64:qc * 64 + 64], slot, bank)
     if blank_unused:
         black = np.zeros((64, 64, 3), np.uint8)
         for slot in set(range(SLOTS)) - set(QUADRANT_SLOTS.values()):

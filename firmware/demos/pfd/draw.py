@@ -1,4 +1,5 @@
 """Drawing helpers on float RGB images, (128, 128, 3), 0..1 in perceptual (pre-gamma) units."""
+import colorsys
 import math
 
 import numpy as np
@@ -14,8 +15,8 @@ def blank():
 
 
 def hsv1(h, s=1.0, v=1.0):
-    """One HSV colour as an (r, g, b) float tuple."""
-    return tuple(float(c) for c in hsv(np.array(h), np.array(s), np.array(v)))
+    """One HSV colour as an (r, g, b) float tuple: hsv()'s colour, without numpy's per-call cost."""
+    return colorsys.hsv_to_rgb(float(h) % 1.0, float(s), float(v))
 
 
 def flare(img, k):

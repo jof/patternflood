@@ -24,6 +24,8 @@ path they're on: the Pi 5 port is a change of flags.
 ./run.py --knobs i2c:1 --out udp           # Pi 5
 ./run.py --demo etch --knobs auto --out preview:/tmp/etch.gif --seconds 8
 ./run.py --list
+./run.py --only upstream                   # just SeungHun's presets (native code: the Pi Zero's choice)
+./run.py --only play,audio                 # just these shelves
 ```
 
 Needs `numpy` and `pyserial` (bench only). Text (demo names, labels) needs

@@ -30,8 +30,20 @@ from pfd.demos import ALL                   # noqa: E402
 from pfd.audio import audio_source          # noqa: E402
 from pfd.io import frame_sink, knob_source  # noqa: E402
 from pfd.runtime import Runtime             # noqa: E402
+from pfd.upstream import Upstream           # noqa: E402
 
 BRIDGE = "/dev/serial/by-id/usb-Espressif_USB_JTAG_serial_debug_unit_XX:XX:XX:XX:XX:XX-if00"
+
+
+def pick(demos, only):
+    """--only: shelves by name, or "upstream" (SeungHun's presets, which are native code: fast on a Pi Zero)."""
+    keys = {k.strip().lower() for k in only.split(",") if k.strip()}
+    if not keys:
+        return demos
+    picked = [d for d in demos if d.group in keys or ("upstream" in keys and issubclass(d, Upstream))]
+    if not picked:
+        raise SystemExit(f"--only {only!r} matches no demos (shelves: {sorted({d.group for d in demos})}, or upstream)")
+    return picked
 
 
 def main():
@@ -41,6 +53,9 @@ def main():
     p.add_argument("--out", default="auto:durian",
                    help="auto[:HOST] (udp if the card is on our link, else pipe) | pipe:HOST[:IP] | udp[:IP] | preview:FILE.gif")
     p.add_argument("--demo", default="0", help="start demo, by name or index")
+    p.add_argument("--only", default="",
+                   help="limit the demos: shelves, comma-separated (play,audio,patternflow), or 'upstream' for "
+                        "SeungHun's presets alone (default: all)")
     p.add_argument("--fps", type=float, default=None, help="default 60, or 20 for previews")
     p.add_argument("--audio", default=None,
                    help="pulse[:SOURCE] | alsa[:DEVICE] | file:PATH[@SECONDS] | none (default: pulse on the bench, none for previews)")
@@ -51,12 +66,13 @@ def main():
     p.add_argument("--list", action="store_true", help="list the demos and exit")
     args = p.parse_args()
 
+    demos = pick(ALL, args.only)
     if args.list:
-        for i, d in enumerate(ALL):
+        for i, d in enumerate(demos):
             print(f"{i}  {d.name:10s} {d.blurb}")
         return
 
-    names = [d.name.lower() for d in ALL]
+    names = [d.name.lower() for d in demos]
     start = int(args.demo) if args.demo.isdigit() else names.index(args.demo.lower())
     preview = args.out.startswith("preview")
     fps = args.fps or (20.0 if preview else 60.0)
@@ -71,7 +87,7 @@ def main():
     knobs = knob_source(args.knobs)
     spec = args.audio or ("none" if preview else "pulse")
     audio = audio_source(spec, delay=args.audio_delay, preview=preview)
-    Runtime(ALL, knobs, out, fps=fps, bright=bright, start=start, duration=seconds, audio=audio).run()
+    Runtime(demos, knobs, out, fps=fps, bright=bright, start=start, duration=seconds, audio=audio).run()
 
 
 if __name__ == "__main__":

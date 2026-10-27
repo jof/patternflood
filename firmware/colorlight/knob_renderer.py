@@ -60,15 +60,15 @@ def log(*a):
 
 
 def hsv(h, s, v):
-    """Vectorised HSV -> RGB, all inputs in 0..1, output float RGB 0..1."""
-    h = (h % 1.0) * 6.0
-    i = np.floor(h).astype(np.int32) % 6
-    f = h - np.floor(h)
-    p, q, t = v * (1 - s), v * (1 - s * f), v * (1 - s * (1 - f))
-    r = np.choose(i, [v, q, p, p, t, v])
-    g = np.choose(i, [t, v, v, q, p, p])
-    b = np.choose(i, [p, p, t, v, v, q])
-    return np.stack([r, g, b], axis=-1)
+    """Vectorised HSV -> RGB, all inputs in 0..1, output float RGB 0..1.
+
+    The closed form (each channel v - v*s*clamp(min(k, 4-k)), k = 6h + 5, 3, 1 mod 6):
+    the same colours as the six-way sector choice, at about half the cost on a Zero W.
+    """
+    h, s, v = np.asarray(h), np.asarray(s), np.asarray(v)
+    k = ((h % 1.0) * 6.0)[..., None] + np.array((5.0, 3.0, 1.0), np.result_type(h, np.float32))
+    k %= 6.0
+    return v[..., None] * (1 - s[..., None] * np.clip(np.minimum(k, 4 - k), 0, 1))
 
 
 def plasma(t, scale, hue):
@@ -141,14 +141,32 @@ def handle(state, ev):
 def capped(rgb):
     """rgb float 0..1 (post-gamma duty) -> uint8 frame, scaled to the current budget."""
     h = rgb.shape[0] // 2
-    duty = rgb.reshape(2, h, 2, h, 3).mean(axis=(1, 3, 4))     # per-panel mean duty, 2x2
+    duty = rgb.reshape(2, h, 2, h * 3).sum(axis=(1, 3), dtype=np.float64) / (h * h * 3)   # per-panel mean, 2x2
     amps = duty * FULL_WHITE_AMPS
     scale = 1.0
     if amps.max() > PANEL_AMPS:
         scale = PANEL_AMPS / amps.max()
     if amps.sum() * scale > TOTAL_AMPS:
         scale = TOTAL_AMPS / amps.sum()
-    return (np.clip(rgb * scale, 0, 1) * 255 + 0.5).astype(np.uint8), amps.sum() * scale, scale
+    out = np.multiply(rgb, 255 * scale, dtype=np.float32)
+    np.clip(out, 0, 255, out=out)
+    out += 0.5
+    return out.astype(np.uint8), amps.sum() * scale, scale
+
+
+def capped_u8(frame):
+    """capped() for a frame already in uint8 (post-gamma duty x 255): rescaled only when over budget."""
+    h = frame.shape[0] // 2
+    duty = frame.reshape(2, h, 2, h * 3).sum(axis=(1, 3), dtype=np.uint32) / (255.0 * h * h * 3)
+    amps = duty * FULL_WHITE_AMPS
+    scale = 1.0
+    if amps.max() > PANEL_AMPS:
+        scale = PANEL_AMPS / amps.max()
+    if amps.sum() * scale > TOTAL_AMPS:
+        scale = TOTAL_AMPS / amps.sum()
+    if scale < 1.0:
+        frame = (frame * np.float32(scale) + np.float32(0.5)).astype(np.uint8)
+    return frame, amps.sum() * scale, scale
 
 
 def knob_lights(state):
@@ -184,7 +202,7 @@ class StdoutLights:
 
 class I2CKnobs:
     """4991 seesaw encoders on a local I2C bus: polled into the event queue; lights set directly."""
-    POLL_S = 0.01
+    POLL_S = 0.02                       # ~33 Hz with bus time: the seesaw counts detents, so this is only latency
     MAX_STEP = 24                       # bigger jumps between polls are bus glitches: resync
 
     def __init__(self, bus, q):

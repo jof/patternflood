@@ -32,7 +32,7 @@ import time
 
 import numpy as np
 
-from knob_renderer import GAMMA, capped
+from knob_renderer import GAMMA, capped_u8
 from . import draw
 from .audio import SilentState
 from .io import log
@@ -44,6 +44,12 @@ SHELF_NAMES = {"play": "PLAY", "audio": "AUDIO", "patternflow": "PATTERNFLOW"}
 LIGHT_MAX = 64          # the 4991 NeoPixels are bright next to a dim panel
 NKNOBS = 4
 DETENTS_PER_REV = 24    # the 4991's encoder (PEC11-style); for demos that map a knob to an absolute angle
+GAMMA_STEPS = 4096      # gamma by table: within 0.07 of an 8-bit step of the exact curve, and far cheaper than **
+
+
+def _gamma_table(bright):
+    """0..1 (in GAMMA_STEPS steps) -> the panel's 8-bit duty at this brightness."""
+    return (np.linspace(0.0, 1.0, GAMMA_STEPS) ** GAMMA * bright * 255 + 0.5).astype(np.uint8)
 
 
 class Demo:
@@ -247,6 +253,7 @@ class Runtime:
         t0 = time.monotonic()
         self.last_lights = None
         frames, t_stat, amps, scale = 0, 0.0, 0.0, 1.0
+        table, table_bright = None, None
         period = dt = 1.0 / self.fps
         try:
             while self.duration is None or self.t < self.duration:
@@ -260,14 +267,20 @@ class Runtime:
                     self.audio = SilentState(self.t, self.audio.counts["beat"])
                 self.demo.step(dt)
 
-                # NaN would slip through the current cap, so scrub it before anything else
-                rgb = np.clip(np.nan_to_num(self.demo.render()), 0, 1).astype(np.float32, copy=True)
+                # NaN would slip through the current cap, so scrub it before anything else: fmax
+                # takes NaN to 0 (as nan_to_num did), and the pair clips to 0..1, in a float32 copy.
+                rgb = np.fmax(self.demo.render(), np.float32(0), dtype=np.float32)
+                np.fmin(rgb, np.float32(1), out=rgb)
                 # the music's big moments, made bright, on the Audio shelf's visualizers
                 if getattr(self.demo, "flare", self.demo.group == "audio") and self.audio.live:
                     rgb = draw.flare(rgb, float(np.clip((self.audio.impact - 0.45) / 0.5, 0, 1)))
                 rgb = self._overlay(rgb)
-                rgb = np.clip(rgb, 0, 1) ** GAMMA * self.bright
-                frame, amps, scale = capped(rgb)
+                if table_bright != self.bright:
+                    table, table_bright = _gamma_table(self.bright), self.bright
+                np.clip(rgb, 0, 1, out=rgb)
+                rgb *= GAMMA_STEPS - 1
+                rgb += 0.5
+                frame, amps, scale = capped_u8(table[rgb.astype(np.uint16)])
 
                 lights = self._lights()
                 self.out.show(frame, lights)

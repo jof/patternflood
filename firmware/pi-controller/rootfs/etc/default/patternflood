@@ -5,7 +5,12 @@
 # menu opens. k1 picks the shelf, k0 the demo, k3 sets brightness; a click on
 # any knob closes it.
 
-# Demo to start on, by name or index (see: python3 /opt/patternflood/demos/run.py --list).
+# Which demos the menu offers: empty for all, shelves comma-separated (play,audio,patternflow),
+# or "upstream" for SeungHun's 48 presets alone. Those are native code, so they run far
+# faster on a Pi Zero than our numpy demos: on the Zero W use PF_ONLY=upstream.
+PF_ONLY=
+# Demo to start on, by name or index within PF_ONLY's list
+# (see: python3 /opt/patternflood/demos/run.py --only "$PF_ONLY" --list).
 PF_DEMO=0
 # Frame rate to aim for. The Zero W falls well short; the Pi 5 can take 60.
 PF_FPS=30

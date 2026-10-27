@@ -36,7 +36,8 @@ that switches demos. The same layout is meant to carry over to the Pi 5. Wiring:
 | First boot | cloud-init installs `python3-numpy`, `i2c-tools`, `python3-pil` and `g++` |
 | Code | `/opt/patternflood/demos` (`run.py`, `pfd/`, the upstream presets' build files and source tree) and `/opt/patternflood/colorlight` (`knob_renderer`, `r75_frame`, `seesaw`), as in the repo |
 | Service | `patternflood.service` runs `demos/run.py --knobs i2c:1 --out udp:192.168.75.39 --fps 30 --audio none` as user `patternflood` (group i2c), CPU governor `performance`, restarts forever. On its first start after g++ lands it compiles upstream's presets (a few minutes on a Zero W, behind splash step 5) |
-| Settings | `/etc/default/patternflood`: start demo, fps, brightness, knob and frame specs. Edit it, then `sudo systemctl restart patternflood` |
+| Settings | `/etc/default/patternflood`: which demos (`PF_ONLY`), start demo, fps, brightness, knob and frame specs. Edit it, then `sudo systemctl restart patternflood` |
+| Speed on the Zero W | SeungHun's presets (`PF_ONLY=upstream`) run at about 12 fps with the knobs polled; our numpy demos at 2–7. Sending (69 UDP packets a frame through the USB adapter) and the knob thread are the fixed costs. The Pi 5 is the real fix |
 | Boot splash | `pf-splash` moves the card's progress bar on (below); needs `arm-linux-gnueabihf-gcc` on the provisioning host |
 
 To update the demos and the renderer on a running Pi (keeps its `/etc/default/patternflood`):
