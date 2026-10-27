@@ -137,7 +137,7 @@ Kernel 6.18.50, `dwc_otg` in host mode through a micro-B-to-A OTG dongle:
 | Enumeration | `usb 1-1: new high-speed USB device` at 5.6 s; r8152 binds it as `eth0` |
 | Supply | `throttled=0x0` |
 | Link to the 5A-75B (direct Cat6) | **1000 Mb/s full duplex**; `colorlight` profile up at 192.168.75.1; card at .39 in ARP |
-| Renderer (`--res 64 --fps 30`) | Frames go out: 27k packets, 0 TX errors. **10–15 fps**, CPU-bound (0 % idle: python 63 %, sys + softirq 30 %) |
+| Renderer (`--res 64 --fps 30`) | Plasma shows on the panels; 27k packets, 0 TX errors. **10–15 fps**, CPU-bound (0 % idle: python 63 %, sys + softirq 30 %) |
 
 - Still plug the adapter in before power-on.
 - `pf-splash` step 5 in `ExecStartPre` fails with `no wired link` if the Cat6 isn't in at boot. It's harmless; the renderer starts anyway.
