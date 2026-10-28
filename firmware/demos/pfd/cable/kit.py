@@ -33,6 +33,9 @@ def vgrad(img, top, bottom, y0=0, y1=N):
 def rect(img, x0, y0, x1, y1, rgb, a=1.0):
     x0, y0, x1, y1 = _box(round(x0), round(y0), round(x1), round(y1))
     if x0 < x1 and y0 < y1:
+        if a >= 1:
+            img[y0:y1, x0:x1] = rgb
+            return
         region = img[y0:y1, x0:x1]
         region += (np.asarray(rgb, np.float32) - region) * a
 

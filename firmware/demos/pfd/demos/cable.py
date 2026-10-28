@@ -42,20 +42,25 @@ OSD = (.35, 1, .35)
 
 
 class Tape(Show):
-    """A video file, as a channel: a random excerpt of it each time it's tuned in."""
+    """A video file, as a channel: a random excerpt of it each time it's tuned in, or all of it
+    if it's no longer than an excerpt (a trim, as tools/cable_trims.py makes)."""
     reception = 0.08
 
     def __init__(self, path, num):
         self.path, self.num = path, num
         self.title = path.stem.upper().replace("_", " ")[:20]
         self.duration = _probe(path)
-        self.length = TAPE_S[1]
+        self.trim = 0 < self.duration <= TAPE_S[1] + 1
+        self.length = self.duration if self.trim else TAPE_S[1]
         self.frames, self.proc, self.gen = [], None, 0
 
     def tune(self):
         self.stop()
-        self.length = random.uniform(*TAPE_S)
-        start = random.uniform(0, max(0.0, self.duration - self.length)) if self.duration else 0.0
+        if self.trim:
+            start = 0.0
+        else:
+            self.length = random.uniform(*TAPE_S)
+            start = random.uniform(0, max(0.0, self.duration - self.length)) if self.duration else 0.0
         self.frames = []
         self.gen += 1
         cmd = ["ffmpeg", "-v", "error", "-ss", f"{start:.2f}", "-i", str(self.path), "-t", f"{self.length:.2f}", "-an",

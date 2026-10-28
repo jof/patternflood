@@ -1,0 +1,180 @@
+{
+  "sources": {
+    "one-week": {
+      "item": "OneWeek512kb",
+      "file": "One_Week_512kb.mp4",
+      "credit": "One Week (1920), Buster Keaton and Eddie Cline"
+    },
+    "the-rink": {
+      "item": "CC_1916_12_04_TheRink",
+      "file": "CC_1916_12_04_TheRink_512kb.mp4",
+      "credit": "The Rink (1916), Charlie Chaplin"
+    },
+    "never-weaken": {
+      "item": "Never_Weaken_1921",
+      "file": "Never_Weaken_1921_512kb.mp4",
+      "credit": "Never Weaken (1921), Harold Lloyd"
+    },
+    "two-lip-time": {
+      "item": "Felix_TwoLipTime_NoAudio",
+      "file": "Felix_TwoLipTime_NoAudio_512kb.mp4",
+      "credit": "Felix the Cat in Two-Lip Time (1926), Pat Sullivan and Otto Messmer"
+    },
+    "trifles-with-time": {
+      "item": "FELIXTHECATTRIFLESWITHTIME",
+      "file": "FELIXTHECATTRIFLESWITHTIME.ia.mp4",
+      "credit": "Felix the Cat Trifles with Time (1925), Pat Sullivan and Otto Messmer"
+    },
+    "gertie": {
+      "item": "gertiethe-dinosaur-512kb",
+      "file": "GertietheDinosaur_512kb.mp4",
+      "credit": "Gertie the Dinosaur (1914), Winsor McCay"
+    },
+    "about-bananas": {
+      "item": "AboutBan1935",
+      "file": "AboutBan1935_512kb.mp4",
+      "credit": "About Bananas (1935), Prelinger Archives"
+    },
+    "breakfast-pals": {
+      "item": "Breakfas1939",
+      "file": "Breakfas1939_512kb.mp4",
+      "credit": "Breakfast Pals (1939), Prelinger Archives"
+    }
+  },
+  "trims": [
+    {
+      "src": "one-week",
+      "at": 934,
+      "dur": 12,
+      "title": "merry go house"
+    },
+    {
+      "src": "one-week",
+      "at": 960,
+      "dur": 12,
+      "title": "thrown out"
+    },
+    {
+      "src": "one-week",
+      "at": 1300,
+      "dur": 14,
+      "title": "the second train"
+    },
+    {
+      "src": "never-weaken",
+      "at": 1267,
+      "dur": 13,
+      "title": "wrong office",
+      "x": 0.25
+    },
+    {
+      "src": "never-weaken",
+      "at": 1293,
+      "dur": 14,
+      "title": "girder ride",
+      "x": 0.4
+    },
+    {
+      "src": "never-weaken",
+      "at": 1466,
+      "dur": 12,
+      "title": "lunch break"
+    },
+    {
+      "src": "the-rink",
+      "at": 548,
+      "dur": 13,
+      "title": "rink rampage"
+    },
+    {
+      "src": "the-rink",
+      "at": 662,
+      "dur": 13,
+      "title": "skate duel"
+    },
+    {
+      "src": "the-rink",
+      "at": 1078,
+      "dur": 14,
+      "title": "party on wheels"
+    },
+    {
+      "src": "two-lip-time",
+      "at": 58,
+      "dur": 12,
+      "title": "barrel roll"
+    },
+    {
+      "src": "two-lip-time",
+      "at": 434,
+      "dur": 12,
+      "title": "instant tulips"
+    },
+    {
+      "src": "trifles-with-time",
+      "at": 88,
+      "dur": 12,
+      "title": "bricked"
+    },
+    {
+      "src": "trifles-with-time",
+      "at": 182,
+      "dur": 10,
+      "title": "time goes back"
+    },
+    {
+      "src": "trifles-with-time",
+      "at": 322,
+      "dur": 14,
+      "title": "dino ride"
+    },
+    {
+      "src": "trifles-with-time",
+      "at": 424,
+      "dur": 12,
+      "title": "cave manners"
+    },
+    {
+      "src": "gertie",
+      "at": 400,
+      "dur": 14,
+      "title": "gertie arrives"
+    },
+    {
+      "src": "gertie",
+      "at": 580,
+      "dur": 14,
+      "title": "gertie dances"
+    },
+    {
+      "src": "gertie",
+      "at": 671,
+      "dur": 11,
+      "title": "thirsty gertie"
+    },
+    {
+      "src": "about-bananas",
+      "at": 532,
+      "dur": 14,
+      "title": "vitamin bananas"
+    },
+    {
+      "src": "about-bananas",
+      "at": 608,
+      "dur": 10,
+      "title": "banana power"
+    },
+    {
+      "src": "breakfast-pals",
+      "at": 28,
+      "dur": 14,
+      "title": "cereal elves"
+    },
+    {
+      "src": "breakfast-pals",
+      "at": 43,
+      "dur": 13,
+      "title": "pancake brawl"
+    }
+  ]
+}
