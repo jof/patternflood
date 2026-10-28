@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: CC-BY-SA-4.0
 // ===============================
 
-// @knobs Tempo=60..180, Jive=0..1, Zoom=0..1, Spin=-1..1
+// @knobs Pace=60..180, Jive=0..1, Zoom=0..1, Spin=-1..1
 // @matrix 64x128
 
 // Solo Jazz: the 1990s paper-cup swash, improvised live by a quartet, for playing like an
@@ -17,9 +17,12 @@
 // the soloist always plays in view, the other three anywhere, each landing where the paper is
 // emptiest, so zooming out shows the whole band at work.
 // Written for any frame size: everything scales with the short side.
-// Knob 1 Tempo: beats per minute. Push: tap tempo (and the tap is the downbeat).
+// It keeps its own time and hears nothing.
+// Knob 1 Pace: how fast the band plays, in beats a minute. Push: a break, fresh phrases on
+//   clean paper.
 // Knob 2 Jive: how wild the solos are, and how hard the purple dances: a zigzag warp that
-//   kicks on every beat, zig and zag trading places. Push: a break, fresh phrases on clean paper.
+//   kicks on every beat, zig and zag trading places. Push: freeze the painting (the view
+//   still moves), and again to let it go.
 // Knob 3 Zoom: middle as painted; down to a half, the whole paper; up to 3x, a crayon
 //   close-up. Pumps a little on the beat. Push: mirror off, mirror, kaleidoscope.
 // Knob 4 Spin: middle still; either way, up to a turn every two bars. Back near the middle
@@ -40,7 +43,6 @@ const PAPER_HI = [242, 228, 198], PAPER_LEVEL = 0.8;
 const TEAL_LIGHT = [64, 198, 204], TEAL_DARK = [10, 112, 148];
 const PURPLE = [96, 26, 176], PURPLE_NIGHT = [132, 48, 222];   // lifted on black, where it runs dim
 const SPIN_DEAD = 0.06;               // about a detent either side of the middle: still
-const TAP_WINDOW = 2;                 // seconds: taps further apart start a new count
 
 function hash32(x) {
   x = (x ^ (x >>> 16)) >>> 0;
@@ -107,7 +109,7 @@ function rnd(p) {
 }
 
 export function setup(params) {
-  params.tempoKnob = 120; params.jive = 0.5; params.zoom = 0.5; params.spin = 0;
+  params.pace = 120; params.jive = 0.5; params.zoom = 0.5; params.spin = 0;
   params.w = 0; params.h = 0;
   params.dt = 0;
   params.press = [false, false, false, false];
@@ -115,7 +117,7 @@ export function setup(params) {
 
 export function update(dt, input, params) {
   if (input && input.knobValues) {
-    params.tempoKnob = input.knobValues[0];
+    params.pace = input.knobValues[0];
     params.jive = input.knobValues[1];
     params.zoom = input.knobValues[2];
     params.spin = input.knobValues[3];
@@ -143,13 +145,13 @@ function init(p, w, h) {
   }
   p.fadeBeats = 2.4 * (8 + 6 * h / (64 * p.S));   // slow: a stroke spends its life wearing into the grain
   p.rng = 0x2468ace1;
-  p.tempoAdj = 0; p.tapAge = 10; p.tapCount = 0; p.tapInt = 0.5;
-  p.tempoS = p.tempoKnob; p.jiveS = p.jive; p.zoomS = p.zoom; p.spinS = p.spin;
+  p.tempoS = p.pace; p.jiveS = p.jive; p.zoomS = p.zoom; p.spinS = p.spin;
   p.paperOn = false; p.paperS = 0;    // night: mostly-white frames fight the power limit
   p.mirror = 0;
+  p.frozen = false;
   p.angle = 0;
   p.beatF = 0; p.beatN = 0;
-  p.tapFlash = 0; p.noteFlash = 0;
+  p.noteFlash = 0;
   p.wash = 0;
   p.voices = [];
   for (let k = 0; k < VOICES; k++) {
@@ -378,37 +380,23 @@ function paintPen(p, v, k, tp0, tp1) {
 }
 
 function step(p, dt) {
-  // The clicks: tap tempo, a break, the mirror, the paper.
-  p.tapAge = p.tapAge + dt > 10 ? 10 : p.tapAge + dt;
+  // The clicks: a break, freeze, the mirror, the paper.
   if (p.press[0]) {
-    if (p.tapAge < TAP_WINDOW) {
-      p.tapInt = p.tapCount > 0 ? 0.5 * p.tapInt + 0.5 * p.tapAge : p.tapAge;
-      p.tapCount++;
-      const bpm = 60 / p.tapInt;
-      p.tempoAdj = (bpm < 60 ? 60 : bpm > 180 ? 180 : bpm) - p.tempoKnob;
-    } else {
-      p.tapCount = 0;
-    }
-    p.tapAge = 0;
-    p.tapFlash = 1;
-    p.beatF = 0; p.beatN = 0;           // the tap is the downbeat
-  }
-  if (p.press[1]) {
+    p.frozen = false;
     p.wash = 1;
     for (let k = 0; k < VOICES; k++) newPhrase(p, p.voices[k], k);
   }
+  if (p.press[1]) p.frozen = !p.frozen;
   if (p.press[2]) p.mirror = (p.mirror + 1) % 3;
   if (p.press[3]) p.paperOn = !p.paperOn;
   for (let i = 0; i < 4; i++) p.press[i] = false;
 
-  const tempo = p.tempoKnob + p.tempoAdj;
   const kk = dt * 3 > 1 ? 1 : dt * 3;
-  p.tempoS += ((tempo < 60 ? 60 : tempo > 180 ? 180 : tempo) - p.tempoS) * kk;
+  p.tempoS += (p.pace - p.tempoS) * kk;
   p.jiveS += (p.jive - p.jiveS) * kk;
   p.zoomS += (p.zoom - p.zoomS) * kk;
   p.spinS += (p.spin - p.spinS) * kk;
   p.paperS += ((p.paperOn ? 1 : 0) - p.paperS) * (dt * 2 > 1 ? 1 : dt * 2);
-  p.tapFlash = p.tapFlash - dt * 4 > 0 ? p.tapFlash - dt * 4 : 0;
   p.noteFlash *= Math.exp(-dt * 8);
 
   const bps = p.tempoS / 60;
@@ -424,6 +412,7 @@ function step(p, dt) {
   if (p.angle > 3.1416) p.angle -= 6.2832;
   if (p.angle < -3.1416) p.angle += 6.2832;
 
+  if (p.frozen) return;                // held: the paper keeps, and the band waits
   const rate = bps / p.fadeBeats + (p.wash > 0 ? 3 : 0);
   if (p.wash > 0) p.wash -= dt;
   const fade = Math.exp(-dt * rate);

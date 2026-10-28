@@ -17,22 +17,25 @@
 // into streaks as they fade. The paper is two screens each way, wrapping round like the cup:
 // the soloist always plays in view, the other three anywhere, each landing where the paper is
 // emptiest, so zooming out shows the whole band at work.
-// Knobs: Tempo (push: tap tempo, the tap is the downbeat); Jive (how wild the solos are and
-// how hard the purple dances on the beat; push: a break on clean paper); Zoom (a half, the
-// whole paper, to 3x; push: mirror off, mirror, kaleidoscope); Spin (either way, still in
-// the middle, easing upright; push: night, the start, or cream paper).
+// It keeps its own time and hears nothing. Knobs: Pace (beats a minute; push: a break on
+// clean paper); Jive (how wild the solos are and how hard the purple dances on the beat;
+// push: freeze the painting, the view still moving); Zoom (a half, the whole paper, to 3x;
+// push: mirror off, mirror, kaleidoscope); Spin (either way, still in the middle, easing
+// upright; push: night, the start, or cream paper).
 //
 // A line-for-line twin of solo_jazz.js: the same generator, hash and draws in the same
 // order, so the device paints what Pattern Lab previews. Everything scales with the
 // short side, so FRAME_W / FRAME_H may be any size (64 x 128 as shared, 128 x 128 too).
-// knobLights() is extra, for hosts with lights in their knobs; the firmware ignores it.
+// Two extras the firmware never calls, for hosts that have them: knobLights(), the knobs'
+// colours, and hostAudio(), a beat tracker's view of the music. Fed that, it plays to the
+// music instead (see hostAudio).
 //
 // By Jonathan Lassoff. CC BY-SA 4.0.
 
 namespace SoloJazz {
 
 const char* NAME = "Solo Jazz";
-const char* const KNOB_LABELS[4] = {"Tempo", "Jive", "Zoom", "Spin"};
+const char* const KNOB_LABELS[4] = {"Pace", "Jive", "Zoom", "Spin"};
 constexpr bool ABSOLUTE_READY = true;
 
 constexpr int FRAME_W = 64;
@@ -59,20 +62,22 @@ constexpr float SJ_PAPER_LEVEL = 0.8f;
 constexpr float SJ_TEAL_LIGHT[3] = {64, 198, 204}, SJ_TEAL_DARK[3] = {10, 112, 148};
 constexpr float SJ_PURPLE[3] = {96, 26, 176}, SJ_PURPLE_NIGHT[3] = {132, 48, 222};   // lifted on black
 constexpr float SJ_SPIN_DEAD = 0.06f;    // about a detent either side of the middle: still
-constexpr float SJ_TAP_WINDOW = 2.0f;    // seconds: taps further apart start a new count
+constexpr float SJ_HEARD_S = 0.5f;       // hostAudio() this recently: playing to the music
 
 // knobs, at the cards' start: mid-range
-static float tempoKnob = 120.0f, jive = 0.5f, zoom = 0.5f, spin = 0.0f;
+static float pace = 120.0f, jive = 0.5f, zoom = 0.5f, spin = 0.0f;
 static float tempoS, jiveS, zoomS, spinS, paperS;
 static bool press[4] = {false, false, false, false};
-static float tempoAdj = 0.0f, tapAge = 10.0f, tapInt = 0.5f;
-static int tapCount = 0;
-static bool paperOn = false;
+static bool paperOn = false, frozen = false;
 static int mirror = 0;
 static float angle = 0.0f, beatF = 0.0f;
 static int beatN = 0;
-static float tapFlash = 0.0f, noteFlash = 0.0f;
+static float noteFlash = 0.0f;
 static float wash = 0.0f;
+// the music, from hostAudio()
+static float audioAge = 10.0f, aBpm = 120.0f, aPhase = 0.0f, aLevel = 0.0f;
+static int aBeat = 0;
+static bool aDrop = false;
 
 static float* T = nullptr;      // teal ink
 static float* Sh = nullptr;     // its shade, light 0 .. dark 1
@@ -380,42 +385,40 @@ static void paintPen(Voice& v, int k, float tp0, float tp1) {
 }
 
 static void step(float dt) {
-  // The clicks: tap tempo, a break, the mirror, the paper.
-  tapAge = tapAge + dt > 10.0f ? 10.0f : tapAge + dt;
-  if (press[0]) {
-    if (tapAge < SJ_TAP_WINDOW) {
-      tapInt = tapCount > 0 ? 0.5f * tapInt + 0.5f * tapAge : tapAge;
-      tapCount++;
-      const float bpm = 60.0f / tapInt;
-      tempoAdj = (bpm < 60.0f ? 60.0f : bpm > 180.0f ? 180.0f : bpm) - tempoKnob;
-    } else {
-      tapCount = 0;
-    }
-    tapAge = 0.0f;
-    tapFlash = 1.0f;
-    beatF = 0.0f; beatN = 0;              // the tap is the downbeat
-  }
-  if (press[1]) {
+  // Playing to the music while hostAudio() keeps coming, its own time otherwise.
+  audioAge = audioAge + dt > 10.0f ? 10.0f : audioAge + dt;
+  const bool heard = audioAge < SJ_HEARD_S;
+  // The clicks: a break, freeze, the mirror, the paper. A drop in the music is a break too.
+  if (press[0] || (heard && aDrop)) {
+    frozen = false;
     wash = 1.0f;
     for (int k = 0; k < SJ_VOICES; k++) newPhrase(voices[k], k);
   }
+  aDrop = false;
+  if (press[1]) frozen = !frozen;
   if (press[2]) mirror = (mirror + 1) % 3;
   if (press[3]) paperOn = !paperOn;
   for (int i = 0; i < 4; i++) press[i] = false;
 
-  const float tempo = tempoKnob + tempoAdj;
   const float kk = dt * 3.0f > 1.0f ? 1.0f : dt * 3.0f;
-  tempoS += ((tempo < 60.0f ? 60.0f : tempo > 180.0f ? 180.0f : tempo) - tempoS) * kk;
-  jiveS += (jive - jiveS) * kk;
+  // Heard, Pace picks the feel: half time below 95, double above 145, straight between.
+  const float feel = pace < 95.0f ? 0.5f : pace > 145.0f ? 2.0f : 1.0f;
+  tempoS += ((heard ? aBpm * feel : pace) - tempoS) * kk;
+  const float jiveT = jive + (heard ? 0.4f * aLevel : 0.0f);   // loud music jives harder
+  jiveS += ((jiveT > 1.0f ? 1.0f : jiveT) - jiveS) * kk;
   zoomS += (zoom - zoomS) * kk;
   spinS += (spin - spinS) * kk;
   paperS += ((paperOn ? 1.0f : 0.0f) - paperS) * (dt * 2.0f > 1.0f ? 1.0f : dt * 2.0f);
-  tapFlash = tapFlash - dt * 4.0f > 0.0f ? tapFlash - dt * 4.0f : 0.0f;
   noteFlash *= expf(-dt * 8.0f);
 
   const float bps = tempoS / 60.0f;
-  beatF += dt * bps;
-  if (beatF >= 1.0f) { beatF -= 1.0f; beatN = (beatN + 1) & 3; }
+  if (heard) {                            // the tracker's beats, as they land
+    beatF = aPhase;
+    beatN = aBeat & 3;
+  } else {
+    beatF += dt * bps;
+    if (beatF >= 1.0f) { beatF -= 1.0f; beatN = (beatN + 1) & 3; }
+  }
 
   if (fabsf(spinS) < SJ_SPIN_DEAD) {        // let go of the spin: ease back upright
     const float target = floorf(angle / 3.1416f + 0.5f) * 3.1416f;
@@ -426,6 +429,7 @@ static void step(float dt) {
   if (angle > 3.1416f) angle -= 6.2832f;
   if (angle < -3.1416f) angle += 6.2832f;
 
+  if (frozen) return;                     // held: the paper keeps, and the band waits
   const float rate = bps / fadeBeats + (wash > 0.0f ? 3.0f : 0.0f);
   if (wash > 0.0f) wash -= dt;
   const float fade = expf(-dt * rate);
@@ -454,16 +458,17 @@ void setup() {
   if (!Sh) Sh = PFMem::allocFloats(SJ_N);
   if (!P) P = PFMem::allocFloats(SJ_N);
   if (!tooth) tooth = PFMem::allocFloats(SJ_N);
-  tempoKnob = 120.0f; jive = 0.5f; zoom = 0.5f; spin = 0.0f;
-  tempoS = tempoKnob; jiveS = jive; zoomS = zoom; spinS = spin;
+  pace = 120.0f; jive = 0.5f; zoom = 0.5f; spin = 0.0f;
+  tempoS = pace; jiveS = jive; zoomS = zoom; spinS = spin;
   for (int i = 0; i < 4; i++) press[i] = false;
-  tempoAdj = 0.0f; tapAge = 10.0f; tapCount = 0; tapInt = 0.5f;
   paperOn = false; paperS = 0.0f;         // night: mostly-white frames fight the power limit
+  frozen = false;
   mirror = 0;
   angle = 0.0f;
   beatF = 0.0f; beatN = 0;
-  tapFlash = 0.0f; noteFlash = 0.0f;
+  noteFlash = 0.0f;
   wash = 0.0f;
+  audioAge = 10.0f; aBpm = 120.0f; aPhase = 0.0f; aLevel = 0.0f; aBeat = 0; aDrop = false;
   rng = 0x2468ace1u;
   S = (FRAME_W < FRAME_H ? FRAME_W : FRAME_H) / 64.0f;
   fadeBeats = 2.4f * (8.0f + 6.0f * FRAME_H / (64.0f * S));   // slow: a stroke spends its life wearing into the grain
@@ -486,7 +491,7 @@ void setup() {
 }
 
 void update(float dt, const InputFrame& input) {
-  PFParams::apply(input, 0, &tempoKnob, 60.0f, 180.0f, 2.5f);
+  PFParams::apply(input, 0, &pace, 60.0f, 180.0f, 2.5f);
   PFParams::apply(input, 1, &jive, 0.0f, 1.0f, 0.020833f);
   PFParams::apply(input, 2, &zoom, 0.0f, 1.0f, 0.020833f);
   PFParams::apply(input, 3, &spin, -1.0f, 1.0f, 0.041667f);
@@ -536,20 +541,36 @@ void draw() {
   PFCanvas::present();
 }
 
+// The music, for hosts with a beat tracker: called before each update() with in[0] 1 if
+// it hears anything, in[1] its tempo (BPM), in[2] how far through the beat (0..1), in[3]
+// which beat of the bar (0 the one), in[4] loudness (0..1), in[5] 1 on a drop. While these
+// keep coming, the beats are the music's, Pace picks half, straight or double time, a drop
+// is a break, and loudness adds jive. Stop calling and it keeps its own time again.
+void hostAudio(const float in[6]) {
+  if (in[0] < 0.5f) return;
+  audioAge = 0.0f;
+  aBpm = in[1] > 30.0f ? in[1] : 120.0f;
+  aPhase = clamp01(in[2]);
+  aBeat = (int)in[3];
+  aLevel = clamp01(in[4]);
+  if (in[5] > 0.5f) aDrop = true;
+}
+
 // For knobs with lights (0..1 RGB each): k0 flashes teal on the beat, brightest on the
-// downbeat, white on a tap; k1 flashes purple on every note the soloist plays; k2 shows
-// the mirror (white off, teal mirror, purple kaleidoscope), brighter the further from 1x;
-// k3 is the paper's colour, pulsing as it spins.
+// downbeat; k1 flashes purple on every note the soloist plays, and holds white-violet while
+// frozen; k2 shows the mirror (white off, teal mirror, purple kaleidoscope), brighter the
+// further from 1x; k3 is the paper's colour, pulsing as it spins.
 void knobLights(float out[4][3]) {
   const float beat = expf(-beatF * 6.0f) * (beatN == 0 ? 1.0f : 0.55f);
   const float teal[3] = {0.25f, 0.78f, 0.8f}, purple[3] = {0.55f, 0.15f, 1.0f}, white[3] = {1.0f, 0.95f, 0.85f};
+  const float held[3] = {0.8f, 0.6f, 1.0f};
   const float cream[3] = {1.0f, 0.88f, 0.7f}, night[3] = {0.15f, 0.2f, 0.6f};
   const float* modes[3] = {white, teal, purple};
   const float zl = 0.2f + 0.8f * clamp01(fabsf(zoomS - 0.5f) * 2.0f);
   const float sl = 0.25f + 0.75f * fabsf(sinf(angle));
   for (int c = 0; c < 3; c++) {
-    out[0][c] = clamp01(teal[c] * (0.12f + 0.88f * beat) + white[c] * tapFlash);
-    out[1][c] = clamp01(purple[c] * (0.1f + 0.15f * jiveS + 0.75f * noteFlash));
+    out[0][c] = clamp01(teal[c] * (0.12f + 0.88f * beat));
+    out[1][c] = frozen ? held[c] * 0.6f : clamp01(purple[c] * (0.1f + 0.15f * jiveS + 0.75f * noteFlash));
     out[2][c] = clamp01(modes[mirror][c] * zl);
     out[3][c] = clamp01((cream[c] * paperS + night[c] * (1.0f - paperS)) * sl);
   }

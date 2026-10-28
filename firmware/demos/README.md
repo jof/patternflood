@@ -643,10 +643,14 @@ line-for-line twin rather than left to the Lab's AI conversion. Both are CC BY-S
   wall expects. The header's `FRAME_W`/`FRAME_H` say the same, and `community.py` raises them to
   128 as it does for the wall's headers.
 - **On the box** they lead both shelves: at 128 × 128 on Community, as written (centred) on
-  Community 1:1. They need a `sync`, for upstream main's cores.
-- **Knob lights.** Upstream's API has none, so a header may add `void knobLights(float out[4][3])`
-  (0..1 RGB per knob). The firmware never calls it. `community.py` exports it as `pf_lights`
-  when it's there, and `pfd/community.py` (`Original`) lights the knobs with it.
+  Community 1:1. There they keep their own time: the menu's audio knobs leave them alone. They
+  need a `sync`, for upstream main's cores.
+- **Hooks** beyond upstream's API, which the firmware never calls. `community.py` exports each one
+  a header defines (`HOOKS`), and `pfd/community.py` (`Original`) uses them:
+  - `void knobLights(float out[4][3])`, 0..1 RGB per knob, exported as `pf_lights`: the knobs' lights.
+  - `void hostAudio(const float in[6])`, exported as `pf_audio`: the beat tracker's view of the
+    music, fed before every frame. A header with it gets a third copy, its own library at 128 × 128,
+    on the **Audio** shelf.
 - **`twin`** runs the script (in the harness, sandboxed) and the header (under ASan) through
   `check`'s scripted player at both sizes, and reports how far apart their frames are. The two use the same
   integer hash and PRNG and draw in the same order, so they should agree to float rounding. The
@@ -672,14 +676,23 @@ played like an instrument (for VJing).
 
 | Knob | Turn | Click | Light |
 |---|---|---|---|
-| k0 Tempo | 60–180 BPM | tap tempo; the tap is the downbeat | teal on every beat, brightest on the downbeat; white on a tap |
-| k1 Jive | how wild the solo is, and a zigzag warp of the purple that kicks on each beat, zig and zag trading places | a break: a fresh phrase on clean paper | purple on every note the pen plays |
+| k0 Pace | 60–180 beats a minute | a break: fresh phrases on clean paper | teal on every beat, brightest on the downbeat |
+| k1 Jive | how wild the solo is, and a zigzag warp of the purple that kicks on each beat, zig and zag trading places | freeze: the painting holds, the view still moves; again to let go | purple on every note the soloist plays; white-violet while frozen |
 | k2 Zoom | ½× (the whole paper) to 3×, as painted in the middle; pumps on the beat with Jive | mirror: off, mirror, kaleidoscope | white, teal, purple for the mirror; brighter further from 1× |
 | k3 Spin | either way, up to a turn every two bars; still in the middle, where it eases upright | paper: night (the start) or cream | the paper's colour, pulsing as it spins |
 
-- The knobs ease, so the audio edition drifts rather than flickers. With it, bass pumps the zoom
-  and the treble spins.
-- k1's light follows the soloist's notes.
+- As shared and on the Community shelves it keeps its own time and hears nothing. (On a stock
+  device, upstream's audio edition can still turn its knobs; they ease, so it drifts rather than
+  flickers.)
+- **On the Audio shelf** it plays to the music, through `hostAudio()`:
+  - the beats are the tracker's: phrases, the k0 light and the purple's dance land on them;
+  - a drop is a break;
+  - loudness adds jive;
+  - k0's turn picks the feel: half time below 95, double above 145, straight between;
+  - k0's click taps the tempo into the tracker (three taps or more, held 8 s), with k0 flashing white.
+
+  Checked against a DnB set (`--audio file:`, Calibre's Boiler Room set from 20 min): k0's light
+  repeats every 0.70 s, two beats at 171 BPM.
 - Memory: the paper is four float planes at four screens' size: 512 KB at 64 × 128 (PSRAM on a
   stock board), 1 MB at 128 × 128.
 - Twin check (2026-10-28, the quartet): the frames differ by at most 0.08 on average, and at

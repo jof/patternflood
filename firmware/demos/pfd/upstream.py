@@ -75,6 +75,7 @@ class Upstream(Demo):
     index = 0
 
     turn_upright = False
+    audio_knobs_ok = True       # the menu's audio knobs may turn this one's knobs
 
     def __init__(self, rt):
         super().__init__(rt)
@@ -103,7 +104,7 @@ class Upstream(Demo):
         # Upstream's audio edition: each knob follows the energy in one range of the spectrum,
         # quick to rise and slow to fall, and the pattern sees it as the knob's value (0..1).
         a = self.rt.audio
-        on = self.rt.audio_knobs and a.live
+        on = self.rt.audio_knobs and a.live and self.audio_knobs_ok
         targets = (a.mid, a.level, a.bass, a.treble)
         for k in range(4):
             tc = AUDIO_ATTACK_S if targets[k] > self.ballistic[k] else AUDIO_RELEASE_S

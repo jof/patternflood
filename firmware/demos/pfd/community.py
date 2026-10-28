@@ -263,32 +263,66 @@ def _js_knobs(code):
 
 
 class Original(Upstream):
-    """One of ours: lit by the pattern itself where it has knobLights() (community.py's pf_lights)."""
+    """One of ours. Lit by the pattern itself where it has knobLights() (community.py's pf_lights).
+    It keeps its own time: the menu's audio knobs leave it alone. The Audio shelf's copy (`listens`)
+    hears the beat tracker through hostAudio() instead (pf_audio), and its k0 click taps the tempo."""
+    audio_knobs_ok = False
+    listens = False
+    TAP_FLASH_S = 0.25
 
     def __init__(self, rt):
         super().__init__(rt)
         self.has_lights = hasattr(self.lib, "pf_lights")
         self.light_buf = (ctypes.c_float * 12)()
+        self.feeds = self.listens and hasattr(self.lib, "pf_audio")
+        self.audio_buf = (ctypes.c_float * 6)()
+        self.t_tap = -10.0
+
+    def press(self, k):
+        if self.feeds and k == 0:
+            if self.rt.audio_in is not None:
+                self.rt.audio_in.tap()          # the tracker takes three taps or more, and holds them 8 s
+            self.t_tap = self.t_touch[0] = self.rt.t
+            return
+        super().press(k)
+
+    def step(self, dt):
+        if self.feeds:
+            a, b = self.rt.audio, self.audio_buf
+            b[0] = 1.0 if a.live else 0.0
+            b[1], b[2], b[3], b[4] = a.bpm or 120.0, a.phase, a.beat_in_bar, a.level
+            b[5] = 1.0 if a.drop else 0.0
+            self.lib.pf_audio(b)
+        super().step(dt)
 
     def lights(self):
         if not self.has_lights:
             return super().lights()
         self.lib.pf_lights(self.light_buf)
         b = self.light_buf
-        return [(b[3 * k], b[3 * k + 1], b[3 * k + 2]) for k in range(4)]
+        out = [(b[3 * k], b[3 * k + 1], b[3 * k + 2]) for k in range(4)]
+        tap = max(0.0, 1 - (self.rt.t - self.t_tap) / self.TAP_FLASH_S)
+        if tap:                                 # white on a tap
+            out[0] = tuple(min(1.0, c + tap) for c in out[0])
+        return out
 
 
 def _originals(cm):
-    """Our own patterns for the wall (upstream_host/originals/), to lead the two shelves -> (best, as published):
-    at 128 x 128 on COMMUNITY, as written (centred) on COMMUNITY 1:1."""
+    """Our own patterns for the wall (upstream_host/originals/) -> (best, as published, audio): leading the
+    COMMUNITY shelf at 128 x 128 and COMMUNITY 1:1 as written (centred), both keeping their own time; and, for
+    a header with hostAudio(), a copy on the AUDIO shelf playing to the music."""
     try:
         built = cm.originals(log=log)
     except Exception as e:
         log(f"community: originals: {e!r}")
-        return [], []
-    best, as_published = [], []
+        return [], [], []
+    shelves = {"community": [], "community-1to1": [], "audio": []}
     for e, paths in built:
-        for shelf, name, size in (("community", "big", " At 128 x 128."), ("community-1to1", "native", "")):
+        for shelf, name, about in (("community", "big", " At 128 x 128, in its own time."),
+                                   ("community-1to1", "native", " In its own time."),
+                                   ("audio", "audio", " Playing to the music: the beat tracker's tempo and "
+                                    "beats, a drop is a break, loudness adds jive. k0 half, straight or double "
+                                    "time; click k0 to tap the tempo.")):
             if name not in paths:
                 continue
             try:
@@ -296,11 +330,14 @@ def _originals(cm):
             except OSError as err:
                 log(f"community: {e['title']} ({name}): {err}")
                 continue
-            blurb = f"Ours, for the community wall (originals/{e['id']}.js).{size}{knobs_blurb(lib, 0)}"
-            (best if shelf == "community" else as_published).append(
+            blurb = f"Ours, for the community wall (originals/{e['id']}.js).{about}"
+            if name != "audio":
+                blurb += knobs_blurb(lib, 0)
+            shelves[shelf].append(
                 type(f"PFO_{e['id']}_{name}", (Original,), {"lib": lib, "index": 0, "name": e["title"],
-                                                             "group": shelf, "blurb": blurb}))
-    return best, as_published
+                                                             "group": shelf, "blurb": blurb,
+                                                             "listens": name == "audio"}))
+    return shelves["community"], shelves["community-1to1"], shelves["audio"]
 
 
 def demos():
@@ -340,7 +377,7 @@ def demos():
     log(f"community: {len(built)} compiled and {len(scripts)} JavaScript patterns, {n_big} shown at 128 x 128")
     out.sort(key=lambda o: -o[0]["likes"])
     chosen = cm.review()
-    best, as_published = _originals(cm)
+    best, as_published, listening = _originals(cm)
     for e, versions in out:
         by = f" by @{e['author']}" if e["author"] else ""
         port = f", ported by @{e['ported_by']}" if e.get("ported_by") else ""
@@ -355,4 +392,4 @@ def demos():
             attrs["blurb"] = f"Community pattern{by}{port}.{js}{size}{knobs}"
             (best if shelf == "community" else as_published).append(
                 type(f"PFC_{e['id']}_{name}", (JSPattern if "host" in attrs else Upstream,), attrs))
-    return best + as_published
+    return best + as_published + listening
