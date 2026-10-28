@@ -148,20 +148,25 @@ class I2CKnobs(_QueueSource):
 
     def __init__(self, bus):
         super().__init__()
-        import seesaw
-        try:
-            self.knobs = seesaw.find_encoders(bus)
-        except OSError as e:
-            log(f"knobs: I2C bus {bus} unavailable ({e}); running without knobs")
-            self.knobs = []
-        self.n = len(self.knobs)
-        self.pos = [ss.position() for ss in self.knobs]
-        self.down = [ss.pressed() for ss in self.knobs]
-        self.errors = 0
-        self.q.put(("hello", self.n))
+        self.bus, self.knobs, self.n, self.errors = bus, [], 0, 0
+        # Found on the polling thread (resetting them takes half a second), so the first frames
+        # needn't wait; "hello" says when they're there.
         threading.Thread(target=self._poll, daemon=True).start()
 
+    def _find(self):
+        import seesaw
+        try:
+            knobs = seesaw.find_encoders(self.bus)
+        except OSError as e:
+            log(f"knobs: I2C bus {self.bus} unavailable ({e}); running without knobs")
+            knobs = []
+        self.pos = [ss.position() for ss in knobs]
+        self.down = [ss.pressed() for ss in knobs]
+        self.knobs, self.n = knobs, len(knobs)
+        self.q.put(("hello", self.n))
+
     def _poll(self):
+        self._find()
         while True:
             for k, ss in enumerate(self.knobs):
                 try:
@@ -299,8 +304,13 @@ class UdpOut:
         self.bank = 1
         self.t_enable = 0.0
         self.t_err = 0.0
-        self._send(lambda s: [r75_frame.send_frame(s, ip, BLACK, blank_unused=True, bank=b) for b in (0, 1)]
-                   + [r75_frame.show_bank(s, ip, 0), r75_frame.enable(s, ip)])
+        self.ready = self._send(self._blank)        # else again before each frame, until the link is up
+
+    def _blank(self, s):
+        for b in (0, 1):
+            r75_frame.send_frame(s, self.ip, BLACK, blank_unused=True, bank=b)
+        r75_frame.show_bank(s, self.ip, 0)
+        r75_frame.enable(s, self.ip)
 
     def _send(self, fn):
         try:
@@ -319,7 +329,9 @@ class UdpOut:
             if time.monotonic() - self.t_enable >= 1.0:     # receiver75 boots disabled
                 r75_frame.enable(s, self.ip)
                 self.t_enable = time.monotonic()
-        if self._send(go):
+        if not self.ready:
+            self.ready = self._send(self._blank)
+        if self.ready and self._send(go):
             self.bank ^= 1
 
     def stats(self):

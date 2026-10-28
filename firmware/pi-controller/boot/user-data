@@ -24,3 +24,6 @@ runcmd:
   # Pick up the boot splash hook (rootfs/etc/initramfs-tools); step 2 shows from the next boot.
   - update-initramfs -u || true
   - systemctl restart patternflood.service || true
+  # Later boots skip cloud-init (about 1 s of the boot): it has nothing left to do. Delete the
+  # file to have it run again (changes to user-data or network-config need that).
+  - touch /etc/cloud/cloud-init.disabled

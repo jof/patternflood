@@ -1,7 +1,9 @@
 #!/bin/sh
 # Boot splash step 2: the kernel and initramfs are up. In the background, so
-# waiting for the card's link never holds up mounting the root; --restore puts
-# the NIC back down for the real root's udev and NetworkManager.
+# waiting for the card's link never holds up mounting the root. The NIC is left
+# up (no --restore): Raspberry Pi OS masks udev's renaming (.link files to
+# /dev/null), and NetworkManager then finds the link already negotiated rather
+# than spending another ~3 s on it.
 PREREQ="udev"
 prereqs() { echo "$PREREQ"; }
 case "$1" in
@@ -11,4 +13,4 @@ esac
 for m in r8152 ax88179_178a cdc_ncm cdc_ether; do
 	modprobe -q "$m"
 done
-/sbin/pf-splash -t 20 --restore 2 >/dev/null 2>&1 &
+/sbin/pf-splash -t 20 2 >/dev/null 2>&1 &

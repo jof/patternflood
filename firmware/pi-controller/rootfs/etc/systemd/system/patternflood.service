@@ -3,7 +3,9 @@ Description=Patternflood demos (2x2 P2 panels via Colorlight 5A-75B / receiver75
 # Not After=cloud-final.service: cloud-final runs after multi-user.target, which waits
 # for this unit, so that's an ordering cycle and systemd drops this unit's start job.
 # The numpy check below retries until cloud-init's first-boot install lands.
-After=network.target
+# Nor After=network.target: start-up takes longer than NetworkManager does to bring up the card's
+# link, so waiting for it only delays the first frame (~2.5 s on the Pi 5); the frame sink retries
+# until the link has its address.
 StartLimitIntervalSec=0
 
 [Service]
@@ -23,7 +25,8 @@ WorkingDirectory=/opt/patternflood/demos
 Environment=PF_ONLY= PF_DEMO=0 PF_FPS=60 PF_BRIGHT=0.3 PF_KNOBS=i2c:1 PF_OUT=udp:192.168.75.39 PF_AUDIO=none
 EnvironmentFile=-/etc/default/patternflood
 # Boot splash step 5: the renderer is starting (importing numpy takes a while).
-ExecStartPre=-+/usr/local/sbin/pf-splash -t 10 5
+# In the background: its three sends take half a second, and the first frame is further off than that.
+ExecStartPre=-+/bin/sh -c '/usr/local/sbin/pf-splash -t 10 5 &'
 # Steady frame timing: no clocking down between frames.
 ExecStartPre=+/bin/sh -c 'for g in /sys/devices/system/cpu/cpufreq/policy*/scaling_governor; do echo performance > $$g; done || true'
 # numpy arrives with cloud-init's first-boot package install; until then, retry.

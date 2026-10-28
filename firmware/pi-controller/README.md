@@ -36,7 +36,7 @@ Pi Zero W, the first controller, runs armhf and needs a USB gigabit adapter. Wir
 | I²C | `i2c_arm` on at 100 kHz, `i2c-dev` loaded; Bluetooth off |
 | Serial console | `enable_uart=1`: GPIO14 TXD (pin 8), GPIO15 RXD (pin 10), 115200 (on the Pi 5, `dtparam=uart0_console` moves it there from the debug connector). With a Glasgow on port B: `glasgow run uart -V 3.3 --rx B0 --tx B1 -b 115200 tty` |
 | Login | `update-motd.d/05-patternflood`: wordmark, plus renderer, card link and power (under-voltage) status |
-| First boot | cloud-init installs `python3-numpy`, `i2c-tools`, `python3-pil` and `g++` |
+| First boot | cloud-init installs `python3-numpy`, `i2c-tools`, `python3-pil` and `g++`, then switches itself off for later boots (`/etc/cloud/cloud-init.disabled`; delete it to have `user-data` or `network-config` applied again) |
 | Code | `/opt/patternflood/demos` (`run.py`, `pfd/`, the upstream presets' build files and source tree) and `/opt/patternflood/colorlight` (`knob_renderer`, `r75_frame`, `seesaw`), as in the repo |
 | Service | `patternflood.service` runs `demos/run.py --knobs i2c:1 --out udp:192.168.75.39 --fps 60 --audio none` as user `patternflood` (group i2c), CPU governor `performance`, restarts forever. On its first start after g++ lands it compiles upstream's presets (a few minutes on a Zero W, behind splash step 5) |
 | Settings | `/etc/default/patternflood`: which demos (`PF_ONLY`), start demo, fps, brightness, knob and frame specs. Edit it, then `sudo systemctl restart patternflood` |
@@ -63,7 +63,15 @@ bar on with `pf-splash STEP`:
 | 2 | initramfs (`init-premount/patternflood-splash`, in the background) | kernel up |
 | 3 | `patternflood-splash-early.service` (sysinit, after `udevadm settle`) | systemd up |
 | 4 | `patternflood-splash-network.service` | NetworkManager up; on first boot it sits here through cloud-init's package install |
-| 5 | `patternflood.service`'s `ExecStartPre` | renderer starting (numpy import) |
+| 5 | `patternflood.service`'s `ExecStartPre` (in the background) | renderer starting; it doesn't wait for the network, so this usually beats step 4, which is then ignored |
+
+**Boot time** (Pi 5, 2026-10-28; frames reach the panels about 7.9 s after the kernel starts, from
+16.2): the bootloader takes about 8.8 s before that ("Starting OS" in `sudo vclog --msg`). What
+bought the rest: the renderer doesn't wait for `network.target`; cloud-init runs on the first boot
+only; the knobs are found on their polling thread, reset together (one 0.5 s wait, not four); node's
+sandbox is probed during the community build; and the initramfs leaves the NIC up (no `--restore`),
+so NetworkManager finds the link already negotiated instead of spending another 3 s on it. The
+link (NetworkManager's activation of `colorlight`) is now what the first frame waits for.
 
 When `patternflood.service` stops or restarts, its `ExecStopPost` runs `pf-splash --show 5`, which puts the spinner back.
 

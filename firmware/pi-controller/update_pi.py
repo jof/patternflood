@@ -60,6 +60,8 @@ def main():
             f"sudo -u patternflood python3 {o}/demos/upstream_host/community.py build; fi; "
             # The restart may rebuild the presets; those fsync themselves. Everything above is on the card
             # before this returns, so the power switch is safe as soon as it does.
+            # Boxes provisioned before user-data switched cloud-init off after its first boot.
+            "if [ -e /var/lib/cloud/instance/boot-finished ]; then sudo touch /etc/cloud/cloud-init.disabled; fi; "
             "sudo systemctl daemon-reload; sudo systemctl restart patternflood; sync; echo restarted"
         )
         with open(tgz, "rb") as f:

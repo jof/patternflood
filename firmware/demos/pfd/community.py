@@ -21,6 +21,7 @@ import select
 import signal
 import subprocess
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 
@@ -348,7 +349,10 @@ def demos():
     if not (cm.SRC / "index.json").exists():
         return []
     try:
-        built = cm.build(log=log)
+        with ThreadPoolExecutor(1) as ex:
+            probe = ex.submit(cm._sandbox)          # node starts slowly from a cold card: probe it meanwhile
+            built = cm.build(log=log)
+            probe.result()
         serve = cm.node_argv(["serve", cm.SRC])
         scripts = cm.js_patterns() if serve else []
     except Exception as e:              # a broken cache costs the shelf, not the box

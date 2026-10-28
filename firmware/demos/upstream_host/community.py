@@ -166,9 +166,10 @@ def fixup(text):
 
 
 # Ours, beyond upstream's API: hooks a header may define, which the firmware never calls.
-HOOKS = [(re.compile(r"\bvoid\s+knobLights\s*\(\s*float\b"),       # knob light colours, 4 x RGB
+# Each with its name, a quick test first: the patterns, starting \b, are tried at every character.
+HOOKS = [("knobLights", re.compile(r"\bvoid\s+knobLights\s*\(\s*float\b"),       # knob light colours, 4 x RGB
           'extern "C" void pf_lights(float* out) {{ {ns}::knobLights(reinterpret_cast<float (*)[3]>(out)); }}'),
-         (re.compile(r"\bvoid\s+hostAudio\s*\(\s*const\s+float\b"),  # the beat tracker's view of the music
+         ("hostAudio", re.compile(r"\bvoid\s+hostAudio\s*\(\s*const\s+float\b"),  # the beat tracker's view of the music
           'extern "C" void pf_audio(const float* in) {{ {ns}::hostAudio(in); }}')]
 
 
@@ -188,7 +189,7 @@ def unit(ns, author, text=""):
              "};",
              "#pragma GCC visibility push(default)"]
     lines += host_api()
-    lines += [c.format(ns=ns) for pat, c in HOOKS if pat.search(text)]
+    lines += [c.format(ns=ns) for name, pat, c in HOOKS if name in text and pat.search(text)]
     lines += ["#pragma GCC visibility pop", "", CHECK_MAIN]
     return "\n".join(lines) + "\n"
 

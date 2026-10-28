@@ -79,21 +79,34 @@ def find_encoders(bus=1, addrs=range(0x36, 0x3E), expect=range(0x37, 0x3B), trie
     Knobs are numbered by their place in this list, so one that misses its probe
     shifts every role after it. The addresses we expect (k0-k3) get several tries:
     on the Zero W, a probe during the renderer's busy start-up has missed a knob
-    that answered every probe on a quiet bus.
+    that answered every probe on a quiet bus. All are reset first and set up after
+    one wait, rather than a wait each.
     """
-    found = []
+    reset = []
     for addr in addrs:
         ss = Seesaw(bus, addr)
         for attempt in range(tries if addr in expect else 1):
             try:
                 if ss.product_id() != PID_4991:
                     break
-                ss.reset()
-                ss.setup_encoder()
-                found.append(ss)
+                ss.write(STATUS, STATUS_SWRST, b"\xff")
+                reset.append(ss)
                 break
             except OSError:             # nothing at this address (NACK), or a glitch: try again
                 time.sleep(0.05)
-        if not found or found[-1] is not ss:
+        if not reset or reset[-1] is not ss:
+            ss.close()
+    if reset:
+        time.sleep(0.5)
+    found = []
+    for ss in reset:
+        for attempt in range(tries):
+            try:
+                ss.setup_encoder()
+                found.append(ss)
+                break
+            except OSError:
+                time.sleep(0.05)
+        else:
             ss.close()
     return found
