@@ -552,6 +552,35 @@ Worth noting the sizing is now generous rather than marginal: 10 A against a
 ~5 A worst case. **The firmware power clamp becomes optional again** — the
 supply, not the source, is no longer the limit.
 
+### The 5 V bus, in 22 AWG
+
+The LRS-50-5 has one +V screw and one −V screw, so the loads meet on a bus
+rather than each landing on the supply. The wire on hand is 22 AWG, so the run
+from the supply to the bus is several strands in parallel per pole:
+
+| Run | Carries | 22 AWG per pole | Drop, 30 cm each way |
+|---|---|---|---|
+| **LRS-50-5 → bus** | up to 10 A (8 A planned) | **4** (3 at minimum) | 63 mV at 8 A (85 mV with 3) |
+| Bus → each panel | 1.4 A capped, 2.4 A full white | 1 (2 for uncapped headroom) | 44 mV (76 mV at 2.4 A) |
+| Bus → Pi 5 | ~1.6 A | 1 (2 for less drop) | 51 mV |
+| Bus → Colorlight 5A-75B | ~0.8 A | 1 | 25 mV |
+
+- **Four strands are 16 AWG.** 22 AWG is 0.33 mm², so four make 1.30 mm²,
+  matching 16 AWG's 1.31, and three make 0.98 mm², a little over 18 AWG's 0.82.
+  That's the "18 minimum, 16 preferred" from §2.
+- **Heat sets the count as much as drop.** A 22 AWG strand bundled inside a
+  closed box is good for about 2.5–3 A. Four share 10 A at 2.5 A each; three
+  carry 3.3 A each, which works but runs warm.
+- **Same length, one ferrule.** Cut the strands of a pole to the same length so
+  they share the current evenly. Twist the four bare ends together and crimp
+  them into one **1.5 mm² (16 AWG) ferrule**: black in the DIN colour code, red
+  in the French one. Use the 10 mm length for the LRS terminals, which sit ~10 mm
+  deep. A 2.5 mm² ferrule is half empty and won't grip. Four 22 AWG insulations
+  are 3.3–3.6 mm across, right at a 1.5 mm² collar's ~3.5 mm. If they won't go
+  in, use an uninsulated ferrule rather than stripping further back.
+- The drops above assume 52.9 mΩ/m per strand and the LRS trimmed to ~5.15 V,
+  which leaves the Pi ≥ 5.0 V under load.
+
 ## 9. Mains safety — read before wiring
 
 Mains inside a wooden box with a removable back is fine if done deliberately.
