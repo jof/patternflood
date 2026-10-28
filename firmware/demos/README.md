@@ -338,7 +338,7 @@ to land on sight. Some are wordless physical comedy, and the rest keep their wor
 
 **Headlines.** When Cable first comes up, `pfd/cable/headlines.py` fetches The Onion's RSS feed
 in the background, then again every 3 hours, and caches the headlines in
-`~/.cache/patternflood/headlines.json`. Offline, the panel shows the last ones it got, or a few
+`~/.cache/patternflood/headlines.json` (on the Pi, `/var/cache/patternflood`, the service's `CacheDirectory`). Offline, the panel shows the last ones it got, or a few
 of our own if it has never been online. `PF_HEADLINES=off` leaves the network alone.
 
 **Tapes.** Video files in `~/cable` (or `$PF_CABLE`) join the line-up as more channels, numbered

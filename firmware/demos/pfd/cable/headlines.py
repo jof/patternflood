@@ -1,7 +1,8 @@
 """Today's headlines from The Onion, for ONN and the news crawls.
 
 Fetched in the background when the Cable demo first comes up, then every few hours, and
-cached on disk, so the panel keeps yesterday's news when it's offline and our own when it
+cached on disk ($CACHE_DIRECTORY, which systemd's CacheDirectory= gives the Pi's
+service, else ~/.cache/patternflood), so the panel keeps yesterday's news when it's offline and our own when it
 has never been online. PF_HEADLINES=off leaves the network alone.
 """
 import json
@@ -16,7 +17,7 @@ from pathlib import Path
 from ..io import log
 
 FEED = "https://theonion.com/feed/"
-CACHE = Path(os.path.expanduser("~/.cache/patternflood/headlines.json"))
+CACHE = Path(os.environ.get("CACHE_DIRECTORY") or os.path.expanduser("~/.cache/patternflood")) / "headlines.json"
 EVERY_S = 3 * 3600
 FALLBACK = ["AREA MAN UNSURE WHICH DIMENSION HE PARKED IN", "SCIENTISTS DISCOVER SECOND, WORSE MOON",
             "NATION'S CLOCKS AGREE TO DISAGREE", "LOCAL DOG ELECTED TO MORE DOGS",
@@ -58,13 +59,17 @@ def _loop():
         if not fresh:
             try:
                 items = _fetch()
-                if items:
-                    _set(items)
-                    CACHE.parent.mkdir(parents=True, exist_ok=True)
-                    CACHE.write_text(json.dumps(items))
-                    log(f"cable: {len(items)} headlines from The Onion")
             except Exception as e:      # noqa: BLE001 (offline, or the feed moved: keep what we have)
                 log(f"cable: headlines: {e}")
+                items = []
+            if items:
+                _set(items)
+                log(f"cable: {len(items)} headlines from The Onion")
+                try:
+                    CACHE.parent.mkdir(parents=True, exist_ok=True)
+                    CACHE.write_text(json.dumps(items))
+                except OSError as e:
+                    log(f"cable: headlines not cached: {e}")
         time.sleep(EVERY_S)
 
 
