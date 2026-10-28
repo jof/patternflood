@@ -473,6 +473,7 @@ Lab's own harness ([below](#the-javascript-only-patterns)).
 ./upstream_host/community.py build    # compile what's new (run.py does this itself, 6 s on ash for all)
 ./upstream_host/community.py sheet /tmp/cs   # contact sheets: each pattern as published beside its 128 x 128 version
 ./upstream_host/community.py strip /tmp/cs --only ID   # one pattern's versions over time, to judge a port
+./upstream_host/community.py twin /tmp/tw    # our originals: the script and its header, frame against frame
 ./run.py --only community
 ```
 
@@ -631,6 +632,40 @@ so it's left off. Node is in the card's cloud-init packages. On a running box:
 **Licence:** the patterns are CC BY-SA 4.0, their authors'. They're fetched into the gitignored
 `upstream_host/build/` and never committed here. Our 128 × 128 ports in `community_ports/` are
 derivatives: each carries its original's credit and stays CC BY-SA 4.0.
+
+### Our own patterns for the wall
+
+`upstream_host/originals/` holds patterns of ours meant for the wall, each in the two forms the
+wall takes: `<name>.js` for Pattern Lab, and `<name>.h`, its firmware header, written by hand as a
+line-for-line twin rather than left to the Lab's AI conversion. Both are CC BY-SA 4.0.
+- **One source, any size.** Each is written against its frame's size, scaling with the short
+  side. The script declares `@matrix 64x128`, the stock panel stood upright, which is what the
+  wall expects. The header's `FRAME_W`/`FRAME_H` say the same, and `community.py` raises them to
+  128 as it does for the wall's headers.
+- **On the box** they lead both shelves: at 128 × 128 on Community, as written (centred) on
+  Community 1:1. They need a `sync`, for upstream main's cores.
+- **`twin`** runs the script (in the harness, sandboxed) and the header (under ASan) through
+  `check`'s scripted player at both sizes, and reports how far apart their frames are. The two use the same
+  integer hash and PRNG and draw in the same order, so they should agree to float rounding. The
+  last shot, after the audio phase that only the header gets, is expected to differ.
+
+**Solo Jazz** (`solo_jazz`) is the 1990s paper-cup swash, improvised live.
+- A teal dry brush lays down one bar. Its pressure follows an attack/release envelope, and each
+  bristle runs out of ink at its own rate, in clumps.
+- A purple pen plays a solo over it: a walk on scale degrees in swung eighths, triplets or
+  sixteenths, gliding between notes, with a 45° nib.
+- Phrases land where the paper is emptiest, and old ones fade.
+- Knobs: k0 tempo (60–180 BPM), k1 solo (a lazy wave to a bebop zigzag), k2 dry (wet to
+  streaky), k3 paper (black to cream). A click washes the paper and starts a new phrase. The
+  knobs ease, so the audio edition drifts rather than flickers.
+- Twin check (2026-10-28): the frames differ by at most 0.03 on average, at both sizes.
+
+To publish one:
+1. In Pattern Lab, set the resolution to 64 × 128 and paste the `.js`. Its `@knobs` line names
+   the knobs and sets their ranges.
+2. Under **To hardware**, paste the `.h` in place of the AI's conversion, then **Apply to my
+   Patternflow** to see it on a stock device.
+3. **Upload to the community** from that screen, so it goes up with its header (the `.h` badge).
 
 ## Speed
 

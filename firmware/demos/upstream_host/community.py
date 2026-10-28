@@ -14,6 +14,7 @@ with no network (jsrun.mjs, node_argv()).
     ./community.py check             # on ash: run each through a scripted player -> src/checks.json
     ./community.py sheet /tmp/cs     # contact sheets of the check's frames, to judge the canvas by eye
     ./community.py strip /tmp/cs --only ID   # one pattern's versions over time, to judge a port
+    ./community.py twin /tmp/tw      # our originals: the script and its header side by side, and how far apart
 
 One library per pattern: names collide between authors, a header that doesn't compile
 costs only itself, and a re-sync compiles only what changed. They're built with hidden
@@ -27,6 +28,10 @@ built at that size and letterboxed.
 The patterns are CC BY-SA 4.0, their authors'. They're fetched into build/ and aren't
 copied into this repository. Our 128 x 128 ports (community_ports/) are derivatives, each
 crediting its original and CC BY-SA 4.0 too; community_review.json is ours.
+
+Our own patterns for the wall are in originals/: each a script for Pattern Lab and a header
+written as its twin (the device runs the header), CC BY-SA 4.0. They're built as the wall's are,
+as written and at 128 x 128, and lead both community shelves. `twin` checks the pair still agree.
 """
 import argparse
 import fcntl
@@ -65,6 +70,8 @@ SHOTS = (30, 90, 200, 330, 450, 600)
 SHEET_SHOT = 1
 PORTS = HERE / "community_ports"            # our enlarged ports: CC BY-SA, each crediting its original
 REVIEW = HERE / "community_review.json"     # by eye: what the COMMUNITY shelf shows of each pattern
+ORIGINALS = HERE / "originals"              # ours, for the wall: <name>.js and its twin <name>.h
+ORIG_LIB = CACHE / "originals"
 # Portrait games and scenes drawn on their side in 128 x 64 (up along +x, as upstream's canvas
 # maps a 64 x 128 frame). pfd turns them a quarter anticlockwise to stand upright; by eye, 2026-10-27.
 TURN = {"4dbf3bb506814fc3": "Breakout Arcade", "77de31bae37940c7": "Tetris", "6ada5c800c734f5c": "Space Invaders",
@@ -234,11 +241,15 @@ def header_variants(entry, src=SRC):
     """A compiled pattern's versions -> {"native": spec, "big": spec or None}, a spec being
     {text, ns, size, sha[, port]}; or None if the header has no namespace to build."""
     raw = (src / "h" / f"{entry['id']}.h").read_text(encoding="utf-8", errors="replace")
+    return _versions(raw, PORTS / f"{entry['id']}.h")
+
+
+def _versions(raw, port):
+    """header_variants for a header's text, and where a port of it would be."""
     text, ns = fixup(raw)
     if not ns:
         return None
     native = {"text": text, "ns": ns, "size": SQUARE if "setFrame" in text else WIDE, "sha": _sha(raw)}
-    port = PORTS / f"{entry['id']}.h"
     big = None
     if port.exists():                   # ours, enlarged by hand
         ptext, pns = fixup(port.read_text())
@@ -261,6 +272,37 @@ def script_variants(entry, src=SRC):
     else:                               # the same script, handed a 128 x 128 display
         big = {"file": file, "matrix": SQUARE, "sha": _sha(code + "@128x128")}
     return {"native": native, "big": big}
+
+
+def original_entries():
+    """Our originals -> [(entry, versions)], from originals/<name>.h: an entry as the index has them."""
+    out = []
+    for h in sorted(ORIGINALS.glob("*.h")):
+        raw = h.read_text()
+        title = re.search(r'\bNAME\s*=\s*"([^"]*)"', raw)
+        e = {"id": h.stem, "title": title.group(1) if title else h.stem, "author": "Jonathan Lassoff", "likes": 0,
+             "ported_by": None}
+        vs = _versions(raw, ORIGINALS / "no-port")
+        if vs:
+            out.append((e, vs))
+    return out
+
+
+def originals(lib=ORIG_LIB, log=print):
+    """Build our originals, as written and at 128 x 128 -> [(entry, {"native": path, "big": path})]."""
+    lib.mkdir(parents=True, exist_ok=True)
+    out = []
+    for e, vs in original_entries():
+        paths = {}
+        for name, spec in vs.items():
+            path, why = release(e, spec, SRC, lib)
+            if why:
+                log(f"originals: {e['title']} ({name}) {why}")
+            else:
+                paths[name] = path
+        if paths:
+            out.append((e, paths))
+    return out
 
 
 def runnable(entry, name, spec, checks):
@@ -582,13 +624,70 @@ def strip(out, only):
         print(p, e["title"])
 
 
+def twin(out, only=None):
+    """Each original's script and header (ONLY these, by name) through the check's scripted player, as
+    written and at 128 x 128: how far apart their frames are, and a strip of both (script above, header
+    below) per version. The knob turns and clicks are the same for both; the audio phase is the header's alone."""
+    import numpy as np
+    from PIL import Image
+    out.mkdir(parents=True, exist_ok=True)
+    env = dict(os.environ, ASAN_OPTIONS="detect_leaks=0:abort_on_error=0")
+    for e, vs in original_entries():
+        if only and e["id"] not in only:
+            continue
+        js = ORIGINALS / f"{e['id']}.js"
+        for name, spec in vs.items():
+            w, h = spec["size"]
+            exe, err = compile_one(e, spec["text"], spec["ns"], spec["size"], out,
+                                   ["-O1", "-g", "-fsanitize=address", "-fno-omit-frame-pointer", "-DPF_HOST_CHECK"],
+                                   exe=True)
+            if err:
+                print(f"{e['title']} ({name}): header doesn't build: {_first_error(err)}")
+                continue
+            r = subprocess.run([str(exe), str(CHECK_FRAMES), ",".join(map(str, SHOTS))], capture_output=True, env=env)
+            if r.returncode:
+                print(f"{e['title']} ({name}): header failed ({r.returncode})\n{r.stderr.decode()[-1500:]}")
+                continue
+            cpp = np.frombuffer(r.stdout, np.uint8).reshape(len(SHOTS), h, w, 3)
+            fw, fh = re.search(r"FRAME_W\s*=\s*(\d+)", spec["text"]), re.search(r"FRAME_H\s*=\s*(\d+)", spec["text"])
+            fw, fh = (int(fw.group(1)), int(fh.group(1))) if fw and fh else (w, h)
+            argv = node_argv(["check", SRC, e["id"], js, name, CHECK_FRAMES, ",".join(map(str, SHOTS)), out,
+                              f"{fw}x{fh}"], write=[out])
+            if not argv:
+                print("no script to compare: needs node with its permission model, and unshare or bwrap")
+                return
+            res = subprocess.run(argv, capture_output=True, text=True)
+            verdict = json.loads(res.stdout).get("verdict") if res.stdout.strip() else res.stderr[-500:]
+            if verdict != "ok":
+                print(f"{e['title']} ({name}): script {verdict}")
+                continue
+            script = np.fromfile(out / f"{e['id']}-{name}.rgb", np.uint8).reshape(len(SHOTS), fh, fw, 3)
+            # The header's frame is the frame centred in the panel; the script's is the frame alone.
+            oy, ox = (h - fh) // 2, (w - fw) // 2
+            cpp = cpp[:, oy:oy + fh, ox:ox + fw]
+            diffs = []
+            for k, f in enumerate(SHOTS):
+                d = np.abs(cpp[k].astype(int) - script[k].astype(int)).max(axis=2)
+                diffs.append(f"{f / 60:.1f}s {d.mean():.2f} ({(d > 24).mean() * 100:.1f}%)")
+            print(f"{e['title']} ({name}, {fw} x {fh}): mean |script - header|, and pixels off by more than 24:")
+            print("   " + ", ".join(diffs))
+            img = np.full((2 * fh + 6, len(SHOTS) * (fw + 4) + 2, 3), 40, np.uint8)
+            for k in range(len(SHOTS)):
+                x = 2 + k * (fw + 4)
+                img[2:2 + fh, x:x + fw] = script[k]
+                img[4 + fh:4 + 2 * fh, x:x + fw] = cpp[k]
+            p = out / f"{e['id']}-{name}.png"
+            Image.fromarray(img).resize((img.shape[1] * 3, img.shape[0] * 3), Image.NEAREST).save(p)
+            print("  ", p)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0],
                                 formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
-    p.add_argument("cmd", choices=["sync", "build", "check", "sheet", "strip"])
+    p.add_argument("cmd", choices=["sync", "build", "check", "sheet", "strip", "twin"])
     p.add_argument("out", nargs="?", type=Path, help="sheet: a directory for the PNGs")
     p.add_argument("--only", default="", help="check, sheet, strip: these patterns only, by id or id prefix, "
-                                              "comma-separated")
+                                              "comma-separated; twin: these originals, by name")
     p.add_argument("-j", "--jobs", type=int, default=None)
     args = p.parse_args()
     if args.cmd == "sync":
@@ -597,6 +696,8 @@ def main():
         build(args.jobs)
     elif args.cmd == "check":
         check(args.jobs, [o for o in args.only.split(",") if o])
+    elif args.cmd == "twin":
+        twin(args.out or Path("/tmp/originals-twin"), [o for o in args.only.split(",") if o])
     elif args.cmd == "strip":
         strip(args.out or Path("/tmp/community-strips"), [o for o in args.only.split(",") if o])
     else:

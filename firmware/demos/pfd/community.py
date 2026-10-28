@@ -7,7 +7,8 @@ header are compiled, each into its own library, and run as an upstream preset ru
 its own canvas, centred (turned upright if community.py's TURN says it lies on its side),
 and most also at 128 x 128: the same code given the bigger square, or our port of it. Two
 shelves: COMMUNITY shows each at its best, as community_review.json chose, and COMMUNITY
-1:1 shows them all as published. Most liked first. With nothing synced, the shelf isn't
+1:1 shows them all as published. Most liked first, after our own patterns for the wall
+(upstream_host/originals/), which lead both shelves. With nothing synced, the shelf isn't
 there. Node runs only sandboxed, with no network (see jsrun.mjs); where that can't be
 arranged, the shelf holds just the compiled ones.
 """
@@ -261,6 +262,31 @@ def _js_knobs(code):
     return " " + ", ".join(f"k{k} {n[:14]}" for k, n in named) + "." if named else ""
 
 
+def _originals(cm):
+    """Our own patterns for the wall (upstream_host/originals/), to lead the two shelves -> (best, as published):
+    at 128 x 128 on COMMUNITY, as written (centred) on COMMUNITY 1:1."""
+    try:
+        built = cm.originals(log=log)
+    except Exception as e:
+        log(f"community: originals: {e!r}")
+        return [], []
+    best, as_published = [], []
+    for e, paths in built:
+        for shelf, name, size in (("community", "big", " At 128 x 128."), ("community-1to1", "native", "")):
+            if name not in paths:
+                continue
+            try:
+                lib = open_lib(paths[name])
+            except OSError as err:
+                log(f"community: {e['title']} ({name}): {err}")
+                continue
+            blurb = f"Ours, for the community wall (originals/{e['id']}.js).{size}{knobs_blurb(lib, 0)}"
+            (best if shelf == "community" else as_published).append(
+                type(f"PFO_{e['id']}_{name}", (Upstream,), {"lib": lib, "index": 0, "name": e["title"],
+                                                             "group": shelf, "blurb": blurb}))
+    return best, as_published
+
+
 def demos():
     """The community's patterns, twice: the COMMUNITY shelf (each at its best: its 128 x 128 version
     where the review chose one, else as published) and COMMUNITY 1:1 (all as published). [] if none
@@ -298,7 +324,7 @@ def demos():
     log(f"community: {len(built)} compiled and {len(scripts)} JavaScript patterns, {n_big} shown at 128 x 128")
     out.sort(key=lambda o: -o[0]["likes"])
     chosen = cm.review()
-    best, as_published = [], []
+    best, as_published = _originals(cm)
     for e, versions in out:
         by = f" by @{e['author']}" if e["author"] else ""
         port = f", ported by @{e['ported_by']}" if e.get("ported_by") else ""
