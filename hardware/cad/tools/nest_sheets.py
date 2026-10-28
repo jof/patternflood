@@ -28,9 +28,10 @@ If art.py has written etch art for a part (art/<part>.etch.dxf), it rides
 along with that part, turned and moved exactly as the part is, into
 sheet-N.svg: cut paths red, score lines blue, engraved dots filled black —
 one file, so the art cannot drift off its part: a score group, then a cut group,
-a group per part in each, every outline one closed path, and the art merged into a
-few compound paths per part (score_paths), so the laser software has dozens of
-objects to handle rather than tens of thousands. The DXFs stay cut-only. For
+a group per part in each, every outline one closed path, and the art's rings
+merged into a few compound paths per part (score_paths), so the laser software
+has fewer objects to handle; open traces stay one polyline each, as XCS closes
+every subpath of a compound path. The DXFs stay cut-only. For
 software that wants the cuts and the art as separate imports, the same sheet is
 also split into sheet-N-cut.svg and sheet-N-score.svg, each with identical
 registration marks at the corners of the cut area (reg_marks).
@@ -515,27 +516,36 @@ SCORE_TILE = 50.0   # mm: a part's score marks are merged into one compound path
 
 
 def score_paths(score, engrave):
-    """A part's art as a few compound <path>s instead of one element per mark.
+    """A part's art with its closed marks merged into a few compound <path>s.
     The laser software slows to a crawl with tens of thousands of objects (the
     back cover had ~36,000), and every mark is a stroke of the same colour, so
-    nothing is lost by merging: each trace, line and ring is still its own
-    subpath, in the order art.py drew them. Marks go to the SCORE_TILE square
-    their first point falls in, so each object is a patch of the part, not one
-    huge path. 0.01 mm is far finer than the beam."""
+    nothing is lost by merging the rings and closed traces: each is still its
+    own subpath, in the order art.py drew them. Open traces stay one <polyline>
+    each: xTool Creative Space closes every subpath of a compound path, which
+    folded each trace back to its start and filled the folds in as blobs.
+    Marks go to the SCORE_TILE square their first point falls in, closed ones
+    as one compound path per square, so each object is a patch of the part,
+    not one huge path. 0.01 mm is far finer than the beam."""
     f = lambda q: f"{q[0]:.2f},{q[1]:.2f}"
     tiles, order = {}, []
 
-    def add(start, d):
+    def add(start, d=None, pts=None):
         k = (int(start[0] // SCORE_TILE), int(start[1] // SCORE_TILE))
         if k not in tiles:
-            tiles[k] = []
+            tiles[k] = ([], [])
             order.append(k)
-        tiles[k].append(d)
+        if d:
+            tiles[k][0].append(d)
+        else:
+            tiles[k][1].append(pts)
     chain = []
 
     def flush():
         if chain:
-            add(chain[0], "M" + f(chain[0]) + "L" + " ".join(f(q) for q in chain[1:]))
+            if len(chain) > 2 and abs(chain[0][0] - chain[-1][0]) < 1e-6 and abs(chain[0][1] - chain[-1][1]) < 1e-6:
+                add(chain[0], "M" + f(chain[0]) + "L" + " ".join(f(q) for q in chain[1:-1]) + "Z")
+            else:
+                add(chain[0], pts=list(chain))
             chain.clear()
     for e in score:
         if e[0] == "L":
@@ -550,7 +560,13 @@ def score_paths(score, engrave):
             a, b = (cx + r, cy), (cx - r, cy)
             add(a, f"M{f(a)}A{r:.3f},{r:.3f} 0 1,1 {f(b)}A{r:.3f},{r:.3f} 0 1,1 {f(a)}Z")
     flush()
-    out = [f'<path d="{"".join(tiles[k])}" stroke="#0000ff" stroke-width="0.1" fill="none"/>' for k in order]
+    out = []
+    for k in order:
+        closed, open_ = tiles[k]
+        if closed:
+            out.append(f'<path d="{"".join(closed)}" stroke="#0000ff" stroke-width="0.1" fill="none"/>')
+        out += ['<polyline points="' + " ".join(f"{x:.3f},{y:.3f}" for x, y in pts)
+                + '" stroke="#0000ff" stroke-width="0.1" fill="none"/>' for pts in open_]
     out += [f'<circle cx="{e[1][0]:.3f}" cy="{e[1][1]:.3f}" r="{e[2]:.3f}" fill="#000000" stroke="none"/>'
             for e in engrave]
     return out
@@ -729,9 +745,11 @@ def main():
           "`score` group and then a `cut` group, and inside each a group per part (`p<N>-<part>`, N as "
           "in the tables below), so the parts come in as separate objects and the art comes first. "
           "Every outline and hole is one closed path, so XCS sees shapes (it needs them to cut inner "
-          "ones first) and cuts each one in a single pass. The art is merged into compound paths, one "
-          f"per {SCORE_TILE:.0f} mm patch of each part, so XCS handles dozens of objects, not tens of "
-          "thousands (sheet 2 went from ~36,000 to 89). **Or import the cuts and "
+          "ones first) and cuts each one in a single pass. The art's rings and closed traces are merged "
+          f"into compound paths, one per {SCORE_TILE:.0f} mm patch of each part; the open traces stay "
+          "one polyline each, because XCS closes every subpath of a compound path (it folded each trace "
+          "back to its start, in blobs). Sheet 2 is ~21,000 objects, down from ~36,000: XCS is slow "
+          "on it but draws it right. **Or import the cuts and "
           "the art separately**, `sheet-N-cut.svg` and `sheet-N-score.svg`: both carry the same green "
           "L-marks at the corners of the cut area, so the two imports are the same size — select both, "
           "**align left** and **align bottom**, and they are registered; then delete the green marks "
