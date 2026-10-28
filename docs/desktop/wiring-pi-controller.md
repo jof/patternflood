@@ -45,8 +45,8 @@ the board edge.
 - **Pull-ups:** the Pi's on-board 1.8 kΩ in parallel with four boards' 10 kΩ
   gives about 1.1 kΩ. That's fine at 3.3 V and 100 kHz. Keep the whole chain
   under about 1 m.
-- **Power:** the NeoPixels follow the panel brightness (k3), reaching full
-  scale at 1.0. Four boards draw about 50 mA with the lights dim, and up to
+- **Power:** the NeoPixels follow the panel brightness (k3), from a floor of
+  15 % up to full scale at 1.0. Four boards draw about 50 mA with the lights dim, and up to
   about 250 mA from the Pi's 3V3 with all four lit white at full brightness.
 
 ## 2. Pi → Colorlight card (Ethernet)

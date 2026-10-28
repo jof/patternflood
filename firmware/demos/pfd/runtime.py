@@ -42,6 +42,7 @@ MENU_HOLD_S = 1.0
 MENU_IDLE_S = 6.0
 SHELF_NAMES = {"play": "PLAY", "audio": "AUDIO", "patternflow": "PATTERNFLOW"}
 LIGHT_MAX = 255         # the 4991 NeoPixels at full scale; they dim with the panel's brightness (k3)
+LIGHT_FLOOR = 0.15      # but no dimmer than this fraction of it, so the knobs still read on a dark panel
 NKNOBS = 4
 DETENTS_PER_REV = 24    # the 4991's encoder (PEC11-style); for demos that map a knob to an absolute angle
 GAMMA_STEPS = 4096      # gamma by table: within 0.07 of an 8-bit step of the exact curve, and far cheaper than **
@@ -246,7 +247,7 @@ class Runtime:
             ls = [(1, 1, 1), (0, 0, 0), (0, 0, 0), (1, .8 * b + .1, .3 * b)]
         else:
             ls = self.demo.lights()
-        scale = LIGHT_MAX * self.bright     # same curve as the panel's gamma table
+        scale = LIGHT_MAX * max(LIGHT_FLOOR, self.bright)     # same curve as the panel's gamma table
         return [tuple(int(scale * min(1.0, max(0.0, c)) ** GAMMA + 0.5) for c in rgb) for rgb in ls[:NKNOBS]]
 
     def run(self):
