@@ -1002,13 +1002,13 @@
  },
  "81be73cb980a4dbd": {
   "title": "Heart's illumination",
-  "big": "native",
-  "note": "too heavy at 128 x 128 for 60 fps on the Pi 5: 45.4 ms a frame, against 22.9 as published"
+  "big": "auto",
+  "note": "heavy: 45.4 ms a frame at 128 x 128 on the Pi 5, so it draws at about 22 fps while the box keeps 60"
  },
  "98b398a939ae4c2d": {
   "title": "Beating Blob",
-  "big": "native",
-  "note": "too heavy at 128 x 128 for 60 fps on the Pi 5: 61.9 ms a frame, against 30.7 as published"
+  "big": "auto",
+  "note": "heavy: 61.9 ms a frame at 128 x 128 on the Pi 5, so it draws at about 16 fps while the box keeps 60"
  },
  "1c31f0b4ff6f4980": {
   "title": "Twisted Perspective Tunnel",
@@ -1080,8 +1080,8 @@
  },
  "c0e0ec8ad86045ff": {
   "title": "Iridescent Protoplasm",
-  "big": "native",
-  "note": "too heavy at 128 x 128 for 60 fps on the Pi 5: 21.7 ms a frame, against 10.8 as published"
+  "big": "auto",
+  "note": "heavy: 21.7 ms a frame at 128 x 128 on the Pi 5, so it draws at about 46 fps while the box keeps 60"
  },
  "136448fc75284712": {
   "title": "Black Rose V4, Adrift",
@@ -1098,8 +1098,8 @@
  },
  "7065658ad7a94e8a": {
   "title": "Armillary Globe Radar Orbit (3D Spin & Fluid Curve Remix)",
-  "big": "native",
-  "note": "too heavy at 128 x 128 for 60 fps on the Pi 5: 24.2 ms a frame, against 11.8 as published"
+  "big": "auto",
+  "note": "heavy: 24.2 ms a frame at 128 x 128 on the Pi 5, so it draws at about 41 fps while the box keeps 60"
  },
  "37b98d5551d64d1a": {
   "title": "Cellular Halftone Moiré",
@@ -1115,8 +1115,8 @@
  },
  "d7197a4e71bf4e6c": {
   "title": "Inward Serpent Tendrils",
-  "big": "native",
-  "note": "too heavy at 128 x 128 for 60 fps on the Pi 5: 20.7 ms a frame, against 11.4 as published"
+  "big": "auto",
+  "note": "heavy: 20.7 ms a frame at 128 x 128 on the Pi 5, so it draws at about 48 fps while the box keeps 60"
  },
  "7e76c27ed2114873": {
   "title": "Bioluminescent Topo Vortex",
@@ -1137,8 +1137,8 @@
  },
  "cbaf570d8d034fe7": {
   "title": "Pareidolia",
-  "big": "native",
-  "note": "too heavy at 128 x 128 for 60 fps on the Pi 5: 32.5 ms a frame, against 19.9 as published"
+  "big": "auto",
+  "note": "heavy: 32.5 ms a frame at 128 x 128 on the Pi 5, so it draws at about 31 fps while the box keeps 60"
  },
  "a22d9728a9d349b7": {
   "title": "Discotheque 1977",

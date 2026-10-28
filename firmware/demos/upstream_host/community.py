@@ -36,6 +36,7 @@ import json
 import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -416,11 +417,16 @@ def check(jobs=None, only=None):
         args = ["check", SRC, e["id"], spec["file"], name, CHECK_FRAMES, ",".join(map(str, SHOTS)), CHECK]
         if spec["matrix"]:
             args.append("%dx%d" % spec["matrix"])
+        # Its own session, so a timeout kills node too, not just the bwrap around it.
+        p = subprocess.Popen(node_argv(args, write=[CHECK]), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             text=True, start_new_session=True)
         try:
-            r = subprocess.run(node_argv(args, write=[CHECK]), capture_output=True, text=True, timeout=120)
+            out, err = p.communicate(timeout=120)
         except subprocess.TimeoutExpired:
+            os.killpg(p.pid, signal.SIGKILL)
+            p.communicate()
             return e, name, spec, {"verdict": "timeout"}
-        res = json.loads(r.stdout) if r.stdout.strip() else {"verdict": "exit: " + r.stderr[-300:]}
+        res = json.loads(out) if out.strip() else {"verdict": "exit: " + err[-300:]}
         return e, name, spec, res
 
     work = [(header, (e, name, spec)) for e in idx["patterns"] for name, spec in (header_variants(e) or {}).items() if spec]

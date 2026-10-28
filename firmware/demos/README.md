@@ -543,8 +543,14 @@ everywhere else.
   - Both versions of every pattern go through `check`.
 
 Of the 288:
-- **225 auto:** most of SeungHun's reposts, field and noise patterns, and a lot of scenes that
+- **231 auto:** most of SeungHun's reposts, field and noise patterns, and a lot of scenes that
   reflow well (Sakura Garden, Mount Fuji, ForestCampFire, Mr. Ferg).
+  - Six of them are JavaScript heavy enough at 128 × 128 to draw below 60 fps on the Pi 5:
+    Beating Blob (62 ms a frame, so about 16 fps), Heart's illumination (45 ms), Pareidolia
+    (32 ms), Armillary Globe Radar Orbit, Iridescent Protoplasm and Inward Serpent Tendrils
+    (21–24 ms).
+  - They run at their own pace while the box keeps 60 ([below](#the-javascript-only-patterns)).
+  - The review notes each one's rate.
 - **27 ported.** Each one is checked under ASan or the sandbox, and judged on strips. A few
   examples:
   - Pulsating Solar Flare's spiral is finer and reaches the corners.
@@ -555,15 +561,12 @@ Of the 288:
     version overflowed a buffer.
   - CALM TURING has 29 tiles where it had 19.
   - Floaters' lamp is twice as wide.
-- **36 as published:**
+- **30 as published:**
   - games and fixed layouts (Tetris, Space Invaders, Breakout, Pong 1v1, Hop Hop Up);
   - composed pixel scenes and sprites that the square only pads (Midnight Clocktower, Moonwell,
     Mesto Hen);
   - patterns whose automatic version breaks (Day and Night, Rebound, Neon Heart Ring Resonance);
-  - Entropy Glass, whose hourglass already fills the square top to bottom at its 1:2 proportions;
-  - six JavaScript ones whose 128 × 128 version is too heavy for 60 fps on the Pi 5: Beating Blob
-    (62 ms against 31), Heart's illumination, Pareidolia, Armillary Globe Radar Orbit,
-    Iridescent Protoplasm and Inward Serpent Tendrils. They're candidates for faster ports.
+  - Entropy Glass, whose hourglass already fills the square top to bottom at its 1:2 proportions.
 
 ### The JavaScript-only patterns
 
@@ -575,6 +578,15 @@ The 77 without a header run as the Pattern Lab runs them, in **upstream's own ha
 - `pfd/community.py` keeps one node child process (`jsrun.mjs serve`) for all of them, talking
   JSON lines and RGB frames over pipes. It holds the 8 most recently used patterns. One it has
   let go is loaded again from the start.
+- **Frames are pipelined, so a heavy pattern runs at its own pace.**
+  - Each tick, the pattern picks up the frame node has finished, if there is one, and sends for
+    the next. That request's `dt` is the time since the last one, so motion stays real-time,
+    just in fewer steps.
+  - The runtime's loop never waits on node, so it keeps its 60 Hz for the knobs, the menu, the
+    overlay and the card.
+  - On the Pi 5, Beating Blob at 128 × 128 draws at about 15 fps while a step costs the loop
+    0.12 ms. Without pipelining, each 62 ms frame would have held up everything.
+  - A pattern logs its rate once, after 5 s on screen, if it's under 50 fps.
 - **Knobs behave as on the community's cards:** each starts mid-range, a detent moves a 48th of
   the range (two turns end to end, as the firmware's `PFParams`), held at the ends. Clicks and
   holds are `btnPressed`/`btnHeld`. The music doesn't turn these knobs: the harness has no audio
@@ -598,9 +610,12 @@ patterns stay off the shelf. Tested on both machines: inside the sandbox a file 
 child process are refused, and a TCP connect gets `ENETUNREACH`; outside it, the same connect
 succeeds.
 
-**A stuck pattern** can't stall the box for long: a frame that takes over 1 s (5 s for the
-first after a load, when some patterns warm up: CALM TURING's first takes 1.05 s on the Pi 5)
-gets node killed and restarted, and that pattern goes dark. The check found one broken
+**A stuck pattern** can't stall the box for long:
+- A frame that takes over 1 s gets node killed and restarted, and that pattern goes dark. The
+  first frame after a load gets 5 s, because some patterns warm up then (CALM TURING's first
+  takes 1.05 s on the Pi 5).
+- Node runs in a session of its own, and the whole group is killed. Under bwrap (ash) node is
+  bwrap's child, and killing bwrap alone would leave it running. The check found one broken
 pattern: *Neon Heart Ring Resonance* throws (`cx is not defined`) once its buttons are clicked,
 so it's left off. Node is in the card's cloud-init packages. On a running box:
 `sudo apt install nodejs`.
@@ -622,8 +637,9 @@ Measured per frame on ash:
 - On the Pi 5 both community shelves (574 entries) take a median of 0.76 ms. The compiled ones
   are all under 3.2 ms (Rose Mushroom is the slowest), but a few of the JavaScript ones are well
   over: *Beating Blob* takes 31 ms, *Rainbow Voronoi* 24 ms (at either size), *Heart's
-  illumination* 23 ms and *Pareidolia* 16 ms, so those run at 30–60 fps. On the Community shelf,
-  a 128 × 128 version that would cost twice that is shown as published instead (above).
+  illumination* 23 ms and *Pareidolia* 16 ms, so those run at 30–60 fps. Their 128 × 128 versions
+  cost up to twice as much: Beating Blob's draws at about 16 fps. Being pipelined, none of them
+  slows the box itself.
 - The Patternflow originals, fastest first: Life 0.3 ms, Op Art 0.3 ms, Fireworks 0.4 ms,
   Streams 0.4 ms, Aurora 0.5 ms, Cyclic 0.5 ms, Moiré 0.5 ms, Snow 0.5 ms, Warp 0.5 ms, Lava
   0.6 ms, Orrery 0.6 ms, Quasicrystal 0.6 ms, Ribbons 0.6 ms, Spiro 0.6 ms, Bit Tunnel 0.7 ms,
