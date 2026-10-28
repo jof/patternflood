@@ -654,11 +654,16 @@ line-for-line twin rather than left to the Lab's AI conversion. Both are CC BY-S
   bristle runs out of ink at its own rate, in clumps.
 - A purple pen plays a solo over it: a walk on scale degrees in swung eighths, triplets or
   sixteenths, gliding between notes, with a 45° nib.
-- Phrases land where the paper is emptiest, and old ones fade.
+- Both are crayon on toothy paper. Ink is rub pressure, and a pixel shows colour only where
+  the pressure beats that pixel's grain (fixed noise, streaky along the strokes). Fresh strokes
+  are dense but flecked, the brush scribbles in diagonal bands, and fading is wear into streaks
+  rather than translucency.
+- Phrases land where the paper is emptiest.
 - Knobs: k0 tempo (60–180 BPM), k1 solo (a lazy wave to a bebop zigzag), k2 dry (wet to
   streaky), k3 paper (black to cream). A click washes the paper and starts a new phrase. The
   knobs ease, so the audio edition drifts rather than flickers.
-- Twin check (2026-10-28): the frames differ by at most 0.03 on average, at both sizes.
+- Twin check (2026-10-28, after the crayon rework): the frames differ by at most 0.03 on
+  average, at both sizes.
 
 To publish one:
 1. In Pattern Lab, set the resolution to 64 × 128 and paste the `.js`. Its `@knobs` line names

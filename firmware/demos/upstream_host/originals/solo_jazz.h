@@ -12,7 +12,9 @@
 // the chord (one bar, its pressure on an attack/release envelope, each bristle running
 // out of ink at its own rate), and a purple pen plays a solo over it: a random walk on
 // scale degrees in swung eighths, triplets or sixteenths, gliding between notes, with a
-// calligraphic nib. Each phrase lands where the paper is emptiest; old ones fade.
+// calligraphic nib. Both are crayon on toothy paper: ink is rub pressure, showing only where
+// it beats the grain, so strokes are rough when fresh and wear into streaks as they fade.
+// Each phrase lands where the paper is emptiest.
 // Knobs: Tempo (BPM), Solo (lazy wave .. bebop zigzag), Dry (wet .. dry brush),
 // Paper (black .. cream). Push any knob: wash the paper and start a new phrase.
 //
@@ -39,6 +41,11 @@ constexpr float SJ_T_MAX = 1.45f, SJ_P_MAX = 1.4f;     // ink over 1 shows as so
 constexpr float SJ_SWING = 0.64f;
 constexpr float SJ_NIB_C = 0.7071f, SJ_NIB_S = -0.7071f;  // the pen's nib, at 45 degrees
 constexpr float SJ_PREROLL_BEATS = 7.0f;
+// Crayon on paper: ink is rub pressure, and a pixel takes colour only where the pressure
+// beats its paper tooth (fixed grain), so light strokes and fading ones break into specks.
+constexpr uint32_t SJ_TOOTH_SEED = 0x1b873593u, SJ_TOOTH_SEED2 = 0xcc9e2d51u;
+constexpr float SJ_TEAL_FLOOR = 0.45f, SJ_TEAL_TOOTH = 0.9f, SJ_PURPLE_FLOOR = 0.45f, SJ_PURPLE_TOOTH = 0.9f;
+constexpr float SJ_GRIP = 0.5f;
 constexpr float SJ_PAPER[3] = {242, 228, 198};
 constexpr float SJ_TEAL_LIGHT[3] = {64, 198, 204}, SJ_TEAL_DARK[3] = {10, 112, 148};
 constexpr float SJ_PURPLE[3] = {96, 26, 176};
@@ -52,6 +59,7 @@ static float wash = 0.0f;
 static float* T = nullptr;    // teal ink
 static float* Sh = nullptr;   // its shade, light 0 .. dark 1
 static float* P = nullptr;    // purple ink
+static float* tooth = nullptr;  // the paper's grain: per pixel, and in streaks along the strokes
 
 static uint32_t rng = 0x2468ace1u;
 static float S = 1.0f, fadeBeats = 20.0f, lastY = -1000.0f;
@@ -59,8 +67,8 @@ static float S = 1.0f, fadeBeats = 20.0f, lastY = -1000.0f;
 // the phrase
 static float pb = 0.0f, phraseLen = 7.0f;
 static bool hasBrush = true, hasPen = true;
-static float hw, L, cx, cy, bend, wobA, wobF, wobP, dx, dy, nx, ny, bias, amp;
-static uint32_t seed = 0;
+static float hw, L, cx, cy, bend, wobA, wobF, wobP, dx, dy, nx, ny, bias, amp, hatchK, hatchP;
+static uint32_t seed = 0, penSeed = 0;
 static int nLanes = 0, nNotes = 0;
 static float penX = -1e9f, penY = -1e9f, nib = 1.0f;
 
@@ -169,6 +177,10 @@ static void newPhrase() {
   if (nLanes > SJ_MAX_LANES) nLanes = SJ_MAX_LANES;
   const float sf = 1.2f + rnd() * 1.6f;
   const float sp = rnd() * 6.2832f;
+  const float hatchSign = rnd() < 0.5f ? -1.0f : 1.0f;
+  hatchK = hatchSign * (0.6f + 0.6f * rnd());          // scribble: pressure in diagonal bands
+  hatchP = S * (2.6f + 1.4f * rnd());
+  penSeed = nextU32();
   for (int j = 0; j < nLanes; j++) {
     Lane& lane = lanes[j];
     const float u = -1.0f + 2.0f * j / (nLanes - 1);
@@ -250,14 +262,15 @@ static void paintBrush(float t0, float t1) {
     const float width = (0.4f + 0.6f * att) * (0.3f + 0.7f * rel);
     const float press = (0.75f + 0.25f * att) * (0.6f + 0.4f * rel);
     const float spacing = 2.0f * hw * width / (nLanes - 1);
-    const float gain = 1.3f * stepAlong * spacing;
+    const float gain = 1.7f * stepAlong * spacing;
     const float tn = t * L / (4.5f * S), tc = t * L / (9.0f * S), te = t * L / (6.0f * S), ts = t * L / (14.0f * S);
     const float cu = hw / (1.4f * S);      // bristle clumps about 1.4 px wide
     for (int j = 0; j < nLanes; j++) {
       const Lane& lane = lanes[j];
       if (t < lane.t0 || t > lane.t1) continue;
       const float u = -1.0f + 2.0f * j / (nLanes - 1);
-      float ink = lane.load * press - dryS * lane.dep * t * 0.9f
+      const float hatch = 0.78f + 0.22f * sinf(6.2832f * (t * L + u * hw * hatchK) / hatchP);
+      float ink = lane.load * press * hatch - dryS * lane.dep * t * 0.9f
         + (vnoise2(seed, (u + 1.0f) * cu, tc) - 0.5f) * (0.2f + 1.5f * dryS)
         + (vnoise(lane.seed, tn) - 0.5f) * 0.15f;
       const float edge = fabsf(u);
@@ -272,7 +285,7 @@ static void paintBrush(float t0, float t1) {
   }
 }
 
-static void disc(float x, float y, float r) {
+static void disc(float x, float y, float r, float press) {
   int x0 = (int)floorf(x - r - 1.0f), x1 = (int)ceilf(x + r + 1.0f);
   int y0 = (int)floorf(y - r - 1.0f), y1 = (int)ceilf(y + r + 1.0f);
   if (x0 < 0) x0 = 0;
@@ -284,7 +297,7 @@ static void disc(float x, float y, float r) {
       const float ddx = px - x, ddy = py - y;
       const float c = r + 0.5f - sqrtf(ddx * ddx + ddy * ddy);
       if (c <= 0.0f) continue;
-      const float v = (c > 1.0f ? 1.0f : c) * SJ_P_MAX;
+      const float v = (c > 1.0f ? 1.0f : c) * SJ_P_MAX * press;
       const int i = py * FRAME_W + px;
       if (v > P[i]) P[i] = v;
     }
@@ -319,7 +332,8 @@ static void paintPen(float tp0, float tp1) {
     penX = x; penY = y;
     if (a.rest) continue;
     const float taper = 0.35f + 0.65f * smooth(tp / 0.05f) * smooth((1.0f - tp) / 0.05f);
-    disc(x, y, S * 0.85f * nib * (1.0f + 0.45f * accent) * taper);
+    const float press = 0.7f + 0.4f * vnoise(penSeed, tp * 1.08f * L / (2.5f * S));   // the crayon skips
+    disc(x, y, S * 1.1f * nib * (1.0f + 0.45f * accent) * taper, press);
   }
 }
 
@@ -350,22 +364,29 @@ static void step(float dt) {
   if (pb >= phraseLen) newPhrase();
 }
 
-static bool buffersOk() { return T && Sh && P; }
+static bool buffersOk() { return T && Sh && P && tooth; }
 
 void setup() {
   if (!T) T = PFMem::allocFloats(SJ_N);
   if (!Sh) Sh = PFMem::allocFloats(SJ_N);
   if (!P) P = PFMem::allocFloats(SJ_N);
+  if (!tooth) tooth = PFMem::allocFloats(SJ_N);
   tempo = 120.0f; solo = 0.5f; dry = 0.5f; paper = 0.5f;
   tempoS = tempo; soloS = solo; dryS = dry; paperS = paper;
   washReq = false;
   wash = 0.0f;
   rng = 0x2468ace1u;
   S = (FRAME_W < FRAME_H ? FRAME_W : FRAME_H) / 64.0f;
-  fadeBeats = 8.0f + 6.0f * FRAME_H / (64.0f * S);
+  fadeBeats = 2.8f * (8.0f + 6.0f * FRAME_H / (64.0f * S));   // slow: a stroke spends its life wearing into the grain
   lastY = -1000.0f;
   if (!buffersOk()) return;
   for (int i = 0; i < SJ_N; i++) T[i] = Sh[i] = P[i] = 0.0f;
+  for (int y = 0; y < FRAME_H; y++) {
+    for (int x = 0; x < FRAME_W; x++) {
+      const int i = y * FRAME_W + x;
+      tooth[i] = 0.35f * h01(SJ_TOOTH_SEED, i) + 0.65f * vnoise2(SJ_TOOTH_SEED2, x * 0.35f, y * 1.1f);
+    }
+  }
   newPhrase();
   hasBrush = hasPen = true;               // open with the whole figure
   for (float b = 0.0f; b < SJ_PREROLL_BEATS; b += tempoS / 60.0f / 30.0f) step(1.0f / 30.0f);
@@ -391,7 +412,8 @@ void draw() {
     for (int x = 0; x < FRAME_W; x++) {
       const int i = y * FRAME_W + x;
       const float grain = (h01(911u, i) - 0.5f) * 10.0f * pa;
-      const float tc = T[i] > 1.0f ? 1.0f : T[i], pc = P[i] > 1.0f ? 1.0f : P[i], sh = Sh[i];
+      const float tc = clamp01((T[i] - SJ_TEAL_FLOOR - tooth[i] * SJ_TEAL_TOOTH) / SJ_GRIP);
+      const float pc = clamp01((P[i] - SJ_PURPLE_FLOOR - tooth[i] * SJ_PURPLE_TOOTH) / SJ_GRIP), sh = Sh[i];
       float c[3];
       for (int ch = 0; ch < 3; ch++) {
         float v = SJ_PAPER[ch] * pa + grain;

@@ -11,7 +11,9 @@
 // the chord (one bar, its pressure on an attack/release envelope, each bristle running
 // out of ink at its own rate), and a purple pen plays a solo over it: a random walk on
 // scale degrees in swung eighths, triplets or sixteenths, gliding between notes, with a
-// calligraphic nib. Each phrase lands where the paper is emptiest; old ones fade.
+// calligraphic nib. Both are crayon on toothy paper: ink is rub pressure, showing only where
+// it beats the grain, so strokes are rough when fresh and wear into streaks as they fade.
+// Each phrase lands where the paper is emptiest.
 // Written for any frame size: everything scales with the short side.
 // Knob 1 Tempo: beats per minute, how fast the brush and pen move.
 // Knob 2 Solo: 0 a lazy wave in swung eighths, 1 a bebop zigzag of sixteenths and leaps.
@@ -25,6 +27,10 @@ const T_MAX = 1.45, P_MAX = 1.4;      // ink over 1 shows as solid: fading start
 const SWING = 0.64;
 const NIB_C = 0.7071, NIB_S = -0.7071; // the pen's nib, at 45 degrees
 const PREROLL_BEATS = 7;
+// Crayon on paper: ink is rub pressure, and a pixel takes colour only where the pressure
+// beats its paper tooth (fixed grain), so light strokes and fading ones break into specks.
+const TOOTH_SEED = 0x1b873593, TOOTH_SEED2 = 0xcc9e2d51;
+const TEAL_FLOOR = 0.45, TEAL_TOOTH = 0.9, PURPLE_FLOOR = 0.45, PURPLE_TOOTH = 0.9, GRIP = 0.5;
 const PAPER_HI = [242, 228, 198];
 const TEAL_LIGHT = [64, 198, 204], TEAL_DARK = [10, 112, 148];
 const PURPLE = [96, 26, 176];
@@ -109,7 +115,14 @@ function init(p, w, h) {
   p.T = new Float32Array(w * h);      // teal ink
   p.Sh = new Float32Array(w * h);     // its shade, light 0 .. dark 1
   p.P = new Float32Array(w * h);      // purple ink
-  p.fadeBeats = 8 + 6 * h / (64 * p.S);
+  p.tooth = new Float32Array(w * h);  // the paper's grain: per pixel, and in streaks along the strokes
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      p.tooth[i] = 0.35 * h01(TOOTH_SEED, i) + 0.65 * vnoise2(TOOTH_SEED2, x * 0.35, y * 1.1);
+    }
+  }
+  p.fadeBeats = 2.8 * (8 + 6 * h / (64 * p.S));   // slow: a stroke spends its life wearing into the grain
   p.rng = 0x2468ace1;
   p.tempoS = p.tempo; p.soloS = p.solo; p.dryS = p.dry; p.paperS = p.paper;
   p.wash = 0;
@@ -164,6 +177,10 @@ function newPhrase(p) {
   p.seed = nextU32(p);
   p.nLanes = Math.min(MAX_LANES, Math.floor(2 * p.hw / 0.55) + 1);
   const sf = 1.2 + rnd(p) * 1.6, sp = rnd(p) * 6.2832;
+  const hatchSign = rnd(p) < 0.5 ? -1 : 1;
+  p.hatchK = hatchSign * (0.6 + 0.6 * rnd(p));       // scribble: pressure in diagonal bands
+  p.hatchP = S * (2.6 + 1.4 * rnd(p));
+  p.penSeed = nextU32(p);
   for (let j = 0; j < p.nLanes; j++) {
     const lane = p.lanes[j];
     const u = -1 + 2 * j / (p.nLanes - 1);
@@ -250,14 +267,15 @@ function paintBrush(p, t0, t1) {
     const width = (0.4 + 0.6 * att) * (0.3 + 0.7 * rel);
     const press = (0.75 + 0.25 * att) * (0.6 + 0.4 * rel);
     const spacing = 2 * p.hw * width / (p.nLanes - 1);
-    const gain = 1.3 * stepAlong * spacing;
+    const gain = 1.7 * stepAlong * spacing;
     const tn = t * p.L / (4.5 * S), tc = t * p.L / (9 * S), te = t * p.L / (6 * S), ts = t * p.L / (14 * S);
     const cu = p.hw / (1.4 * S);         // bristle clumps about 1.4 px wide
     for (let j = 0; j < p.nLanes; j++) {
       const lane = p.lanes[j];
       if (t < lane.t0 || t > lane.t1) continue;
       const u = -1 + 2 * j / (p.nLanes - 1);
-      let ink = lane.load * press - dry * lane.dep * t * 0.9
+      const hatch = 0.78 + 0.22 * Math.sin(6.2832 * (t * p.L + u * p.hw * p.hatchK) / p.hatchP);
+      let ink = lane.load * press * hatch - dry * lane.dep * t * 0.9
         + (vnoise2(p.seed, (u + 1) * cu, tc) - 0.5) * (0.2 + 1.5 * dry)
         + (vnoise(lane.seed, tn) - 0.5) * 0.15;
       const edge = Math.abs(u);
@@ -272,7 +290,7 @@ function paintBrush(p, t0, t1) {
   }
 }
 
-function disc(p, x, y, r) {
+function disc(p, x, y, r, press) {
   const x0 = Math.max(0, Math.floor(x - r - 1)), x1 = Math.min(p.w - 1, Math.ceil(x + r + 1));
   const y0 = Math.max(0, Math.floor(y - r - 1)), y1 = Math.min(p.h - 1, Math.ceil(y + r + 1));
   for (let py = y0; py <= y1; py++) {
@@ -280,7 +298,7 @@ function disc(p, x, y, r) {
       const ddx = px - x, ddy = py - y;
       const c = r + 0.5 - Math.sqrt(ddx * ddx + ddy * ddy);
       if (c <= 0) continue;
-      const v = (c > 1 ? 1 : c) * P_MAX;
+      const v = (c > 1 ? 1 : c) * P_MAX * press;
       const i = py * p.w + px;
       if (v > p.P[i]) p.P[i] = v;
     }
@@ -311,7 +329,8 @@ function paintPen(p, tp0, tp1) {
     p.penX = x; p.penY = y;
     if (a.rest) continue;
     const taper = 0.35 + 0.65 * smooth(tp / 0.05) * smooth((1 - tp) / 0.05);
-    disc(p, x, y, p.S * 0.85 * p.nib * (1 + 0.45 * accent) * taper);
+    const press = 0.7 + 0.4 * vnoise(p.penSeed, tp * 1.08 * p.L / (2.5 * p.S));   // the crayon skips
+    disc(p, x, y, p.S * 1.1 * p.nib * (1 + 0.45 * accent) * taper, press);
   }
 }
 
@@ -353,7 +372,9 @@ export function draw(display, params, time) {
     for (let x = 0; x < W; x++) {
       const i = y * W + x;
       const grain = (h01(911, i) - 0.5) * 10 * pa;
-      const tc = p.T[i] > 1 ? 1 : p.T[i], pc = p.P[i] > 1 ? 1 : p.P[i], sh = p.Sh[i];
+      const tooth = p.tooth[i];
+      const tc = clamp01((p.T[i] - TEAL_FLOOR - tooth * TEAL_TOOTH) / GRIP);
+      const pc = clamp01((p.P[i] - PURPLE_FLOOR - tooth * PURPLE_TOOTH) / GRIP), sh = p.Sh[i];
       let r = PAPER_HI[0] * pa + grain, g = PAPER_HI[1] * pa + grain, b = PAPER_HI[2] * pa + grain;
       r += (TEAL_LIGHT[0] + (TEAL_DARK[0] - TEAL_LIGHT[0]) * sh - r) * tc;
       g += (TEAL_LIGHT[1] + (TEAL_DARK[1] - TEAL_LIGHT[1]) * sh - g) * tc;
