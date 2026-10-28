@@ -652,8 +652,8 @@ line-for-line twin rather than left to the Lab's AI conversion. Both are CC BY-S
   integer hash and PRNG and draw in the same order, so they should agree to float rounding. The
   last shot, after the audio phase that only the header gets, is expected to differ.
 
-**Solo Jazz** (`solo_jazz`) is the 1990s paper-cup swash, improvised live and played like
-an instrument (for VJing).
+**Solo Jazz** (`solo_jazz`) is the 1990s paper-cup swash, improvised live by a quartet and
+played like an instrument (for VJing).
 - A teal dry brush lays down one bar. Its pressure follows an attack/release envelope, and each
   bristle runs out of ink at its own rate, in clumps.
 - A purple pen plays a zigzag solo over it: a walk on scale degrees in swung eighths, triplets
@@ -662,20 +662,29 @@ an instrument (for VJing).
   the pressure beats that pixel's grain (fixed noise, streaky along the strokes). Fresh strokes
   are dense but flecked, the brush scribbles in diagonal bands, and fading is wear into streaks
   rather than translucency.
-- Phrases land where the paper is emptiest, and each has its own dryness. The paper wraps round
-  like the cup, so it tiles when zoomed out and shows no edge when it spins.
+- The paper is two screens each way and wraps round like the cup, so it shows no edge when it
+  spins. Four voices paint on it at once, each with its own phrases, placement, dryness and solo,
+  landing where the paper is emptiest. The soloist always plays in the middle screen (the 1×
+  view). The other three play anywhere, and rest two beats longer between phrases. Zoomed out,
+  the whole band is in view, never a repeat.
+- Night (black paper) is the start: a mostly-cream frame fights the power limit. The purple is
+  lifted on black, where it runs dim.
 
 | Knob | Turn | Click | Light |
 |---|---|---|---|
 | k0 Tempo | 60–180 BPM | tap tempo; the tap is the downbeat | teal on every beat, brightest on the downbeat; white on a tap |
 | k1 Jive | how wild the solo is, and a zigzag warp of the purple that kicks on each beat, zig and zag trading places | a break: a fresh phrase on clean paper | purple on every note the pen plays |
-| k2 Zoom | ⅓× (tiled) to 3×, as painted in the middle; pumps on the beat with Jive | mirror: off, mirror, kaleidoscope | white, teal, purple for the mirror; brighter further from 1× |
-| k3 Spin | either way, up to a turn every two bars; still in the middle, where it eases upright | paper: cream or night | the paper's colour, pulsing as it spins |
+| k2 Zoom | ½× (the whole paper) to 3×, as painted in the middle; pumps on the beat with Jive | mirror: off, mirror, kaleidoscope | white, teal, purple for the mirror; brighter further from 1× |
+| k3 Spin | either way, up to a turn every two bars; still in the middle, where it eases upright | paper: night (the start) or cream | the paper's colour, pulsing as it spins |
 
 - The knobs ease, so the audio edition drifts rather than flickers. With it, bass pumps the zoom
   and the treble spins.
-- Twin check (2026-10-28, with the VJ controls): the frames differ by at most 0.02 on average,
-  at both sizes, through the scripted player's turns and clicks.
+- k1's light follows the soloist's notes.
+- Memory: the paper is four float planes at four screens' size: 512 KB at 64 × 128 (PSRAM on a
+  stock board), 1 MB at 128 × 128.
+- Twin check (2026-10-28, the quartet): the frames differ by at most 0.08 on average, and at
+  most 0.1 % of pixels by more than 24, at both sizes, through the scripted player's turns and
+  clicks.
 
 To publish one:
 1. In Pattern Lab, set the resolution to 64 × 128 and paste the `.js`. Its `@knobs` line names

@@ -7,24 +7,26 @@
 // @knobs Tempo=60..180, Jive=0..1, Zoom=0..1, Spin=-1..1
 // @matrix 64x128
 
-// Solo Jazz: the 1990s paper-cup swash, improvised live, for playing like an instrument.
-// A teal dry brush lays down the chord (one bar, its pressure on an attack/release envelope,
-// each bristle running out of ink at its own rate), and a purple pen plays a zigzag solo
-// over it: a walk on scale degrees in swung eighths, triplets or sixteenths that mostly
-// turns back on itself. Both are crayon on toothy paper: ink is rub pressure, showing only
-// where it beats the grain, so strokes are rough when fresh and wear into streaks as they
-// fade. Each phrase lands where the paper is emptiest. The paper wraps round like the cup,
-// so it tiles when you zoom out and never shows an edge when it spins.
+// Solo Jazz: the 1990s paper-cup swash, improvised live by a quartet, for playing like an
+// instrument. Each voice's teal dry brush lays down a chord (one bar, its pressure on an
+// attack/release envelope, each bristle running out of ink at its own rate), and its purple
+// pen plays a zigzag solo over it: a walk on scale degrees in swung eighths, triplets or
+// sixteenths that mostly turns back on itself. Both are crayon on toothy paper: ink is rub
+// pressure, showing only where it beats the grain, so strokes are rough when fresh and wear
+// into streaks as they fade. The paper is two screens each way, wrapping round like the cup:
+// the soloist always plays in view, the other three anywhere, each landing where the paper is
+// emptiest, so zooming out shows the whole band at work.
 // Written for any frame size: everything scales with the short side.
 // Knob 1 Tempo: beats per minute. Push: tap tempo (and the tap is the downbeat).
-// Knob 2 Jive: how wild the solo is, and how hard the purple dances: a zigzag warp that
-//   kicks on every beat, zig and zag trading places. Push: a break, a fresh phrase on clean paper.
-// Knob 3 Zoom: middle as painted; down to a third, the cup's pattern tiling; up to 3x, a
-//   crayon close-up. Pumps a little on the beat. Push: mirror off, mirror, kaleidoscope.
+// Knob 2 Jive: how wild the solos are, and how hard the purple dances: a zigzag warp that
+//   kicks on every beat, zig and zag trading places. Push: a break, fresh phrases on clean paper.
+// Knob 3 Zoom: middle as painted; down to a half, the whole paper; up to 3x, a crayon
+//   close-up. Pumps a little on the beat. Push: mirror off, mirror, kaleidoscope.
 // Knob 4 Spin: middle still; either way, up to a turn every two bars. Back near the middle
-//   it eases upright. Push: cream paper or night.
+//   it eases upright. Push: night (the start) or cream paper.
 
 const BRUSH_BEATS = 4, PEN_DELAY = 1.5, PEN_BEATS = 4;
+const VOICES = 4, ROOM = 2;           // a quartet, on paper two screens each way
 const MAX_LANES = 96, MAX_NOTES = 24;
 const T_MAX = 1.45, P_MAX = 1.4;      // ink over 1 shows as solid: fading starts late
 const SWING = 0.64;
@@ -36,7 +38,7 @@ const TOOTH_SEED = 0x1b873593, TOOTH_SEED2 = 0xcc9e2d51;
 const TEAL_FLOOR = 0.45, TEAL_TOOTH = 0.9, PURPLE_FLOOR = 0.4, PURPLE_TOOTH = 0.9, GRIP = 0.5;
 const PAPER_HI = [242, 228, 198], PAPER_LEVEL = 0.8;
 const TEAL_LIGHT = [64, 198, 204], TEAL_DARK = [10, 112, 148];
-const PURPLE = [96, 26, 176];
+const PURPLE = [96, 26, 176], PURPLE_NIGHT = [132, 48, 222];   // lifted on black, where it runs dim
 const SPIN_DEAD = 0.06;               // about a detent either side of the middle: still
 const TAP_WINDOW = 2;                 // seconds: taps further apart start a new count
 
@@ -126,87 +128,103 @@ export function update(dt, input, params) {
 
 function init(p, w, h) {
   p.w = w; p.h = h;
+  p.cw = w * ROOM; p.ch = h * ROOM;
   p.S = Math.min(w, h) / 64;
-  p.T = new Float32Array(w * h);      // teal ink
-  p.Sh = new Float32Array(w * h);     // its shade, light 0 .. dark 1
-  p.P = new Float32Array(w * h);      // purple ink
-  p.tooth = new Float32Array(w * h);  // the paper's grain: per pixel, and in streaks along the strokes
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
+  const n = p.cw * p.ch;
+  p.T = new Float32Array(n);          // teal ink
+  p.Sh = new Float32Array(n);         // its shade, light 0 .. dark 1
+  p.P = new Float32Array(n);          // purple ink
+  p.tooth = new Float32Array(n);      // the paper's grain: per pixel, and in streaks along the strokes
+  for (let y = 0; y < p.ch; y++) {
+    for (let x = 0; x < p.cw; x++) {
+      const i = y * p.cw + x;
       p.tooth[i] = 0.35 * h01(TOOTH_SEED, i) + 0.65 * vnoise2(TOOTH_SEED2, x * 0.35, y * 1.1);
     }
   }
-  p.fadeBeats = 2.8 * (8 + 6 * h / (64 * p.S));   // slow: a stroke spends its life wearing into the grain
+  p.fadeBeats = 2.4 * (8 + 6 * h / (64 * p.S));   // slow: a stroke spends its life wearing into the grain
   p.rng = 0x2468ace1;
   p.tempoAdj = 0; p.tapAge = 10; p.tapCount = 0; p.tapInt = 0.5;
   p.tempoS = p.tempoKnob; p.jiveS = p.jive; p.zoomS = p.zoom; p.spinS = p.spin;
-  p.paperOn = true; p.paperS = 1;
+  p.paperOn = false; p.paperS = 0;    // night: mostly-white frames fight the power limit
   p.mirror = 0;
   p.angle = 0;
   p.beatF = 0; p.beatN = 0;
   p.tapFlash = 0; p.noteFlash = 0;
   p.wash = 0;
-  p.lastY = -1000;
-  p.lanes = [];
-  for (let j = 0; j < MAX_LANES; j++) p.lanes.push({ load: 0, dep: 0, seed: 0, shade: 0, t0: 0, t1: 1 });
-  p.notes = [];
-  for (let k = 0; k < MAX_NOTES; k++) p.notes.push({ t: 0, deg: 0, acc: 0, rest: false });
-  newPhrase(p);
-  p.hasBrush = p.hasPen = true;       // open with the whole figure
+  p.voices = [];
+  for (let k = 0; k < VOICES; k++) {
+    const v = { lastX: -1e4, lastY: -1e4, lanes: [], notes: [] };
+    for (let j = 0; j < MAX_LANES; j++) v.lanes.push({ load: 0, dep: 0, seed: 0, shade: 0, t0: 0, t1: 1 });
+    for (let j = 0; j < MAX_NOTES; j++) v.notes.push({ t: 0, deg: 0, acc: 0, rest: false });
+    p.voices.push(v);
+  }
+  for (let k = 0; k < VOICES; k++) {
+    const v = p.voices[k];
+    newPhrase(p, v, k);
+    v.hasBrush = v.hasPen = true;     // open with the whole figure
+    v.pb = -1.75 * k;                 // and come in one after another
+  }
   for (let b = 0; b < PREROLL_BEATS; b += p.tempoS / 60 / 30) step(p, 1 / 30);
 }
 
-// Where the paper is emptiest, of six tries, and not on top of the last phrase.
-function pickY(p, hw) {
-  let best = p.h * 0.5, bestScore = 1e30;
-  for (let k = 0; k < 6; k++) {
-    const y = p.h * (0.1 + 0.8 * rnd(p));
-    let score = Math.abs(y - p.lastY) < hw * 1.5 ? 1e6 : 0;
-    const y0 = Math.floor(y - hw), y1 = Math.floor(y + hw);
-    for (let yy = y0; yy <= y1; yy += 2) {
-      const row = wrap(yy, p.h) * p.w;
-      for (let x = 0; x < p.w; x += 2) score += p.T[row + x] + p.P[row + x];
+// Where the paper is emptiest, of six tries, and off this voice's last phrase. The soloist
+// (voice 0) plays in the middle screen, the one in view at 1x; the others anywhere.
+function pickSpot(p, v, k, hw, len) {
+  let bx = p.cw * 0.5, by = p.ch * 0.5, bestScore = 1e30;
+  for (let c = 0; c < 6; c++) {
+    let x, y;
+    if (k === 0) {
+      x = p.cw * 0.5 + p.w * (rnd(p) - 0.5) * 0.4;
+      y = p.ch * 0.5 + p.h * (rnd(p) * 0.8 - 0.4);
+    } else {
+      x = p.cw * rnd(p);
+      y = p.ch * rnd(p);
     }
-    if (score < bestScore) { bestScore = score; best = y; }
+    let score = Math.abs(y - v.lastY) < hw * 1.5 && Math.abs(x - v.lastX) < len * 0.5 ? 1e6 : 0;
+    const y0 = Math.floor(y - hw), y1 = Math.floor(y + hw);
+    const x0 = Math.floor(x - len * 0.5), x1 = Math.floor(x + len * 0.5);
+    for (let yy = y0; yy <= y1; yy += 2) {
+      const row = wrap(yy, p.ch) * p.cw;
+      for (let xx = x0; xx <= x1; xx += 2) score += p.T[row + wrap(xx, p.cw)] + p.P[row + wrap(xx, p.cw)];
+    }
+    if (score < bestScore) { bestScore = score; bx = x; by = y; }
   }
-  return best;
+  v.cx = bx; v.cy = by;
+  v.lastX = bx; v.lastY = by;
 }
 
-function newPhrase(p) {
+function newPhrase(p, v, k) {
   const S = p.S, W = p.w;
-  p.pb = 0;
+  v.pb = 0;
   const r = rnd(p);
-  p.hasBrush = r >= 0.1;                  // one in ten: the pen alone, a solo break
-  p.hasPen = r < 0.1 || r >= 0.16;        // and one in sixteen: the brush alone
+  v.hasBrush = r >= 0.1;                  // one in ten: the pen alone, a solo break
+  v.hasPen = r < 0.1 || r >= 0.16;        // and one in sixteen: the brush alone
   const rest = [0.5, 1, 1, 2][Math.floor(rnd(p) * 4)];
-  p.phraseLen = PEN_DELAY + PEN_BEATS + rest;
-  p.dryP = 0.15 + 0.7 * rnd(p);
+  v.phraseLen = PEN_DELAY + PEN_BEATS + rest + (k === 0 ? 0 : 2);   // the band lays out more than the soloist
+  v.dry = 0.15 + 0.7 * rnd(p);
 
   const th = (rnd(p) * 2 - 1) * 0.38;
   const dir = rnd(p) < 0.8 ? 1 : -1;
-  p.hw = S * (6.0 + rnd(p) * 3.0);
-  p.L = W * (0.75 + rnd(p) * 0.3) / Math.cos(th);    // under a turn of the wrapped paper
-  p.cx = W * (0.3 + rnd(p) * 0.4);
-  p.cy = pickY(p, p.hw);
-  p.lastY = p.cy;
-  p.bend = (rnd(p) * 2 - 1) * 0.1 * p.L;
-  p.wobA = S * (0.6 + rnd(p) * 1.2);
-  p.wobF = 0.8 + rnd(p) * 1.4;
-  p.wobP = rnd(p);
-  p.dx = Math.cos(th) * dir; p.dy = Math.sin(th) * dir;
-  p.nx = -p.dy; p.ny = p.dx;
+  v.hw = S * (6.0 + rnd(p) * 3.0);
+  v.L = W * (0.75 + rnd(p) * 0.3) / Math.cos(th);
+  pickSpot(p, v, k, v.hw, v.L);
+  v.bend = (rnd(p) * 2 - 1) * 0.1 * v.L;
+  v.wobA = S * (0.6 + rnd(p) * 1.2);
+  v.wobF = 0.8 + rnd(p) * 1.4;
+  v.wobP = rnd(p);
+  v.dx = Math.cos(th) * dir; v.dy = Math.sin(th) * dir;
+  v.nx = -v.dy; v.ny = v.dx;
 
-  p.seed = nextU32(p);
-  p.nLanes = Math.min(MAX_LANES, Math.floor(2 * p.hw / 0.55) + 1);
+  v.seed = nextU32(p);
+  v.nLanes = Math.min(MAX_LANES, Math.floor(2 * v.hw / 0.55) + 1);
   const sf = 1.2 + rnd(p) * 1.6, sp = rnd(p) * 6.2832;
   const hatchSign = rnd(p) < 0.5 ? -1 : 1;
-  p.hatchK = hatchSign * (0.6 + 0.6 * rnd(p));       // scribble: pressure in diagonal bands
-  p.hatchP = S * (2.6 + 1.4 * rnd(p));
-  p.penSeed = nextU32(p);
-  for (let j = 0; j < p.nLanes; j++) {
-    const lane = p.lanes[j];
-    const u = -1 + 2 * j / (p.nLanes - 1);
+  v.hatchK = hatchSign * (0.6 + 0.6 * rnd(p));       // scribble: pressure in diagonal bands
+  v.hatchP = S * (2.6 + 1.4 * rnd(p));
+  v.penSeed = nextU32(p);
+  for (let j = 0; j < v.nLanes; j++) {
+    const lane = v.lanes[j];
+    const u = -1 + 2 * j / (v.nLanes - 1);
     lane.load = 0.82 + 0.18 * rnd(p);
     lane.dep = 0.45 + 0.55 * rnd(p);
     lane.seed = nextU32(p);
@@ -218,8 +236,8 @@ function newPhrase(p) {
 
   // The solo: a zigzag walk on scale degrees -6..6, one beat at a time.
   const jive = p.jiveS;
-  p.bias = (rnd(p) * 2 - 1) * 0.3 * p.hw;
-  p.amp = p.hw * (1.4 + 1.2 * jive) / 6;
+  v.bias = (rnd(p) * 2 - 1) * 0.3 * v.hw;
+  v.amp = v.hw * (1.4 + 1.2 * jive) / 6;
   let deg = Math.floor((rnd(p) * 2 - 1) * 2 + 0.5);
   let up = rnd(p) < 0.5;
   let n = 0;
@@ -227,7 +245,7 @@ function newPhrase(p) {
     const rs = rnd(p);
     const sub = rs < 0.25 + 0.6 * jive ? 4 : rs < 0.45 + 0.5 * jive ? 3 : 2;
     for (let s = 0; s < sub; s++) {
-      const note = p.notes[n++];
+      const note = v.notes[n++];
       note.t = (b + (sub === 2 ? (s === 0 ? 0 : SWING) : s / sub)) / PEN_BEATS;
       note.deg = deg;
       note.acc = s === 0 ? (b % 2 === 0 ? 1 : 0.6) : 0;
@@ -243,33 +261,26 @@ function newPhrase(p) {
       if (deg < -6) deg = -6;
     }
   }
-  const last = p.notes[n++];
+  const last = v.notes[n++];
   last.t = 1; last.deg = deg; last.acc = 0; last.rest = false;
-  p.nNotes = n;
-  p.lastNote = -1;
-  p.penX = p.penY = -1e9;
+  v.nNotes = n;
+  v.lastNote = -1;
+  v.penX = v.penY = -1e9;
 }
 
-function pathX(p, t) {
+function pathOff(v, t) {
   const s = t - 0.5;
-  const off = p.bend * (1 - 4 * s * s) + p.wobA * Math.sin(6.2832 * (p.wobF * t + p.wobP));
-  return p.cx + p.dx * s * p.L + p.nx * off;
-}
-
-function pathY(p, t) {
-  const s = t - 0.5;
-  const off = p.bend * (1 - 4 * s * s) + p.wobA * Math.sin(6.2832 * (p.wobF * t + p.wobP));
-  return p.cy + p.dy * s * p.L + p.ny * off;
+  return v.bend * (1 - 4 * s * s) + v.wobA * Math.sin(6.2832 * (v.wobF * t + v.wobP));
 }
 
 function splat(p, x, y, a, shade) {
   const ix = Math.floor(x), iy = Math.floor(y);
   const fx = x - ix, fy = y - iy;
   for (let k = 0; k < 4; k++) {
-    const px = wrap(ix + (k & 1), p.w), py = wrap(iy + (k >> 1), p.h);
+    const px = wrap(ix + (k & 1), p.cw), py = wrap(iy + (k >> 1), p.ch);
     const wgt = ((k & 1) ? fx : 1 - fx) * ((k >> 1) ? fy : 1 - fy);
     const aa = a * wgt;
-    const i = py * p.w + px;
+    const i = py * p.cw + px;
     const t = p.T[i] + aa;
     p.T[i] = t > T_MAX ? T_MAX : t;
     const m = aa * 2;
@@ -279,38 +290,39 @@ function splat(p, x, y, a, shade) {
   }
 }
 
-function paintBrush(p, t0, t1) {
-  const S = p.S, dry = p.dryP;
-  const along = (t1 - t0) * p.L;
+function paintBrush(p, v, t0, t1) {
+  const S = p.S, dry = v.dry;
+  const along = (t1 - t0) * v.L;
   const n = Math.max(1, Math.ceil(along / 0.45));
   const stepAlong = along / n;
   for (let i = 1; i <= n; i++) {
     const t = t0 + (t1 - t0) * i / n;
-    const x = pathX(p, t), y = pathY(p, t);
+    const s = t - 0.5, off0 = pathOff(v, t);
+    const x = v.cx + v.dx * s * v.L + v.nx * off0, y = v.cy + v.dy * s * v.L + v.ny * off0;
     const att = t < 0.1 ? smooth(t / 0.1) : 1;
     const rel = t > 0.78 ? smooth((1 - t) / 0.22) : 1;
     const width = (0.4 + 0.6 * att) * (0.3 + 0.7 * rel);
     const press = (0.75 + 0.25 * att) * (0.6 + 0.4 * rel);
-    const spacing = 2 * p.hw * width / (p.nLanes - 1);
+    const spacing = 2 * v.hw * width / (v.nLanes - 1);
     const gain = 1.7 * stepAlong * spacing;
-    const tn = t * p.L / (4.5 * S), tc = t * p.L / (9 * S), te = t * p.L / (6 * S), ts = t * p.L / (14 * S);
-    const cu = p.hw / (1.4 * S);         // bristle clumps about 1.4 px wide
-    for (let j = 0; j < p.nLanes; j++) {
-      const lane = p.lanes[j];
+    const tn = t * v.L / (4.5 * S), tc = t * v.L / (9 * S), te = t * v.L / (6 * S), ts = t * v.L / (14 * S);
+    const cu = v.hw / (1.4 * S);         // bristle clumps about 1.4 px wide
+    for (let j = 0; j < v.nLanes; j++) {
+      const lane = v.lanes[j];
       if (t < lane.t0 || t > lane.t1) continue;
-      const u = -1 + 2 * j / (p.nLanes - 1);
-      const hatch = 0.78 + 0.22 * Math.sin(6.2832 * (t * p.L + u * p.hw * p.hatchK) / p.hatchP);
+      const u = -1 + 2 * j / (v.nLanes - 1);
+      const hatch = 0.78 + 0.22 * Math.sin(6.2832 * (t * v.L + u * v.hw * v.hatchK) / v.hatchP);
       let ink = lane.load * press * hatch - dry * lane.dep * t * 0.9
-        + (vnoise2(p.seed, (u + 1) * cu, tc) - 0.5) * (0.2 + 1.5 * dry)
+        + (vnoise2(v.seed, (u + 1) * cu, tc) - 0.5) * (0.2 + 1.5 * dry)
         + (vnoise(lane.seed, tn) - 0.5) * 0.15;
       const edge = Math.abs(u);
-      if (edge > 0.7) ink -= (edge - 0.7) / 0.3 * (0.2 + 1.0 * vnoise2(p.seed ^ 0x5bd1e995, (u + 1) * cu, te));
+      if (edge > 0.7) ink -= (edge - 0.7) / 0.3 * (0.2 + 1.0 * vnoise2(v.seed ^ 0x5bd1e995, (u + 1) * cu, te));
       if (ink < 0.12) continue;           // a dry bristle skips: paper shows through
       ink = 0.45 + ink;
       if (ink > 1) ink = 1;
-      const off = u * p.hw * width;
-      const shade = clamp01(lane.shade + (vnoise2(p.seed ^ 0x27d4eb2f, (u + 1) * cu * 0.6, ts) - 0.5) * 0.9);
-      splat(p, x + p.nx * off, y + p.ny * off, ink * gain, shade);
+      const off = u * v.hw * width;
+      const shade = clamp01(lane.shade + (vnoise2(v.seed ^ 0x27d4eb2f, (u + 1) * cu * 0.6, ts) - 0.5) * 0.9);
+      splat(p, x + v.nx * off, y + v.ny * off, ink * gain, shade);
     }
   }
 }
@@ -323,43 +335,45 @@ function disc(p, x, y, r, press) {
       const ddx = px - x, ddy = py - y;
       const c = r + 0.5 - Math.sqrt(ddx * ddx + ddy * ddy);
       if (c <= 0) continue;
-      const v = (c > 1 ? 1 : c) * P_MAX * press;
-      const i = wrap(py, p.h) * p.w + wrap(px, p.w);
-      if (v > p.P[i]) p.P[i] = v;
+      const val = (c > 1 ? 1 : c) * P_MAX * press;
+      const i = wrap(py, p.ch) * p.cw + wrap(px, p.cw);
+      if (val > p.P[i]) p.P[i] = val;
     }
   }
 }
 
-function paintPen(p, tp0, tp1) {
-  const along = (tp1 - tp0) * 1.08 * p.L;
+function paintPen(p, v, k, tp0, tp1) {
+  const along = (tp1 - tp0) * 1.08 * v.L;
   const n = Math.max(1, Math.ceil(along / 0.12));
   const glide = 0.55 + 0.45 * p.jiveS;  // 0: notes joined by cosine glides, 1: straight, sharp corners
   for (let i = 1; i <= n; i++) {
     const tp = tp0 + (tp1 - tp0) * i / n;
-    let k = 0;
-    while (k < p.nNotes - 2 && p.notes[k + 1].t <= tp) k++;
-    const a = p.notes[k], b = p.notes[k + 1];
-    if (k !== p.lastNote) {
-      p.lastNote = k;
-      if (!a.rest) p.noteFlash = 0.6 + 0.4 * a.acc;
+    let q = 0;
+    while (q < v.nNotes - 2 && v.notes[q + 1].t <= tp) q++;
+    const a = v.notes[q], b = v.notes[q + 1];
+    if (q !== v.lastNote) {
+      v.lastNote = q;
+      if (k === 0 && !a.rest) p.noteFlash = 0.6 + 0.4 * a.acc;   // the soloist's notes light k1
     }
     const f = clamp01((tp - a.t) / (b.t - a.t));
     const cs = (1 - Math.cos(3.1416 * f)) * 0.5;
-    const s = cs + (f - cs) * glide;
-    const m = a.deg + (b.deg - a.deg) * s;
+    const sm = cs + (f - cs) * glide;
+    const m = a.deg + (b.deg - a.deg) * sm;
     const accent = a.acc * Math.exp(-(tp - a.t) * PEN_BEATS * 6);
     const t = -0.04 + 1.08 * tp;
-    const off = p.bias + m * p.amp;
-    const x = pathX(p, t) + p.nx * off, y = pathY(p, t) + p.ny * off;
-    const mx = x - p.penX, my = y - p.penY;
+    const s = t - 0.5, off0 = pathOff(v, t);
+    const off = v.bias + m * v.amp;
+    const x = v.cx + v.dx * s * v.L + v.nx * off0 + v.nx * off;
+    const y = v.cy + v.dy * s * v.L + v.ny * off0 + v.ny * off;
+    const mx = x - v.penX, my = y - v.penY;
     const len = Math.sqrt(mx * mx + my * my);
-    if (p.penX > -1e8 && len > 1e-4) p.nib = 0.6 + 0.6 * Math.abs((my * NIB_C - mx * NIB_S) / len);
-    else if (p.penX <= -1e8) p.nib = 1;
-    p.penX = x; p.penY = y;
+    if (v.penX > -1e8 && len > 1e-4) v.nib = 0.6 + 0.6 * Math.abs((my * NIB_C - mx * NIB_S) / len);
+    else if (v.penX <= -1e8) v.nib = 1;
+    v.penX = x; v.penY = y;
     if (a.rest) continue;
     const taper = 0.35 + 0.65 * smooth(tp / 0.05) * smooth((1 - tp) / 0.05);
-    const press = 0.8 + 0.4 * vnoise(p.penSeed, tp * 1.08 * p.L / (2.5 * p.S));   // the crayon skips
-    disc(p, x, y, p.S * 1.1 * p.nib * (1 + 0.45 * accent) * taper, press);
+    const press = 0.8 + 0.4 * vnoise(v.penSeed, tp * 1.08 * v.L / (2.5 * p.S));   // the crayon skips
+    disc(p, x, y, p.S * 1.1 * v.nib * (1 + 0.45 * accent) * taper, press);
   }
 }
 
@@ -379,7 +393,10 @@ function step(p, dt) {
     p.tapFlash = 1;
     p.beatF = 0; p.beatN = 0;           // the tap is the downbeat
   }
-  if (p.press[1]) { p.wash = 1; newPhrase(p); }
+  if (p.press[1]) {
+    p.wash = 1;
+    for (let k = 0; k < VOICES; k++) newPhrase(p, p.voices[k], k);
+  }
   if (p.press[2]) p.mirror = (p.mirror + 1) % 3;
   if (p.press[3]) p.paperOn = !p.paperOn;
   for (let i = 0; i < 4; i++) p.press[i] = false;
@@ -410,20 +427,23 @@ function step(p, dt) {
   const rate = bps / p.fadeBeats + (p.wash > 0 ? 3 : 0);
   if (p.wash > 0) p.wash -= dt;
   const fade = Math.exp(-dt * rate);
-  const N = p.w * p.h;
+  const N = p.cw * p.ch;
   for (let i = 0; i < N; i++) { p.T[i] *= fade; p.P[i] *= fade; }
 
-  const pb0 = p.pb;
-  p.pb += dt * bps;
-  if (p.hasBrush) {
-    const t0 = clamp01(pb0 / BRUSH_BEATS), t1 = clamp01(p.pb / BRUSH_BEATS);
-    if (t1 > t0) paintBrush(p, t0, t1);
+  for (let k = 0; k < VOICES; k++) {
+    const v = p.voices[k];
+    const pb0 = v.pb;
+    v.pb += dt * bps;
+    if (v.hasBrush) {
+      const t0 = clamp01(pb0 / BRUSH_BEATS), t1 = clamp01(v.pb / BRUSH_BEATS);
+      if (t1 > t0) paintBrush(p, v, t0, t1);
+    }
+    if (v.hasPen) {
+      const t0 = clamp01((pb0 - PEN_DELAY) / PEN_BEATS), t1 = clamp01((v.pb - PEN_DELAY) / PEN_BEATS);
+      if (t1 > t0) paintPen(p, v, k, t0, t1);
+    }
+    if (v.pb >= v.phraseLen) newPhrase(p, v, k);
   }
-  if (p.hasPen) {
-    const t0 = clamp01((pb0 - PEN_DELAY) / PEN_BEATS), t1 = clamp01((p.pb - PEN_DELAY) / PEN_BEATS);
-    if (t1 > t0) paintPen(p, t0, t1);
-  }
-  if (p.pb >= p.phraseLen) newPhrase(p);
 }
 
 export function draw(display, params, time) {
@@ -432,21 +452,25 @@ export function draw(display, params, time) {
   step(p, p.dt);
 
   const pa = PAPER_LEVEL * p.paperS;
+  const purple = [0, 1, 2].map((c) => PURPLE_NIGHT[c] + (PURPLE[c] - PURPLE_NIGHT[c]) * p.paperS);
   const kick = Math.exp(-p.beatF * 5);
-  const zoom = Math.exp((p.zoomS - 0.5) * 3.2 * 0.693147) * (1 + 0.06 * p.jiveS * kick);
+  // A half (the whole paper) at the bottom of the knob, 1x in the middle, 3x at the top.
+  const zl = p.zoomS < 0.5 ? (p.zoomS - 0.5) * 2 : (p.zoomS - 0.5) * 2 * 1.585;
+  const zoom = Math.exp(zl * 0.693147) * (1 + 0.06 * p.jiveS * kick);
   const ca = Math.cos(p.angle) / zoom, sa = Math.sin(p.angle) / zoom;
   const jiveA = p.S * 3.2 * p.jiveS * (0.35 + 0.65 * kick);   // the purple dances on the beat
   const jiveL = 6 * p.S, jiveShift = (p.beatN & 1) * 0.5;
+  const cw = p.cw, ch = p.ch;
   for (let y = 0; y < H; y++) {
     let sy = y + 0.5 - H * 0.5;
     if (p.mirror === 2) sy = Math.abs(sy);
     for (let x = 0; x < W; x++) {
       let sx = x + 0.5 - W * 0.5;
       if (p.mirror >= 1) sx = Math.abs(sx);
-      const u = ca * sx + sa * sy + W * 0.5, v = -sa * sx + ca * sy + H * 0.5;
-      const iu = wrap(Math.floor(u), W);
-      const i = wrap(Math.floor(v), H) * W + iu;
-      const j = wrap(Math.floor(v + jiveA * tri(u / jiveL + jiveShift)), H) * W + iu;
+      const u = ca * sx + sa * sy + cw * 0.5, v = -sa * sx + ca * sy + ch * 0.5;
+      const iu = wrap(Math.floor(u), cw);
+      const i = wrap(Math.floor(v), ch) * cw + iu;
+      const j = wrap(Math.floor(v + jiveA * tri(u / jiveL + jiveShift)), ch) * cw + iu;
       const tc = clamp01((p.T[i] - TEAL_FLOOR - p.tooth[i] * TEAL_TOOTH) / GRIP);
       const pc = clamp01((p.P[j] - PURPLE_FLOOR - p.tooth[j] * PURPLE_TOOTH) / GRIP), sh = p.Sh[i];
       const grain = (h01(911, y * W + x) - 0.5) * 10 * pa;
@@ -454,9 +478,9 @@ export function draw(display, params, time) {
       r += (TEAL_LIGHT[0] + (TEAL_DARK[0] - TEAL_LIGHT[0]) * sh - r) * tc;
       g += (TEAL_LIGHT[1] + (TEAL_DARK[1] - TEAL_LIGHT[1]) * sh - g) * tc;
       b += (TEAL_LIGHT[2] + (TEAL_DARK[2] - TEAL_LIGHT[2]) * sh - b) * tc;
-      r += (PURPLE[0] - r) * pc;
-      g += (PURPLE[1] - g) * pc;
-      b += (PURPLE[2] - b) * pc;
+      r += (purple[0] - r) * pc;
+      g += (purple[1] - g) * pc;
+      b += (purple[2] - b) * pc;
       display.setPixel(x, y, r < 0 ? 0 : r | 0, g < 0 ? 0 : g | 0, b < 0 ? 0 : b | 0);
     }
   }
