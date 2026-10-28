@@ -3,7 +3,8 @@
 //
 //   node jsrun.mjs bundle SRC                    (sync, on ash: node >= 22.6) SRC/web/**/*.ts -> SRC/web/harness.js
 //   node jsrun.mjs serve SRC                     requests on stdin, frames on stdout (the demo process's child)
-//   node jsrun.mjs check SRC ID FRAMES SHOT OUT  one pattern through the scripted player -> a JSON line
+//   node jsrun.mjs check SRC ID FILE NAME FRAMES SHOT OUT [WxH]
+//                                                one version of a pattern through the scripted player -> a JSON line
 //
 // Patterns run in this process's own realm: a vm context would isolate them, but makes a
 // frame some 80 times slower (every Math.sin goes through the context's global
@@ -14,7 +15,9 @@
 // returns is the caller's to kill.
 //
 // Protocol (serve): one JSON line per request, one JSON line per reply.
-//   {"op":"load","key":K,"file":PATH}            -> {"ok":true,"w":W,"h":H} | {"ok":false,"error":...}
+//   {"op":"load","key":K,"file":PATH[,"matrix":[W,H]]}
+//                                               -> {"ok":true,"w":W,"h":H} | {"ok":false,"error":...}
+//     "matrix" overrides the script's @matrix: the same pattern on a bigger display.
 //   {"op":"frame","key":K,"dt":S,"d":[4],"p":[4],"h":[4]}
 //                                               -> {"ok":true} then W*H*3 bytes of RGB | {"ok":false,"error":...}
 // A frame for a pattern no longer held (LIVE) answers {"ok":false,"error":"not loaded"}: load it again.
@@ -69,9 +72,9 @@ function lockdown() {
 }
 
 class Pattern {
-  constructor(m, file) {
+  constructor(m, file, matrix) {
     const code = readFileSync(file, "utf8");
-    const size = m["pattern/matrix"].matrixFromCode(code);
+    const size = matrix ? { width: matrix[0], height: matrix[1] } : m["pattern/matrix"].matrixFromCode(code);
     this.m = m;
     this.rt = new m["pattern/harness"].PatternRuntime(size.width, size.height);
     this.knobs = m["community/knobs"].knobSetupFromCode(code);       // the cards' start: each knob mid-range
@@ -151,7 +154,7 @@ function serve(src) {
     try {
       if (req.op === "load") {
         patterns.delete(req.key);
-        const pat = new Pattern(m, req.file);
+        const pat = new Pattern(m, req.file, req.matrix);
         if (pat.info.ok) patterns.set(req.key, pat);
         while (patterns.size > LIVE) patterns.delete(patterns.keys().next().value);
         reply(pat.info);
@@ -174,12 +177,12 @@ function serve(src) {
 }
 
 // ---- check: community.py's scripted player (see CHECK_MAIN there), at 60 fps
-function check(src, id, frames, shot, out) {
+function check(src, id, file, name, frames, shot, out, matrix) {
   const m = harness(src);
   lockdown();
   const res = { id };
   try {
-    const pat = new Pattern(m, join(src, "js", id + ".js"));
+    const pat = new Pattern(m, file, matrix);
     if (!pat.info.ok) throw new Error(pat.info.error);
     Object.assign(res, { w: pat.info.w, h: pat.info.h });
     let seed = 1, ms = 0;
@@ -200,7 +203,7 @@ function check(src, id, frames, shot, out) {
       const err = pat.frame(1 / 60, d, p, h);
       ms += performance.now() - t0;
       if (err) throw new Error(`frame ${f}: ${err}`);
-      if (f === shot) writeFileSync(join(out, `${id}-js.rgb`), pat.rgb);
+      if (f === shot) writeFileSync(join(out, `${id}-${name}.rgb`), pat.rgb);
     }
     Object.assign(res, { verdict: "ok", ms: +(ms / frames).toFixed(3) });
   } catch (e) {
@@ -212,7 +215,10 @@ function check(src, id, frames, shot, out) {
 const [cmd, src, ...rest] = process.argv.slice(2);
 if (cmd === "bundle") await bundle(src);
 else if (cmd === "serve") serve(src);
-else if (cmd === "check") check(src, rest[0], +rest[1], +rest[2], rest[3]);
+else if (cmd === "check") {
+  const [id, file, name, frames, shot, out, size] = rest;
+  check(src, id, file, name, +frames, +shot, out, size ? size.split("x").map(Number) : null);
+}
 else {
   console.error("usage: node jsrun.mjs bundle|serve|check SRC ...");
   process.exit(2);

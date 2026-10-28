@@ -3,8 +3,11 @@
 upstream_host/community.py fetches the wall (`sync`, on ash). Patterns with a firmware
 header are compiled, each into its own library, and run as an upstream preset runs
 (pfd/upstream.py). The JavaScript-only ones run under node, in upstream's own harness
-(upstream_host/jsrun.mjs, one child process for them all). Each runs at its own canvas,
-centred. Most liked first. With nothing synced, the shelf isn't there. Node runs only
+(upstream_host/jsrun.mjs, one child process for them all). Each comes as published, at
+its own canvas, centred (turned upright if community.py's TURN says it lies on its side),
+and most also at 128 x 128: the same code given the bigger square, or our port of it. Two
+shelves: COMMUNITY shows each at its best, as community_review.json chose, and COMMUNITY
+1:1 shows them all as published. Most liked first. With nothing synced, the shelf isn't there. Node runs only
 sandboxed, with no network (see jsrun.mjs); where that can't be arranged, the shelf holds
 just the compiled ones.
 """
@@ -91,6 +94,7 @@ class JSPattern(Upstream):
     """A JavaScript-only pattern: Upstream's knobs, lights and output stage, with node drawing."""
     host = None
     file = None
+    matrix = None                       # (w, h) to override the script's @matrix: its 128 x 128 version
 
     def __init__(self, rt):
         Demo.__init__(self, rt)
@@ -104,7 +108,10 @@ class JSPattern(Upstream):
     def _load(self):
         self.generation = self.host.generation
         try:
-            info, _ = self.host.call({"op": "load", "key": self.key, "file": str(self.file)}, timeout=LOAD_S)
+            req = {"op": "load", "key": self.key, "file": str(self.file)}
+            if self.matrix:
+                req["matrix"] = list(self.matrix)
+            info, _ = self.host.call(req, timeout=LOAD_S)
         except Exception:
             info = {"ok": False, "error": "node"}
         if not info.get("ok"):
@@ -153,7 +160,9 @@ def _js_knobs(code):
 
 
 def demos():
-    """One Demo class per community pattern that will run, or [] if none have been synced."""
+    """The community's patterns, twice: the COMMUNITY shelf (each at its best: its 128 x 128 version
+    where the review chose one, else as published) and COMMUNITY 1:1 (all as published). [] if none
+    have been synced."""
     cm = _builder()
     if not (cm.SRC / "index.json").exists():
         return []
@@ -166,23 +175,40 @@ def demos():
         return []
     if not serve:
         log("community: no JavaScript-only patterns: they need node, with its permission model, and unshare or bwrap")
-    out = []
-    for e, path in built:
-        try:
-            lib = open_lib(path)
-        except OSError as err:
-            log(f"community: {e['title']}: {err}")
-            continue
-        out.append((e, {"lib": lib, "index": 0}, knobs_blurb(lib, 0)))
+    out = []                            # (entry, {version: (attrs, knobs blurb)})
+    for e, paths in built:
+        versions = {}
+        for name, path in paths.items():
+            try:
+                lib = open_lib(path)
+            except OSError as err:
+                log(f"community: {e['title']} ({name}): {err}")
+                continue
+            versions[name] = ({"lib": lib, "index": 0}, knobs_blurb(lib, 0))
+        if versions:
+            out.append((e, versions))
     host = JSHost(serve) if scripts else None
-    for e, path in scripts:
-        out.append((e, {"host": host, "file": path, "key": e["id"]}, _js_knobs(path.read_text(errors="replace"))))
-    log(f"community: {len(built)} compiled and {len(scripts)} JavaScript patterns")
-    classes = []
-    for e, attrs, knobs in sorted(out, key=lambda o: -o[0]["likes"]):
+    for e, specs in scripts:
+        out.append((e, {name: ({"host": host, "file": s["file"], "matrix": s["matrix"], "key": f"{e['id']}:{name}"},
+                               _js_knobs(s["file"].read_text(errors="replace")))
+                        for name, s in specs.items()}))
+    n_big = sum("big" in v for _, v in out)
+    log(f"community: {len(built)} compiled and {len(scripts)} JavaScript patterns, {n_big} shown at 128 x 128")
+    out.sort(key=lambda o: -o[0]["likes"])
+    chosen = cm.review()
+    best, as_published = [], []
+    for e, versions in out:
         by = f" by @{e['author']}" if e["author"] else ""
         port = f", ported by @{e['ported_by']}" if e.get("ported_by") else ""
-        js = " In JavaScript." if "host" in attrs else ""
-        attrs.update(name=e["title"], blurb=f"Community pattern{by}{port}.{js}{knobs}", group="community")
-        classes.append(type(f"PFC_{e['id']}", (JSPattern if "host" in attrs else Upstream,), attrs))
-    return classes
+        for shelf, name in (("community", "big" if "big" in versions else "native"), ("community-1to1", "native")):
+            if name not in versions:
+                continue
+            attrs, knobs = versions[name]
+            attrs = dict(attrs, name=e["title"], group=shelf, turn_upright=name == "native" and e["id"] in cm.TURN)
+            js = " In JavaScript." if "host" in attrs else ""
+            size = (" Enlarged for this panel." if chosen.get(e["id"]) == "port" else " At 128 x 128.") \
+                if name == "big" else ""
+            attrs["blurb"] = f"Community pattern{by}{port}.{js}{size}{knobs}"
+            (best if shelf == "community" else as_published).append(
+                type(f"PFC_{e['id']}_{name}", (JSPattern if "host" in attrs else Upstream,), attrs))
+    return best + as_published

@@ -55,7 +55,7 @@ def main():
                    help="auto[:HOST] (udp if the card is on our link, else pipe) | pipe:HOST[:IP] | udp[:IP] | preview:FILE.gif")
     p.add_argument("--demo", default="0", help="start demo, by name or index")
     p.add_argument("--only", default="",
-                   help="limit the demos: shelves, comma-separated (play,audio,patternflow,community), or 'upstream' for "
+                   help="limit the demos: shelves, comma-separated (play,audio,patternflow,community,community-1to1), or 'upstream' for "
                         "SeungHun's presets alone (default: all)")
     p.add_argument("--fps", type=float, default=None, help="default 60, or 20 for previews")
     p.add_argument("--audio", default=None,

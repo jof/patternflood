@@ -56,6 +56,14 @@ SHIMS = [HERE / "community_shim", HERE / "shim"]
 FLAGS = ["-std=c++17", "-w", "-fvisibility=hidden", "-fvisibility-inlines-hidden", "-fno-gnu-unique"]
 SQUARE, WIDE = (128, 128), (128, 64)
 CHECK_FRAMES, SHEET_FRAME = 660, 90
+PORTS = HERE / "community_ports"            # our enlarged ports: CC BY-SA, each crediting its original
+REVIEW = HERE / "community_review.json"     # by eye: what the COMMUNITY shelf shows of each pattern
+# Portrait games and scenes drawn on their side in 128 x 64 (up along +x, as upstream's canvas
+# maps a 64 x 128 frame). pfd turns them a quarter anticlockwise to stand upright; by eye, 2026-10-27.
+TURN = {"4dbf3bb506814fc3": "Breakout Arcade", "77de31bae37940c7": "Tetris", "6ada5c800c734f5c": "Space Invaders",
+        "879b8d05250448ed": "Midsummer Sea", "d027a48e3eaf4995": "Firefly Hollow",
+        "df7ca71df5c04d20": "RocketFlightPattern"}
+FRAME_CONST = re.compile(r"(constexpr\s+int\s+FRAME_[WH]\s*=\s*)\d+")
 
 # Anyone can post to the wall, and a pattern runs as native code in the demo process. So a
 # built library may import only what drawing needs: maths, memory, strings, and the C++
@@ -198,22 +206,53 @@ def load_index(src=SRC):
     return idx, checks
 
 
-def prepare(entry, src=SRC):
-    """-> (fixed header text, namespace or None, header sha)."""
+def review():
+    """{id: "auto" | "port" | "native"}: what the COMMUNITY shelf shows of each. Unreviewed is native."""
+    data = json.loads(REVIEW.read_text()) if REVIEW.exists() else {}
+    return {i: r["big"] for i, r in data.items()}
+
+
+def _sha(text):
+    return hashlib.sha256(text.encode()).hexdigest()[:16]
+
+
+def header_variants(entry, src=SRC):
+    """A compiled pattern's versions -> {"native": spec, "big": spec or None}, a spec being
+    {text, ns, size, sha[, port]}; or None if the header has no namespace to build."""
     raw = (src / "h" / f"{entry['id']}.h").read_text(encoding="utf-8", errors="replace")
     text, ns = fixup(raw)
-    return text, ns, hashlib.sha256(raw.encode()).hexdigest()[:16]
+    if not ns:
+        return None
+    native = {"text": text, "ns": ns, "size": SQUARE if "setFrame" in text else WIDE, "sha": _sha(raw)}
+    port = PORTS / f"{entry['id']}.h"
+    big = None
+    if port.exists():                   # ours, enlarged by hand
+        ptext, pns = fixup(port.read_text())
+        big = {"text": ptext, "ns": pns, "size": SQUARE, "sha": _sha(ptext), "port": True}
+    elif entry["id"] not in TURN:
+        # The same code at 128 x 128, and a frame it declares grows to the square with the panel.
+        btext = FRAME_CONST.sub(lambda m: m.group(1) + "128", text)
+        big = {"text": btext, "ns": ns, "size": SQUARE, "sha": _sha(btext + "@128x128")}
+    return {"native": native, "big": big}
 
 
-def canvas(text):
-    """setFrame's patterns centre their own frame in 128 x 128; the rest are 128 x 64."""
-    return SQUARE if "setFrame" in text else WIDE
+def script_variants(entry, src=SRC):
+    """A JavaScript-only pattern's versions -> {"native": spec, "big": spec}, a spec being {file, matrix, sha[, port]}."""
+    file = src / "js" / f"{entry['id']}.js"
+    code = file.read_text(errors="replace")
+    port = PORTS / f"{entry['id']}.js"
+    native = {"file": file, "matrix": None, "sha": _sha(code)}
+    if port.exists():
+        big = {"file": port, "matrix": None, "sha": _sha(port.read_text()), "port": True}
+    else:                               # the same script, handed a 128 x 128 display
+        big = {"file": file, "matrix": SQUARE, "sha": _sha(code + "@128x128")}
+    return {"native": native, "big": big}
 
 
-def runnable(entry, sha, size, checks):
-    """False only if the last check of this very header found it unsafe."""
-    c = checks.get(entry["id"])
-    return not c or c.get("sha") != sha or c.get(f"{size[0]}x{size[1]}") == "ok"
+def runnable(entry, name, spec, checks):
+    """False only if the last check of this very version found it unsafe or broken."""
+    c = checks.get(entry["id"], {}).get(name)
+    return not c or c.get("sha") != spec["sha"] or c.get("verdict") == "ok"
 
 
 def _inputs_hash(text, tu, size, extra, src):
@@ -269,9 +308,10 @@ def vet(lib_path):
     return None
 
 
-def release(entry, text, ns, src=SRC, lib=LIB):
-    """The pattern's runnable library -> (path, None), or (None, why it won't run)."""
-    path, err = compile_one(entry, text, ns, canvas(text), lib, ["-O2", "-fPIC", "-shared", "-Wl,-Bsymbolic"], src)
+def release(entry, spec, src=SRC, lib=LIB):
+    """A version's runnable library -> (path, None), or (None, why it won't run)."""
+    path, err = compile_one(entry, spec["text"], spec["ns"], spec["size"], lib,
+                            ["-O2", "-fPIC", "-shared", "-Wl,-Bsymbolic"], src)
     if err:
         return None, "doesn't build: " + _first_error(err)
     why = vet(path)
@@ -279,33 +319,46 @@ def release(entry, text, ns, src=SRC, lib=LIB):
 
 
 def build(jobs=None, src=SRC, lib=LIB, log=print):
-    """Compile every pattern that will run -> [(entry, library path)], in index order."""
+    """Compile every version that will run -> [(entry, {"native": path, "big": path})], in index order.
+    A big version is built only where the review puts it on the COMMUNITY shelf."""
     idx, checks = load_index(src)
+    chosen = review()
     lib.mkdir(parents=True, exist_ok=True)
     todo = []
     for e in idx["patterns"]:
-        text, ns, sha = prepare(e, src)
-        if ns and runnable(e, sha, canvas(text), checks):
-            todo.append((e, text, ns))
-        else:
-            log(f"community: skipping {e['title']} ({e['id']}): " + ("the check found it unsafe" if ns else "no namespace"))
+        vs = header_variants(e, src)
+        if not vs:
+            log(f"community: skipping {e['title']} ({e['id']}): no namespace")
+            continue
+        for name, spec in vs.items():
+            if not spec or (name == "big" and chosen.get(e["id"], "native") == "native"):
+                continue
+            if runnable(e, name, spec, checks):
+                todo.append((e, name, spec))
+            else:
+                log(f"community: skipping {e['title']} ({e['id']}, {name}): the check found it unsafe")
     t0 = time.monotonic()
 
     def one(job):
-        e, text, ns = job
-        path, why = release(e, text, ns, src, lib)
+        e, name, spec = job
+        path, why = release(e, spec, src, lib)
         if why:
-            log(f"community: {e['title']} ({e['id']}) {why}")
-        return e, path
+            log(f"community: {e['title']} ({e['id']}, {name}) {why}")
+        return e, name, path
 
     built = list(ThreadPoolExecutor(jobs or os.cpu_count()).map(one, todo))
-    keep = {n for _, p in built if p for n in (p.name, p.name + ".vetted")}
+    keep = {n for _, _, p in built if p for n in (p.name, p.name + ".vetted")}
     for f in lib.iterdir():             # libraries of headers since replaced or removed, and refused ones
         if f.name not in keep:
             shutil.rmtree(f) if f.is_dir() else f.unlink()
-    ok = [b for b in built if b[1]]
-    log(f"community: {len(ok)} of {len(idx['patterns'])} patterns ready ({time.monotonic() - t0:.0f} s)")
-    return ok
+    out = {}
+    for e, name, path in built:
+        if path:
+            out.setdefault(e["id"], (e, {}))[1][name] = path
+    n_big = sum("big" in paths for _, paths in out.values())
+    log(f"community: {len(out)} of {len(idx['patterns'])} patterns ready, {n_big} of them at 128 x 128 too "
+        f"({time.monotonic() - t0:.0f} s)")
+    return list(out.values())
 
 
 def _first_error(err):
@@ -314,63 +367,62 @@ def _first_error(err):
 
 
 def check(jobs=None):
-    """Each pattern under AddressSanitizer, through a scripted player, at the size it runs at."""
+    """Every version of every pattern through a scripted player: the compiled ones under
+    AddressSanitizer, the scripts in node's sandbox. Each leaves a frame in CHECK for `sheet`."""
     idx, _ = load_index()
     CHECK.mkdir(parents=True, exist_ok=True)
     env = dict(os.environ, ASAN_OPTIONS="detect_leaks=0:abort_on_error=0")
-    jobs_list = []
-    for e in idx["patterns"]:
-        text, ns, sha = prepare(e)
-        if ns:
-            jobs_list.append((e, text, ns, sha, canvas(text)))
 
-    def one(job):
-        e, text, ns, sha, size = job
-        _, why = release(e, text, ns)      # vetted before anything of it runs here
+    def header(job):
+        e, name, spec = job
+        _, why = release(e, spec)       # vetted before anything of it runs here
         if why:
-            return e, sha, size, why
-        exe, err = compile_one(e, text, ns, size, CHECK,
+            return e, name, spec, {"verdict": why}
+        exe, err = compile_one(e, spec["text"], spec["ns"], spec["size"], CHECK,
                                ["-O1", "-g", "-fsanitize=address", "-fno-omit-frame-pointer", "-DPF_HOST_CHECK"], exe=True)
         if err:
-            return e, sha, size, "build: " + _first_error(err)
+            return e, name, spec, {"verdict": "build: " + _first_error(err)}
         try:
             r = subprocess.run([str(exe), str(CHECK_FRAMES), str(SHEET_FRAME)], capture_output=True, env=env, timeout=120)
         except subprocess.TimeoutExpired:
-            return e, sha, size, "timeout"
-        frame = CHECK / f"{e['id']}-{size[0]}x{size[1]}.rgb"
-        frame.write_bytes(r.stdout)
+            return e, name, spec, {"verdict": "timeout"}
+        (CHECK / f"{e['id']}-{name}.rgb").write_bytes(r.stdout)
+        verdict = "ok"
         if r.returncode:
             m = re.search(rb"ERROR: AddressSanitizer: ([\w-]+)", r.stderr)
-            return e, sha, size, "asan: " + m.group(1).decode() if m else f"exit {r.returncode}"
-        return e, sha, size, "ok"
+            verdict = "asan: " + m.group(1).decode() if m else f"exit {r.returncode}"
+        return e, name, spec, {"verdict": verdict, "w": spec["size"][0], "h": spec["size"][1]}
+
+    def script(job):
+        e, name, spec = job
+        args = ["check", SRC, e["id"], spec["file"], name, CHECK_FRAMES, SHEET_FRAME, CHECK]
+        if spec["matrix"]:
+            args.append("%dx%d" % spec["matrix"])
+        try:
+            r = subprocess.run(node_argv(args, write=[CHECK]), capture_output=True, text=True, timeout=120)
+        except subprocess.TimeoutExpired:
+            return e, name, spec, {"verdict": "timeout"}
+        res = json.loads(r.stdout) if r.stdout.strip() else {"verdict": "exit: " + r.stderr[-300:]}
+        return e, name, spec, res
+
+    work = [(header, (e, name, spec)) for e in idx["patterns"] for name, spec in (header_variants(e) or {}).items() if spec]
+    if idx["js_only"] and not (SRC / "web" / "harness.js").exists():
+        print("JavaScript-only patterns not checked: no harness (sync with node >= 22.6)")
+    elif idx["js_only"] and not node_argv([]):
+        print("JavaScript-only patterns not checked: needs node with its permission model, and unshare or bwrap")
+    elif idx["js_only"]:
+        work += [(script, (e, name, spec)) for e in idx["js_only"] for name, spec in script_variants(e).items()]
 
     checks = {}
-    for e, sha, size, verdict in ThreadPoolExecutor(jobs or os.cpu_count()).map(one, jobs_list):
-        checks.setdefault(e["id"], {"sha": sha, "title": e["title"]})[f"{size[0]}x{size[1]}"] = verdict
-        if verdict != "ok":
-            print(f"{e['title']} ({e['id']}) at {size[0]}x{size[1]}: {verdict}")
-    titles = {e["id"]: e["title"] for e in idx["js_only"]}
-    if titles and not (SRC / "web" / "harness.js").exists():
-        print("JavaScript-only patterns not checked: no harness (sync with node >= 22.6)")
-    elif titles and not node_argv([]):
-        print("JavaScript-only patterns not checked: needs node with its permission model, and unshare or bwrap")
-    elif titles:
-        def js(i):
-            try:
-                r = subprocess.run(node_argv(["check", SRC, i, CHECK_FRAMES, SHEET_FRAME, CHECK], write=[CHECK]),
-                                   capture_output=True, text=True, timeout=120)
-            except subprocess.TimeoutExpired:
-                return {"id": i, "verdict": "timeout"}
-            return json.loads(r.stdout) if r.stdout.strip() else {"id": i, "verdict": "exit: " + r.stderr[-300:]}
-
-        for res in ThreadPoolExecutor(jobs or os.cpu_count()).map(js, titles):
-            i = res.pop("id")
-            checks[i] = {"sha": js_sha(i), "title": titles[i], "js": res.pop("verdict"), **res}
-            if checks[i]["js"] != "ok":
-                print(f"{titles[i]} ({i}), JavaScript: {checks[i]['js']}")
+    for e, name, spec, res in ThreadPoolExecutor(jobs or os.cpu_count()).map(lambda w: w[0](w[1]), work):
+        res.pop("id", None)
+        checks.setdefault(e["id"], {"title": e["title"]})[name] = {"sha": spec["sha"], **res}
+        if res["verdict"] != "ok":
+            print(f"{e['title']} ({e['id']}, {name}): {res['verdict']}")
     (SRC / "checks.json").write_text(json.dumps(checks, indent=1, ensure_ascii=False))
-    bad = sum(1 for c in checks.values() for k, v in c.items() if ("x" in k or k == "js") and v != "ok")
-    print(f"checked {len(checks)} patterns ({bad} not ok) -> {SRC / 'checks.json'}")
+    runs = [v for c in checks.values() for k, v in c.items() if k != "title"]
+    print(f"checked {len(checks)} patterns, {len(runs)} versions ({sum(r['verdict'] != 'ok' for r in runs)} not ok) "
+          f"-> {SRC / 'checks.json'}")
 
 
 @functools.lru_cache(maxsize=None)
@@ -402,55 +454,64 @@ def node_argv(args, write=()):
             "--max-old-space-size=512", str(HERE / "jsrun.mjs"), *map(str, args)]
 
 
-def js_sha(i, src=SRC):
-    return hashlib.sha256((src / "js" / f"{i}.js").read_bytes()).hexdigest()[:16]
-
-
 def js_patterns(src=SRC):
-    """The JavaScript-only patterns that can run (with jsrun.mjs, under node) -> [(entry, source path)]."""
+    """The JavaScript-only patterns that can run -> [(entry, {"native": spec, "big": spec})], in index order.
+    "big" is there only where the review puts it on the COMMUNITY shelf and its check passed."""
     idx, checks = load_index(src)
     if not (src / "web" / "harness.js").exists():
         return []
+    chosen = review()
     out = []
     for e in idx["js_only"]:
-        c = checks.get(e["id"])
-        if not c or c.get("sha") != js_sha(e["id"], src) or c.get("js") == "ok":
-            out.append((e, src / "js" / f"{e['id']}.js"))
+        vs = script_variants(e, src)
+        if not runnable(e, "native", vs["native"], checks):
+            continue
+        keep = {"native": vs["native"]}
+        if chosen.get(e["id"], "native") != "native" and runnable(e, "big", vs["big"], checks):
+            keep["big"] = vs["big"]
+        out.append((e, keep))
     return out
 
 
-def sheet(out):
-    """Contact sheets from the check's frames, each centred in the square as on the panel."""
+def sheet(out, only=None):
+    """Contact sheets of the check's frames, for the review: each pattern as published (centred, and
+    turned if it's in TURN) beside its 128 x 128 version, with the review's choice under the pair."""
     from PIL import Image, ImageDraw
     idx, checks = load_index()
-    cells = []
-    for e in idx["patterns"]:
-        size = canvas(prepare(e)[0])
-        f = CHECK / f"{e['id']}-{size[0]}x{size[1]}.rgb"
-        if f.exists() and f.stat().st_size == size[0] * size[1] * 3:
-            img = Image.frombytes("RGB", size, f.read_bytes())
-            verdict = checks.get(e["id"], {}).get(f"{size[0]}x{size[1]}", "?")
-            cells.append((e, size, img, verdict))
-    for e in idx["js_only"]:
-        c, f = checks.get(e["id"], {}), CHECK / f"{e['id']}-js.rgb"
-        if c.get("w") and f.exists() and f.stat().st_size == c["w"] * c["h"] * 3:
-            size = (c["w"], c["h"])
-            cells.append((e, size, Image.frombytes("RGB", size, f.read_bytes()), c["js"]))
+    chosen = review()
+    pairs = []
+    for e in idx["patterns"] + idx["js_only"]:
+        if only and not any(e["id"].startswith(o) for o in only):
+            continue
+        cells = []
+        for name in ("native", "big"):
+            c = checks.get(e["id"], {}).get(name, {})
+            f = CHECK / f"{e['id']}-{name}.rgb"
+            img = None
+            if c.get("w") and f.exists() and f.stat().st_size == c["w"] * c["h"] * 3:
+                img = Image.frombytes("RGB", (c["w"], c["h"]), f.read_bytes())
+                if name == "native" and e["id"] in TURN:
+                    img = img.rotate(90, expand=True)       # anticlockwise, as pfd turns it
+            cells.append((img, c.get("verdict", "-")))
+        pairs.append((e, cells))
     out.mkdir(parents=True, exist_ok=True)
-    cols, rows, cw, ch = 6, 5, 136, 150
-    for page in range(0, len(cells), cols * rows):
-        sheet_img = Image.new("RGB", (cols * cw, rows * ch), (40, 40, 40))
-        d = ImageDraw.Draw(sheet_img)
-        for i, (e, size, img, verdict) in enumerate(cells[page:page + cols * rows]):
-            x, y = (i % cols) * cw + 4, (i // cols) * ch + 2
-            sq = Image.new("RGB", SQUARE)
-            sq.paste(img, ((128 - size[0]) // 2, (128 - size[1]) // 2))
-            sheet_img.paste(sq, (x, y))
-            label = f"{e['id'][:6]} {size[0]}x{size[1]}{'' if verdict == 'ok' else ' !'}"
-            d.text((x, y + 129), label, fill=(255, 200, 80) if verdict != "ok" else (200, 200, 200))
-            d.text((x, y + 139), e["title"][:22], fill=(150, 150, 150))
-        p = out / f"sheet{page // (cols * rows):02d}.png"
-        sheet_img.save(p)
+    per_row, rows, cw, ch = 3, 5, 136, 152
+    for page in range(0, len(pairs), per_row * rows):
+        img = Image.new("RGB", (per_row * 2 * cw, rows * ch), (40, 40, 40))
+        d = ImageDraw.Draw(img)
+        for n, (e, cells) in enumerate(pairs[page:page + per_row * rows]):
+            x0, y0 = (n % per_row) * 2 * cw, (n // per_row) * ch
+            for k, (frame, verdict) in enumerate(cells):
+                sq = Image.new("RGB", SQUARE, (0, 0, 0) if frame else (90, 0, 0))
+                if frame:
+                    sq.paste(frame, ((128 - frame.width) // 2, (128 - frame.height) // 2))
+                img.paste(sq, (x0 + k * cw + 4, y0 + 2))
+                if verdict != "ok":
+                    d.text((x0 + k * cw + 6, y0 + 4), "!", fill=(255, 80, 80))
+            d.text((x0 + 4, y0 + 131), f"{e['id'][:6]} [{chosen.get(e['id'], '-')}]", fill=(255, 200, 80))
+            d.text((x0 + 4, y0 + 141), e["title"][:40], fill=(170, 170, 170))
+        p = out / f"sheet{page // (per_row * rows):02d}.png"
+        img.save(p)
         print(p)
 
 
@@ -459,6 +520,7 @@ def main():
                                 formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
     p.add_argument("cmd", choices=["sync", "build", "check", "sheet"])
     p.add_argument("out", nargs="?", type=Path, help="sheet: a directory for the PNGs")
+    p.add_argument("--only", default="", help="sheet: these patterns only, by id or id prefix, comma-separated")
     p.add_argument("-j", "--jobs", type=int, default=None)
     args = p.parse_args()
     if args.cmd == "sync":
@@ -468,7 +530,7 @@ def main():
     elif args.cmd == "check":
         check(args.jobs)
     else:
-        sheet(args.out or Path("/tmp/community-sheets"))
+        sheet(args.out or Path("/tmp/community-sheets"), [o for o in args.only.split(",") if o])
 
 
 if __name__ == "__main__":
