@@ -490,6 +490,15 @@ How it differs from the presets:
 - **Each at its own canvas, centred.** A header that calls `PFCanvas::setFrame` (all of them
   portrait, 64 × 128) stands in the middle of the square, pillarboxed. The rest were written for
   upstream's 128 × 64 and are letterboxed. Nothing is stretched or turned.
+- **Vetted before it runs.** Anyone can post to the wall, including C++ ports of other people's
+  patterns, and a pattern runs as native code in the demo process. So every built library is
+  inspected before anything of it runs, on ash or on the Pi (`vet` in `community.py`):
+  - Its dynamic imports must all be maths, memory, strings or the C++ runtime's plumbing
+    (`ALLOWED`), so nothing that opens a file or a socket or starts a process gets through,
+    however the source spells it.
+  - Its disassembly must have no system-call instruction of its own.
+  All 211 pass. A source scan (2026-10-27) found nothing reaching beyond drawing in them, or in
+  the 77 JS-only patterns either.
 - **The check.** A pattern runs inside the demo process, so `check` runs each one under
   AddressSanitizer for 11 s of scripted input: idle, the knobs out to their extremes and back,
   fast spins, clicks, push-and-turn and the audio edition. A pattern it fails is left off the

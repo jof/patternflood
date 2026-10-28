@@ -52,6 +52,20 @@ FLAGS = ["-std=c++17", "-w", "-fvisibility=hidden", "-fvisibility-inlines-hidden
 SQUARE, WIDE = (128, 128), (128, 64)
 CHECK_FRAMES, SHEET_FRAME = 660, 90
 
+# Anyone can post to the wall, and a pattern runs as native code in the demo process. So a
+# built library may import only what drawing needs: maths, memory, strings, and the C++
+# runtime's own plumbing. Nothing that opens a file or a socket or starts a process gets
+# through, however the source spells it. With no syscall instruction of its own, either,
+# that's all a library can reach.
+ALLOWED = re.compile(
+    r"(a?(sin|cos|tan)h?|sincos|atan2|exp2?|expm1|log(2|10|1p)?|pow|sqrt|cbrt|hypot|fmod|remainder|floor|ceil|"
+    r"l?l?round|l?l?rint|nearbyint|trunc|fabs|fmin|fmax|fdim|fma|copysign|ldexp|frexp|modf|erfc?|[lt]gamma)[fl]?"
+    r"|(__)?(mem(set|cpy|move|cmp)|strn?(len|cmp|cpy|cat)|strchr|strstr|v?sn?printf)(_chk)?"
+    r"|malloc|calloc|realloc|free|aligned_alloc|posix_memalign|rand|srand"
+    r"|_Zn[wa]m|_Zd[la]Pv(m)?|_ZSt\d+__throw_\w+|__cxa_\w+|__gxx_personality_v0|_Unwind_Resume"
+    r"|__stack_chk_fail|__gmon_start__|_ITM_\w+|__aarch64_\w+")
+SYSCALL = re.compile(r"\t(syscall|sysenter|int\s+\$0x80|svc|hvc|smc)\b")
+
 
 def fetch(url, tries=4):
     for n in range(tries):
@@ -222,6 +236,34 @@ def compile_one(entry, text, ns, size, out_dir, extra, src=SRC, exe=False):
     return out, None
 
 
+def vet(lib_path):
+    """None if this library reaches no further than ALLOWED, else why not. A pass is remembered beside it."""
+    ok = lib_path.with_name(lib_path.name + ".vetted")
+    if ok.exists():
+        return None
+    nm = subprocess.run(["nm", "-D", "--undefined-only", str(lib_path)], capture_output=True, text=True)
+    dis = subprocess.run(["objdump", "-d", str(lib_path)], capture_output=True, text=True)
+    if nm.returncode or dis.returncode:
+        return "can't inspect it: " + (nm.stderr or dis.stderr).strip()
+    imports = {line.split()[-1].split("@")[0] for line in nm.stdout.splitlines() if line.strip()}
+    bad = sorted(s for s in imports if not ALLOWED.fullmatch(s))
+    if bad:
+        return "imports " + ", ".join(bad[:6])
+    if SYSCALL.search(dis.stdout):
+        return "makes system calls of its own"
+    ok.touch()
+    return None
+
+
+def release(entry, text, ns, src=SRC, lib=LIB):
+    """The pattern's runnable library -> (path, None), or (None, why it won't run)."""
+    path, err = compile_one(entry, text, ns, canvas(text), lib, ["-O2", "-fPIC", "-shared", "-Wl,-Bsymbolic"], src)
+    if err:
+        return None, "doesn't build: " + _first_error(err)
+    why = vet(path)
+    return (path, None) if not why else (None, why)
+
+
 def build(jobs=None, src=SRC, lib=LIB, log=print):
     """Compile every pattern that will run -> [(entry, library path)], in index order."""
     idx, checks = load_index(src)
@@ -237,14 +279,14 @@ def build(jobs=None, src=SRC, lib=LIB, log=print):
 
     def one(job):
         e, text, ns = job
-        path, err = compile_one(e, text, ns, canvas(text), lib, ["-O2", "-fPIC", "-shared", "-Wl,-Bsymbolic"], src)
-        if err:
-            log(f"community: {e['title']} ({e['id']}) doesn't build: {_first_error(err)}")
+        path, why = release(e, text, ns, src, lib)
+        if why:
+            log(f"community: {e['title']} ({e['id']}) {why}")
         return e, path
 
     built = list(ThreadPoolExecutor(jobs or os.cpu_count()).map(one, todo))
-    keep = {p.name for _, p in built if p}
-    for f in lib.iterdir():             # libraries of headers since replaced or removed
+    keep = {n for _, p in built if p for n in (p.name, p.name + ".vetted")}
+    for f in lib.iterdir():             # libraries of headers since replaced or removed, and refused ones
         if f.name not in keep:
             shutil.rmtree(f) if f.is_dir() else f.unlink()
     ok = [b for b in built if b[1]]
@@ -270,6 +312,9 @@ def check(jobs=None):
 
     def one(job):
         e, text, ns, sha, size = job
+        _, why = release(e, text, ns)      # vetted before anything of it runs here
+        if why:
+            return e, sha, size, why
         exe, err = compile_one(e, text, ns, size, CHECK,
                                ["-O1", "-g", "-fsanitize=address", "-fno-omit-frame-pointer", "-DPF_HOST_CHECK"], exe=True)
         if err:
