@@ -27,7 +27,8 @@ DEMOS = HERE.parent / "demos"
 # The demo suite, as laid out in the repo (run.py finds ../colorlight). upstream_host
 # carries only what builds the presets; the preset tree itself is written by build.py.
 DEMO_FILES = ["run.py", "pfd", "upstream_host/build.py", "upstream_host/shim", "upstream_host/web_ports",
-              "upstream_host/community.py", "upstream_host/community_shim", "upstream_host/jsrun.mjs"]
+              "upstream_host/community.py", "upstream_host/community_shim", "upstream_host/jsrun.mjs",
+              "upstream_host/community_ports", "upstream_host/community_review.json"]
 # The community's patterns, as `community.py sync` and `check` left them in this checkout.
 COMMUNITY = DEMOS / "upstream_host/build/community/src"
 MARKER = "# --- patternflood controller ---"

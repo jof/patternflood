@@ -3,7 +3,7 @@
 //
 //   node jsrun.mjs bundle SRC                    (sync, on ash: node >= 22.6) SRC/web/**/*.ts -> SRC/web/harness.js
 //   node jsrun.mjs serve SRC                     requests on stdin, frames on stdout (the demo process's child)
-//   node jsrun.mjs check SRC ID FILE NAME FRAMES SHOT OUT [WxH]
+//   node jsrun.mjs check SRC ID FILE NAME FRAMES SHOTS OUT [WxH]   (SHOTS: frames to keep, "30,90,...")
 //                                                one version of a pattern through the scripted player -> a JSON line
 //
 // Patterns run in this process's own realm: a vm context would isolate them, but makes a
@@ -177,7 +177,7 @@ function serve(src) {
 }
 
 // ---- check: community.py's scripted player (see CHECK_MAIN there), at 60 fps
-function check(src, id, file, name, frames, shot, out, matrix) {
+function check(src, id, file, name, frames, shots, out, matrix) {
   const m = harness(src);
   lockdown();
   const res = { id };
@@ -186,6 +186,7 @@ function check(src, id, file, name, frames, shot, out, matrix) {
     if (!pat.info.ok) throw new Error(pat.info.error);
     Object.assign(res, { w: pat.info.w, h: pat.info.h });
     let seed = 1, ms = 0;
+    const kept = [];
     for (let f = 0; f < frames; f++) {
       const phase = f < 120 ? 0 : 1 + Math.floor((f - 120) / 60), t = (f - 120) % 60;
       const d = [0, 0, 0, 0], p = [0, 0, 0, 0], h = [0, 0, 0, 0];
@@ -203,8 +204,9 @@ function check(src, id, file, name, frames, shot, out, matrix) {
       const err = pat.frame(1 / 60, d, p, h);
       ms += performance.now() - t0;
       if (err) throw new Error(`frame ${f}: ${err}`);
-      if (f === shot) writeFileSync(join(out, `${id}-${name}.rgb`), pat.rgb);
+      if (shots.includes(f)) kept.push(Buffer.from(pat.rgb));
     }
+    writeFileSync(join(out, `${id}-${name}.rgb`), Buffer.concat(kept));
     Object.assign(res, { verdict: "ok", ms: +(ms / frames).toFixed(3) });
   } catch (e) {
     res.verdict = "error: " + message(e);
@@ -216,8 +218,8 @@ const [cmd, src, ...rest] = process.argv.slice(2);
 if (cmd === "bundle") await bundle(src);
 else if (cmd === "serve") serve(src);
 else if (cmd === "check") {
-  const [id, file, name, frames, shot, out, size] = rest;
-  check(src, id, file, name, +frames, +shot, out, size ? size.split("x").map(Number) : null);
+  const [id, file, name, frames, shots, out, size] = rest;
+  check(src, id, file, name, +frames, shots.split(",").map(Number), out, size ? size.split("x").map(Number) : null);
 }
 else {
   console.error("usage: node jsrun.mjs bundle|serve|check SRC ...");

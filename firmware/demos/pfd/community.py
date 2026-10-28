@@ -204,7 +204,7 @@ def demos():
             if name not in versions:
                 continue
             attrs, knobs = versions[name]
-            attrs = dict(attrs, name=e["title"], group=shelf, turn_upright=name == "native" and e["id"] in cm.TURN)
+            attrs = dict(attrs, name=e["title"], group=shelf, turn_upright=e["id"] in (cm.TURN if name == "native" else cm.BIG_TURN))
             js = " In JavaScript." if "host" in attrs else ""
             size = (" Enlarged for this panel." if chosen.get(e["id"]) == "port" else " At 128 x 128.") \
                 if name == "big" else ""

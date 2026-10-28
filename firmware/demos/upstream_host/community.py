@@ -13,6 +13,7 @@ with no network (jsrun.mjs, node_argv()).
     ./community.py build             # compile what's new, in parallel (the controller does this on start)
     ./community.py check             # on ash: run each through a scripted player -> src/checks.json
     ./community.py sheet /tmp/cs     # contact sheets of the check's frames, to judge the canvas by eye
+    ./community.py strip /tmp/cs --only ID   # one pattern's versions over time, to judge a port
 
 One library per pattern: names collide between authors, a header that doesn't compile
 costs only itself, and a re-sync compiles only what changed. They're built with hidden
@@ -24,9 +25,11 @@ and the shim centres its frame. The rest were written for upstream's 128 x 64, a
 built at that size and letterboxed.
 
 The patterns are CC BY-SA 4.0, their authors'. They're fetched into build/ and aren't
-copied into this repository.
+copied into this repository. Our 128 x 128 ports (community_ports/) are derivatives, each
+crediting its original and CC BY-SA 4.0 too; community_review.json is ours.
 """
 import argparse
+import fcntl
 import functools
 import hashlib
 import json
@@ -55,7 +58,10 @@ SRC, LIB, CHECK = CACHE / "src", CACHE / "lib", CACHE / "check"
 SHIMS = [HERE / "community_shim", HERE / "shim"]
 FLAGS = ["-std=c++17", "-w", "-fvisibility=hidden", "-fvisibility-inlines-hidden", "-fno-gnu-unique"]
 SQUARE, WIDE = (128, 128), (128, 64)
-CHECK_FRAMES, SHEET_FRAME = 660, 90
+CHECK_FRAMES = 660
+# The frames each check keeps: idle at 0.5 s and 1.5 s (the sheet's), then with the knobs at work.
+SHOTS = (30, 90, 200, 330, 450, 600)
+SHEET_SHOT = 1
 PORTS = HERE / "community_ports"            # our enlarged ports: CC BY-SA, each crediting its original
 REVIEW = HERE / "community_review.json"     # by eye: what the COMMUNITY shelf shows of each pattern
 # Portrait games and scenes drawn on their side in 128 x 64 (up along +x, as upstream's canvas
@@ -63,6 +69,8 @@ REVIEW = HERE / "community_review.json"     # by eye: what the COMMUNITY shelf s
 TURN = {"4dbf3bb506814fc3": "Breakout Arcade", "77de31bae37940c7": "Tetris", "6ada5c800c734f5c": "Space Invaders",
         "879b8d05250448ed": "Midsummer Sea", "d027a48e3eaf4995": "Firefly Hollow",
         "df7ca71df5c04d20": "RocketFlightPattern"}
+# Of those, the ones whose 128 x 128 version lies on its side too (it fills the square, then turns).
+BIG_TURN = {"879b8d05250448ed": "Midsummer Sea", "d027a48e3eaf4995": "Firefly Hollow"}
 FRAME_CONST = re.compile(r"(constexpr\s+int\s+FRAME_[WH]\s*=\s*)\d+")
 
 # Anyone can post to the wall, and a pattern runs as native code in the demo process. So a
@@ -172,7 +180,8 @@ def unit(ns, author):
 # and back, fast spins, clicks, push-and-turn, and the audio edition, 60 frames each.
 CHECK_MAIN = r"""#ifdef PF_HOST_CHECK
 int main(int argc, char** argv) {
-  int frames = atoi(argv[1]), shot = atoi(argv[2]);
+  int frames = atoi(argv[1]);
+  char* shots = argv[2];               // "30,90,...": the frames to write out, in order
   int d[4]; uint8_t pressed[4], held[4], aon[4]; float aval[4];
   uint32_t seed = 1;
   pf_setup(0);
@@ -193,7 +202,11 @@ int main(int argc, char** argv) {
       }
     }
     const uint8_t* buf = pf_frame(0, 1 / 60.0f, d, pressed, held, f * 17u, aon, aval);
-    if (f == shot) fwrite(buf, 1, (size_t)PANEL_RES_W * PANEL_RES_H * 3, stdout);
+    if (*shots && f == atoi(shots)) {
+      fwrite(buf, 1, (size_t)PANEL_RES_W * PANEL_RES_H * 3, stdout);
+      while (*shots && *shots != ',') shots++;
+      if (*shots) shots++;
+    }
   }
   return 0;
 }
@@ -229,7 +242,7 @@ def header_variants(entry, src=SRC):
     if port.exists():                   # ours, enlarged by hand
         ptext, pns = fixup(port.read_text())
         big = {"text": ptext, "ns": pns, "size": SQUARE, "sha": _sha(ptext), "port": True}
-    elif entry["id"] not in TURN:
+    else:
         # The same code at 128 x 128, and a frame it declares grows to the square with the panel.
         btext = FRAME_CONST.sub(lambda m: m.group(1) + "128", text)
         big = {"text": btext, "ns": ns, "size": SQUARE, "sha": _sha(btext + "@128x128")}
@@ -366,10 +379,14 @@ def _first_error(err):
     return m.group(1) if m else err.strip().splitlines()[-1] if err.strip() else "?"
 
 
-def check(jobs=None):
-    """Every version of every pattern through a scripted player: the compiled ones under
-    AddressSanitizer, the scripts in node's sandbox. Each leaves a frame in CHECK for `sheet`."""
+def check(jobs=None, only=None):
+    """Every version of every pattern (or ONLY these, by id prefix) through a scripted player: the
+    compiled ones under AddressSanitizer, the scripts in node's sandbox. Each leaves its SHOTS in
+    CHECK for `sheet` and `strip`. Results merge into checks.json, so checks may run side by side."""
     idx, _ = load_index()
+    if only:
+        keep = lambda e: any(e["id"].startswith(o) for o in only)      # noqa: E731
+        idx = dict(idx, patterns=[e for e in idx["patterns"] if keep(e)], js_only=[e for e in idx["js_only"] if keep(e)])
     CHECK.mkdir(parents=True, exist_ok=True)
     env = dict(os.environ, ASAN_OPTIONS="detect_leaks=0:abort_on_error=0")
 
@@ -383,7 +400,8 @@ def check(jobs=None):
         if err:
             return e, name, spec, {"verdict": "build: " + _first_error(err)}
         try:
-            r = subprocess.run([str(exe), str(CHECK_FRAMES), str(SHEET_FRAME)], capture_output=True, env=env, timeout=120)
+            r = subprocess.run([str(exe), str(CHECK_FRAMES), ",".join(map(str, SHOTS))], capture_output=True, env=env,
+                               timeout=120)
         except subprocess.TimeoutExpired:
             return e, name, spec, {"verdict": "timeout"}
         (CHECK / f"{e['id']}-{name}.rgb").write_bytes(r.stdout)
@@ -395,7 +413,7 @@ def check(jobs=None):
 
     def script(job):
         e, name, spec = job
-        args = ["check", SRC, e["id"], spec["file"], name, CHECK_FRAMES, SHEET_FRAME, CHECK]
+        args = ["check", SRC, e["id"], spec["file"], name, CHECK_FRAMES, ",".join(map(str, SHOTS)), CHECK]
         if spec["matrix"]:
             args.append("%dx%d" % spec["matrix"])
         try:
@@ -413,15 +431,20 @@ def check(jobs=None):
     elif idx["js_only"]:
         work += [(script, (e, name, spec)) for e in idx["js_only"] for name, spec in script_variants(e).items()]
 
-    checks = {}
+    fresh = {}
     for e, name, spec, res in ThreadPoolExecutor(jobs or os.cpu_count()).map(lambda w: w[0](w[1]), work):
         res.pop("id", None)
-        checks.setdefault(e["id"], {"title": e["title"]})[name] = {"sha": spec["sha"], **res}
+        fresh.setdefault(e["id"], {"title": e["title"]})[name] = {"sha": spec["sha"], **res}
         if res["verdict"] != "ok":
             print(f"{e['title']} ({e['id']}, {name}): {res['verdict']}")
-    (SRC / "checks.json").write_text(json.dumps(checks, indent=1, ensure_ascii=False))
-    runs = [v for c in checks.values() for k, v in c.items() if k != "title"]
-    print(f"checked {len(checks)} patterns, {len(runs)} versions ({sum(r['verdict'] != 'ok' for r in runs)} not ok) "
+    with open(SRC / "checks.lock", "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        checks = json.loads((SRC / "checks.json").read_text()) if only and (SRC / "checks.json").exists() else {}
+        for i, c in fresh.items():
+            checks.setdefault(i, {}).update(c)
+        (SRC / "checks.json").write_text(json.dumps(checks, indent=1, ensure_ascii=False))
+    runs = [v for c in fresh.values() for k, v in c.items() if k != "title"]
+    print(f"checked {len(fresh)} patterns, {len(runs)} versions ({sum(r['verdict'] != 'ok' for r in runs)} not ok) "
           f"-> {SRC / 'checks.json'}")
 
 
@@ -487,10 +510,9 @@ def sheet(out, only=None):
         for name in ("native", "big"):
             c = checks.get(e["id"], {}).get(name, {})
             f = CHECK / f"{e['id']}-{name}.rgb"
-            img = None
-            if c.get("w") and f.exists() and f.stat().st_size == c["w"] * c["h"] * 3:
-                img = Image.frombytes("RGB", (c["w"], c["h"]), f.read_bytes())
-                if name == "native" and e["id"] in TURN:
+            img = _shot(c, f, SHEET_SHOT)
+            if img:
+                if e["id"] in (TURN if name == "native" else BIG_TURN):
                     img = img.rotate(90, expand=True)       # anticlockwise, as pfd turns it
             cells.append((img, c.get("verdict", "-")))
         pairs.append((e, cells))
@@ -515,12 +537,52 @@ def sheet(out, only=None):
         print(p)
 
 
+def _shot(c, f, k):
+    """Frame k of SHOTS from a check's file, as a PIL image, or None."""
+    from PIL import Image
+    n = c.get("w", 0) * c.get("h", 0) * 3
+    if not n or not f.exists() or f.stat().st_size < n * (k + 1):
+        return None
+    with open(f, "rb") as fh:
+        fh.seek(n * k)
+        return Image.frombytes("RGB", (c["w"], c["h"]), fh.read(n))
+
+
+def strip(out, only):
+    """For each pattern (ONLY these, by id prefix): its versions over time, a row each, every frame
+    of SHOTS as the panel shows it (centred, turned). For judging a port: motion and the knobs' ends."""
+    from PIL import Image, ImageDraw
+    idx, checks = load_index()
+    out.mkdir(parents=True, exist_ok=True)
+    for e in idx["patterns"] + idx["js_only"]:
+        if only and not any(e["id"].startswith(o) for o in only):
+            continue
+        img = Image.new("RGB", (len(SHOTS) * 132 + 4, 2 * 144 + 4), (40, 40, 40))
+        d = ImageDraw.Draw(img)
+        for row, name in enumerate(("native", "big")):
+            c = checks.get(e["id"], {}).get(name, {})
+            for k, frame_no in enumerate(SHOTS):
+                frame = _shot(c, CHECK / f"{e['id']}-{name}.rgb", k)
+                sq = Image.new("RGB", SQUARE, (0, 0, 0) if frame else (90, 0, 0))
+                if frame:
+                    if e["id"] in (TURN if name == "native" else BIG_TURN):
+                        frame = frame.rotate(90, expand=True)
+                    sq.paste(frame, ((128 - frame.width) // 2, (128 - frame.height) // 2))
+                img.paste(sq, (4 + k * 132, 4 + row * 144))
+                label = f"{name} {frame_no / 60:.1f}s" + (f"  {c.get('verdict', '-')[:14]}" if k == 0 else "")
+                d.text((6 + k * 132, 134 + row * 144), label, fill=(200, 200, 200))
+        p = out / f"{e['id']}.png"
+        img.save(p)
+        print(p, e["title"])
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0],
                                 formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
-    p.add_argument("cmd", choices=["sync", "build", "check", "sheet"])
+    p.add_argument("cmd", choices=["sync", "build", "check", "sheet", "strip"])
     p.add_argument("out", nargs="?", type=Path, help="sheet: a directory for the PNGs")
-    p.add_argument("--only", default="", help="sheet: these patterns only, by id or id prefix, comma-separated")
+    p.add_argument("--only", default="", help="check, sheet, strip: these patterns only, by id or id prefix, "
+                                              "comma-separated")
     p.add_argument("-j", "--jobs", type=int, default=None)
     args = p.parse_args()
     if args.cmd == "sync":
@@ -528,7 +590,9 @@ def main():
     elif args.cmd == "build":
         build(args.jobs)
     elif args.cmd == "check":
-        check(args.jobs)
+        check(args.jobs, [o for o in args.only.split(",") if o])
+    elif args.cmd == "strip":
+        strip(args.out or Path("/tmp/community-strips"), [o for o in args.only.split(",") if o])
     else:
         sheet(args.out or Path("/tmp/community-sheets"), [o for o in args.only.split(",") if o])
 

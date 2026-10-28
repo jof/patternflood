@@ -1,0 +1,1219 @@
+{
+ "7b42d0e08e164e70": {
+  "title": "Origin",
+  "big": "native",
+  "note": "big identical to native: draws a fixed-size figure"
+ },
+ "a02fe808f3ab49da": {
+  "title": "Wave Saw",
+  "big": "auto"
+ },
+ "366fedc652be4a08": {
+  "title": "Pattern 0510",
+  "big": "auto"
+ },
+ "4a8a16aab4bc4dc8": {
+  "title": "Pattern 0511",
+  "big": "auto"
+ },
+ "754172a3b23d45f0": {
+  "title": "a big hit",
+  "big": "auto"
+ },
+ "80ce43bef2a74356": {
+  "title": "Pattern 0512",
+  "big": "port",
+  "note": "ported: the lotus twice the size, its lines kept fine"
+ },
+ "e098086e9fa0431f": {
+  "title": "Pattern 0513",
+  "big": "auto"
+ },
+ "19fbb4ec147e47e2": {
+  "title": "Pattern 0514",
+  "big": "auto"
+ },
+ "400d320562c34ebb": {
+  "title": "Pattern 0515-3",
+  "big": "auto"
+ },
+ "5caaee17d9a94bf3": {
+  "title": "Pattern 0515",
+  "big": "auto"
+ },
+ "e1a2546423b4405b": {
+  "title": "Pattern 0515-4",
+  "big": "auto"
+ },
+ "f483e686e15b4f05": {
+  "title": "Pattern 0518",
+  "big": "auto"
+ },
+ "788b040926494ff3": {
+  "title": "Pattern 0519-1",
+  "big": "auto"
+ },
+ "fafb5be567a14207": {
+  "title": "Pattern 0520",
+  "big": "auto"
+ },
+ "34a7683009464906": {
+  "title": "Pattern 0521",
+  "big": "auto"
+ },
+ "388b6cfb5ada49c8": {
+  "title": "Pattern 0522",
+  "big": "auto"
+ },
+ "f0ed4740b4e14d87": {
+  "title": "Pattern 0527",
+  "big": "auto"
+ },
+ "e82aec89fe794200": {
+  "title": "Pattern 0528",
+  "big": "auto"
+ },
+ "dd29b02e40464b5e": {
+  "title": "Pattern 0531",
+  "big": "auto"
+ },
+ "bc638cd5f623445b": {
+  "title": "Pattern 0601",
+  "big": "auto"
+ },
+ "a631b48915ca4994": {
+  "title": "Pattern 0602",
+  "big": "auto"
+ },
+ "425dc6db000c4e0c": {
+  "title": "Retro Digital Tapestry",
+  "big": "auto"
+ },
+ "038817c38c0b4600": {
+  "title": "Chromatic Vortex",
+  "big": "auto"
+ },
+ "fd3c442ca0ed4b9b": {
+  "title": "Vector Field Flow",
+  "big": "auto"
+ },
+ "0636f1ee0b754bf3": {
+  "title": "Lissajous Weave",
+  "big": "auto"
+ },
+ "9de5703237714e2d": {
+  "title": "Pattern 0707",
+  "big": "auto"
+ },
+ "9da1b60441514b22": {
+  "title": "TileWaves",
+  "big": "auto"
+ },
+ "4dbf3bb506814fc3": {
+  "title": "Breakout Arcade",
+  "big": "native",
+  "note": "game: layout needs its 64 x 128"
+ },
+ "879b8d05250448ed": {
+  "title": "Midsummer Sea",
+  "big": "auto",
+  "note": "fills the square, turned"
+ },
+ "d027a48e3eaf4995": {
+  "title": "Firefly Hollow",
+  "big": "auto",
+  "note": "fills the square, turned"
+ },
+ "c97009f186694810": {
+  "title": "Poincaré Sphere",
+  "big": "auto"
+ },
+ "3136f04f0edc4b4c": {
+  "title": "Tri March",
+  "big": "auto"
+ },
+ "fe979a91db44433c": {
+  "title": "Warped Wave",
+  "big": "auto"
+ },
+ "04ed9b58be294c75": {
+  "title": "MagVortex",
+  "big": "auto"
+ },
+ "6f394814f2cf490b": {
+  "title": "Ripple Grid",
+  "big": "auto"
+ },
+ "f626fa1b78ed4fd9": {
+  "title": "RippleCellGrid",
+  "big": "auto"
+ },
+ "f34fcec2fd0740a2": {
+  "title": "DiamondRipple",
+  "big": "auto"
+ },
+ "df7ca71df5c04d20": {
+  "title": "RocketFlightPattern",
+  "big": "auto"
+ },
+ "e3cf336e638e4d2a": {
+  "title": "CrystalCascade",
+  "big": "auto"
+ },
+ "891d306815d8418e": {
+  "title": "BlackRoseTunnelVortex",
+  "big": "auto"
+ },
+ "c7497dbcb0604784": {
+  "title": "HexagonalHivePulse",
+  "big": "auto"
+ },
+ "dafd36789d264762": {
+  "title": "DynamicMoirLattice",
+  "big": "auto"
+ },
+ "a78117c22e4e4382": {
+  "title": "Memphis 1.0",
+  "big": "auto"
+ },
+ "8548e6e3f3a74b8d": {
+  "title": "Conway's Game of Life",
+  "big": "auto"
+ },
+ "42350716dcc14005": {
+  "title": "Sand Dunes",
+  "big": "auto"
+ },
+ "1cb29c1006a9430b": {
+  "title": "Circle Gets the Square",
+  "big": "auto"
+ },
+ "9de77afc9f49481c": {
+  "title": "I love Truchets",
+  "big": "auto"
+ },
+ "48d79bbac1fc4cd4": {
+  "title": "CellularAutomataGrowthColumn",
+  "big": "auto"
+ },
+ "a45354db83104580": {
+  "title": "SnowFall",
+  "big": "port",
+  "note": "ported: a longer lens and three times the flakes: snow over the whole square"
+ },
+ "169a7c52727f4531": {
+  "title": "seacoast",
+  "big": "auto"
+ },
+ "162a58cdbbdc4992": {
+  "title": "ChladniAcousticWaves",
+  "big": "auto"
+ },
+ "61e6378f12674c1b": {
+  "title": "Prism-Cube Singularity",
+  "big": "auto"
+ },
+ "efa2dbc8afe94ebd": {
+  "title": "Pulsating Solar Flare",
+  "big": "port",
+  "note": "ported: a finer, fuller spiral that reaches the corners"
+ },
+ "e553c4246a3245c3": {
+  "title": "Strange Ink",
+  "big": "port",
+  "note": "ported: the attractor at its true shape, spanning the square, starting in a full spell"
+ },
+ "1d1059705b2c4372": {
+  "title": "GaleInk",
+  "big": "auto"
+ },
+ "a50fbce08eb44d10": {
+  "title": "ThomasLabyrinth",
+  "big": "auto"
+ },
+ "4a4e86268bde43f4": {
+  "title": "Kaleidomoscope",
+  "big": "auto"
+ },
+ "77de31bae37940c7": {
+  "title": "Tetris",
+  "big": "native",
+  "note": "game: layout needs its 64 x 128"
+ },
+ "f68385bf44a04a29": {
+  "title": "Bouncy Beholder",
+  "big": "port",
+  "note": "ported: eyes twice the size, with shading, veins, iris fibres and a second glint"
+ },
+ "662a2543f6c44a93": {
+  "title": "Murmuration2x",
+  "big": "auto"
+ },
+ "413475165f1f44e9": {
+  "title": "LedSpiralWave",
+  "big": "auto"
+ },
+ "309cb987eda04848": {
+  "title": "ParabolicWavefront",
+  "big": "auto"
+ },
+ "b908bc267db647fe": {
+  "title": "DualLenseQuadrupole",
+  "big": "auto"
+ },
+ "c9e848766ac34682": {
+  "title": "DefectStorm",
+  "big": "auto"
+ },
+ "2888ee5273a047fe": {
+  "title": "FantasiaGarden",
+  "big": "auto"
+ },
+ "a5ba11936500489b": {
+  "title": "PhoenixEmber",
+  "big": "auto"
+ },
+ "7454b78b9430414f": {
+  "title": "Cosmic Clockwork",
+  "big": "auto"
+ },
+ "5a547e2dfd8e49ea": {
+  "title": "Neural Serotonin",
+  "big": "native",
+  "note": "at 128 x 128 the faces leave the middle for the corners"
+ },
+ "05d656858895439e": {
+  "title": "WaveCoupling",
+  "big": "auto"
+ },
+ "0403fa9a269449ed": {
+  "title": "Black Rose Cascade",
+  "big": "auto"
+ },
+ "6ada5c800c734f5c": {
+  "title": "Space Invaders",
+  "big": "native",
+  "note": "game: layout needs its 64 x 128"
+ },
+ "81bc9bdd10184c5d": {
+  "title": "Black Rose V5, Adrift",
+  "big": "auto"
+ },
+ "742de1fdb142473b": {
+  "title": "IsingModelPattern",
+  "big": "auto"
+ },
+ "e5afb770f9674dbc": {
+  "title": "DefectCascade",
+  "big": "auto"
+ },
+ "a3ae492e7cc2413c": {
+  "title": "AizawaViscousInkPlume",
+  "big": "port",
+  "note": "ported: the whole plume at one scale, cap included, in finer ink"
+ },
+ "7e7dda3524f544a3": {
+  "title": "Animated Ocular Vortex Blinking Gaze Pupil RGB Remix",
+  "big": "auto"
+ },
+ "b2683ba1d9fc4647": {
+  "title": "Starlight Jester Ribbon",
+  "big": "auto"
+ },
+ "138f77104c5e4610": {
+  "title": "ChladniPlasma",
+  "big": "auto"
+ },
+ "573b53ddf3d04a2c": {
+  "title": "heart",
+  "big": "port",
+  "note": "ported: a heart 1.7 times bigger, top to bottom, with five strands of lace"
+ },
+ "f30a889758ce488a": {
+  "title": "green",
+  "big": "auto"
+ },
+ "551ac69c88834e41": {
+  "title": "Oil pastel",
+  "big": "port",
+  "note": "ported: two pens a band, crossing loops in each colour"
+ },
+ "311b66035cde49a3": {
+  "title": "SolitonLattice",
+  "big": "auto"
+ },
+ "2aa1f910f1874b21": {
+  "title": "GliderCascade",
+  "big": "auto"
+ },
+ "9ae85b2d6dbb4d7d": {
+  "title": "MercuryDrops",
+  "big": "port",
+  "note": "ported: 18 drops on wider orbits: the pool spreads over the square"
+ },
+ "bb3c80ebdfe04652": {
+  "title": "Strawberry Rush",
+  "big": "port",
+  "note": "ported: twice the traffic: 12 rockets in six lanes, 52 stars"
+ },
+ "b605fb0312af4010": {
+  "title": "Locomotion 35",
+  "big": "auto"
+ },
+ "ccdd8c0aecba4897": {
+  "title": "Blooming Bioluminescence",
+  "big": "auto"
+ },
+ "53495f6d69f54663": {
+  "title": "SolitonLatticeEcho",
+  "big": "auto"
+ },
+ "c786f5b7619248a3": {
+  "title": "Day and Night dreamy beach",
+  "big": "native",
+  "note": "scene: overflows a buffer at 128 x 128"
+ },
+ "90a01463055c43ac": {
+  "title": "Topological Iso-Phase Contours",
+  "big": "auto"
+ },
+ "9de1ee8469f94a06": {
+  "title": "Hyper-Radial Kaleidoscope Star",
+  "big": "port",
+  "note": "ported: a round star from a 128-cell ring: finer, more rays"
+ },
+ "ab4212ed2d204092": {
+  "title": "MembraneWave",
+  "big": "auto"
+ },
+ "84ce122b64d241eb": {
+  "title": "Fireworks",
+  "big": "port",
+  "note": "ported: 1.6x wider bursts with 2.2x the sparks in a sky the full square"
+ },
+ "44aba4d403424295": {
+  "title": "SandglassHopper",
+  "big": "auto"
+ },
+ "eaf359b2e1d343e6": {
+  "title": "Chromadrift",
+  "big": "auto"
+ },
+ "b827c6435ab54dfe": {
+  "title": "Sub.Frequency",
+  "big": "auto"
+ },
+ "2fe9cf3e50ac4c0a": {
+  "title": "Hypnotrail",
+  "big": "auto"
+ },
+ "1415a8510d184774": {
+  "title": "Pong 1v1",
+  "big": "native",
+  "note": "game: court laid out for 128 x 64"
+ },
+ "d4cedbb1bc0b4c4e": {
+  "title": "Launching",
+  "big": "auto"
+ },
+ "f90c79fe5a854ee8": {
+  "title": "RippleCellGrid2",
+  "big": "auto"
+ },
+ "50930d6bc15b422f": {
+  "title": "RUSH",
+  "big": "auto"
+ },
+ "cd52a3e9314d4a7d": {
+  "title": "ForSoundTest",
+  "big": "auto"
+ },
+ "75a98a69e3594d94": {
+  "title": "Structure_0830",
+  "big": "auto"
+ },
+ "86a38bdfc94f466d": {
+  "title": "Feeling",
+  "big": "auto"
+ },
+ "14f879eac2324b9b": {
+  "title": "Soundsqure",
+  "big": "auto"
+ },
+ "f89459a9a3984fc4": {
+  "title": "Standing Wave",
+  "big": "auto"
+ },
+ "0ed79a0872db415d": {
+  "title": "Fractal Depth Fields",
+  "big": "auto"
+ },
+ "4fe34c75c9b142cf": {
+  "title": "Diamond Breath",
+  "big": "auto"
+ },
+ "219fab51be1445db": {
+  "title": "Rainbow Heart Shape Shifter Mesh",
+  "big": "auto"
+ },
+ "23a29c90cf3b4e67": {
+  "title": "Bessel Dish",
+  "big": "auto"
+ },
+ "de57d598161d4541": {
+  "title": "forAudioIntro",
+  "big": "auto"
+ },
+ "2c4c9f38ddc7438d": {
+  "title": "Two-stream phase-space vortices",
+  "big": "auto"
+ },
+ "e19c74c9b4a24bf0": {
+  "title": "Branched flow",
+  "big": "port",
+  "note": "ported: rays run on to the corners, 6400 of them"
+ },
+ "284af1a598d54c31": {
+  "title": "Welcome to Mesto Koh Phangan",
+  "big": "native",
+  "note": "text banner"
+ },
+ "98d0b9b5617644a2": {
+  "title": "2D Burgers shock web",
+  "big": "auto"
+ },
+ "4695f899704141fa": {
+  "title": "0908",
+  "big": "auto"
+ },
+ "06efda49e3a64300": {
+  "title": "Gelatinous Lava Pour",
+  "big": "auto"
+ },
+ "09a83ca0ae734c0a": {
+  "title": "Nacreous Gyre",
+  "big": "auto"
+ },
+ "13599a4b376e45da": {
+  "title": "Retro Cyber Card",
+  "big": "native",
+  "note": "a fixed composition: the card stays its size"
+ },
+ "c6e35971c0b7452c": {
+  "title": "Y2K Cyber Collage",
+  "big": "auto"
+ },
+ "bb6e21ac3b3d4414": {
+  "title": "koi pond",
+  "big": "auto"
+ },
+ "9b007348542a4c0f": {
+  "title": "Midnight Clocktower",
+  "big": "native",
+  "note": "a composed scene: the bigger square only pads it"
+ },
+ "2579fbaf3e574f08": {
+  "title": "Phonon Breather",
+  "big": "auto"
+ },
+ "422af5297a8b4598": {
+  "title": "Trippy Mandelbrot",
+  "big": "auto"
+ },
+ "17bbf0ad2705440a": {
+  "title": "Mirrored Fractal",
+  "big": "auto"
+ },
+ "14efee4d13f84dd3": {
+  "title": "Fractal Storm",
+  "big": "auto"
+ },
+ "95d7cedcc2114250": {
+  "title": "Ascender",
+  "big": "native",
+  "note": "a composed scene: breaks at 128 x 128"
+ },
+ "83360f90f5c349cc": {
+  "title": "Moonwell",
+  "big": "native",
+  "note": "a composed scene: the bigger square only pads it"
+ },
+ "7ddd1341d23a40c7": {
+  "title": "Poolside",
+  "big": "auto"
+ },
+ "dbbfed6b6a404299": {
+  "title": "flower_0917",
+  "big": "port",
+  "note": "ported: a meadow of 12 spires, finer florets and stalks"
+ },
+ "db20f04706bd462b": {
+  "title": "The Rose and Her Little Planet",
+  "big": "native",
+  "note": "a composed scene: the bigger square only pads it"
+ },
+ "c07b7e5d74de48ec": {
+  "title": "Mondrian",
+  "big": "auto"
+ },
+ "a8c1b7f2f88b4822": {
+  "title": "Vega222",
+  "big": "auto"
+ },
+ "58a5526c032443fe": {
+  "title": "flower_0920",
+  "big": "auto"
+ },
+ "cf7993ce658640e9": {
+  "title": "Mesto Hen",
+  "big": "native",
+  "note": "a sprite, left in a corner at 128 x 128"
+ },
+ "3518c956b19c4dca": {
+  "title": "TV setup",
+  "big": "auto"
+ },
+ "98ecd7da56b5445f": {
+  "title": "HUSH Grid",
+  "big": "auto"
+ },
+ "a6ac090bd7814095": {
+  "title": "Neon Kinetic Matrix",
+  "big": "auto"
+ },
+ "beb1eceac4644957": {
+  "title": "Astral Silk",
+  "big": "auto"
+ },
+ "6ac75c4434774b1c": {
+  "title": "Astral silk V2",
+  "big": "auto"
+ },
+ "bc49741315d44ba1": {
+  "title": "Nebula Hex",
+  "big": "auto"
+ },
+ "561ebd1f2b4d408a": {
+  "title": "Aurora Veils",
+  "big": "auto"
+ },
+ "4bc8f4973521493c": {
+  "title": "Phase web",
+  "big": "auto"
+ },
+ "01c25addf86a4fe5": {
+  "title": "Gravity Joy",
+  "big": "auto"
+ },
+ "73b258b1be0a4d0f": {
+  "title": "Gargantua",
+  "big": "auto"
+ },
+ "1e15bf35717d4342": {
+  "title": "Mercury Rain",
+  "big": "auto"
+ },
+ "804a94968d8d40c1": {
+  "title": "Caustic Pool",
+  "big": "auto"
+ },
+ "1fdb5efac3214822": {
+  "title": "Twisted Tunnel",
+  "big": "auto"
+ },
+ "0c0638be3b034134": {
+  "title": "Entropy Glass",
+  "big": "native",
+  "note": "the glass already fills the square top to bottom at its 1:2 proportions; a pair of them read as a copy"
+ },
+ "5b57b1b18fad4e5e": {
+  "title": "Chuseok Moon Shadow",
+  "big": "native",
+  "note": "a composed scene: the bigger square only pads it"
+ },
+ "b7a0bc93fe6e4ea8": {
+  "title": "Vega444_C",
+  "big": "auto"
+ },
+ "acbfdd1510e844bb": {
+  "title": "LavaLamp",
+  "big": "auto"
+ },
+ "52e56b0b3c3c46bb": {
+  "title": "Cryptfire Beacon",
+  "big": "native",
+  "note": "a sprite: the skull stays its size"
+ },
+ "f70191083d754330": {
+  "title": "Pentagrid Tower",
+  "big": "auto"
+ },
+ "083aacaaac6d45cf": {
+  "title": "M4R10",
+  "big": "native",
+  "note": "game scene"
+ },
+ "69c82924a40d41e3": {
+  "title": "Bus Window Rain",
+  "big": "auto"
+ },
+ "2018b3787d9844b3": {
+  "title": "Ito Loom",
+  "big": "auto"
+ },
+ "fd829e3f9d88496c": {
+  "title": "Water Lilies",
+  "big": "auto"
+ },
+ "cee6c770a9764a6e": {
+  "title": "Mesto Hen",
+  "big": "native",
+  "note": "a sprite, left in a corner at 128 x 128"
+ },
+ "856b13303db34162": {
+  "title": "Twisted Torus",
+  "big": "auto"
+ },
+ "c2ff744b86214c1c": {
+  "title": "Disk shift",
+  "big": "auto"
+ },
+ "f90f84ad04b840d6": {
+  "title": "Velvet Steps",
+  "big": "port",
+  "note": "ported: the cat drawn at twice the samples: crisp fur and pads, and the glass beside it"
+ },
+ "863ef7cf49d64f3f": {
+  "title": "Tetris",
+  "big": "native",
+  "note": "game: layout needs its 64 x 128"
+ },
+ "618c344307ae4593": {
+  "title": "elephant_breath",
+  "big": "native",
+  "note": "draws only the top of a bigger canvas"
+ },
+ "523e8c0fd1424e9c": {
+  "title": "Collatz Kelp",
+  "big": "port",
+  "note": "ported: twice the stalks from a deeper trie, true to aspect, leaning in a current"
+ },
+ "ee84ace7bdb941fc": {
+  "title": "M4TR1X",
+  "big": "auto"
+ },
+ "8509e4b2463f4f74": {
+  "title": "Mandelzoom",
+  "big": "auto"
+ },
+ "3bfbe45273f74ca9": {
+  "title": "Diamond Dust",
+  "big": "auto"
+ },
+ "c629e73406d6414b": {
+  "title": "Riley Fall",
+  "big": "auto"
+ },
+ "7ff72bd7273d4edd": {
+  "title": "Dual Metamorphic Lifecycle",
+  "big": "port",
+  "note": "ported: one mandala at twice the size, earth above and magma below; no overflow"
+ },
+ "5bf140286fad4955": {
+  "title": "Julia Airplane",
+  "big": "auto"
+ },
+ "d6221b9f6675493a": {
+  "title": "PRISM FLOWER (Performance)",
+  "big": "auto"
+ },
+ "59e36230a4e0436e": {
+  "title": "Ford Ladder",
+  "big": "auto"
+ },
+ "a50fae79e6e64bd5": {
+  "title": "Sakura Garden",
+  "big": "auto"
+ },
+ "ce77f03277dc4b3c": {
+  "title": "Mount Fuji",
+  "big": "auto"
+ },
+ "53c2be725a0742aa": {
+  "title": "Rose Mushroom",
+  "big": "auto"
+ },
+ "9e112048ad7c4f1c": {
+  "title": "ForestCampFire",
+  "big": "auto"
+ },
+ "b5b6c98153fb4851": {
+  "title": "Xenoflora",
+  "big": "auto"
+ },
+ "1514baacd6a045e0": {
+  "title": "Nebulae",
+  "big": "auto"
+ },
+ "6138b1ddd9274d66": {
+  "title": "BLOOM DRIFT",
+  "big": "auto"
+ },
+ "90048fdae0744a19": {
+  "title": "Mr. Ferg",
+  "big": "auto"
+ },
+ "24c2afc692974441": {
+  "title": "Cool Pattern Final Last Revision_this one",
+  "big": "auto"
+ },
+ "fbcc41731f6c4f7e": {
+  "title": "Rain Ramp",
+  "big": "auto"
+ },
+ "3498015d29324e8e": {
+  "title": "NightCity",
+  "big": "auto"
+ },
+ "3d35474705354a02": {
+  "title": "VelvetSmoke",
+  "big": "auto"
+ },
+ "62d3695a58ef4c7a": {
+  "title": "AMBER RIVER",
+  "big": "auto"
+ },
+ "0262e5565b85416c": {
+  "title": "JDM",
+  "big": "native",
+  "note": "pixel art drawn at its own size: identical at 128 x 128"
+ },
+ "7dc1b7db2f034776": {
+  "title": "The Fractal Hive",
+  "big": "auto"
+ },
+ "36ab6163247e49f7": {
+  "title": "Pareidolia",
+  "big": "auto"
+ },
+ "582ef8ca25f247ce": {
+  "title": "Pharmacy Rave",
+  "big": "auto"
+ },
+ "9ec65c9cef604564": {
+  "title": "Boo TV",
+  "big": "auto"
+ },
+ "841f7af24e074ad1": {
+  "title": "Orb Lattice v5",
+  "big": "auto"
+ },
+ "138c8601996640cf": {
+  "title": "Lumen Loop",
+  "big": "auto"
+ },
+ "2968a822aa7a4b11": {
+  "title": "DipoleFlux",
+  "big": "auto"
+ },
+ "11b408995c494274": {
+  "title": "Psychedelic Suits",
+  "big": "auto"
+ },
+ "b2d08109e98945c8": {
+  "title": "Hop Hop Up",
+  "big": "native",
+  "note": "game"
+ },
+ "daa5fb6dc5af452f": {
+  "title": "Slingshot Eight",
+  "big": "port",
+  "note": "ported: a 1.3x figure-eight along the diagonal, 4000 particles"
+ },
+ "3cc29959c02f47e5": {
+  "title": "Dreamy Stars",
+  "big": "auto"
+ },
+ "2dbef67643f64e7f": {
+  "title": "Thermal Tiles",
+  "big": "auto"
+ },
+ "64051e649ec445f7": {
+  "title": "Ring Spire",
+  "big": "auto"
+ },
+ "0364ced6ce0940dc": {
+  "title": "Rebound",
+  "big": "native",
+  "note": "overflows a buffer at 128 x 128"
+ },
+ "4b9bc1b39f1d42f6": {
+  "title": "Domain Warp 261023",
+  "big": "auto"
+ },
+ "349b4e69da984b9b": {
+  "title": "Lunation",
+  "big": "native",
+  "note": "a composed scene: the bigger square only pads it"
+ },
+ "6dd2fd46e2524811": {
+  "title": "Bokeh",
+  "big": "auto"
+ },
+ "dc614ad810254ecf": {
+  "title": "Fluoroscope",
+  "big": "native",
+  "note": "a sprite: the skeleton stays its size"
+ },
+ "8859405fd7f8455c": {
+  "title": "Pampas Night",
+  "big": "auto"
+ },
+ "8397681fac8c4715": {
+  "title": "Soap Bubbles 01",
+  "big": "auto"
+ },
+ "7b10cfd2c5f34658": {
+  "title": "BIOLUMINESCENT PLUMES",
+  "big": "auto"
+ },
+ "d107915be4df4725": {
+  "title": "IRIS SINGULARITY",
+  "big": "auto"
+ },
+ "9bbdc8ca7ca94ebc": {
+  "title": "LIQUID CHROME",
+  "big": "auto"
+ },
+ "69987ac03b89418e": {
+  "title": "GLIMMER FIELD",
+  "big": "auto"
+ },
+ "841c3df0c5e34367": {
+  "title": "Pattern 0516",
+  "big": "auto"
+ },
+ "621ee24e1c444bc5": {
+  "title": "Pattern 0517",
+  "big": "auto"
+ },
+ "f820f482b3344356": {
+  "title": "Pattern 0519-2",
+  "big": "auto"
+ },
+ "a9fdd07632044c62": {
+  "title": "Pattern 0524",
+  "big": "auto"
+ },
+ "e26f394de01a4083": {
+  "title": "Pattern 0524-2",
+  "big": "auto"
+ },
+ "9d94e4356dcd40fd": {
+  "title": "Pattern 0526",
+  "big": "auto"
+ },
+ "2ad58e6234d34e96": {
+  "title": "Pattern 0529",
+  "big": "auto"
+ },
+ "4be83044a84a4a61": {
+  "title": "Pattern 0530",
+  "big": "auto"
+ },
+ "d3b0e33454914c53": {
+  "title": "Pattern 0609",
+  "big": "auto"
+ },
+ "ae7e073f8ebe4f25": {
+  "title": "Pattern 0614",
+  "big": "auto"
+ },
+ "b934e81d5b8c44c9": {
+  "title": "Pattern 0614-2",
+  "big": "auto"
+ },
+ "8b1f496de3f44591": {
+  "title": "Pattern 0619",
+  "big": "auto"
+ },
+ "bf03db4cf06944fe": {
+  "title": "Pattern 0622",
+  "big": "auto"
+ },
+ "a5dbd3bd1d274241": {
+  "title": "Pattern 0624",
+  "big": "auto"
+ },
+ "4027222feeb04827": {
+  "title": "hypnospiral",
+  "big": "auto"
+ },
+ "f38544cc6f024a85": {
+  "title": "Hypno Circles",
+  "big": "auto"
+ },
+ "9d6e44e7dadc486e": {
+  "title": "The Exploding Voxel Lattice",
+  "big": "auto"
+ },
+ "bdbad64263e148e3": {
+  "title": "Fractured Grid Fluid Cells",
+  "big": "port",
+  "note": "ported: twice the cells and a whole round funnel, in one pass"
+ },
+ "1f66ab28084f489f": {
+  "title": "Geometric Singularity",
+  "big": "auto"
+ },
+ "a9d69e40775c4b72": {
+  "title": "Chromatic Plasma Core",
+  "big": "port",
+  "note": "ported: a core 1.8x larger, carrying more rings of the same fine dashes"
+ },
+ "ecc8abea57544048": {
+  "title": "Thermal Oil Blob",
+  "big": "auto"
+ },
+ "2243e221c1294a0e": {
+  "title": "Unstable Viscous Plasma Membrane",
+  "big": "auto"
+ },
+ "c354eb327e1a4e23": {
+  "title": "Melty Thermal Fluid Bands",
+  "big": "auto"
+ },
+ "4b877553bdd5469a": {
+  "title": "Ink Drop Topology",
+  "big": "auto"
+ },
+ "a65a233865984dc2": {
+  "title": "Hyper-Glitch Tunnel",
+  "big": "auto"
+ },
+ "7f5ff181f7144a1f": {
+  "title": "Trailing Star",
+  "big": "auto"
+ },
+ "e8316f656eb14bd8": {
+  "title": "Multicore Phyllotaxis",
+  "big": "port",
+  "note": "ported: a grid of counter-rotating cores, SpiralCount on a side"
+ },
+ "81be73cb980a4dbd": {
+  "title": "Heart's illumination",
+  "big": "native",
+  "note": "too heavy at 128 x 128 for 60 fps on the Pi 5: 45.4 ms a frame, against 22.9 as published"
+ },
+ "98b398a939ae4c2d": {
+  "title": "Beating Blob",
+  "big": "native",
+  "note": "too heavy at 128 x 128 for 60 fps on the Pi 5: 61.9 ms a frame, against 30.7 as published"
+ },
+ "1c31f0b4ff6f4980": {
+  "title": "Twisted Perspective Tunnel",
+  "big": "port",
+  "note": "ported: the whole tunnel: rings close into circles, squares turn whole"
+ },
+ "e56ee5868c084141": {
+  "title": "Spectral Mosaic Rings",
+  "big": "port",
+  "note": "ported: 16 x 16 rings instead of 8 x 16, centred"
+ },
+ "6da97bad3c8e404d": {
+  "title": "8-Bit Supercar Horizon",
+  "big": "auto"
+ },
+ "4b8794209c974ecb": {
+  "title": "Monochromatic Perspective Flow",
+  "big": "auto"
+ },
+ "6a8aa73e2f264f76": {
+  "title": "Data Stare",
+  "big": "auto"
+ },
+ "a35472bd5bfb4ac5": {
+  "title": "Physarum Polycephalum",
+  "big": "auto"
+ },
+ "627e6ef18b8e41de": {
+  "title": "Plasmodial Pulse",
+  "big": "auto"
+ },
+ "047c87519cf64411": {
+  "title": "Arboreal Network",
+  "big": "auto"
+ },
+ "585bdeaab8c9459a": {
+  "title": "Black Rock City",
+  "big": "native",
+  "note": "a fixed layout: the same at 128 x 128"
+ },
+ "49e2592863db4ace": {
+  "title": "Biolum Helix",
+  "big": "port",
+  "note": "ported: the helix 1.3x taller, 1800 particles, water edge to edge"
+ },
+ "3bf64462e1ba41ef": {
+  "title": "Colorful Star slacle",
+  "big": "auto"
+ },
+ "797eab29aee84f74": {
+  "title": "AGAR.IO",
+  "big": "auto"
+ },
+ "bb6530e0f3404d5d": {
+  "title": "Rainbow Voronoi",
+  "big": "auto"
+ },
+ "fe31316adf714020": {
+  "title": "Black Rose v1",
+  "big": "auto"
+ },
+ "a7921d84305a4b49": {
+  "title": "Mathematical Winds",
+  "big": "auto"
+ },
+ "69d812a8c6264dc7": {
+  "title": "Digital Lava Lamp",
+  "big": "auto"
+ },
+ "c0e0ec8ad86045ff": {
+  "title": "Iridescent Protoplasm",
+  "big": "native",
+  "note": "too heavy at 128 x 128 for 60 fps on the Pi 5: 21.7 ms a frame, against 10.8 as published"
+ },
+ "136448fc75284712": {
+  "title": "Black Rose V4, Adrift",
+  "big": "auto"
+ },
+ "51e91f05e5ec4e5d": {
+  "title": "Ocular Vortex",
+  "big": "native",
+  "note": "the face stays in the top 64 rows"
+ },
+ "f83a25ed01bf4cec": {
+  "title": "Controlled Burn",
+  "big": "auto"
+ },
+ "7065658ad7a94e8a": {
+  "title": "Armillary Globe Radar Orbit (3D Spin & Fluid Curve Remix)",
+  "big": "native",
+  "note": "too heavy at 128 x 128 for 60 fps on the Pi 5: 24.2 ms a frame, against 11.8 as published"
+ },
+ "37b98d5551d64d1a": {
+  "title": "Cellular Halftone Moiré",
+  "big": "auto"
+ },
+ "a9a8636780d249b4": {
+  "title": "Tectonic Mosaic Pulse",
+  "big": "auto"
+ },
+ "a8afc2e950374291": {
+  "title": "Kinetic Constructivist Accelerator",
+  "big": "auto"
+ },
+ "d7197a4e71bf4e6c": {
+  "title": "Inward Serpent Tendrils",
+  "big": "native",
+  "note": "too heavy at 128 x 128 for 60 fps on the Pi 5: 20.7 ms a frame, against 11.4 as published"
+ },
+ "7e76c27ed2114873": {
+  "title": "Bioluminescent Topo Vortex",
+  "big": "auto"
+ },
+ "3b0239981a67419e": {
+  "title": "Understory",
+  "big": "port",
+  "note": "ported: a thicket of five stalks, back to front"
+ },
+ "d22de2b8b4ec4fbe": {
+  "title": "Rorschach Fluid Morph",
+  "big": "auto"
+ },
+ "a905ff5b41734024": {
+  "title": "Op-Art Squircle Spacetime Warp",
+  "big": "auto"
+ },
+ "cbaf570d8d034fe7": {
+  "title": "Pareidolia",
+  "big": "native",
+  "note": "too heavy at 128 x 128 for 60 fps on the Pi 5: 32.5 ms a frame, against 19.9 as published"
+ },
+ "a22d9728a9d349b7": {
+  "title": "Discotheque 1977",
+  "big": "auto"
+ },
+ "0d96a8b573cf41e2": {
+  "title": "OctaFlora",
+  "big": "auto"
+ },
+ "7c4ce38fb38844e1": {
+  "title": "Telemetry Bloom",
+  "big": "auto"
+ },
+ "1259f524a32547f8": {
+  "title": "M4TR1X",
+  "big": "auto"
+ },
+ "03a567927e6a4973": {
+  "title": "SP4C31NV4D3RS",
+  "big": "native",
+  "note": "a game-like layout: the same at 128 x 128"
+ },
+ "83c47c9e8b7c486d": {
+  "title": "Midnight Metropolis",
+  "big": "auto"
+ },
+ "de1a89d6bf514b2c": {
+  "title": "The Andromeda Gallery Living Starburst Edition",
+  "big": "auto"
+ },
+ "85885256ff1d43f1": {
+  "title": "Autumn Star Chandelier",
+  "big": "auto"
+ },
+ "85f614ec0da24cfd": {
+  "title": "Mandel lace",
+  "big": "auto"
+ },
+ "a2208a90bebf4bd5": {
+  "title": "Julia Dendrite",
+  "big": "auto"
+ },
+ "423fe05378bd426c": {
+  "title": "Neon Heart Ring Resonance",
+  "big": "native",
+  "note": "broken in both versions (a script error once clicked): off the shelf"
+ },
+ "1a1248fb9bd641e2": {
+  "title": "BASS MONOLITH (Performance)",
+  "big": "auto"
+ },
+ "2d966beecdd44a3f": {
+  "title": "Prismatic Rain Slick",
+  "big": "auto"
+ },
+ "bb25e5a83c7e4bd8": {
+  "title": "CALM TURING",
+  "big": "port",
+  "note": "ported: 29 tiles across the square instead of 19, one shared reaction-diffusion field"
+ },
+ "6355cab46a764082": {
+  "title": "Spazzy",
+  "big": "auto"
+ },
+ "a0de133274a24074": {
+  "title": "Floaters",
+  "big": "port",
+  "note": "ported: a lamp twice as wide with twice the blobs, at the same size in pixels"
+ },
+ "741ebce8838245c4": {
+  "title": "Ion Giftbox",
+  "big": "auto"
+ },
+ "a261483768ab4581": {
+  "title": "Leopard Changing Spots",
+  "big": "auto"
+ }
+}

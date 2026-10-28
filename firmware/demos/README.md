@@ -39,14 +39,15 @@ and the `upstream/` clone; without them they're skipped. It imports `r75_frame`,
 
 ## Menu
 
-**Hold the two outer knobs (k0 and k3) for a second.** The demos sit on four shelves:
+**Hold the two outer knobs (k0 and k3) for a second.** The demos sit on five shelves:
 
 | Shelf | What's on it |
 |---|---|
 | **Play** | our interactive demos: the knob toys and games |
 | **Audio** | visualizers, and some of the Play demos played by the music |
 | **Patternflow** | upstream's 48 patterns |
-| **Community** | the community wall's patterns, most liked first (only once synced: [below](#community-patterns)) |
+| **Community** | the community wall's patterns, most liked first, each at its best: at 128 × 128 where that's better ([below](#community-patterns); only once synced) |
+| **Community 1:1** | the same patterns as published, at their own canvas, centred |
 
 In the menu:
 - **k1** moves between shelves, back to wherever you were on each.
@@ -56,7 +57,8 @@ In the menu:
 - **k2,** on the Patternflow and Community shelves only, turns *audio knobs* on or off (below).
 - **A click on any knob** closes the menu, or it closes after 6 s with no input.
 
-A demo's shelf is its class's `group`: `play` (the default), `audio`, `patternflow` or `community`.
+A demo's shelf is its class's `group`: `play` (the default), `audio`, `patternflow`, `community` or
+`community-1to1`.
 
 The power cap is the same as `knob_renderer.py`'s and still uncalibrated: 1.2 A
 a panel and 4 A in total, from estimated duty.
@@ -469,14 +471,15 @@ Lab's own harness ([below](#the-javascript-only-patterns)).
 ./upstream_host/community.py sync     # the wall: headers, scripts, titles, authors, likes; upstream main's cores and harness
 ./upstream_host/community.py check    # each through a scripted player: C++ under AddressSanitizer, JS sandboxed (11 s on ash)
 ./upstream_host/community.py build    # compile what's new (run.py does this itself, 6 s on ash for all)
-./upstream_host/community.py sheet /tmp/cs   # contact sheets of the check's frames
+./upstream_host/community.py sheet /tmp/cs   # contact sheets: each pattern as published beside its 128 x 128 version
+./upstream_host/community.py strip /tmp/cs --only ID   # one pattern's versions over time, to judge a port
 ./run.py --only community
 ```
 
 `sync` needs node 22.6 or later, to strip the harness's TypeScript; ash has 24. Re-run `sync`
 and `check` to pick up new patterns, then `../pi-controller/update_pi.py` to send them to the
-box. It compiles only what's new or changed, over ssh, before the restart. All 211 from scratch
-take 79 s on the Pi 5.
+box. It compiles only what's new or changed, over ssh, before the restart. All of them from
+scratch (211 as published and 185 at 128 × 128) take 138 s on the Pi 5.
 
 How the compiled ones differ from the presets:
 - **Upstream main's cores.** The community builds against upstream's current firmware, not our
@@ -490,9 +493,12 @@ How the compiled ones differ from the presets:
 - **Mechanical fixups only:** `"../src/..."` includes, a namespace with a space in its name,
   and `pf_module.h` (upstream's module SDK header, stood in for by `upstream_host/community_shim/`).
   With those, all 211 build.
-- **Each at its own canvas, centred.** A header that calls `PFCanvas::setFrame` (all of them
-  portrait, 64 × 128) stands in the middle of the square, pillarboxed. The rest were written for
-  upstream's 128 × 64 and are letterboxed. Nothing is stretched or turned.
+- **As published: each at its own canvas, centred.** A header that calls `PFCanvas::setFrame`
+  (all of them portrait, 64 × 128) stands in the middle of the square, pillarboxed. The rest were
+  written for upstream's 128 × 64 and are letterboxed. Nothing is stretched. Six lie on their side
+  in 128 × 64, drawn with "up" along +x as upstream's canvas maps a 64 × 128 frame: Tetris (@akacoda),
+  Space Invaders, Breakout Arcade, Midsummer Sea, Firefly Hollow and RocketFlightPattern. They're
+  turned a quarter anticlockwise to stand upright (`TURN` in `community.py`, by eye).
 - **Vetted before it runs.** Anyone can post to the wall, including C++ ports of other people's
   patterns, and a pattern runs as native code in the demo process. So every built library is
   inspected before anything of it runs, on ash or on the Pi (`vet` in `community.py`):
@@ -509,6 +515,55 @@ How the compiled ones differ from the presets:
   global at 128 × 128, which is a reason not to fill the square.) The verdicts are keyed by each
   header's hash, so a header that changed since is trusted until the next check.
 - **Menu blurb:** author, porter if any, and knob labels. Shelf order is most liked first.
+
+### Two versions: as published, and 128 × 128
+
+Every pattern comes as published (the Community 1:1 shelf) and, mostly, at 128 × 128 too. The
+Community shelf shows each one's 128 × 128 version where the review chose it, and as published
+everywhere else.
+- **The automatic version** is the same code given the square.
+  - A compiled pattern is built at 128 × 128, with any `constexpr int FRAME_W/FRAME_H` raised to 128.
+  - A script gets a 128 × 128 display.
+  - Most patterns are written against their canvas's size, so this fills the square with more of
+    the pattern, not a stretched copy.
+- **Our ports** (`upstream_host/community_ports/<id>.h` or `.js`) take over where the automatic
+  version came out poorly. Typical cases: one small figure in the middle at either size, a script
+  that hard-codes 64 columns, or a buffer that overflows at 128 × 128.
+  - Each is enlarged by hand to use the resolution: finer structure, more elements, a bigger figure
+    where the figure *is* the pattern. Aspect is always kept.
+  - Each keeps the original's credit header, its `Source:` link and CC BY-SA 4.0, plus a paragraph
+    on what changed.
+  - They're the one place community code is committed here, as derivatives under the same licence.
+- **The review** (`upstream_host/community_review.json`, by eye, 2026-10-27) records each pattern's
+  choice: `auto`, `port` or `native`, with a note for anything not `auto`. A pattern synced later
+  is native until it's reviewed.
+  - `community.py sheet` puts each pattern as published beside its 128 × 128 version, at 1.5 s.
+  - `strip --only ID` shows both versions at six moments: idle, then with the scripted player
+    turning the knobs to their ends.
+  - Both versions of every pattern go through `check`.
+
+Of the 288:
+- **225 auto:** most of SeungHun's reposts, field and noise patterns, and a lot of scenes that
+  reflow well (Sakura Garden, Mount Fuji, ForestCampFire, Mr. Ferg).
+- **27 ported.** Each one is checked under ASan or the sandbox, and judged on strips. A few
+  examples:
+  - Pulsating Solar Flare's spiral is finer and reaches the corners.
+  - Branched flow's rays run on to the corners.
+  - Bouncy Beholder's eyes are twice the size, with veins and iris fibres.
+  - Fireworks fills the whole sky.
+  - Dual Metamorphic Lifecycle is one mandala at twice the size; at 128 × 128 its automatic
+    version overflowed a buffer.
+  - CALM TURING has 29 tiles where it had 19.
+  - Floaters' lamp is twice as wide.
+- **36 as published:**
+  - games and fixed layouts (Tetris, Space Invaders, Breakout, Pong 1v1, Hop Hop Up);
+  - composed pixel scenes and sprites that the square only pads (Midnight Clocktower, Moonwell,
+    Mesto Hen);
+  - patterns whose automatic version breaks (Day and Night, Rebound, Neon Heart Ring Resonance);
+  - Entropy Glass, whose hourglass already fills the square top to bottom at its 1:2 proportions;
+  - six JavaScript ones whose 128 × 128 version is too heavy for 60 fps on the Pi 5: Beating Blob
+    (62 ms against 31), Heart's illumination, Pareidolia, Armillary Globe Radar Orbit,
+    Iridescent Protoplasm and Inward Serpent Tendrils. They're candidates for faster ports.
 
 ### The JavaScript-only patterns
 
@@ -551,7 +606,8 @@ so it's left off. Node is in the card's cloud-init packages. On a running box:
 `sudo apt install nodejs`.
 
 **Licence:** the patterns are CC BY-SA 4.0, their authors'. They're fetched into the gitignored
-`upstream_host/build/` and never committed here.
+`upstream_host/build/` and never committed here. Our 128 × 128 ports in `community_ports/` are
+derivatives: each carries its original's credit and stays CC BY-SA 4.0.
 
 ## Speed
 
@@ -563,10 +619,11 @@ Measured per frame on ash:
 - The upstream presets take **0.1–0.6 ms** natively. The community's compiled patterns take
   a median of **0.15 ms** (none over 1 ms), and its JavaScript ones up to 7.8 ms (Pareidolia),
   through the pipe.
-- On the Pi 5 the community's 287 take a median of 0.65 ms. The compiled ones are all under
-  3.2 ms (Rose Mushroom is the slowest), but a few of the JavaScript ones are well over:
-  *Beating Blob* takes 31 ms, *Rainbow Voronoi* 24 ms, *Heart's illumination* 23 ms and
-  *Pareidolia* 16 ms, so those run at 30–60 fps.
+- On the Pi 5 both community shelves (574 entries) take a median of 0.76 ms. The compiled ones
+  are all under 3.2 ms (Rose Mushroom is the slowest), but a few of the JavaScript ones are well
+  over: *Beating Blob* takes 31 ms, *Rainbow Voronoi* 24 ms (at either size), *Heart's
+  illumination* 23 ms and *Pareidolia* 16 ms, so those run at 30–60 fps. On the Community shelf,
+  a 128 × 128 version that would cost twice that is shown as published instead (above).
 - The Patternflow originals, fastest first: Life 0.3 ms, Op Art 0.3 ms, Fireworks 0.4 ms,
   Streams 0.4 ms, Aurora 0.5 ms, Cyclic 0.5 ms, Moiré 0.5 ms, Snow 0.5 ms, Warp 0.5 ms, Lava
   0.6 ms, Orrery 0.6 ms, Quasicrystal 0.6 ms, Ribbons 0.6 ms, Spiro 0.6 ms, Bit Tunnel 0.7 ms,
