@@ -42,6 +42,7 @@ def _steam(img, x, y, t, n=3, h=14):
 
 
 class SoupHat(Show):
+    """An infomercial: the grey 'before', the sunburst 'after', 3 payments of $SOUP."""
     num, title, length = 2, "SOUP HAT", 11.0
 
     def draw(self, img, t):
@@ -76,6 +77,7 @@ class SoupHat(Show):
 
 
 class IsItAHat(Show):
+    """Public access: a cat, a fish and a house on a man's head, each judged."""
     num, title, length = 3, "IS IT A HAT?", 12.0
     ITEMS = [("cat", "NOT A HAT", (.9, .15, .1)), ("fish", "HAT!", (.15, .85, .2)), ("house", "...MAYBE", (.9, .8, .1))]
 
@@ -121,6 +123,7 @@ class IsItAHat(Show):
 
 
 class News(Show):
+    """A two-headed anchor; the crawl mixes our gags with real headlines."""
     num, title, length = 4, "NEWS AT NEVER", 12.0
     STORIES = [(0, "THE MOON HAS LEFT. IT TOOK NOTHING."),
                (4, "LOCAL MAN BECOMES A HALLWAY"),
@@ -187,6 +190,7 @@ class News(Show):
 
 
 class Weather(Show):
+    """Teeth today, a high of 4000, 90% chance of bees."""
     num, title, length = 7, "WEATHER-ISH", 12.0
 
     def __init__(self):
@@ -231,6 +235,7 @@ class Weather(Show):
 
 
 class Square(Show):
+    """A nature documentary: squares migrate at sunset; the triangle waits."""
     num, title, length = 9, "PLANET SQUARE", 13.0
     LINES = [(0, "THE SQUARE HAS NO KNEES."), (3, "AND YET... IT MIGRATES."), (6, "NOBODY KNOWS WHERE."),
              (8.5, "THE TRIANGLE WAITS."), (11, "NOT EVEN THE SQUARE.")]
@@ -266,6 +271,7 @@ class Square(Show):
 
 
 class Standing(Show):
+    """Two men standing, live; a wobble costs half a point."""
     num, title, length = 11, "PRO STANDING", 11.0
 
     def __init__(self):
@@ -292,6 +298,7 @@ class Standing(Show):
 
 
 class Doors(Show):
+    """Doors that open onto doors, forever."""
     num, title, length = 13, "DOOR WORLD", 11.0
     WALLS = [(.85, .75, .55), (.5, .7, .55), (.7, .5, .6), (.45, .55, .75)]
 
@@ -322,6 +329,7 @@ class Doors(Show):
 
 
 class Mouth(Show):
+    """A singing mouth counts: one, two, blue, with a bouncing ball."""
     num, title, length = 18, "MR. MOUTH", 12.0
     SONG = [(0, ["COUNT", "WITH", "MR.", "MOUTH!"]), (3, ["ONE,", "TWO,", "BLUE!"]),
             (6, ["SEVEN,", "EIGHT,", "SOUP!"]), (9, ["NINE,", "TEN,", "FOREVER!"])]
@@ -364,6 +372,7 @@ class Mouth(Show):
 
 
 class Wheel(Show):
+    """The wheel of regret lands on AGAIN, and spins again."""
     num, title, length = 23, "WHEEL OF REGRET", 11.0
     SEGS = [("BEES", (.95, .75, .1)), ("TAX", (.2, .5, .9)), ("DAD", (.85, .2, .3)), ("AGAIN", (.5, .2, .8)),
             ("SOUP", (.95, .5, .1)), ("YES", (.2, .75, .35)), ("LEGS", (.9, .4, .7)), ("AGAIN", (.1, .7, .8))]
@@ -416,6 +425,7 @@ class Wheel(Show):
 
 
 class Glorpax(Show):
+    """A pharma ad whose side effects come true."""
     num, title, length = 27, "GLORPAX", 13.0
     EFFECTS = ["SIDE EFFECTS", "MAY INCLUDE:", "", "BECOMING TWO PEOPLE,", "KNOWING THE SUN'S", "BIRTHDAY, MILD SOUP,",
                "HEARING BEIGE, A", "SECOND, SMALLER YOU,", "TEETH IN THE WRONG", "ORDER, AND GLORPAX.", "",
@@ -456,6 +466,7 @@ class Glorpax(Show):
 
 
 class Cooking(Show):
+    """Apologise to the egg; serve cold, in a shoe."""
     num, title, length = 31, "COOKING WITH A HAND", 12.0
 
     def __init__(self):
@@ -501,6 +512,7 @@ class Cooking(Show):
 
 
 class Cube(Show):
+    """A car ad: no wheels, no doors, no exit."""
     num, title, length = 38, "THE 2087 CUBE", 11.0
     V = np.array([(x, y, z) for x in (-1, 1) for y in (-1, 1) for z in (-1, 1)], np.float32)
     FACES = [(0, 1, 3, 2), (4, 6, 7, 5), (0, 4, 5, 1), (2, 3, 7, 6), (0, 2, 6, 4), (1, 5, 7, 3)]
@@ -546,6 +558,7 @@ class Cube(Show):
 
 
 class StandBy(Show):
+    """Colour bars with an eye in them. It sees you."""
     num, title, length = 42, "PLEASE STAND BY", 9.0
     BARS = [(.75, .75, .75), (.75, .75, 0), (0, .75, .75), (0, .75, 0), (.75, 0, .75), (.75, 0, 0), (0, 0, .75)]
     LOW = [(0, 0, .75), (0, 0, 0), (.75, 0, .75), (0, 0, 0), (0, .75, .75), (0, 0, 0), (.75, .75, .75)]
@@ -578,6 +591,7 @@ class StandBy(Show):
 
 
 class Snake(Show):
+    """A synthwave workout for snakes; reps: 0."""
     num, title, length = 47, "ARM DAY FOR SNAKES", 11.0
 
     def draw(self, img, t):
@@ -612,6 +626,7 @@ class Snake(Show):
 
 
 class Zorb(Show):
+    """A three-eyed psychic in a crystal ball."""
     num, title, length = 52, "MADAME ZORB", 11.0
 
     def __init__(self):
@@ -647,6 +662,7 @@ def _raccoon(img, x, y, r, t, seed=0.0):
 
 
 class Soap(Show):
+    """A soap opera: three raccoons in a trench coat."""
     num, title, length = 66, "AS THE WORM TURNS", 13.0
 
     def _coat(self, img, x, y, r):
@@ -679,6 +695,7 @@ class Soap(Show):
 
 
 class Whale(Show):
+    """House hunting inside a whale."""
     num, title, length = 73, "HOUSE HUNTERS: WHALE", 12.0
 
     def __init__(self):
@@ -711,6 +728,7 @@ class Whale(Show):
 
 
 class Bees(Show):
+    """A test of the emergency bee system; this was an actual bee."""
     num, title, length = 99, "EMERGENCY BEE SYSTEM", 11.0
 
     def __init__(self):
@@ -732,6 +750,7 @@ class Bees(Show):
 
 
 class NoSignal(Show):
+    """Dead air: snow, a bouncing NO SIGNAL, and a face."""
     num, title, length = 404, "", 7.0
     reception = 1.0
 

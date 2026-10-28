@@ -304,37 +304,19 @@ channel is a short clip, a few seconds to 14 s. The TV plays each one two to fou
 The knob lights glow with the picture under them, and fill left to right as the clip runs
 out. Change channel and the cable box's green number and the show's title come up for 2.5 s.
 
-The channels (`pfd/cable/shows.py`) are drawn whole from a script at the time since you tuned
-in, so a channel starts over when you come back to it. The panel has no sound, so the gags have
-to land on sight. Some are wordless physical comedy, and the rest keep their words short:
+There are 103 drawn channels (`pfd/cable/lineup.py`), each drawn whole from a script at the time
+since you tuned in, so a channel starts over when you come back to it. The panel has no sound, so
+the gags have to land on sight: many have no words at all, and the rest keep theirs to a few
+per beat. Each show's class has a one-line docstring with its gag.
 
-| Ch | Show | |
-|---|---|---|
-| 2 | Soup Hat | infomercial: the grey "before", the sunburst "after", 3 payments of $SOUP |
-| 3 | Is It a Hat? | public access: a cat, a fish and a house, each judged |
-| 4 | News at Never | a two-headed anchor; the crawl mixes our gags with real headlines |
-| 5 | Pull | *silent:* a man pushes a PULL door, bounces, charges it, reads the sign, pulls |
-| 6 | ONN | today's Onion headlines on an anchor desk's chyron, more in the crawl (below) |
-| 7 | Weather-ish | teeth today, a high of 4000, 90 % chance of bees |
-| 9 | Planet Square | nature documentary: squares migrate at sunset; the triangle waits |
-| 11 | Pro Standing | two men standing; a wobble costs half a point |
-| 13 | Door World | doors that open onto doors, forever |
-| 14 | Look Up | *silent:* a walk, a growing shadow, a piano; he walks it off, flat |
-| 16 | Banana | *silent:* a pratfall, a backflip off the second peel, and a third peel from the sky |
-| 18 | Mr. Mouth | a singing mouth: one, two, blue, with a bouncing ball |
-| 21 | Pie Off | *silent:* pies across a stage, two meet in mid-air, and one for the viewer |
-| 23 | Wheel of Regret | it lands on AGAIN, and spins again |
-| 27 | Glorpax | a pharma ad; the side effects come true |
-| 31 | Cooking with a Hand | apologise to the egg; serve cold, in a shoe |
-| 33 | Cave School | *silent, in stop motion* (8 poses a second): an alien teaches a caveman the wheel |
-| 38 | The 2087 Cube | car ad: no wheels, no doors, no exit |
-| 42 | Please Stand By | colour bars with an eye in them. It sees you |
-| 47 | Arm Day for Snakes | synthwave workout; reps: 0 |
-| 52 | Madame Zorb | a three-eyed psychic in a crystal ball |
-| 66 | As the Worm Turns | soap opera: three raccoons in a trench coat |
-| 73 | House Hunters: Whale | a house inside a whale |
-| 99 | Emergency Bee System | this was an actual bee |
-| 404 | (dead air) | snow, a bouncing NO SIGNAL, a face |
+| Channels | File | | For instance |
+|---|---|---|---|
+| 2-99, 404 | `shows.py` | the first 25 | Soup Hat, the PULL door, a piano drop, banana peels, a pie fight, Cave School (an alien teaches a caveman the wheel), the raccoons-in-a-coat soap, ONN (6), dead air (404) |
+| 101-191 | `batch_ads.py` | 16 commercials | a vacuum that eats the room and then itself; perfume that launches its model; UNLIMITED BARS (iron ones); a burger that bites back; SPF 9000 |
+| 201-287 | `batch_formats.py` | 15 TV formats gone wrong | a talk-show host shrinking beside an armchair guest; a toaster winning a quiz; a slow-motion replay of a dropped grape; a sitcom set that pulls back to a turtle in space |
+| 301-396 | `batch_slapstick.py` | 16 silent slapstick | rakes ping-pong; a hiccup through the ceiling; running off a cliff; a small dog walking a giant man; toast that always lands jam-side down; a door that opens onto the sea |
+| 501-597 | `batch_docs.py` | 16 kids' TV, docs, science, PSAs | a desk lamp stalking a moth; geese flying a bar chart; how holes are made; a planet that sneezes away a probe; a cell that's a tiny office |
+| 601-685 | `batch_strange.py` | 15 pure strangeness | claymation and 12 fps toy figures (a hero's head on upside down); an egg boy band; IN A WORLD... WITHOUT KNEES; a cat as long as a day; colour bars on a coffee break |
 
 **Headlines.** When Cable first comes up, `pfd/cable/headlines.py` starts reading The Onion's RSS
 feed in the background. It caches the headlines in `~/.cache/patternflood/headlines.json` (on the Pi,
@@ -353,17 +335,33 @@ THE ONION. It's a gentle reader:
 `PF_HEADLINES=off` leaves the network alone.
 
 **Tapes.** Video files in `~/cable` (or `$PF_CABLE`) join the line-up as more channels, numbered
-after the drawn ones. Any format ffmpeg reads works: mp4, mkv, webm, mov, avi, m4v or gif. Each
-tune-in plays a random 8 to 14 s excerpt, cropped square to 128 × 128 at 24 fps and silent, so
-physical comedy plays best. They are yours to supply; nothing in the repo ships any. On the Pi they go in
-`/var/lib/patternflood/cable` (the renderer's home, its `StateDirectory`, which `update_pi.py`
-leaves alone), and the Pi needs ffmpeg (`sudo apt install ffmpeg`). Public-domain silent comedy
-(Keaton, Chaplin, Lloyd: pre-1930 films are public domain in the US) and the Prelinger Archives'
-old ads on the Internet Archive suit it well.
+from 700. Any format ffmpeg reads works: mp4, mkv, webm, mov, avi, m4v or gif. A file no longer than
+15 s plays whole; a longer one plays a random 8 to 14 s excerpt at each tune-in. Either way it's cropped
+square to 128 × 128 at 24 fps, and silent, so physical comedy plays best. Nothing in the repo ships
+any. On the Pi they go in `/var/lib/patternflood/cable` (the renderer's home, its `StateDirectory`,
+which `update_pi.py` leaves alone), and the Pi needs ffmpeg (`sudo apt install ffmpeg`).
 
-To add a channel, subclass `Show` (`num`, `title`, `length`, and `draw(img, t)`) in `pfd/cable/shows.py`
-or a batch of its own, and list it in `pfd/cable/lineup.py`. `pfd/cable/kit.py` has the drawing kit: posable
-toons, faces that talk and blink, captions, tickers, starbursts and timelines (`cue`).
+`tools/cable_trims.py` makes 22 of them: trims of public-domain silent comedy, cartoons and old ads
+from the Internet Archive, listed with their timings in `tools/cable_trims.json`. They come from
+Keaton's *One Week* (the house spun by the storm, the second train), Lloyd's *Never Weaken* (a desk
+chair on a girder over the street), Chaplin's *The Rink*, two Felix the Cat shorts, *Gertie the
+Dinosaur*, and the Prelinger Archives' *About Bananas* and *Breakfast Pals*. US films from before 1930
+are public domain, and the Prelinger films are marked so. The tool is gentle too. It fetches each
+source's small (512 kb/s) copy once, one at a time, at most 1.5 MB/s, under its own user-agent, and
+checks it against the archive's MD5. Then it cuts the trims, about 5 MB in all:
+
+```sh
+./tools/cable_trims.py fetch                   # ~485 MB, once, into ~/.cache/patternflood/cable-sources
+./tools/cable_trims.py cut ~/cable             # 22 clips, 128 x 128
+./tools/cable_trims.py scan one-week --start 920 --length 80 --every 1   # contact sheets, to find more gags
+scp ~/cable/*.mp4 jof@patternflood.local:/tmp/ && ssh jof@patternflood.local \
+    'sudo install -D -m 644 -t /var/lib/patternflood/cable /tmp/*.mp4 && sudo systemctl restart patternflood'
+```
+
+To add a channel, subclass `Show` (`num`, `title`, `length`, and `draw(img, t)`, which paints the
+whole frame) in a batch, and list the batch in `pfd/cable/lineup.py`. `pfd/cable/kit.py` has the drawing
+kit: posable toons, faces that talk and blink, captions, tickers, starbursts and timelines (`cue`). The
+batches have more of their own, such as sprites, dizzy stars, dust puffs and screen shake.
 
 ## Upstream Patternflow presets
 

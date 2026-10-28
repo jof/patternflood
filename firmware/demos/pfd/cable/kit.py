@@ -167,7 +167,7 @@ def toon(img, x, y, h, skin, shirt, t=0.0, walk=0.0, rot=0.0, arms=(0.3, 0.3), f
     for k in (-1, 1):
         a = walk * 0.55 * math.sin(t * 10) * k
         line(img, *at(k * h * 0.05, 0), *at(k * h * 0.05 + LEG * h * math.sin(a), LEG * h * math.cos(a)), pants, w)
-    sx, sy = 0, -h * 0.3
+    sy = -h * 0.3
     for k, a in zip((-1, 1), arms):
         line(img, *at(k * h * 0.12, sy), *at(k * h * 0.12 + k * math.sin(a) * h * 0.28, sy + math.cos(a) * h * 0.28),
              shirt, w * 0.85)
