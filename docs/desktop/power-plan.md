@@ -91,7 +91,7 @@ set bay [4], per [`mechanical-plan.md`](mechanical-plan.md) §2.2.
 | 2× Waveshare P2 64×64 | ~1.5–2 A | **6 A** (2 × 3 A spec, 30 W) |
 | Matrix Portal S3 | ~0.15 A | 0.25 A |
 | LD2450 radar *(optional)* | ~0.07 A | 0.1 A |
-| 4× seesaw encoder + NeoPixel | ~0.05 A | 0.15 A |
+| 4× seesaw encoder + NeoPixel | ~0.05 A | 0.25 A |
 | **Total @ 5 V** | **~1.9 A (10 W)** | **~6.5 A (33 W)** |
 
 > The VL53L9CX is **not** in this budget — it moved to the

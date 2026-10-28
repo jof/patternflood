@@ -41,7 +41,7 @@ CLICK_S = 0.45          # a press shorter than this, with no turn in it, is a cl
 MENU_HOLD_S = 1.0
 MENU_IDLE_S = 6.0
 SHELF_NAMES = {"play": "PLAY", "audio": "AUDIO", "patternflow": "PATTERNFLOW"}
-LIGHT_MAX = 64          # the 4991 NeoPixels are bright next to a dim panel
+LIGHT_MAX = 255         # the 4991 NeoPixels at full scale; they dim with the panel's brightness (k3)
 NKNOBS = 4
 DETENTS_PER_REV = 24    # the 4991's encoder (PEC11-style); for demos that map a knob to an absolute angle
 GAMMA_STEPS = 4096      # gamma by table: within 0.07 of an 8-bit step of the exact curve, and far cheaper than **
@@ -246,7 +246,8 @@ class Runtime:
             ls = [(1, 1, 1), (0, 0, 0), (0, 0, 0), (1, .8 * b + .1, .3 * b)]
         else:
             ls = self.demo.lights()
-        return [tuple(int(LIGHT_MAX * min(1.0, max(0.0, c)) ** GAMMA + 0.5) for c in rgb) for rgb in ls[:NKNOBS]]
+        scale = LIGHT_MAX * self.bright     # same curve as the panel's gamma table
+        return [tuple(int(scale * min(1.0, max(0.0, c)) ** GAMMA + 0.5) for c in rgb) for rgb in ls[:NKNOBS]]
 
     def run(self):
         realtime = getattr(self.out, "realtime", True)
