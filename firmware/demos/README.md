@@ -292,17 +292,17 @@ upstream's audio edition, sound turns each upstream pattern's four knobs:
 
 A shelf of its own with one demo on it, **Cable**: a TV surfing channels from other dimensions,
 after Rick and Morty's interdimensional cable, Robot Chicken and Prometheus and Bob. Every
-channel is a short clip, 9 to 14 s, and when one ends the TV moves up a channel by itself.
+channel is a short clip, a few seconds to 14 s. The TV plays each one two to four times over
+(about 24 s in all), then surfs on to a channel at random, every channel once before any repeats.
 
 | Knob | |
 |---|---|
 | **any, turned** | channel up (clockwise) or down, one channel a detent, through snow |
 | **any, clicked** | skip ahead a channel |
-| **any one, held 0.7 s** | stay tuned: the clip loops; hold again to surf. The OSD says which |
+| **any one, held 0.7 s** | stay tuned: the clip loops for good; hold again to surf. The OSD says which |
 
 The knob lights glow with the picture under them, and fill left to right as the clip runs
 out. Change channel and the cable box's green number and the show's title come up for 2.5 s.
-The network's bug sits in the corner.
 
 The channels (`pfd/cable/shows.py`) are drawn whole from a script at the time since you tuned
 in, so a channel starts over when you come back to it. The panel has no sound, so the gags have
@@ -336,19 +336,33 @@ to land on sight. Some are wordless physical comedy, and the rest keep their wor
 | 99 | Emergency Bee System | this was an actual bee |
 | 404 | (dead air) | snow, a bouncing NO SIGNAL, a face |
 
-**Headlines.** When Cable first comes up, `pfd/cable/headlines.py` fetches The Onion's RSS feed
-in the background, then again every 3 hours, and caches the headlines in
-`~/.cache/patternflood/headlines.json` (on the Pi, `/var/cache/patternflood`, the service's `CacheDirectory`). Offline, the panel shows the last ones it got, or a few
-of our own if it has never been online. `PF_HEADLINES=off` leaves the network alone.
+**Headlines.** When Cable first comes up, `pfd/cable/headlines.py` starts reading The Onion's RSS
+feed in the background. It caches the headlines in `~/.cache/patternflood/headlines.json` (on the Pi,
+`/var/cache/patternflood`, the service's `CacheDirectory`). Offline, the panel shows the last ones it
+got, or a few of our own if it has never been online. Only the titles are used, and they're credited
+on screen: ONN's crawl opens with HEADLINES VIA THE ONION, and the other news crawl marks each one
+THE ONION. It's a gentle reader:
+- it reads robots.txt under its own user-agent (`patternflood-cable`), at most once a day, and obeys it;
+- it reads the feed at most once every 6 hours, plus up to half an hour of jitter. When the next
+  read is due is kept in the cache, so restarts (`update_pi.py`, the watchdog, a power cut) never
+  cause an extra read;
+- reads are conditional (ETag, Last-Modified), so an unchanged feed costs a 304 and no body;
+- it asks for gzip, gives up after 15 s, and takes at most 2 MB;
+- a failure backs off, doubling from half an hour to a day, and a `Retry-After` is honoured.
+
+`PF_HEADLINES=off` leaves the network alone.
 
 **Tapes.** Video files in `~/cable` (or `$PF_CABLE`) join the line-up as more channels, numbered
 after the drawn ones. Any format ffmpeg reads works: mp4, mkv, webm, mov, avi, m4v or gif. Each
 tune-in plays a random 8 to 14 s excerpt, cropped square to 128 × 128 at 24 fps and silent, so
-physical comedy plays best. They are yours to supply. Nothing in the repo ships any, and the Pi
-needs them copied to its own `~/cable`.
+physical comedy plays best. They are yours to supply; nothing in the repo ships any. On the Pi they go in
+`/var/lib/patternflood/cable` (the renderer's home, its `StateDirectory`, which `update_pi.py`
+leaves alone), and the Pi needs ffmpeg (`sudo apt install ffmpeg`). Public-domain silent comedy
+(Keaton, Chaplin, Lloyd: pre-1930 films are public domain in the US) and the Prelinger Archives'
+old ads on the Internet Archive suit it well.
 
-To add a channel, subclass `Show` in `pfd/cable/shows.py` (`num`, `title`, `net`, `length`, and
-`draw(img, t)`), and add it to `CHANNELS`. `pfd/cable/kit.py` has the drawing kit: posable
+To add a channel, subclass `Show` (`num`, `title`, `length`, and `draw(img, t)`) in `pfd/cable/shows.py`
+or a batch of its own, and list it in `pfd/cable/lineup.py`. `pfd/cable/kit.py` has the drawing kit: posable
 toons, faces that talk and blink, captions, tickers, starbursts and timelines (`cue`).
 
 ## Upstream Patternflow presets

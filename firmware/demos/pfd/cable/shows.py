@@ -2,7 +2,7 @@
 
 A show draws itself whole at t seconds since you tuned in, from a fixed script: change
 channel and come back, and it starts over. `length` is how long it runs before the surf
-moves on (or loops, if you stay); `reception` 0..1 is how much snow the TV puts over it.
+loops (a few times over, then the TV surfs on); `reception` 0..1 is how much snow the TV puts over it.
 """
 import math
 
@@ -18,7 +18,6 @@ from .kit import (BLACK, LEG, LINE, SKINS, WHITE, bee, body, caption, chatter, c
 class Show:
     num = 0
     title = ""
-    net = ""                # the network's bug, in the corner
     length = 10.0
     reception = 0.0
 
@@ -43,7 +42,7 @@ def _steam(img, x, y, t, n=3, h=14):
 
 
 class SoupHat(Show):
-    num, title, net, length = 2, "SOUP HAT", "SHOP-Z", 11.0
+    num, title, length = 2, "SOUP HAT", 11.0
 
     def draw(self, img, t):
         i, _, lt = cue(t, [(0, 0), (3.6, 1), (7.4, 2)])
@@ -77,7 +76,7 @@ class SoupHat(Show):
 
 
 class IsItAHat(Show):
-    num, title, net, length = 3, "IS IT A HAT?", "PUB-ACCESS", 12.0
+    num, title, length = 3, "IS IT A HAT?", 12.0
     ITEMS = [("cat", "NOT A HAT", (.9, .15, .1)), ("fish", "HAT!", (.15, .85, .2)), ("house", "...MAYBE", (.9, .8, .1))]
 
     def __init__(self):
@@ -122,7 +121,7 @@ class IsItAHat(Show):
 
 
 class News(Show):
-    num, title, net, length = 4, "NEWS AT NEVER", "ZNN", 12.0
+    num, title, length = 4, "NEWS AT NEVER", 12.0
     STORIES = [(0, "THE MOON HAS LEFT. IT TOOK NOTHING."),
                (4, "LOCAL MAN BECOMES A HALLWAY"),
                (8, "TUESDAY CANCELLED DUE TO FOG")]
@@ -133,11 +132,13 @@ class News(Show):
         self.crawl = " * ".join(self.GAGS) + " * "
 
     def tune(self):
-        """The crawl mixes our news with a few of this dimension's headlines."""
+        """The crawl: our news, then a few of this dimension's real headlines, credited."""
         rng = np.random.default_rng()
-        news = headlines.get()
-        mix = list(self.GAGS) + list(rng.choice(news, min(3, len(news)), replace=False))
+        mix = list(self.GAGS)
         rng.shuffle(mix)
+        real = headlines.real()
+        if real:
+            mix += [f"THE ONION: {h}" for h in rng.choice(real, min(3, len(real)), replace=False)]
         self.crawl = " * ".join(mix) + " * "
 
     def _picture(self, img, i, lt):
@@ -186,7 +187,7 @@ class News(Show):
 
 
 class Weather(Show):
-    num, title, net, length = 7, "WEATHER-ISH", "KBLRG", 12.0
+    num, title, length = 7, "WEATHER-ISH", 12.0
 
     def __init__(self):
         f = np.sin(X * 0.07) + np.sin(Y * 0.09 + 1) + np.sin((X + Y) * 0.05 + 2) + 0.4 * np.sin(X * 0.2 + Y * 0.15)
@@ -230,7 +231,7 @@ class Weather(Show):
 
 
 class Square(Show):
-    num, title, net, length = 9, "PLANET SQUARE", "NAT-GEOMETRIC", 13.0
+    num, title, length = 9, "PLANET SQUARE", 13.0
     LINES = [(0, "THE SQUARE HAS NO KNEES."), (3, "AND YET... IT MIGRATES."), (6, "NOBODY KNOWS WHERE."),
              (8.5, "THE TRIANGLE WAITS."), (11, "NOT EVEN THE SQUARE.")]
 
@@ -265,7 +266,7 @@ class Square(Show):
 
 
 class Standing(Show):
-    num, title, net, length = 11, "PRO STANDING", "ESPN-9", 11.0
+    num, title, length = 11, "PRO STANDING", 11.0
 
     def __init__(self):
         rng = np.random.default_rng(11)
@@ -291,7 +292,7 @@ class Standing(Show):
 
 
 class Doors(Show):
-    num, title, net, length = 13, "DOOR WORLD", "SHOP-Z", 11.0
+    num, title, length = 13, "DOOR WORLD", 11.0
     WALLS = [(.85, .75, .55), (.5, .7, .55), (.7, .5, .6), (.45, .55, .75)]
 
     def draw(self, img, t):
@@ -321,7 +322,7 @@ class Doors(Show):
 
 
 class Mouth(Show):
-    num, title, net, length = 18, "MR. MOUTH", "KIDZ+", 12.0
+    num, title, length = 18, "MR. MOUTH", 12.0
     SONG = [(0, ["COUNT", "WITH", "MR.", "MOUTH!"]), (3, ["ONE,", "TWO,", "BLUE!"]),
             (6, ["SEVEN,", "EIGHT,", "SOUP!"]), (9, ["NINE,", "TEN,", "FOREVER!"])]
 
@@ -363,7 +364,7 @@ class Mouth(Show):
 
 
 class Wheel(Show):
-    num, title, net, length = 23, "WHEEL OF REGRET", "GZN", 11.0
+    num, title, length = 23, "WHEEL OF REGRET", 11.0
     SEGS = [("BEES", (.95, .75, .1)), ("TAX", (.2, .5, .9)), ("DAD", (.85, .2, .3)), ("AGAIN", (.5, .2, .8)),
             ("SOUP", (.95, .5, .1)), ("YES", (.2, .75, .35)), ("LEGS", (.9, .4, .7)), ("AGAIN", (.1, .7, .8))]
     CX, CY, R = 64, 66, 42
@@ -415,7 +416,7 @@ class Wheel(Show):
 
 
 class Glorpax(Show):
-    num, title, net, length = 27, "GLORPAX", "KBLRG", 13.0
+    num, title, length = 27, "GLORPAX", 13.0
     EFFECTS = ["SIDE EFFECTS", "MAY INCLUDE:", "", "BECOMING TWO PEOPLE,", "KNOWING THE SUN'S", "BIRTHDAY, MILD SOUP,",
                "HEARING BEIGE, A", "SECOND, SMALLER YOU,", "TEETH IN THE WRONG", "ORDER, AND GLORPAX.", "",
                "DO NOT TAKE GLORPAX", "IF YOU ARE GLORPAX."]
@@ -455,7 +456,7 @@ class Glorpax(Show):
 
 
 class Cooking(Show):
-    num, title, net, length = 31, "COOKING WITH A HAND", "FOOD-ISH", 12.0
+    num, title, length = 31, "COOKING WITH A HAND", 12.0
 
     def __init__(self):
         chk = (((X // 8) + (Y // 8)) % 2)[..., None]
@@ -500,7 +501,7 @@ class Cooking(Show):
 
 
 class Cube(Show):
-    num, title, net, length = 38, "THE 2087 CUBE", "AUTO-Z", 11.0
+    num, title, length = 38, "THE 2087 CUBE", 11.0
     V = np.array([(x, y, z) for x in (-1, 1) for y in (-1, 1) for z in (-1, 1)], np.float32)
     FACES = [(0, 1, 3, 2), (4, 6, 7, 5), (0, 4, 5, 1), (2, 3, 7, 6), (0, 2, 6, 4), (1, 5, 7, 3)]
 
@@ -545,7 +546,7 @@ class Cube(Show):
 
 
 class StandBy(Show):
-    num, title, net, length = 42, "PLEASE STAND BY", "", 9.0
+    num, title, length = 42, "PLEASE STAND BY", 9.0
     BARS = [(.75, .75, .75), (.75, .75, 0), (0, .75, .75), (0, .75, 0), (.75, 0, .75), (.75, 0, 0), (0, 0, .75)]
     LOW = [(0, 0, .75), (0, 0, 0), (.75, 0, .75), (0, 0, 0), (0, .75, .75), (0, 0, 0), (.75, .75, .75)]
 
@@ -577,7 +578,7 @@ class StandBy(Show):
 
 
 class Snake(Show):
-    num, title, net, length = 47, "ARM DAY FOR SNAKES", "FIT-TV", 11.0
+    num, title, length = 47, "ARM DAY FOR SNAKES", 11.0
 
     def draw(self, img, t):
         vgrad(img, (.1, .0, .25), (.9, .2, .5), 0, 70)
@@ -611,7 +612,7 @@ class Snake(Show):
 
 
 class Zorb(Show):
-    num, title, net, length = 52, "MADAME ZORB", "PSY-NET", 11.0
+    num, title, length = 52, "MADAME ZORB", 11.0
 
     def __init__(self):
         self.ang = np.arctan2(Y - 60, X - 64)
@@ -646,7 +647,7 @@ def _raccoon(img, x, y, r, t, seed=0.0):
 
 
 class Soap(Show):
-    num, title, net, length = 66, "AS THE WORM TURNS", "WB-Q", 13.0
+    num, title, length = 66, "AS THE WORM TURNS", 13.0
 
     def _coat(self, img, x, y, r):
         ellipse(img, x, y + r * 2.8, r * 1.9, r * 1.9, (.7, .55, .3))
@@ -678,7 +679,7 @@ class Soap(Show):
 
 
 class Whale(Show):
-    num, title, net, length = 73, "HOUSE HUNTERS: WHALE", "HGTV-9", 12.0
+    num, title, length = 73, "HOUSE HUNTERS: WHALE", 12.0
 
     def __init__(self):
         rng = np.random.default_rng(73)
@@ -710,7 +711,7 @@ class Whale(Show):
 
 
 class Bees(Show):
-    num, title, net, length = 99, "EMERGENCY BEE SYSTEM", "EBS", 11.0
+    num, title, length = 99, "EMERGENCY BEE SYSTEM", 11.0
 
     def __init__(self):
         self.hazard = ((((X + Y) // 8) % 2) > 0)[..., None]
@@ -731,7 +732,7 @@ class Bees(Show):
 
 
 class NoSignal(Show):
-    num, title, net, length = 404, "", "", 7.0
+    num, title, length = 404, "", 7.0
     reception = 1.0
 
     def draw(self, img, t):
@@ -750,7 +751,7 @@ class NoSignal(Show):
 
 class Onn(Show):
     """An anchor desk for this dimension's real headlines, from The Onion (headlines.py)."""
-    num, title, net, length = 6, "ONN", "ONN", 14.0
+    num, title, length = 6, "ONN", 14.0
 
     def __init__(self):
         lat, lon = [], []
@@ -768,7 +769,8 @@ class Onn(Show):
         rng = np.random.default_rng()
         self.pick = list(rng.choice(news, min(2, len(news)), replace=False))
         rest = [h for h in news if h not in self.pick] or self.pick
-        self.crawl = " * ".join(rng.choice(rest, min(6, len(rest)), replace=False)) + " * "
+        credit = [headlines.CREDIT] if headlines.real() else []
+        self.crawl = " * ".join(credit + list(rng.choice(rest, min(6, len(rest)), replace=False))) + " * "
 
     def draw(self, img, t):
         vgrad(img, (.02, .06, .22), (0, 0, .05))
@@ -806,7 +808,7 @@ class Onn(Show):
 
 class Pull(Show):
     """Silent: a man, a door, a sign."""
-    num, title, net, length = 5, "PULL", "LOL-TV", 11.5
+    num, title, length = 5, "PULL", 11.5
     G, H = 104, 46
 
     def _door(self, img, phi):
@@ -888,7 +890,7 @@ class Pull(Show):
 
 class Piano(Show):
     """Silent: a nice day for a walk."""
-    num, title, net, length = 14, "LOOK UP", "LOL-TV", 10.5
+    num, title, length = 14, "LOOK UP", 10.5
     G, H = 106, 40
 
     def draw(self, img, t):
@@ -948,7 +950,7 @@ def _peel(img, x, y, rot=0.0):
 
 class Banana(Show):
     """Silent: three bananas."""
-    num, title, net, length = 16, "BANANA", "LOL-TV", 11.0
+    num, title, length = 16, "BANANA", 11.0
     G, H = 104, 40
 
     def draw(self, img, t):
@@ -1010,7 +1012,7 @@ class Banana(Show):
 
 class Pies(Show):
     """Silent: a gentlemen's disagreement."""
-    num, title, net, length = 21, "PIE OFF", "LOL-TV", 9.5
+    num, title, length = 21, "PIE OFF", 9.5
     G, H, A, B = 116, 50, 28, 100
     FLY = 0.45
     CREAM = (.95, .9, .78)
@@ -1077,7 +1079,7 @@ class Pies(Show):
 
 class Cave(Show):
     """Silent, in stop motion: a lesson."""
-    num, title, net, length = 33, "CAVE SCHOOL", "CLAY-TV", 11.0
+    num, title, length = 33, "CAVE SCHOOL", 11.0
     G, H, P, C = 108, 52, 32, 98
     ROCK = (.62, .6, .58)
 
