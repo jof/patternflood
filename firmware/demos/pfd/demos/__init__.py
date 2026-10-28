@@ -82,13 +82,14 @@ from .streams import Streams
 from .girih import Girih
 from .marbling import Marbling
 from .dial import Dial
+from .cable import Cable
 
 from .. import community, upstream
 
 OURS = [Classic, Etch, Squash, Cycles, Sand, Harmono, Rewind, Reaction, Rotor, Echo, Rocket, Vault, Mandala,
         Droplet, Terrain, Glitch, Kaleido, Pool, Resort]
 AUDIO = [Milk, MilkTunnel, MilkFlame, MilkMirror, MilkEcho, Superscope, Pulse, Spectrum, Scope, Waterfall, Prism, Rain, Spores, Lissajous, NightDrive, Tempo]
-OURS = OURS + AUDIO
+OURS = OURS + AUDIO + [Cable]
 # Our own patterns on the Patternflow shelf, each placed after the preset of SeungHun's it riffs on
 ORIGINALS = [(BitTunnel, "pf 0521"), (Obra, "pf 0522"), (Riso, "pf 0528"), (Strange, "pf Lissajous Weave"), (PixelSort, "pf 0519-2"),
              (Moon, "pf Poincaré Sphere"), (Smoke, "pf Vector Field Flow"),

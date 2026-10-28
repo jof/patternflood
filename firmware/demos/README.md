@@ -1,7 +1,7 @@
 # Demos
 
 Interactive demos for the 2×2 (128 × 128), written once and run in either place.
-There are 139: 91 of ours, plus all 48 of upstream Patternflow's patterns, run
+There are 140: 92 of ours, plus all 48 of upstream Patternflow's patterns, run
 natively ([below](#upstream-patternflow-presets)). That's the 34 firmware presets and
 our ports of the 14 that upstream only had as web sources. Fifty-six of ours are
 [Patternflow-style originals](#our-originals-on-the-patternflow-shelf), shelved among SeungHun's.
@@ -29,7 +29,7 @@ path they're on: the Pi 5 port is a change of flags.
 ./run.py --demo etch --knobs auto --out preview:/tmp/etch.gif --seconds 8
 ./run.py --list
 ./run.py --only upstream                   # just SeungHun's presets (native code: the Pi Zero's choice)
-./run.py --only play,audio                 # just these shelves
+./run.py --only play,audio,cable           # just these shelves
 ```
 
 Needs `numpy` and `pyserial` (bench only). Text (demo names, labels) needs
@@ -39,12 +39,13 @@ and the `upstream/` clone; without them they're skipped. It imports `r75_frame`,
 
 ## Menu
 
-**Hold the two outer knobs (k0 and k3) for a second.** The demos sit on five shelves:
+**Hold the two outer knobs (k0 and k3) for a second.** The demos sit on six shelves:
 
 | Shelf | What's on it |
 |---|---|
 | **Play** | our interactive demos: the knob toys and games |
 | **Audio** | visualizers, and some of the Play demos played by the music |
+| **Interdimensional Cable** | a TV surfing very weird channels from other dimensions ([below](#interdimensional-cable)) |
 | **Patternflow** | upstream's 48 patterns |
 | **Community** | the community wall's patterns, most liked first, each at its best: at 128 × 128 where that's better ([below](#community-patterns); only once synced) |
 | **Community 1:1** | the same patterns as published, at their own canvas, centred |
@@ -57,7 +58,7 @@ In the menu:
 - **k2,** on the Patternflow and Community shelves only, turns *audio knobs* on or off (below).
 - **A click on any knob** closes the menu, or it closes after 6 s with no input.
 
-A demo's shelf is its class's `group`: `play` (the default), `audio`, `patternflow`, `community` or
+A demo's shelf is its class's `group`: `play` (the default), `audio`, `cable`, `patternflow`, `community` or
 `community-1to1`.
 
 The power cap is the same as `knob_renderer.py`'s and still uncalibrated: 1.2 A
@@ -286,6 +287,69 @@ upstream's audio edition, sound turns each upstream pattern's four knobs:
 - k0 follows the mids, k1 the level, k2 the bass and k3 the treble.
 - Each rises fast and falls slowly, through upstream's own `knobAudioActive`/`knobAudioValue`
   fields, so every one of the 48 reacts without a line of it changing.
+
+## Interdimensional Cable
+
+A shelf of its own with one demo on it, **Cable**: a TV surfing channels from other dimensions,
+after Rick and Morty's interdimensional cable, Robot Chicken and Prometheus and Bob. Every
+channel is a short clip, 9 to 14 s, and when one ends the TV moves up a channel by itself.
+
+| Knob | |
+|---|---|
+| **any, turned** | channel up (clockwise) or down, one channel a detent, through snow |
+| **any, clicked** | skip ahead a channel |
+| **any one, held 0.7 s** | stay tuned: the clip loops; hold again to surf. The OSD says which |
+
+The knob lights glow with the picture under them, and fill left to right as the clip runs
+out. Change channel and the cable box's green number and the show's title come up for 2.5 s.
+The network's bug sits in the corner.
+
+The channels (`pfd/cable/shows.py`) are drawn whole from a script at the time since you tuned
+in, so a channel starts over when you come back to it. The panel has no sound, so the gags have
+to land on sight. Some are wordless physical comedy, and the rest keep their words short:
+
+| Ch | Show | |
+|---|---|---|
+| 2 | Soup Hat | infomercial: the grey "before", the sunburst "after", 3 payments of $SOUP |
+| 3 | Is It a Hat? | public access: a cat, a fish and a house, each judged |
+| 4 | News at Never | a two-headed anchor; the crawl mixes our gags with real headlines |
+| 5 | Pull | *silent:* a man pushes a PULL door, bounces, charges it, reads the sign, pulls |
+| 6 | ONN | today's Onion headlines on an anchor desk's chyron, more in the crawl (below) |
+| 7 | Weather-ish | teeth today, a high of 4000, 90 % chance of bees |
+| 9 | Planet Square | nature documentary: squares migrate at sunset; the triangle waits |
+| 11 | Pro Standing | two men standing; a wobble costs half a point |
+| 13 | Door World | doors that open onto doors, forever |
+| 14 | Look Up | *silent:* a walk, a growing shadow, a piano; he walks it off, flat |
+| 16 | Banana | *silent:* a pratfall, a backflip off the second peel, and a third peel from the sky |
+| 18 | Mr. Mouth | a singing mouth: one, two, blue, with a bouncing ball |
+| 21 | Pie Off | *silent:* pies across a stage, two meet in mid-air, and one for the viewer |
+| 23 | Wheel of Regret | it lands on AGAIN, and spins again |
+| 27 | Glorpax | a pharma ad; the side effects come true |
+| 31 | Cooking with a Hand | apologise to the egg; serve cold, in a shoe |
+| 33 | Cave School | *silent, in stop motion* (8 poses a second): an alien teaches a caveman the wheel |
+| 38 | The 2087 Cube | car ad: no wheels, no doors, no exit |
+| 42 | Please Stand By | colour bars with an eye in them. It sees you |
+| 47 | Arm Day for Snakes | synthwave workout; reps: 0 |
+| 52 | Madame Zorb | a three-eyed psychic in a crystal ball |
+| 66 | As the Worm Turns | soap opera: three raccoons in a trench coat |
+| 73 | House Hunters: Whale | a house inside a whale |
+| 99 | Emergency Bee System | this was an actual bee |
+| 404 | (dead air) | snow, a bouncing NO SIGNAL, a face |
+
+**Headlines.** When Cable first comes up, `pfd/cable/headlines.py` fetches The Onion's RSS feed
+in the background, then again every 3 hours, and caches the headlines in
+`~/.cache/patternflood/headlines.json`. Offline, the panel shows the last ones it got, or a few
+of our own if it has never been online. `PF_HEADLINES=off` leaves the network alone.
+
+**Tapes.** Video files in `~/cable` (or `$PF_CABLE`) join the line-up as more channels, numbered
+after the drawn ones. Any format ffmpeg reads works: mp4, mkv, webm, mov, avi, m4v or gif. Each
+tune-in plays a random 8 to 14 s excerpt, cropped square to 128 × 128 at 24 fps and silent, so
+physical comedy plays best. They are yours to supply. Nothing in the repo ships any, and the Pi
+needs them copied to its own `~/cable`.
+
+To add a channel, subclass `Show` in `pfd/cable/shows.py` (`num`, `title`, `net`, `length`, and
+`draw(img, t)`), and add it to `CHANNELS`. `pfd/cable/kit.py` has the drawing kit: posable
+toons, faces that talk and blink, captions, tickers, starbursts and timelines (`cue`).
 
 ## Upstream Patternflow presets
 

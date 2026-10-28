@@ -20,8 +20,8 @@ and these runtime helpers on self.rt:
                           no audio it's a quiet, steady 120 BPM, so visualizers still move.
 
 System gesture, in every demo: hold the two outer knobs (k0 and k3) for a
-second to open the menu. Demos sit on shelves (Play, Audio, Patternflow,
-Community, Community 1:1, from each class's `group`): in the menu k1 moves between shelves, k0
+second to open the menu. Demos sit on shelves (Play, Audio, Interdimensional Cable,
+Patternflow, Community, Community 1:1, from each class's `group`): in the menu k1 moves between shelves, k0
 picks the demo on the shelf (live, faster when spun), k3 sets brightness, and on
 the Patternflow and Community shelves k2 lets the music turn the patterns'
 knobs. A click on any knob, or 6 s with no input, closes it.
@@ -41,7 +41,7 @@ CLICK_S = 0.45          # a press shorter than this, with no turn in it, is a cl
 MENU_HOLD_S = 1.0
 MENU_IDLE_S = 6.0
 SHELF_NAMES = {"play": "PLAY", "audio": "AUDIO", "patternflow": "PATTERNFLOW", "community": "COMMUNITY",
-               "community-1to1": "COMMUNITY 1:1"}
+               "community-1to1": "COMMUNITY 1:1", "cable": "INTERDIM. CABLE"}
 AUDIO_KNOB_SHELVES = ("patternflow", "community", "community-1to1")     # Patternflow patterns: sound can turn their knobs
 LIGHT_MAX = 255         # the 4991 NeoPixels at full scale; they dim with the panel's brightness (k3)
 LIGHT_FLOOR = 0.15      # but no dimmer than this fraction of it, so the knobs still read on a dark panel
