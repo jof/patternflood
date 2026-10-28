@@ -308,6 +308,10 @@ def originals(lib=ORIG_LIB, log=print):
                 paths[name] = path
         if paths:
             out.append((e, paths))
+    keep = {n for _, paths in out for p in paths.values() for n in (p.name, p.name + ".vetted")}
+    for f in lib.iterdir():             # libraries of versions since edited, as build() prunes the wall's
+        if f.name not in keep:
+            shutil.rmtree(f) if f.is_dir() else f.unlink()
     return out
 
 
