@@ -5,9 +5,11 @@
     ./update_pi.py jof@ADDRESS -o HostKeyAlias=patternflood.local
 
 Installs what provision_card.py puts in /opt/patternflood (the demo suite, the
-renderer and the upstream presets' source tree), plus patternflood.service. An
-existing /etc/default/patternflood is kept: it holds the box's own settings.
-The Pi compiles the presets again on the restart if any of their sources changed.
+renderer, the upstream presets' source tree and the community's patterns as
+this checkout last synced them), plus patternflood.service. An existing
+/etc/default/patternflood is kept: it holds the box's own settings. The Pi
+compiles new or changed community patterns before the restart, and the presets
+again on the restart if any of their sources changed.
 """
 import subprocess
 import sys
@@ -45,8 +47,13 @@ def main():
             f"sudo mkdir -p {o}/demos/upstream_host; "
             f"sudo find {o}/demos -mindepth 1 -maxdepth 1 ! -name upstream_host -exec rm -rf {{}} +; "
             f"sudo find {o}/demos/upstream_host -mindepth 1 -maxdepth 1 ! -name build -exec rm -rf {{}} +; "
-            f"sudo rm -rf {o}/demos/upstream_host/build/tree; "
+            f"sudo rm -rf {o}/demos/upstream_host/build/tree {o}/demos/upstream_host/build/community/src; "
             "sudo cp -a $t/. /; sudo rm -rf $t; "
+            # The community's patterns compile here, where you can watch, rather than behind the splash
+            # on the restart. Only what's new or changed: the libraries are kept, keyed by their sources.
+            f"sudo chown -R patternflood:patternflood {o}/demos/upstream_host/build; "
+            f"if [ -e {o}/demos/upstream_host/build/community/src/index.json ]; then "
+            f"sudo -u patternflood python3 {o}/demos/upstream_host/community.py build; fi; "
             "sudo systemctl daemon-reload; sudo systemctl restart patternflood; echo restarted"
         )
         with open(tgz, "rb") as f:

@@ -83,7 +83,7 @@ from .girih import Girih
 from .marbling import Marbling
 from .dial import Dial
 
-from .. import upstream
+from .. import community, upstream
 
 OURS = [Classic, Etch, Squash, Cycles, Sand, Harmono, Rewind, Reaction, Rotor, Echo, Rocket, Vault, Mandala,
         Droplet, Terrain, Glitch, Kaleido, Pool, Resort]
@@ -126,4 +126,5 @@ def _shelf(presets):
     return out
 
 
-ALL = OURS + _shelf(upstream.demos())       # upstream Patternflow's presets, after ours, with our originals among them
+# upstream Patternflow's presets, after ours, with our originals among them; then the community's patterns
+ALL = OURS + _shelf(upstream.demos()) + community.demos()

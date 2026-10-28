@@ -5,6 +5,9 @@ There are 139: 91 of ours, plus all 48 of upstream Patternflow's patterns, run
 natively ([below](#upstream-patternflow-presets)). That's the 34 firmware presets and
 our ports of the 14 that upstream only had as web sources. Fifty-six of ours are
 [Patternflow-style originals](#our-originals-on-the-patternflow-shelf), shelved among SeungHun's.
+On top of those, the [community's patterns](#community-patterns) run natively on a shelf of
+their own: every one on community.patternflow.work with a firmware header, 211 of them as of
+2026-10-27.
 
 | | Knobs | Frames | Renders on |
 |---|---|---|---|
@@ -35,22 +38,24 @@ and the `upstream/` clone; without them they're skipped. It imports `r75_frame`,
 
 ## Menu
 
-**Hold the two outer knobs (k0 and k3) for a second.** The demos sit on three shelves:
+**Hold the two outer knobs (k0 and k3) for a second.** The demos sit on four shelves:
 
 | Shelf | What's on it |
 |---|---|
 | **Play** | our interactive demos: the knob toys and games |
 | **Audio** | visualizers, and some of the Play demos played by the music |
 | **Patternflow** | upstream's 48 patterns |
+| **Community** | the community wall's patterns, most liked first (only once synced: [below](#community-patterns)) |
 
 In the menu:
 - **k1** moves between shelves, back to wherever you were on each.
 - **k0** steps along the shelf. Demos switch live behind the overlay and keep their state.
+  Spin it to skip ahead (`rt.accel`), which is how to cross the Community shelf.
 - **k3** sets brightness (0.3 at start).
-- **k2,** on the Patternflow shelf only, turns *audio knobs* on or off (below).
+- **k2,** on the Patternflow and Community shelves only, turns *audio knobs* on or off (below).
 - **A click on any knob** closes the menu, or it closes after 6 s with no input.
 
-A demo's shelf is its class's `group`: `play` (the default), `audio` or `patternflow`.
+A demo's shelf is its class's `group`: `play` (the default), `audio`, `patternflow` or `community`.
 
 The power cap is the same as `knob_renderer.py`'s and still uncalibrated: 1.2 A
 a panel and 4 A in total, from estimated duty.
@@ -451,6 +456,54 @@ changes palette when clicked. The palettes are `pfd/hues.py`'s cosine gradients
 | **Marbling** | pf 0520 | Paper marbling, exactly (Jaffer and Lu): each ink drop spreads and pushes the older ink out into rings, keeping its area; combs drag it all into feathered chevrons. The tray keeps its recent drops and strokes (older ones are baked into a stored picture, so nothing pops), each pixel is traced back through them at four sample points for smooth edges, and new drops swell into place. | k0 drop size; k1 drop rate; k2 comb spacing; k3 colour. Click: k0 fresh tray, k1 a big drop, k2 comb it, k3 next palette. |
 | **Dial** | pf 0614 | Eight rings of coloured segments turning each their own way, like a combination lock; now and then (click k0, or each phrase) every ring eases round until its seams line up, and it flashes open. | k0 speed; k1 segments; k2 rings; k3 colour. Click: k0 open the lock, k3 next palette. |
 
+## Community patterns
+
+[community.patternflow.work](https://community.patternflow.work) is upstream's pattern wall.
+Every pattern there is JavaScript, and most also carry a **firmware header**: the author's
+own, or a port someone else verified on hardware. Those headers run here natively, the way
+SeungHun's presets do, one small shared library each:
+
+```sh
+./upstream_host/community.py sync     # the public wall: headers, titles, authors, likes; upstream main's cores
+./upstream_host/community.py check    # each under AddressSanitizer, through a scripted player (13 s on ash)
+./upstream_host/community.py build    # compile what's new (run.py does this itself, 6 s on ash for all)
+./upstream_host/community.py sheet /tmp/cs   # contact sheets of the check's frames
+./run.py --only community
+```
+
+Re-run `sync` and `check` to pick up new patterns, then `../pi-controller/update_pi.py` to
+send them to the box. It compiles only what's new or changed, over ssh, before the restart.
+All 211 from scratch take 79 s on the Pi 5.
+
+How it differs from the presets:
+- **Upstream main's cores.** The community builds against upstream's current firmware, not our
+  pinned clone (newer `PFMath` helpers, for one). `sync` fetches the portable cores (math, colour,
+  noise, tables, mem, params) at main's current commit. The pattern-facing API (`InputFrame`,
+  `PFCanvas`) is the same, so the same shim serves both.
+- **One library per pattern** (`build/community/lib/<id>-<size>-<hash>.so`). Namespaces collide
+  between authors, a header that doesn't compile costs only itself, and a new header compiles
+  alone. The libraries use hidden visibility and `-fno-gnu-unique`. Without that, the dynamic
+  linker would merge every library's `PFCanvas::buffer` (an inline variable) into one.
+- **Mechanical fixups only:** `"../src/..."` includes, a namespace with a space in its name,
+  and `pf_module.h` (upstream's module SDK header, stood in for by `upstream_host/community_shim/`).
+  With those, all 211 build.
+- **Each at its own canvas, centred.** A header that calls `PFCanvas::setFrame` (all of them
+  portrait, 64 × 128) stands in the middle of the square, pillarboxed. The rest were written for
+  upstream's 128 × 64 and are letterboxed. Nothing is stretched or turned.
+- **The check.** A pattern runs inside the demo process, so `check` runs each one under
+  AddressSanitizer for 11 s of scripted input: idle, the knobs out to their extremes and back,
+  fast spins, clicks, push-and-turn and the audio edition. A pattern it fails is left off the
+  shelf. All 211 pass at their own canvas. (One, *Day and Night dreamy beach*, overflows a
+  global at 128 × 128, which is a reason not to fill the square.) The verdicts are keyed by each
+  header's hash, so a header that changed since is trusted until the next check.
+- **Menu blurb:** author, porter if any, and knob labels. Shelf order is most liked first.
+
+Not yet: the 77 patterns that are JavaScript only. Running those needs upstream's JS harness
+under node.
+
+**Licence:** the patterns are CC BY-SA 4.0, their authors'. They're fetched into the gitignored
+`upstream_host/build/` and never committed here.
+
 ## Speed
 
 Measured per frame on ash:
@@ -458,7 +511,9 @@ Measured per frame on ash:
   Mandala take under 1 ms; Droplet, Terrain and Glitch about 1 ms; **Kaleido 3.1 ms**; and
   Pool 1.4 ms (it was 8.3 ms before drawing a diagonal of pillars at a time).
 - **Reaction takes 4.3 ms** at 10 iterations a frame.
-- The upstream presets take **0.1–0.6 ms** natively.
+- The upstream presets take **0.1–0.6 ms** natively, and the community's a median of
+  **0.15 ms** (none over 1 ms). On the Pi 5 the community's take a median of 0.51 ms, and the
+  slowest, Rose Mushroom, takes 3.2 ms.
 - The Patternflow originals, fastest first: Life 0.3 ms, Op Art 0.3 ms, Fireworks 0.4 ms,
   Streams 0.4 ms, Aurora 0.5 ms, Cyclic 0.5 ms, Moiré 0.5 ms, Snow 0.5 ms, Warp 0.5 ms, Lava
   0.6 ms, Orrery 0.6 ms, Quasicrystal 0.6 ms, Ribbons 0.6 ms, Spiro 0.6 ms, Bit Tunnel 0.7 ms,

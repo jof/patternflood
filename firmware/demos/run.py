@@ -40,7 +40,8 @@ def pick(demos, only):
     keys = {k.strip().lower() for k in only.split(",") if k.strip()}
     if not keys:
         return demos
-    picked = [d for d in demos if d.group in keys or ("upstream" in keys and issubclass(d, Upstream))]
+    picked = [d for d in demos if d.group in keys
+              or ("upstream" in keys and issubclass(d, Upstream) and d.group == "patternflow")]
     if not picked:
         raise SystemExit(f"--only {only!r} matches no demos (shelves: {sorted({d.group for d in demos})}, or upstream)")
     return picked
@@ -54,7 +55,7 @@ def main():
                    help="auto[:HOST] (udp if the card is on our link, else pipe) | pipe:HOST[:IP] | udp[:IP] | preview:FILE.gif")
     p.add_argument("--demo", default="0", help="start demo, by name or index")
     p.add_argument("--only", default="",
-                   help="limit the demos: shelves, comma-separated (play,audio,patternflow), or 'upstream' for "
+                   help="limit the demos: shelves, comma-separated (play,audio,patternflow,community), or 'upstream' for "
                         "SeungHun's presets alone (default: all)")
     p.add_argument("--fps", type=float, default=None, help="default 60, or 20 for previews")
     p.add_argument("--audio", default=None,

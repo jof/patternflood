@@ -54,6 +54,11 @@ def _load(size="128x128"):
         if r.returncode:
             log(f"upstream: build failed, running without upstream patterns\n{r.stderr[-2000:]}")
             return None
+    return open_lib(lib_path)
+
+
+def open_lib(lib_path):
+    """A library with build.py's C API (the community's, from community.py, have the same)."""
     lib = ctypes.CDLL(str(lib_path))
     lib.pf_name.restype = lib.pf_author.restype = lib.pf_label.restype = ctypes.c_char_p
     lib.pf_frame.restype = ctypes.POINTER(ctypes.c_uint8)
@@ -139,6 +144,14 @@ class Upstream(Demo):
         return out
 
 
+def knobs_blurb(lib, i):
+    """" k0 Speed, k1 Hue, ..." from the pattern's KNOB_LABELS, or "" when they're just "Knob 1".."Knob 4"."""
+    labels = [lib.pf_label(i, k).decode(errors="replace") for k in range(4)]
+    if all(lab.lower().startswith("knob") for lab in labels):
+        return ""
+    return " " + ", ".join(f"k{k} {lab}" for k, lab in enumerate(labels)) + "."
+
+
 def demos():
     """One Demo class per upstream preset, or [] if the library can't be built."""
     lib = _load("128x128")
@@ -155,11 +168,8 @@ def demos():
             names = [native.pf_name(n).decode() for n in range(native.pf_count())] if native else []
             if name in names:                       # by name: the two libraries needn't list the same presets
                 use, upright, index = native, True, names.index(name)
-        labels = [lib.pf_label(i, k).decode() for k in range(4)]
         author = lib.pf_author(i).decode()
-        blurb = f"Patternflow preset{' by ' + author if author else ''}."
-        if not all(lab.lower().startswith("knob") for lab in labels):     # "Knob 1".."Knob 4" says nothing
-            blurb += " " + ", ".join(f"k{k} {lab}" for k, lab in enumerate(labels)) + "."
+        blurb = f"Patternflow preset{' by ' + author if author else ''}." + knobs_blurb(lib, i)
         if name in NOTES:
             blurb += " " + NOTES[name]
         out.append(type(f"PF_{name}", (Upstream,), {"name": f"pf {name}", "blurb": blurb, "lib": use, "index": index,

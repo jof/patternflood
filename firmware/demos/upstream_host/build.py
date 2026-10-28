@@ -95,41 +95,45 @@ def write_tree(upstream, out):
               "static const PFHostEntry ENTRIES[] = {"]
     lines += [f"  {{{ns}::NAME, {c_str(author)}, {ns}::KNOB_LABELS, {ns}::setup, {ns}::update, {ns}::draw}},"
               for _, ns, author in found]
-    lines += ["};",
-              "static const int COUNT = sizeof(ENTRIES) / sizeof(ENTRIES[0]);",
-              "static long knobs[4];",
-              "",
-              'extern "C" {',
-              "int pf_count() { return COUNT; }",
-              "int pf_width() { return PANEL_RES_W; }",
-              "int pf_height() { return PANEL_RES_H; }",
-              "const char* pf_name(int i) { return ENTRIES[i].name; }",
-              "const char* pf_author(int i) { return ENTRIES[i].author; }",
-              "const char* pf_label(int i, int k) { return ENTRIES[i].labels[k]; }",
-              "void pf_setup(int i) { PFCanvas::clear(); ENTRIES[i].setup(); }",
-              "const uint8_t* pf_frame(int i, float dt, const int* deltas, const uint8_t* pressed,",
-              "                        const uint8_t* held, uint32_t now, const uint8_t* audio_on,",
-              "                        const float* audio) {",
-              "  InputFrame in;",
-              "  memset(&in, 0, sizeof in);",
-              "  for (int k = 0; k < 4; k++) {",
-              "    knobs[k] += deltas[k];",
-              "    in.knobs[k] = knobs[k];",
-              "    in.knobDeltas[k] = deltas[k];",
-              "    in.btnPressed[k] = pressed[k];",
-              "    in.btnHeld[k] = held[k];",
-              "    in.knobAudioActive[k] = audio_on[k];     // upstream's audio edition: sound turns the knob",
-              "    in.knobAudioValue[k] = audio[k];",
-              "  }",
-              "  in.now = now;",
-              "  pf_host_now_ms = now;",
-              "  ENTRIES[i].update(dt, in);",
-              "  ENTRIES[i].draw();",
-              "  return PFCanvas::buffer;",
-              "}",
-              "}"]
+    lines += ["};"] + host_api()
     (out / "pf_host.cpp").write_text("\n".join(lines) + "\n")
     return found, rev
+
+
+def host_api():
+    """The C API over ENTRIES[], as the ctypes side expects it (community.py builds the same API)."""
+    return ["static const int COUNT = sizeof(ENTRIES) / sizeof(ENTRIES[0]);",
+            "static long knobs[4];",
+            "",
+            'extern "C" {',
+            "int pf_count() { return COUNT; }",
+            "int pf_width() { return PANEL_RES_W; }",
+            "int pf_height() { return PANEL_RES_H; }",
+            "const char* pf_name(int i) { return ENTRIES[i].name; }",
+            "const char* pf_author(int i) { return ENTRIES[i].author; }",
+            "const char* pf_label(int i, int k) { return ENTRIES[i].labels[k]; }",
+            "void pf_setup(int i) { PFCanvas::clear(); ENTRIES[i].setup(); }",
+            "const uint8_t* pf_frame(int i, float dt, const int* deltas, const uint8_t* pressed,",
+            "                        const uint8_t* held, uint32_t now, const uint8_t* audio_on,",
+            "                        const float* audio) {",
+            "  InputFrame in;",
+            "  memset(&in, 0, sizeof in);",
+            "  for (int k = 0; k < 4; k++) {",
+            "    knobs[k] += deltas[k];",
+            "    in.knobs[k] = knobs[k];",
+            "    in.knobDeltas[k] = deltas[k];",
+            "    in.btnPressed[k] = pressed[k];",
+            "    in.btnHeld[k] = held[k];",
+            "    in.knobAudioActive[k] = audio_on[k];     // upstream's audio edition: sound turns the knob",
+            "    in.knobAudioValue[k] = audio[k];",
+            "  }",
+            "  in.now = now;",
+            "  pf_host_now_ms = now;",
+            "  ENTRIES[i].update(dt, in);",
+            "  ENTRIES[i].draw();",
+            "  return PFCanvas::buffer;",
+            "}",
+            "}"]
 
 
 def compile_tree(tree, size, lib):

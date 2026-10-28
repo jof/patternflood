@@ -26,7 +26,10 @@ RENDERER_FILES = ["knob_renderer.py", "r75_frame.py", "seesaw.py"]
 DEMOS = HERE.parent / "demos"
 # The demo suite, as laid out in the repo (run.py finds ../colorlight). upstream_host
 # carries only what builds the presets; the preset tree itself is written by build.py.
-DEMO_FILES = ["run.py", "pfd", "upstream_host/build.py", "upstream_host/shim", "upstream_host/web_ports"]
+DEMO_FILES = ["run.py", "pfd", "upstream_host/build.py", "upstream_host/shim", "upstream_host/web_ports",
+              "upstream_host/community.py", "upstream_host/community_shim"]
+# The community's patterns, as `community.py sync` and `check` left them in this checkout.
+COMMUNITY = DEMOS / "upstream_host/build/community/src"
 MARKER = "# --- patternflood controller ---"
 FIRST_UID = 1000                        # the image's "pi" user, renamed by userconf.txt
 # unit -> the target that pulls it in
@@ -57,14 +60,24 @@ def install_payload(opt):
         src = DEMOS / entry
         for f in sorted(src.rglob("*")) if src.is_dir() else [src]:
             if f.is_file() and "__pycache__" not in f.parts:
-                install(f, opt / "demos" / f.relative_to(DEMOS), 0o755 if f.name in ("run.py", "build.py") else 0o644,
-                        quiet=True)
+                install(f, opt / "demos" / f.relative_to(DEMOS),
+                        0o755 if f.name in ("run.py", "build.py", "community.py") else 0o644, quiet=True)
                 n += 1
     print(f"  {opt / 'demos'}  ({n} files)")
     # The presets' self-contained source tree (from the upstream clone); the Pi compiles it with g++.
     tree = opt / "demos/upstream_host/build/tree"
     subprocess.run([sys.executable, str(DEMOS / "upstream_host/build.py"), "--tree-only", "--out", str(tree)],
                    check=True)
+    # The community's patterns: their headers, upstream's cores and ash's check. The Pi compiles them too.
+    if (COMMUNITY / "index.json").exists():
+        n = 0
+        for f in sorted(COMMUNITY.rglob("*")):
+            if f.is_file():
+                install(f, opt / "demos/upstream_host/build/community/src" / f.relative_to(COMMUNITY), 0o644, quiet=True)
+                n += 1
+        print(f"  {opt / 'demos/upstream_host/build/community/src'}  ({n} files)")
+    else:
+        print("  no community patterns: run firmware/demos/upstream_host/community.py sync (and check) first")
 
 
 def write(dst, text, mode, uid=0, gid=0):
