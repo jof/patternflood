@@ -5,9 +5,10 @@ There are 139: 91 of ours, plus all 48 of upstream Patternflow's patterns, run
 natively ([below](#upstream-patternflow-presets)). That's the 34 firmware presets and
 our ports of the 14 that upstream only had as web sources. Fifty-six of ours are
 [Patternflow-style originals](#our-originals-on-the-patternflow-shelf), shelved among SeungHun's.
-On top of those, the [community's patterns](#community-patterns) run natively on a shelf of
-their own: every one on community.patternflow.work with a firmware header, 211 of them as of
-2026-10-27.
+On top of those, the [community's patterns](#community-patterns) have a shelf of their own:
+all 288 public patterns on community.patternflow.work as of 2026-10-27. The 211 with a firmware
+header are compiled, and the 77 that are JavaScript only run in upstream's own harness under
+node. One of those has a bug of its own and is left off, so 287 are on the shelf.
 
 | | Knobs | Frames | Renders on |
 |---|---|---|---|
@@ -363,8 +364,8 @@ into `upstream_host/web_ports/preset_*.h`. `build.py` adds them to the library.
   knob 3's raw value (0–4.9) where the JavaScript uses it normalized (0–1), so zoom comes out
   about 2.5× too large. It's upstream's file, so it's left as it is and noted here.
 
-Not ported: the community library on patternflow.work. Any community `.h` should build the
-same way: drop it in `upstream_host/web_ports/`.
+The community's patterns on patternflow.work have a shelf of their own: [Community
+patterns](#community-patterns).
 
 ### Our originals on the Patternflow shelf
 
@@ -461,21 +462,23 @@ changes palette when clicked. The palettes are `pfd/hues.py`'s cosine gradients
 [community.patternflow.work](https://community.patternflow.work) is upstream's pattern wall.
 Every pattern there is JavaScript, and most also carry a **firmware header**: the author's
 own, or a port someone else verified on hardware. Those headers run here natively, the way
-SeungHun's presets do, one small shared library each:
+SeungHun's presets do, one small shared library each. The rest run under node, in the Pattern
+Lab's own harness ([below](#the-javascript-only-patterns)).
 
 ```sh
-./upstream_host/community.py sync     # the public wall: headers, titles, authors, likes; upstream main's cores
-./upstream_host/community.py check    # each under AddressSanitizer, through a scripted player (13 s on ash)
+./upstream_host/community.py sync     # the wall: headers, scripts, titles, authors, likes; upstream main's cores and harness
+./upstream_host/community.py check    # each through a scripted player: C++ under AddressSanitizer, JS sandboxed (11 s on ash)
 ./upstream_host/community.py build    # compile what's new (run.py does this itself, 6 s on ash for all)
 ./upstream_host/community.py sheet /tmp/cs   # contact sheets of the check's frames
 ./run.py --only community
 ```
 
-Re-run `sync` and `check` to pick up new patterns, then `../pi-controller/update_pi.py` to
-send them to the box. It compiles only what's new or changed, over ssh, before the restart.
-All 211 from scratch take 79 s on the Pi 5.
+`sync` needs node 22.6 or later, to strip the harness's TypeScript; ash has 24. Re-run `sync`
+and `check` to pick up new patterns, then `../pi-controller/update_pi.py` to send them to the
+box. It compiles only what's new or changed, over ssh, before the restart. All 211 from scratch
+take 79 s on the Pi 5.
 
-How it differs from the presets:
+How the compiled ones differ from the presets:
 - **Upstream main's cores.** The community builds against upstream's current firmware, not our
   pinned clone (newer `PFMath` helpers, for one). `sync` fetches the portable cores (math, colour,
   noise, tables, mem, params) at main's current commit. The pattern-facing API (`InputFrame`,
@@ -507,8 +510,45 @@ How it differs from the presets:
   header's hash, so a header that changed since is trusted until the next check.
 - **Menu blurb:** author, porter if any, and knob labels. Shelf order is most liked first.
 
-Not yet: the 77 patterns that are JavaScript only. Running those needs upstream's JS harness
-under node.
+### The JavaScript-only patterns
+
+The 77 without a header run as the Pattern Lab runs them, in **upstream's own harness**:
+`PatternRuntime`, with `@knobs`, `@matrix` and `@ramp`.
+- `sync` fetches the harness's seven modules from upstream main's `web/src/lib/`. `jsrun.mjs bundle`
+  strips their types (node's own `stripTypeScriptTypes`, so no npm) into one script,
+  `build/community/src/web/harness.js`, which the Pi's node 20 runs as it is.
+- `pfd/community.py` keeps one node child process (`jsrun.mjs serve`) for all of them, talking
+  JSON lines and RGB frames over pipes. It holds the 8 most recently used patterns. One it has
+  let go is loaded again from the start.
+- **Knobs behave as on the community's cards:** each starts mid-range, a detent moves a 48th of
+  the range (two turns end to end, as the firmware's `PFParams`), held at the ends. Clicks and
+  holds are `btnPressed`/`btnHeld`. The music doesn't turn these knobs: the harness has no audio
+  input.
+- Each runs at its own `@matrix` (64 × 128 for most, else 128 × 64), centred, through the same
+  saturation boost as the compiled ones.
+
+**Sandboxed, with no network.** A vm context would keep pattern code from node, but it makes
+a frame about 80 times slower: every `Math.sin` goes through the context's global interceptor
+(0.23 ms against 19.4 ms for one pattern on ash). So the isolation is the process's
+(`node_argv` in `community.py`):
+- **Node's permission model.** It may read only `upstream_host/`. It can't write (except `check`'s
+  frames), start processes, or load workers or addons.
+- **A network namespace of its own, with no network at all.** On the Pi that's `unshare -rn`. On
+  ash it's `bwrap --unshare-net`, because Ubuntu's AppArmor lets bwrap have a user namespace but
+  not unshare.
+- `fetch`, `WebSocket` and the rest are deleted before any pattern code is seen.
+
+Where node, its permission model, or a network namespace isn't available, the JavaScript
+patterns stay off the shelf. Tested on both machines: inside the sandbox a file write and a
+child process are refused, and a TCP connect gets `ENETUNREACH`; outside it, the same connect
+succeeds.
+
+**A stuck pattern** can't stall the box for long: a frame that takes over 1 s (5 s for the
+first after a load, when some patterns warm up: CALM TURING's first takes 1.05 s on the Pi 5)
+gets node killed and restarted, and that pattern goes dark. The check found one broken
+pattern: *Neon Heart Ring Resonance* throws (`cx is not defined`) once its buttons are clicked,
+so it's left off. Node is in the card's cloud-init packages. On a running box:
+`sudo apt install nodejs`.
 
 **Licence:** the patterns are CC BY-SA 4.0, their authors'. They're fetched into the gitignored
 `upstream_host/build/` and never committed here.
@@ -520,9 +560,13 @@ Measured per frame on ash:
   Mandala take under 1 ms; Droplet, Terrain and Glitch about 1 ms; **Kaleido 3.1 ms**; and
   Pool 1.4 ms (it was 8.3 ms before drawing a diagonal of pillars at a time).
 - **Reaction takes 4.3 ms** at 10 iterations a frame.
-- The upstream presets take **0.1–0.6 ms** natively, and the community's a median of
-  **0.15 ms** (none over 1 ms). On the Pi 5 the community's take a median of 0.51 ms, and the
-  slowest, Rose Mushroom, takes 3.2 ms.
+- The upstream presets take **0.1–0.6 ms** natively. The community's compiled patterns take
+  a median of **0.15 ms** (none over 1 ms), and its JavaScript ones up to 7.8 ms (Pareidolia),
+  through the pipe.
+- On the Pi 5 the community's 287 take a median of 0.65 ms. The compiled ones are all under
+  3.2 ms (Rose Mushroom is the slowest), but a few of the JavaScript ones are well over:
+  *Beating Blob* takes 31 ms, *Rainbow Voronoi* 24 ms, *Heart's illumination* 23 ms and
+  *Pareidolia* 16 ms, so those run at 30–60 fps.
 - The Patternflow originals, fastest first: Life 0.3 ms, Op Art 0.3 ms, Fireworks 0.4 ms,
   Streams 0.4 ms, Aurora 0.5 ms, Cyclic 0.5 ms, Moiré 0.5 ms, Snow 0.5 ms, Warp 0.5 ms, Lava
   0.6 ms, Orrery 0.6 ms, Quasicrystal 0.6 ms, Ribbons 0.6 ms, Spiro 0.6 ms, Bit Tunnel 0.7 ms,

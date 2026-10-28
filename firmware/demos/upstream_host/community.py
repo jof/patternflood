@@ -2,14 +2,16 @@
 """Build Patternflow's community patterns (community.patternflow.work) into host libraries.
 
 The community wall's patterns are JavaScript, and most also carry a firmware header:
-the author's own, or a port someone verified on hardware. The headers are what we run.
-Each is compiled, unchanged but for a few mechanical fixups, into its own small shared
-library with build.py's C API (pfd/upstream.py drives both), against our shim and the
-portable cores of upstream's main branch, which the community builds against.
+the author's own, or a port someone verified on hardware. Where there's a header, that's
+what we run. Each is compiled, unchanged but for a few mechanical fixups, into its own
+small shared library with build.py's C API (pfd/upstream.py drives both), against our
+shim and the portable cores of upstream's main branch, which the community builds
+against. The JavaScript-only ones run under node, in upstream's own harness, sandboxed
+with no network (jsrun.mjs, node_argv()).
 
-    ./community.py sync              # the wall's public patterns, their headers, and upstream's cores
+    ./community.py sync              # the wall's public patterns, headers and scripts; upstream's cores and harness
     ./community.py build             # compile what's new, in parallel (the controller does this on start)
-    ./community.py check             # on ash: run each under AddressSanitizer -> src/checks.json
+    ./community.py check             # on ash: run each through a scripted player -> src/checks.json
     ./community.py sheet /tmp/cs     # contact sheets of the check's frames, to judge the canvas by eye
 
 One library per pattern: names collide between authors, a header that doesn't compile
@@ -25,6 +27,7 @@ The patterns are CC BY-SA 4.0, their authors'. They're fetched into build/ and a
 copied into this repository.
 """
 import argparse
+import functools
 import hashlib
 import json
 import os
@@ -45,6 +48,8 @@ API = "https://community.patternflow.work/api/community"
 GITHUB = "engmung/patternflow"
 CORES = ["src/core_math.h", "src/core_color.h", "src/core_noise.h", "src/core_tables.h", "src/core_mem.h",
          "src/core_params.h", "abi/pf_params.h"]
+WEB = ["shared/constants", "pattern/controls", "pattern/knobs", "pattern/matrix", "pattern/harness", "pattern/ramp",
+       "community/knobs"]           # web/src/lib/<module>.ts, as jsrun.mjs bundles them
 CACHE = HERE / "build" / "community"
 SRC, LIB, CHECK = CACHE / "src", CACHE / "lib", CACHE / "check"
 SHIMS = [HERE / "community_shim", HERE / "shim"]
@@ -96,11 +101,16 @@ def sync():
     for rel in CORES:
         (new / "cores" / rel).parent.mkdir(parents=True, exist_ok=True)
         (new / "cores" / rel).write_bytes(fetch(f"https://raw.githubusercontent.com/{GITHUB}/{sha}/firmware/patternflow/{rel}"))
+    for mod in WEB:                     # the Pattern Lab's harness, for the JavaScript-only patterns
+        (new / "web" / f"{mod}.ts").parent.mkdir(parents=True, exist_ok=True)
+        (new / "web" / f"{mod}.ts").write_bytes(fetch(f"https://raw.githubusercontent.com/{GITHUB}/{sha}/web/src/lib/{mod}.ts"))
+    (new / "js").mkdir()
     patterns, js_only = [], []
     for c in cards:
         entry = {"id": c["id"], "title": c["title"].strip(), "author": c.get("displayUsername") or c.get("username") or "",
                  "likes": c.get("likeCount", 0), "created": c.get("createdAt")}
         if not c.get("hasCpp"):
+            (new / "js" / f"{c['id']}.js").write_text(c["code"])
             js_only.append(entry)
             continue
         header = json.loads(fetch(f"{API}/patterns/{c['id']}/header"))
@@ -112,9 +122,13 @@ def sync():
         shutil.copy(SRC / "checks.json", new / "checks.json")
     (new / "index.json").write_text(json.dumps({"synced": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                                                 "upstream": sha, "patterns": patterns, "js_only": js_only}, indent=1))
+    r = subprocess.run(["node", str(HERE / "jsrun.mjs"), "bundle", str(new)], capture_output=True, text=True) \
+        if shutil.which("node") else None
+    if not r or r.returncode:           # it needs node >= 22.6 (to strip the TypeScript); the Pi's node runs the result
+        print("no JavaScript-only patterns: couldn't bundle the harness" + (f"\n{r.stderr[-1000:]}" if r else " (no node)"))
     shutil.rmtree(SRC, ignore_errors=True)
     new.rename(SRC)
-    print(f"{len(patterns)} patterns with headers, {len(js_only)} JavaScript only; upstream cores at {sha[:8]} -> {SRC}")
+    print(f"{len(patterns)} patterns with headers, {len(js_only)} JavaScript only; upstream at {sha[:8]} -> {SRC}")
 
 
 def fixup(text):
@@ -335,9 +349,74 @@ def check(jobs=None):
         checks.setdefault(e["id"], {"sha": sha, "title": e["title"]})[f"{size[0]}x{size[1]}"] = verdict
         if verdict != "ok":
             print(f"{e['title']} ({e['id']}) at {size[0]}x{size[1]}: {verdict}")
+    titles = {e["id"]: e["title"] for e in idx["js_only"]}
+    if titles and not (SRC / "web" / "harness.js").exists():
+        print("JavaScript-only patterns not checked: no harness (sync with node >= 22.6)")
+    elif titles and not node_argv([]):
+        print("JavaScript-only patterns not checked: needs node with its permission model, and unshare or bwrap")
+    elif titles:
+        def js(i):
+            try:
+                r = subprocess.run(node_argv(["check", SRC, i, CHECK_FRAMES, SHEET_FRAME, CHECK], write=[CHECK]),
+                                   capture_output=True, text=True, timeout=120)
+            except subprocess.TimeoutExpired:
+                return {"id": i, "verdict": "timeout"}
+            return json.loads(r.stdout) if r.stdout.strip() else {"id": i, "verdict": "exit: " + r.stderr[-300:]}
+
+        for res in ThreadPoolExecutor(jobs or os.cpu_count()).map(js, titles):
+            i = res.pop("id")
+            checks[i] = {"sha": js_sha(i), "title": titles[i], "js": res.pop("verdict"), **res}
+            if checks[i]["js"] != "ok":
+                print(f"{titles[i]} ({i}), JavaScript: {checks[i]['js']}")
     (SRC / "checks.json").write_text(json.dumps(checks, indent=1, ensure_ascii=False))
-    bad = sum(1 for c in checks.values() for k, v in c.items() if "x" in k and v != "ok")
+    bad = sum(1 for c in checks.values() for k, v in c.items() if ("x" in k or k == "js") and v != "ok")
     print(f"checked {len(checks)} patterns ({bad} not ok) -> {SRC / 'checks.json'}")
+
+
+@functools.lru_cache(maxsize=None)
+def _sandbox():
+    """(node's permission flag, a network-namespace prefix taking extra writable paths), or None if either is missing."""
+    if not shutil.which("node"):
+        return None
+    ok = lambda argv: subprocess.run(argv, capture_output=True).returncode == 0      # noqa: E731
+    flag = next((f for f in ("--permission", "--experimental-permission") if ok(["node", f, "-e", "0"])), None)
+    if not flag:
+        return None
+    if ok(["unshare", "-rn", "true"]):                  # the Pi
+        return flag, lambda writable: ["unshare", "-rn"]
+    bwrap = ["bwrap", "--ro-bind", "/", "/", "--dev", "/dev", "--proc", "/proc", "--unshare-net", "--die-with-parent"]
+    if shutil.which("bwrap") and ok(bwrap + ["true"]):  # ash: Ubuntu lets bwrap have a user namespace, not unshare
+        return flag, lambda writable: bwrap + [a for w in writable for a in ("--bind", str(w), str(w))]
+    return None
+
+
+def node_argv(args, write=()):
+    """jsrun.mjs ARGS under node's permission model (reads in upstream_host only, writes only in WRITE),
+    with no network: the only way a JavaScript pattern runs. None where that can't be arranged."""
+    box = _sandbox()
+    if not box:
+        return None
+    flag, netns = box
+    return [*netns(write), "node", "--no-warnings", flag, f"--allow-fs-read={HERE}",
+            *(f"--allow-fs-write={w}" for w in write),
+            "--max-old-space-size=512", str(HERE / "jsrun.mjs"), *map(str, args)]
+
+
+def js_sha(i, src=SRC):
+    return hashlib.sha256((src / "js" / f"{i}.js").read_bytes()).hexdigest()[:16]
+
+
+def js_patterns(src=SRC):
+    """The JavaScript-only patterns that can run (with jsrun.mjs, under node) -> [(entry, source path)]."""
+    idx, checks = load_index(src)
+    if not (src / "web" / "harness.js").exists():
+        return []
+    out = []
+    for e in idx["js_only"]:
+        c = checks.get(e["id"])
+        if not c or c.get("sha") != js_sha(e["id"], src) or c.get("js") == "ok":
+            out.append((e, src / "js" / f"{e['id']}.js"))
+    return out
 
 
 def sheet(out):
@@ -352,6 +431,11 @@ def sheet(out):
             img = Image.frombytes("RGB", size, f.read_bytes())
             verdict = checks.get(e["id"], {}).get(f"{size[0]}x{size[1]}", "?")
             cells.append((e, size, img, verdict))
+    for e in idx["js_only"]:
+        c, f = checks.get(e["id"], {}), CHECK / f"{e['id']}-js.rgb"
+        if c.get("w") and f.exists() and f.stat().st_size == c["w"] * c["h"] * 3:
+            size = (c["w"], c["h"])
+            cells.append((e, size, Image.frombytes("RGB", size, f.read_bytes()), c["js"]))
     out.mkdir(parents=True, exist_ok=True)
     cols, rows, cw, ch = 6, 5, 136, 150
     for page in range(0, len(cells), cols * rows):

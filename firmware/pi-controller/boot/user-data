@@ -16,6 +16,8 @@ packages:
   # The demo suite: Pillow draws its text, g++ compiles upstream's presets on the first start.
   - python3-pil
   - g++
+  # The community's JavaScript-only patterns run under node (upstream_host/jsrun.mjs).
+  - nodejs
 
 runcmd:
   - systemctl disable --now hciuart.service || true
