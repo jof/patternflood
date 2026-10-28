@@ -7,6 +7,14 @@ After=network.target
 StartLimitIntervalSec=0
 
 [Service]
+# The frame loop says READY=1 on its first frame and WATCHDOG=1 about once a second, so a renderer that
+# hangs (a pattern stuck in a loop, I/O that never returns) is killed and restarted, not left frozen.
+# Start-up may compile the presets first: minutes on a Zero W. (The kernel and systemd themselves are
+# covered by Raspberry Pi OS's default RuntimeWatchdogSec=1min on the hardware watchdog.)
+Type=notify
+NotifyAccess=main
+WatchdogSec=20
+TimeoutStartSec=30min
 User=patternflood
 Group=patternflood
 WorkingDirectory=/opt/patternflood/demos

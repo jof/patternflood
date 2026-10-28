@@ -137,11 +137,20 @@ def host_api():
 
 
 def compile_tree(tree, size, lib):
+    """Built beside the library and renamed over it once it's on the card: the box's power switch is a
+    hard power cut, which can otherwise leave the library named but empty."""
     w, h = size
+    tmp = lib.with_name(lib.name + ".tmp")
     cmd = ["g++", "-std=c++17", "-O2", "-fPIC", "-shared", "-w",
            f"-DPANEL_RES_W={w}", f"-DPANEL_RES_H={h}",
-           "-I", str(tree), "-o", str(lib), str(tree / "pf_host.cpp")]
+           "-I", str(tree), "-o", str(tmp), str(tree / "pf_host.cpp")]
     subprocess.run(cmd, check=True)
+    fd = os.open(tmp, os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+    os.replace(tmp, lib)
 
 
 def main():

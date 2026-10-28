@@ -47,14 +47,20 @@ def main():
             f"sudo mkdir -p {o}/demos/upstream_host; "
             f"sudo find {o}/demos -mindepth 1 -maxdepth 1 ! -name upstream_host -exec rm -rf {{}} +; "
             f"sudo find {o}/demos/upstream_host -mindepth 1 -maxdepth 1 ! -name build -exec rm -rf {{}} +; "
-            f"sudo rm -rf {o}/demos/upstream_host/build/tree {o}/demos/upstream_host/build/community/src; "
+            f"sudo rm -rf {o}/demos/upstream_host/build/tree; "
+            # The community's synced sources aren't in git: a checkout without them (a fresh worktree)
+            # leaves the Pi's alone rather than emptying its shelf.
+            f"if [ -e $t{o}/demos/upstream_host/build/community/src/index.json ]; then "
+            f"sudo rm -rf {o}/demos/upstream_host/build/community/src; fi; "
             "sudo cp -a $t/. /; sudo rm -rf $t; "
             # The community's patterns compile here, where you can watch, rather than behind the splash
             # on the restart. Only what's new or changed: the libraries are kept, keyed by their sources.
             f"sudo chown -R patternflood:patternflood {o}/demos/upstream_host/build; "
             f"if [ -e {o}/demos/upstream_host/build/community/src/index.json ]; then "
             f"sudo -u patternflood python3 {o}/demos/upstream_host/community.py build; fi; "
-            "sudo systemctl daemon-reload; sudo systemctl restart patternflood; echo restarted"
+            # The restart may rebuild the presets; those fsync themselves. Everything above is on the card
+            # before this returns, so the power switch is safe as soon as it does.
+            "sudo systemctl daemon-reload; sudo systemctl restart patternflood; sync; echo restarted"
         )
         with open(tgz, "rb") as f:
             subprocess.run(["ssh", *ssh_opts, host, remote], stdin=f, check=True)

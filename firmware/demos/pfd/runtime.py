@@ -35,7 +35,7 @@ import numpy as np
 from knob_renderer import GAMMA, capped_u8
 from . import draw
 from .audio import SilentState
-from .io import log
+from .io import log, sd_notify
 
 CLICK_S = 0.45          # a press shorter than this, with no turn in it, is a click
 MENU_HOLD_S = 1.0
@@ -259,9 +259,13 @@ class Runtime:
         frames, t_stat, amps, scale = 0, 0.0, 0.0, 1.0
         table, table_bright = None, None
         period = dt = 1.0 / self.fps
+        t_alive = None
         try:
             while self.duration is None or self.t < self.duration:
                 t_frame = time.monotonic()
+                if t_alive is None or t_frame - t_alive >= 1:     # systemd restarts us if this stops
+                    sd_notify("WATCHDOG=1" if t_alive else "READY=1")
+                    t_alive = t_frame
                 for ev in self.knobs_in.poll(self.t):
                     self._event(ev)
                 self._check_menu_chord()

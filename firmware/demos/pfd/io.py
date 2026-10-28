@@ -20,6 +20,7 @@ Frame sinks take uint8 (128, 128, 3) frames, post-gamma, as receiver75 shows the
 """
 import base64
 import json
+import os
 import queue
 import random
 import socket
@@ -38,6 +39,24 @@ import r75_frame
 
 def log(*a):
     print(*a, file=sys.stderr, flush=True)
+
+
+_notify = None
+
+
+def sd_notify(msg):
+    """Tell systemd (patternflood.service is Type=notify, with a watchdog) e.g. READY=1 or WATCHDOG=1.
+    A no-op off the Pi, where there's no NOTIFY_SOCKET."""
+    global _notify
+    addr = os.environ.get("NOTIFY_SOCKET")
+    if not addr:
+        return
+    if _notify is None:
+        _notify = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+    try:
+        _notify.sendto(msg.encode(), "\0" + addr[1:] if addr[0] == "@" else addr)
+    except OSError as e:
+        log(f"sd_notify: {e}")
 
 
 # ---------------------------------------------------------------- knob sources

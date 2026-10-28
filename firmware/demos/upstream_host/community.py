@@ -357,9 +357,18 @@ def compile_one(entry, text, ns, size, out_dir, extra, src=SRC, exe=False):
     if r.returncode:
         shutil.rmtree(work, ignore_errors=True)
         return None, r.stderr
+    _fsync(work / "out")                # else a power cut soon after can leave `out` named but empty
     (work / "out").rename(out)
     shutil.rmtree(work, ignore_errors=True)
     return out, None
+
+
+def _fsync(path):
+    fd = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
 
 
 def vet(lib_path):

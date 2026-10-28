@@ -82,4 +82,17 @@ On the Zero W, the USB gigabit adapter needs a micro-B-to-A OTG **cable**. A plu
 failed (2026-10-22); a plain cable links at 1000 Mb/s (2026-10-26). Plug the
 adapter in with the Pi off. See [`wiring-pi-controller.md` §5](../../docs/desktop/wiring-pi-controller.md).
 
+**Power switch.** Cutting the power is safe once the box is running: it writes about 1 KB/s (the
+journal is in RAM, and there are no unattended upgrades), and ext4 replays its journal on the next
+boot. Twice crashed with sysrq-b (2026-10-28): clean filesystem, renderer back in 15 s. The one risky
+moment was the half-minute after a compile, when a library could be named but still empty, so the
+libraries are now fsynced before they get their names, an empty preset library is rebuilt, and
+`update_pi.py` syncs before it returns. Don't cut the power during an `apt upgrade` (it writes the
+FAT boot partition).
+
+**Watchdogs.** Raspberry Pi OS already runs the hardware watchdog (systemd `RuntimeWatchdogSec=1min`),
+so the kernel or systemd hanging reboots the box. `patternflood.service` is `Type=notify` with
+`WatchdogSec=20`: the frame loop checks in about once a second, and a renderer that hangs is
+killed and restarted (tested 2026-10-28 by SIGSTOPping it: back in 21 s).
+
 Not done yet: a read-only root filesystem (overlayfs) before the box is closed.

@@ -48,13 +48,21 @@ def _stale(lib_path):
 
 def _load(size="128x128"):
     lib_path = BUILD / "build" / f"libpfup_{size}.so"
-    if _stale(lib_path):
-        log(f"upstream: building {lib_path.name}")
-        r = subprocess.run([sys.executable, str(BUILD / "build.py"), "--size", size], capture_output=True, text=True)
-        if r.returncode:
-            log(f"upstream: build failed, running without upstream patterns\n{r.stderr[-2000:]}")
-            return None
-    return open_lib(lib_path)
+    rebuild = _stale(lib_path)
+    for _ in range(2):
+        if rebuild:
+            log(f"upstream: building {lib_path.name}")
+            r = subprocess.run([sys.executable, str(BUILD / "build.py"), "--size", size],
+                               capture_output=True, text=True)
+            if r.returncode:
+                log(f"upstream: build failed, running without upstream patterns\n{r.stderr[-2000:]}")
+                return None
+        try:
+            return open_lib(lib_path)
+        except OSError as err:          # e.g. left empty by a power cut before build.py renamed its output
+            log(f"upstream: {lib_path.name} won't load ({err}), rebuilding")
+            rebuild = True
+    return None
 
 
 def open_lib(lib_path):
