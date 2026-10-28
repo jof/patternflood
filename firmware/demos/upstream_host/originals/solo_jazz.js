@@ -20,11 +20,11 @@
 // It keeps its own time and hears nothing.
 // Knob 1 Pace: how fast the band plays, in beats a minute. Push: a break, fresh phrases on
 //   clean paper.
-// Knob 2 Jive: how wild the solos are, and how hard the purple dances: a zigzag warp that
-//   kicks on every beat, zig and zag trading places. Push: freeze the painting (the view
-//   still moves), and again to let it go.
+// Knob 2 Jive: how wild the solos are, and how hard the purple wriggles: a zigzag warp
+//   crawling along the strokes. Push: freeze the painting (the view still moves), and again
+//   to let it go.
 // Knob 3 Zoom: middle as painted; down to a half, the whole paper; up to 3x, a crayon
-//   close-up. Pumps a little on the beat. Push: mirror off, mirror, kaleidoscope.
+//   close-up. Push: mirror off, mirror, kaleidoscope.
 // Knob 4 Spin: middle still; either way, up to a turn every two bars. Back near the middle
 //   it eases upright. Push: night (the start) or cream paper.
 
@@ -151,6 +151,7 @@ function init(p, w, h) {
   p.frozen = false;
   p.angle = 0;
   p.beatF = 0; p.beatN = 0;
+  p.drift = 0;
   p.noteFlash = 0;
   p.wash = 0;
   p.voices = [];
@@ -402,6 +403,8 @@ function step(p, dt) {
   const bps = p.tempoS / 60;
   p.beatF += dt * bps;
   if (p.beatF >= 1) { p.beatF -= 1; p.beatN = (p.beatN + 1) & 3; }
+  p.drift += dt * bps * 0.25;          // the warp crawls a zigzag every four beats, smoothly
+  if (p.drift >= 1) p.drift -= 1;
 
   if (Math.abs(p.spinS) < SPIN_DEAD) {     // let go of the spin: ease back upright
     const target = Math.floor(p.angle / 3.1416 + 0.5) * 3.1416;
@@ -442,13 +445,12 @@ export function draw(display, params, time) {
 
   const pa = PAPER_LEVEL * p.paperS;
   const purple = [0, 1, 2].map((c) => PURPLE_NIGHT[c] + (PURPLE[c] - PURPLE_NIGHT[c]) * p.paperS);
-  const kick = Math.exp(-p.beatF * 5);
   // A half (the whole paper) at the bottom of the knob, 1x in the middle, 3x at the top.
   const zl = p.zoomS < 0.5 ? (p.zoomS - 0.5) * 2 : (p.zoomS - 0.5) * 2 * 1.585;
-  const zoom = Math.exp(zl * 0.693147) * (1 + 0.06 * p.jiveS * kick);
+  const zoom = Math.exp(zl * 0.693147);
   const ca = Math.cos(p.angle) / zoom, sa = Math.sin(p.angle) / zoom;
-  const jiveA = p.S * 3.2 * p.jiveS * (0.35 + 0.65 * kick);   // the purple dances on the beat
-  const jiveL = 6 * p.S, jiveShift = (p.beatN & 1) * 0.5;
+  const jiveA = p.S * 3.2 * p.jiveS * 0.6;           // the purple wriggles, the warp crawling along
+  const jiveL = 6 * p.S, jiveShift = p.drift;
   const cw = p.cw, ch = p.ch;
   for (let y = 0; y < H; y++) {
     let sy = y + 0.5 - H * 0.5;
@@ -459,9 +461,12 @@ export function draw(display, params, time) {
       const u = ca * sx + sa * sy + cw * 0.5, v = -sa * sx + ca * sy + ch * 0.5;
       const iu = wrap(Math.floor(u), cw);
       const i = wrap(Math.floor(v), ch) * cw + iu;
-      const j = wrap(Math.floor(v + jiveA * tri(u / jiveL + jiveShift)), ch) * cw + iu;
+      // The purple, warped, read between rows: the crawl glides instead of stepping a pixel at a time.
+      const vw = v + jiveA * tri(u / jiveL + jiveShift), fv = Math.floor(vw), wv = vw - fv;
+      const j0 = wrap(fv, ch) * cw + iu, j1 = wrap(fv + 1, ch) * cw + iu;
+      const pv = p.P[j0] + (p.P[j1] - p.P[j0]) * wv, tv = p.tooth[j0] + (p.tooth[j1] - p.tooth[j0]) * wv;
       const tc = clamp01((p.T[i] - TEAL_FLOOR - p.tooth[i] * TEAL_TOOTH) / GRIP);
-      const pc = clamp01((p.P[j] - PURPLE_FLOOR - p.tooth[j] * PURPLE_TOOTH) / GRIP), sh = p.Sh[i];
+      const pc = clamp01((pv - PURPLE_FLOOR - tv * PURPLE_TOOTH) / GRIP), sh = p.Sh[i];
       const grain = (h01(911, y * W + x) - 0.5) * 10 * pa;
       let r = PAPER_HI[0] * pa + grain, g = PAPER_HI[1] * pa + grain, b = PAPER_HI[2] * pa + grain;
       r += (TEAL_LIGHT[0] + (TEAL_DARK[0] - TEAL_LIGHT[0]) * sh - r) * tc;

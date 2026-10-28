@@ -676,16 +676,20 @@ played like an instrument (for VJing).
 
 | Knob | Turn | Click | Light |
 |---|---|---|---|
-| k0 Pace | 60–180 beats a minute | a break: fresh phrases on clean paper | teal on every beat, brightest on the downbeat |
-| k1 Jive | how wild the solo is, and a zigzag warp of the purple that kicks on each beat, zig and zag trading places | freeze: the painting holds, the view still moves; again to let go | purple on every note the soloist plays; white-violet while frozen |
-| k2 Zoom | ½× (the whole paper) to 3×, as painted in the middle; pumps on the beat with Jive | mirror: off, mirror, kaleidoscope | white, teal, purple for the mirror; brighter further from 1× |
+| k0 Pace | 60–180 beats a minute | a break: fresh phrases on clean paper | a steady teal, brighter the faster the pace |
+| k1 Jive | how wild the solo is, and how hard the purple wriggles: a zigzag warp crawling along the strokes, read between rows so it glides | freeze: the painting holds, the view still moves; again to let go | purple on every note the soloist plays; white-violet while frozen |
+| k2 Zoom | ½× (the whole paper) to 3×, as painted in the middle | mirror: off, mirror, kaleidoscope | white, teal, purple for the mirror; brighter further from 1× |
 | k3 Spin | either way, up to a turn every two bars; still in the middle, where it eases upright | paper: night (the start) or cream | the paper's colour, pulsing as it spins |
 
-- As shared and on the Community shelves it keeps its own time and hears nothing. (On a stock
+- As shared and on the Community shelves it keeps its own time and hears nothing, and nothing in
+  it pulses to a beat: in 6 s at full Jive, the frame-to-frame change has no periodicity at all
+  (its autocorrelation falls away smoothly, with no peak at the pace's beat or anywhere else). (On a stock
   device, upstream's audio edition can still turn its knobs; they ease, so it drifts rather than
   flickers.)
 - **On the Audio shelf** it plays to the music, through `hostAudio()`:
-  - the beats are the tracker's: phrases, the k0 light and the purple's dance land on them;
+  - the beats are the tracker's, and it bumps to them, which it never does in its own time: the
+    k0 light flashes on each, brightest on the one; the purple's warp kicks on each, zig and zag
+    trading places; the zoom pumps a little with Jive; phrases land on them;
   - a drop is a break;
   - loudness adds jive;
   - k0's turn picks the feel: half time below 95, double above 145, straight between;

@@ -18,8 +18,8 @@
 // the soloist always plays in view, the other three anywhere, each landing where the paper is
 // emptiest, so zooming out shows the whole band at work.
 // It keeps its own time and hears nothing. Knobs: Pace (beats a minute; push: a break on
-// clean paper); Jive (how wild the solos are and how hard the purple dances on the beat;
-// push: freeze the painting, the view still moving); Zoom (a half, the whole paper, to 3x;
+// clean paper); Jive (how wild the solos are and how hard the purple wriggles, a zigzag warp
+// crawling along the strokes; push: freeze the painting, the view still moving); Zoom (a half, the whole paper, to 3x;
 // push: mirror off, mirror, kaleidoscope); Spin (either way, still in the middle, easing
 // upright; push: night, the start, or cream paper).
 //
@@ -70,8 +70,9 @@ static float tempoS, jiveS, zoomS, spinS, paperS;
 static bool press[4] = {false, false, false, false};
 static bool paperOn = false, frozen = false;
 static int mirror = 0;
-static float angle = 0.0f, beatF = 0.0f;
+static float angle = 0.0f, beatF = 0.0f, drift = 0.0f;
 static int beatN = 0;
+static bool heardNow = false;
 static float noteFlash = 0.0f;
 static float wash = 0.0f;
 // the music, from hostAudio()
@@ -388,6 +389,7 @@ static void step(float dt) {
   // Playing to the music while hostAudio() keeps coming, its own time otherwise.
   audioAge = audioAge + dt > 10.0f ? 10.0f : audioAge + dt;
   const bool heard = audioAge < SJ_HEARD_S;
+  heardNow = heard;
   // The clicks: a break, freeze, the mirror, the paper. A drop in the music is a break too.
   if (press[0] || (heard && aDrop)) {
     frozen = false;
@@ -419,6 +421,8 @@ static void step(float dt) {
     beatF += dt * bps;
     if (beatF >= 1.0f) { beatF -= 1.0f; beatN = (beatN + 1) & 3; }
   }
+  drift += dt * bps * 0.25;               // the warp crawls a zigzag every four beats, smoothly
+  if (drift >= 1.0f) drift -= 1.0f;
 
   if (fabsf(spinS) < SJ_SPIN_DEAD) {        // let go of the spin: ease back upright
     const float target = floorf(angle / 3.1416f + 0.5f) * 3.1416f;
@@ -465,7 +469,8 @@ void setup() {
   frozen = false;
   mirror = 0;
   angle = 0.0f;
-  beatF = 0.0f; beatN = 0;
+  beatF = 0.0f; beatN = 0; drift = 0.0f;
+  heardNow = false;
   noteFlash = 0.0f;
   wash = 0.0f;
   audioAge = 10.0f; aBpm = 120.0f; aPhase = 0.0f; aLevel = 0.0f; aBeat = 0; aDrop = false;
@@ -508,13 +513,15 @@ void draw() {
   const float pa = SJ_PAPER_LEVEL * paperS;
   float purple[3];
   for (int c = 0; c < 3; c++) purple[c] = SJ_PURPLE_NIGHT[c] + (SJ_PURPLE[c] - SJ_PURPLE_NIGHT[c]) * paperS;
-  const float kick = expf(-beatF * 5.0f);
+  // Hearing the music, the purple dances on its beats: the warp kicks on each one, zig and zag
+  // trading places, and the zoom pumps. In its own time it wriggles, the warp crawling along.
+  const float kick = heardNow ? expf(-beatF * 5.0f) : 0.0f;
   // A half (the whole paper) at the bottom of the knob, 1x in the middle, 3x at the top.
   const float zl = zoomS < 0.5f ? (zoomS - 0.5f) * 2.0f : (zoomS - 0.5f) * 2.0f * 1.585f;
   const float zm = expf(zl * 0.693147f) * (1.0f + 0.06f * jiveS * kick);
   const float ca = cosf(angle) / zm, sa = sinf(angle) / zm;
-  const float jiveA = S * 3.2f * jiveS * (0.35f + 0.65f * kick);   // the purple dances on the beat
-  const float jiveL = 6.0f * S, jiveShift = (beatN & 1) * 0.5f;
+  const float jiveA = S * 3.2f * jiveS * (heardNow ? 0.35f + 0.65f * kick : 0.6f);
+  const float jiveL = 6.0f * S, jiveShift = heardNow ? (beatN & 1) * 0.5f : drift;
   for (int y = 0; y < FRAME_H; y++) {
     float sy = y + 0.5f - FRAME_H * 0.5f;
     if (mirror == 2) sy = fabsf(sy);
@@ -524,9 +531,12 @@ void draw() {
       const float u = ca * sx + sa * sy + SJ_CW * 0.5f, v = -sa * sx + ca * sy + SJ_CH * 0.5f;
       const int iu = wrapI((int)floorf(u), SJ_CW);
       const int i = wrapI((int)floorf(v), SJ_CH) * SJ_CW + iu;
-      const int j = wrapI((int)floorf(v + jiveA * tri(u / jiveL + jiveShift)), SJ_CH) * SJ_CW + iu;
+      // The purple, warped, read between rows: the crawl glides instead of stepping a pixel at a time.
+      const float vw = v + jiveA * tri(u / jiveL + jiveShift), fv = floorf(vw), wv = vw - fv;
+      const int j0 = wrapI((int)fv, SJ_CH) * SJ_CW + iu, j1 = wrapI((int)fv + 1, SJ_CH) * SJ_CW + iu;
+      const float pv = P[j0] + (P[j1] - P[j0]) * wv, tv = tooth[j0] + (tooth[j1] - tooth[j0]) * wv;
       const float tc = clamp01((T[i] - SJ_TEAL_FLOOR - tooth[i] * SJ_TEAL_TOOTH) / SJ_GRIP);
-      const float pc = clamp01((P[j] - SJ_PURPLE_FLOOR - tooth[j] * SJ_PURPLE_TOOTH) / SJ_GRIP), sh = Sh[i];
+      const float pc = clamp01((pv - SJ_PURPLE_FLOOR - tv * SJ_PURPLE_TOOTH) / SJ_GRIP), sh = Sh[i];
       const float grain = (h01(911u, y * FRAME_W + x) - 0.5f) * 10.0f * pa;
       float c[3];
       for (int ch = 0; ch < 3; ch++) {
@@ -556,8 +566,8 @@ void hostAudio(const float in[6]) {
   if (in[5] > 0.5f) aDrop = true;
 }
 
-// For knobs with lights (0..1 RGB each): k0 flashes teal on the beat, brightest on the
-// downbeat; k1 flashes purple on every note the soloist plays, and holds white-violet while
+// For knobs with lights (0..1 RGB each): k0 flashes teal on the music's beats, brightest
+// on the downbeat, and in its own time glows steady, brighter the faster the pace; k1 flashes purple on every note the soloist plays, and holds white-violet while
 // frozen; k2 shows the mirror (white off, teal mirror, purple kaleidoscope), brighter the
 // further from 1x; k3 is the paper's colour, pulsing as it spins.
 void knobLights(float out[4][3]) {
@@ -569,7 +579,7 @@ void knobLights(float out[4][3]) {
   const float zl = 0.2f + 0.8f * clamp01(fabsf(zoomS - 0.5f) * 2.0f);
   const float sl = 0.25f + 0.75f * fabsf(sinf(angle));
   for (int c = 0; c < 3; c++) {
-    out[0][c] = clamp01(teal[c] * (0.12f + 0.88f * beat));
+    out[0][c] = clamp01(teal[c] * (heardNow ? 0.12f + 0.88f * beat : 0.15f + 0.6f * (tempoS - 60.0f) / 120.0f));
     out[1][c] = frozen ? held[c] * 0.6f : clamp01(purple[c] * (0.1f + 0.15f * jiveS + 0.75f * noteFlash));
     out[2][c] = clamp01(modes[mirror][c] * zl);
     out[3][c] = clamp01((cream[c] * paperS + night[c] * (1.0f - paperS)) * sl);
