@@ -69,7 +69,7 @@ REVIEW = HERE / "community_review.json"     # by eye: what the COMMUNITY shelf s
 # maps a 64 x 128 frame). pfd turns them a quarter anticlockwise to stand upright; by eye, 2026-10-27.
 TURN = {"4dbf3bb506814fc3": "Breakout Arcade", "77de31bae37940c7": "Tetris", "6ada5c800c734f5c": "Space Invaders",
         "879b8d05250448ed": "Midsummer Sea", "d027a48e3eaf4995": "Firefly Hollow",
-        "df7ca71df5c04d20": "RocketFlightPattern"}
+        "df7ca71df5c04d20": "RocketFlightPattern", "618c344307ae4593": "elephant_breath"}
 # Of those, the ones whose 128 x 128 version lies on its side too (it fills the square, then turns).
 BIG_TURN = {"879b8d05250448ed": "Midsummer Sea", "d027a48e3eaf4995": "Firefly Hollow"}
 FRAME_CONST = re.compile(r"(constexpr\s+int\s+FRAME_[WH]\s*=\s*)\d+")

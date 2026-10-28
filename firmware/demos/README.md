@@ -495,10 +495,11 @@ How the compiled ones differ from the presets:
   With those, all 211 build.
 - **As published: each at its own canvas, centred.** A header that calls `PFCanvas::setFrame`
   (all of them portrait, 64 × 128) stands in the middle of the square, pillarboxed. The rest were
-  written for upstream's 128 × 64 and are letterboxed. Nothing is stretched. Six lie on their side
-  in 128 × 64, drawn with "up" along +x as upstream's canvas maps a 64 × 128 frame: Tetris (@akacoda),
-  Space Invaders, Breakout Arcade, Midsummer Sea, Firefly Hollow and RocketFlightPattern. They're
-  turned a quarter anticlockwise to stand upright (`TURN` in `community.py`, by eye).
+  written for upstream's 128 × 64 and are letterboxed. Nothing is stretched. Seven lie on their
+  side in 128 × 64, drawn with "up" along +x as upstream's canvas maps a 64 × 128 frame: Tetris
+  (@akacoda), Space Invaders, Breakout Arcade, Midsummer Sea, Firefly Hollow, RocketFlightPattern
+  and elephant_breath. They're turned a quarter anticlockwise to stand upright (`TURN` in
+  `community.py`, by eye).
 - **Vetted before it runs.** Anyone can post to the wall, including C++ ports of other people's
   patterns, and a pattern runs as native code in the demo process. So every built library is
   inspected before anything of it runs, on ash or on the Pi (`vet` in `community.py`):
@@ -551,7 +552,7 @@ Of the 288:
     (21–24 ms).
   - They run at their own pace while the box keeps 60 ([below](#the-javascript-only-patterns)).
   - The review notes each one's rate.
-- **27 ported.** Each one is checked under ASan or the sandbox, and judged on strips. A few
+- **30 ported.** Each one is checked under ASan or the sandbox, and judged on strips. A few
   examples:
   - Pulsating Solar Flare's spiral is finer and reaches the corners.
   - Branched flow's rays run on to the corners.
@@ -561,10 +562,17 @@ Of the 288:
     version overflowed a buffer.
   - CALM TURING has 29 tiles where it had 19.
   - Floaters' lamp is twice as wide.
-- **30 as published:**
+  - Three composed pixel scenes are widened by hand in their own style, 2026-10-28, after a look on
+    the panel:
+    - Midnight Clocktower stands centred in a town twice as wide, and its zoom goes on until the
+      clock face fills the square.
+    - Moonwell's crystal cave spans the square, with the shaft and sword centred.
+    - elephant_breath stands upright, 128 px tall, with its breathing rings converging on the
+      silhouette from the corners.
+- **27 as published:**
   - games and fixed layouts (Tetris, Space Invaders, Breakout, Pong 1v1, Hop Hop Up);
-  - composed pixel scenes and sprites that the square only pads (Midnight Clocktower, Moonwell,
-    Mesto Hen);
+  - composed pixel scenes and sprites that the square only pads (Lunation, The Rose and Her
+    Little Planet, Mesto Hen);
   - patterns whose automatic version breaks (Day and Night, Rebound, Neon Heart Ring Resonance);
   - Entropy Glass, whose hourglass already fills the square top to bottom at its 1:2 proportions.
 

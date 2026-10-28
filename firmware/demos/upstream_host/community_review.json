@@ -509,8 +509,8 @@
  },
  "9b007348542a4c0f": {
   "title": "Midnight Clocktower",
-  "big": "native",
-  "note": "a composed scene: the bigger square only pads it"
+  "big": "port",
+  "note": "ported: the tower centred in a town twice as wide, with sky, clouds and bats across; the zoom goes on until the clock fills the square"
  },
  "2579fbaf3e574f08": {
   "title": "Phonon Breather",
@@ -535,8 +535,8 @@
  },
  "83360f90f5c349cc": {
   "title": "Moonwell",
-  "big": "native",
-  "note": "a composed scene: the bigger square only pads it"
+  "big": "port",
+  "note": "ported: a whole cave: crystal walls both sides across the square, the shaft and sword centred, the pool and its reflections spanning the width"
  },
  "7ddd1341d23a40c7": {
   "title": "Poolside",
@@ -690,8 +690,8 @@
  },
  "618c344307ae4593": {
   "title": "elephant_breath",
-  "big": "native",
-  "note": "draws only the top of a bigger canvas"
+  "big": "port",
+  "note": "ported: upright, 128 px tall and centred, with the breathing rings converging on its silhouette from across the whole square"
  },
  "523e8c0fd1424e9c": {
   "title": "Collatz Kelp",
