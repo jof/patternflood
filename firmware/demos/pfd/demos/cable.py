@@ -3,16 +3,17 @@ in the spirit of Rick and Morty's interdimensional cable, Robot Chicken and Prom
 
 Each channel is a short clip (pfd/cable/lineup.py), drawn whole from a script, so it starts
 over when you come back to it. A clip plays a few times over (about LOOP_S in all, and at
-least twice), then the TV surfs on by itself to a channel picked at random, every channel
-once before any comes round again. Video files in
-~/cable (or $PF_CABLE) join the line-up as more channels: each tune-in plays a random
-excerpt, cropped square, silent like everything else here, so physical comedy plays best.
+least twice), then the TV surfs on by itself. The channels come in a shuffled order, new each
+time Cable starts and again after every lap, so every channel plays once before any comes
+round again. Video files in ~/cable (or $PF_CABLE) join the line-up as more channels: each
+tune-in plays a random excerpt, cropped square, silent like everything else here, so physical
+comedy plays best.
 
-Any knob turns the channel up or down, one channel a detent; a click skips ahead; hold a
-knob for a moment to stay tuned (the clip loops for good), and again to surf. The knob
-lights glow with the picture and fill left to right as the channel's time runs out.
+Any knob steps forward or back through the shuffled order, one channel a detent (back goes
+back to what you were just watching); a click skips ahead; hold a knob for a moment to stay
+tuned (the clip loops for good), and again to surf. The knob lights glow with the picture and
+fill left to right as the channel's time runs out.
 """
-import math
 import os
 import random
 import subprocess
@@ -127,8 +128,9 @@ class Cable(Demo):
         self.shows += found
         self.shows.sort(key=lambda s: s.num)
         self.rng = np.random.default_rng()
-        self.idx = random.randrange(len(self.shows))
-        self.bag = []
+        self.order = random.sample(range(len(self.shows)), len(self.shows))
+        self.pos = 0
+        self.idx = self.order[0]
         self.t_show = 0.0
         self.loop = 0
         self.t_change = -1.0
@@ -145,18 +147,19 @@ class Cable(Demo):
     def _loops(self, show):
         return max(LOOPS[0], min(LOOPS[1], round(LOOP_S / show.length)))
 
-    def _surf(self):
-        """On to a channel at random: every one once, then round again."""
-        if not self.bag:
-            self.bag = [i for i in range(len(self.shows)) if i != self.idx]
-            random.shuffle(self.bag)
-        self._tune(self.bag.pop() - self.idx)
-
     def _tune(self, d, k=None):
+        """d channels on (or back) in the shuffled order; past the end, a new shuffle."""
         show = self.shows[self.idx]
         if isinstance(show, Tape):
             show.stop()
-        self.idx = (self.idx + d) % len(self.shows)
+        n = len(self.order)
+        pos = self.pos + d
+        if pos >= n:                                  # a lap done: round again in a new order,
+            self.order = random.sample(range(n), n)  # not starting on the channel just left
+            if n > 1 and self.order[0] == self.idx:
+                self.order.append(self.order.pop(0))
+        self.pos = pos % n
+        self.idx = self.order[self.pos]
         self.t_show = 0.0
         self.loop = 0
         self.t_change = self.rt.t
@@ -166,9 +169,7 @@ class Cable(Demo):
             self.t_flash[k] = self.rt.t
 
     def turn(self, k, d):
-        self._tune(1 if d > 0 else -1, k)
-        if abs(d) > 1:
-            self._tune(int(math.copysign(abs(d) - 1, d)), k)
+        self._tune(d, k)
 
     def press(self, k):
         self.held_done[k] = False
@@ -193,7 +194,7 @@ class Cable(Demo):
             if self.stay or self.loop < self._loops(show):
                 self.t_show = 0.0                     # again, straight on, without the snow
             else:
-                self._surf()
+                self._tune(1)
 
     def render(self):
         t = self.rt.t

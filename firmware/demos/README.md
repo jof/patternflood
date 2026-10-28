@@ -293,11 +293,12 @@ upstream's audio edition, sound turns each upstream pattern's four knobs:
 A shelf of its own with one demo on it, **Cable**: a TV surfing channels from other dimensions,
 after Rick and Morty's interdimensional cable, Robot Chicken and Prometheus and Bob. Every
 channel is a short clip, a few seconds to 14 s. The TV plays each one two to four times over
-(about 24 s in all), then surfs on to a channel at random, every channel once before any repeats.
+(about 24 s in all), then surfs on. The channels come in a shuffled order, new each time Cable
+starts and again after every lap, so every channel plays once before any repeats.
 
 | Knob | |
 |---|---|
-| **any, turned** | channel up (clockwise) or down, one channel a detent, through snow |
+| **any, turned** | forward (clockwise) or back through the shuffled order, one channel a detent, through snow; back returns to what you were just watching |
 | **any, clicked** | skip ahead a channel |
 | **any one, held 0.7 s** | stay tuned: the clip loops for good; hold again to surf. The OSD says which |
 
