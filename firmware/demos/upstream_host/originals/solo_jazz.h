@@ -8,26 +8,30 @@
 #include "src/core_params.h"
 #include "src/core_mem.h"
 
-// Solo Jazz: the 1990s paper-cup swash, improvised live. A teal dry brush lays down
-// the chord (one bar, its pressure on an attack/release envelope, each bristle running
-// out of ink at its own rate), and a purple pen plays a solo over it: a random walk on
-// scale degrees in swung eighths, triplets or sixteenths, gliding between notes, with a
-// calligraphic nib. Both are crayon on toothy paper: ink is rub pressure, showing only where
-// it beats the grain, so strokes are rough when fresh and wear into streaks as they fade.
-// Each phrase lands where the paper is emptiest.
-// Knobs: Tempo (BPM), Solo (lazy wave .. bebop zigzag), Dry (wet .. dry brush),
-// Paper (black .. cream). Push any knob: wash the paper and start a new phrase.
+// Solo Jazz: the 1990s paper-cup swash, improvised live, for playing like an instrument.
+// A teal dry brush lays down the chord (one bar, its pressure on an attack/release envelope,
+// each bristle running out of ink at its own rate), and a purple pen plays a zigzag solo
+// over it: a walk on scale degrees in swung eighths, triplets or sixteenths that mostly
+// turns back on itself. Both are crayon on toothy paper: ink is rub pressure, showing only
+// where it beats the grain, so strokes are rough when fresh and wear into streaks as they
+// fade. Each phrase lands where the paper is emptiest. The paper wraps round like the cup,
+// so it tiles when you zoom out and never shows an edge when it spins.
+// Knobs: Tempo (push: tap tempo, the tap is the downbeat); Jive (how wild the solo is and
+// how hard the purple dances on the beat; push: a break on clean paper); Zoom (a third,
+// tiled, to 3x; push: mirror off, mirror, kaleidoscope); Spin (either way, still in the
+// middle, easing upright; push: cream paper or night).
 //
 // A line-for-line twin of solo_jazz.js: the same generator, hash and draws in the same
 // order, so the device paints what Pattern Lab previews. Everything scales with the
 // short side, so FRAME_W / FRAME_H may be any size (64 x 128 as shared, 128 x 128 too).
+// knobLights() is extra, for hosts with lights in their knobs; the firmware ignores it.
 //
 // By Jonathan Lassoff. CC BY-SA 4.0.
 
 namespace SoloJazz {
 
 const char* NAME = "Solo Jazz";
-const char* const KNOB_LABELS[4] = {"Tempo", "Solo", "Dry", "Paper"};
+const char* const KNOB_LABELS[4] = {"Tempo", "Jive", "Zoom", "Spin"};
 constexpr bool ABSOLUTE_READY = true;
 
 constexpr int FRAME_W = 64;
@@ -44,32 +48,42 @@ constexpr float SJ_PREROLL_BEATS = 7.0f;
 // Crayon on paper: ink is rub pressure, and a pixel takes colour only where the pressure
 // beats its paper tooth (fixed grain), so light strokes and fading ones break into specks.
 constexpr uint32_t SJ_TOOTH_SEED = 0x1b873593u, SJ_TOOTH_SEED2 = 0xcc9e2d51u;
-constexpr float SJ_TEAL_FLOOR = 0.45f, SJ_TEAL_TOOTH = 0.9f, SJ_PURPLE_FLOOR = 0.45f, SJ_PURPLE_TOOTH = 0.9f;
+constexpr float SJ_TEAL_FLOOR = 0.45f, SJ_TEAL_TOOTH = 0.9f, SJ_PURPLE_FLOOR = 0.4f, SJ_PURPLE_TOOTH = 0.9f;
 constexpr float SJ_GRIP = 0.5f;
 constexpr float SJ_PAPER[3] = {242, 228, 198};
+constexpr float SJ_PAPER_LEVEL = 0.8f;
 constexpr float SJ_TEAL_LIGHT[3] = {64, 198, 204}, SJ_TEAL_DARK[3] = {10, 112, 148};
 constexpr float SJ_PURPLE[3] = {96, 26, 176};
+constexpr float SJ_SPIN_DEAD = 0.06f;    // about a detent either side of the middle: still
+constexpr float SJ_TAP_WINDOW = 2.0f;    // seconds: taps further apart start a new count
 
 // knobs, at the cards' start: mid-range
-static float tempo = 120.0f, solo = 0.5f, dry = 0.5f, paper = 0.5f;
-static float tempoS, soloS, dryS, paperS;
-static bool washReq = false;
+static float tempoKnob = 120.0f, jive = 0.5f, zoom = 0.5f, spin = 0.0f;
+static float tempoS, jiveS, zoomS, spinS, paperS;
+static bool press[4] = {false, false, false, false};
+static float tempoAdj = 0.0f, tapAge = 10.0f, tapInt = 0.5f;
+static int tapCount = 0;
+static bool paperOn = true;
+static int mirror = 0;
+static float angle = 0.0f, beatF = 0.0f;
+static int beatN = 0;
+static float tapFlash = 0.0f, noteFlash = 0.0f;
 static float wash = 0.0f;
 
-static float* T = nullptr;    // teal ink
-static float* Sh = nullptr;   // its shade, light 0 .. dark 1
-static float* P = nullptr;    // purple ink
+static float* T = nullptr;      // teal ink
+static float* Sh = nullptr;     // its shade, light 0 .. dark 1
+static float* P = nullptr;      // purple ink
 static float* tooth = nullptr;  // the paper's grain: per pixel, and in streaks along the strokes
 
 static uint32_t rng = 0x2468ace1u;
 static float S = 1.0f, fadeBeats = 20.0f, lastY = -1000.0f;
 
 // the phrase
-static float pb = 0.0f, phraseLen = 7.0f;
+static float pb = 0.0f, phraseLen = 7.0f, dryP = 0.5f;
 static bool hasBrush = true, hasPen = true;
 static float hw, L, cx, cy, bend, wobA, wobF, wobP, dx, dy, nx, ny, bias, amp, hatchK, hatchP;
 static uint32_t seed = 0, penSeed = 0;
-static int nLanes = 0, nNotes = 0;
+static int nLanes = 0, nNotes = 0, lastNote = -1;
 static float penX = -1e9f, penY = -1e9f, nib = 1.0f;
 
 struct Lane { float load, dep, shade, t0, t1; uint32_t seed; };
@@ -120,6 +134,16 @@ static inline float clamp01(float x) {
   return x < 0.0f ? 0.0f : x > 1.0f ? 1.0f : x;
 }
 
+static inline int wrapI(int n, int m) {
+  n %= m;
+  return n < 0 ? n + m : n;
+}
+
+// -1 at whole numbers, +1 halfway: a zigzag
+static inline float tri(float x) {
+  return 1.0f - 4.0f * fabsf(x - floorf(x) - 0.5f);
+}
+
 static inline uint32_t nextU32() {
   uint32_t x = rng;
   x ^= x << 13;
@@ -139,11 +163,10 @@ static float pickY(float w) {
   for (int k = 0; k < 6; k++) {
     const float y = FRAME_H * (0.1f + 0.8f * rnd());
     float score = fabsf(y - lastY) < w * 1.5f ? 1e6f : 0.0f;
-    int y0 = (int)floorf(y - w), y1 = (int)floorf(y + w);
-    if (y0 < 0) y0 = 0;
-    if (y1 > FRAME_H - 1) y1 = FRAME_H - 1;
+    const int y0 = (int)floorf(y - w), y1 = (int)floorf(y + w);
     for (int yy = y0; yy <= y1; yy += 2) {
-      for (int x = 0; x < FRAME_W; x += 2) score += T[yy * FRAME_W + x] + P[yy * FRAME_W + x];
+      const int row = wrapI(yy, FRAME_H) * FRAME_W;
+      for (int x = 0; x < FRAME_W; x += 2) score += T[row + x] + P[row + x];
     }
     if (score < bestScore) { bestScore = score; best = y; }
   }
@@ -157,11 +180,12 @@ static void newPhrase() {
   hasBrush = r >= 0.1f;                   // one in ten: the pen alone, a solo break
   hasPen = r < 0.1f || r >= 0.16f;        // and one in sixteen: the brush alone
   phraseLen = SJ_PEN_DELAY + SJ_PEN_BEATS + RESTS[(int)floorf(rnd() * 4.0f)];
+  dryP = 0.15f + 0.7f * rnd();
 
   const float th = (rnd() * 2.0f - 1.0f) * 0.38f;
   const float dir = rnd() < 0.8f ? 1.0f : -1.0f;
   hw = S * (6.0f + rnd() * 3.0f);
-  L = FRAME_W * (0.85f + rnd() * 0.45f) / cosf(th);
+  L = FRAME_W * (0.75f + rnd() * 0.3f) / cosf(th);    // under a turn of the wrapped paper
   cx = FRAME_W * (0.3f + rnd() * 0.4f);
   cy = pickY(hw);
   lastY = cy;
@@ -193,16 +217,16 @@ static void newPhrase() {
     lane.t1 = 1.0f - (0.06f + 0.06f * rnd()) * u * u;    // and lift sooner: a round start, a pointed tail
   }
 
-  // The solo: a walk on scale degrees -5..5, one beat at a time.
-  const float so = soloS;
+  // The solo: a zigzag walk on scale degrees -6..6, one beat at a time.
+  const float jv = jiveS;
   bias = (rnd() * 2.0f - 1.0f) * 0.3f * hw;
-  amp = hw * (1.0f + 0.8f * so) / 5.0f;
+  amp = hw * (1.4f + 1.2f * jv) / 6.0f;
   int deg = (int)floorf((rnd() * 2.0f - 1.0f) * 2.0f + 0.5f);
   bool up = rnd() < 0.5f;
   int n = 0;
   for (int b = 0; b < SJ_PEN_BEATS; b++) {
     const float rs = rnd();
-    const int sub = rs < so * 0.75f ? 4 : rs < so ? 3 : 2;
+    const int sub = rs < 0.25f + 0.6f * jv ? 4 : rs < 0.45f + 0.5f * jv ? 3 : 2;
     for (int s = 0; s < sub; s++) {
       Note& note = notes[n++];
       note.t = (b + (sub == 2 ? (s == 0 ? 0.0f : SJ_SWING) : (float)s / sub)) / SJ_PEN_BEATS;
@@ -210,17 +234,20 @@ static void newPhrase() {
       note.acc = s == 0 ? (b % 2 == 0 ? 1.0f : 0.6f) : 0.0f;
       note.rest = n > 1 && b < SJ_PEN_BEATS - 1 && rnd() < 0.04f;
       int size;
-      if (rnd() < 0.08f + 0.25f * so) size = 3 + (int)floorf(rnd() * 3.0f);
-      else size = rnd() < 0.4f ? 2 : 1;
-      if (rnd() < 0.7f) up = !up;          // a squiggle mostly turns back
+      if (rnd() < 0.15f + 0.35f * jv) size = 4 + (int)floorf(rnd() * 3.0f);
+      else size = rnd() < 0.5f ? 3 : 2;
+      if (rnd() < 0.88f) up = !up;         // a zigzag: it nearly always turns back
       deg += up ? size : -size;
-      if (deg > 5) deg = 10 - deg;
-      if (deg < -5) deg = -10 - deg;
+      if (deg > 6) deg = 12 - deg;
+      if (deg < -6) deg = -12 - deg;
+      if (deg > 6) deg = 6;
+      if (deg < -6) deg = -6;
     }
   }
   Note& last = notes[n++];
   last.t = 1.0f; last.deg = deg; last.acc = 0.0f; last.rest = false;
   nNotes = n;
+  lastNote = -1;
   penX = penY = -1e9f;
 }
 
@@ -234,8 +261,7 @@ static void splat(float x, float y, float a, float shade) {
   const int ix = (int)fx0, iy = (int)fy0;
   const float fx = x - fx0, fy = y - fy0;
   for (int k = 0; k < 4; k++) {
-    const int px = ix + (k & 1), py = iy + (k >> 1);
-    if (px < 0 || py < 0 || px >= FRAME_W || py >= FRAME_H) continue;
+    const int px = wrapI(ix + (k & 1), FRAME_W), py = wrapI(iy + (k >> 1), FRAME_H);
     const float wgt = ((k & 1) ? fx : 1.0f - fx) * ((k >> 1) ? fy : 1.0f - fy);
     const float aa = a * wgt;
     const int i = py * FRAME_W + px;
@@ -270,8 +296,8 @@ static void paintBrush(float t0, float t1) {
       if (t < lane.t0 || t > lane.t1) continue;
       const float u = -1.0f + 2.0f * j / (nLanes - 1);
       const float hatch = 0.78f + 0.22f * sinf(6.2832f * (t * L + u * hw * hatchK) / hatchP);
-      float ink = lane.load * press * hatch - dryS * lane.dep * t * 0.9f
-        + (vnoise2(seed, (u + 1.0f) * cu, tc) - 0.5f) * (0.2f + 1.5f * dryS)
+      float ink = lane.load * press * hatch - dryP * lane.dep * t * 0.9f
+        + (vnoise2(seed, (u + 1.0f) * cu, tc) - 0.5f) * (0.2f + 1.5f * dryP)
         + (vnoise(lane.seed, tn) - 0.5f) * 0.15f;
       const float edge = fabsf(u);
       if (edge > 0.7f) ink -= (edge - 0.7f) / 0.3f * (0.2f + 1.0f * vnoise2(seed ^ 0x5bd1e995u, (u + 1.0f) * cu, te));
@@ -285,20 +311,16 @@ static void paintBrush(float t0, float t1) {
   }
 }
 
-static void disc(float x, float y, float r, float press) {
-  int x0 = (int)floorf(x - r - 1.0f), x1 = (int)ceilf(x + r + 1.0f);
-  int y0 = (int)floorf(y - r - 1.0f), y1 = (int)ceilf(y + r + 1.0f);
-  if (x0 < 0) x0 = 0;
-  if (y0 < 0) y0 = 0;
-  if (x1 > FRAME_W - 1) x1 = FRAME_W - 1;
-  if (y1 > FRAME_H - 1) y1 = FRAME_H - 1;
+static void disc(float x, float y, float r, float pr) {
+  const int x0 = (int)floorf(x - r - 1.0f), x1 = (int)ceilf(x + r + 1.0f);
+  const int y0 = (int)floorf(y - r - 1.0f), y1 = (int)ceilf(y + r + 1.0f);
   for (int py = y0; py <= y1; py++) {
     for (int px = x0; px <= x1; px++) {
       const float ddx = px - x, ddy = py - y;
       const float c = r + 0.5f - sqrtf(ddx * ddx + ddy * ddy);
       if (c <= 0.0f) continue;
-      const float v = (c > 1.0f ? 1.0f : c) * SJ_P_MAX * press;
-      const int i = py * FRAME_W + px;
+      const float v = (c > 1.0f ? 1.0f : c) * SJ_P_MAX * pr;
+      const int i = wrapI(py, FRAME_H) * FRAME_W + wrapI(px, FRAME_W);
       if (v > P[i]) P[i] = v;
     }
   }
@@ -308,13 +330,17 @@ static void paintPen(float tp0, float tp1) {
   const float along = (tp1 - tp0) * 1.08f * L;
   int n = (int)ceilf(along / 0.12f);
   if (n < 1) n = 1;
-  const float glide = 0.85f * soloS * soloS;   // 0: notes joined by cosine glides, 1: nearly straight
+  const float glide = 0.55f + 0.45f * jiveS;   // 0: notes joined by cosine glides, 1: straight, sharp corners
   for (int i = 1; i <= n; i++) {
     const float tp = tp0 + (tp1 - tp0) * i / n;
     int k = 0;
     while (k < nNotes - 2 && notes[k + 1].t <= tp) k++;
     const Note& a = notes[k];
     const Note& b = notes[k + 1];
+    if (k != lastNote) {
+      lastNote = k;
+      if (!a.rest) noteFlash = 0.6f + 0.4f * a.acc;
+    }
     const float f = clamp01((tp - a.t) / (b.t - a.t));
     const float cs = (1.0f - cosf(3.1416f * f)) * 0.5f;
     const float sm = cs + (f - cs) * glide;
@@ -332,20 +358,55 @@ static void paintPen(float tp0, float tp1) {
     penX = x; penY = y;
     if (a.rest) continue;
     const float taper = 0.35f + 0.65f * smooth(tp / 0.05f) * smooth((1.0f - tp) / 0.05f);
-    const float press = 0.7f + 0.4f * vnoise(penSeed, tp * 1.08f * L / (2.5f * S));   // the crayon skips
-    disc(x, y, S * 1.1f * nib * (1.0f + 0.45f * accent) * taper, press);
+    const float pr = 0.8f + 0.4f * vnoise(penSeed, tp * 1.08f * L / (2.5f * S));   // the crayon skips
+    disc(x, y, S * 1.1f * nib * (1.0f + 0.45f * accent) * taper, pr);
   }
 }
 
 static void step(float dt) {
+  // The clicks: tap tempo, a break, the mirror, the paper.
+  tapAge = tapAge + dt > 10.0f ? 10.0f : tapAge + dt;
+  if (press[0]) {
+    if (tapAge < SJ_TAP_WINDOW) {
+      tapInt = tapCount > 0 ? 0.5f * tapInt + 0.5f * tapAge : tapAge;
+      tapCount++;
+      const float bpm = 60.0f / tapInt;
+      tempoAdj = (bpm < 60.0f ? 60.0f : bpm > 180.0f ? 180.0f : bpm) - tempoKnob;
+    } else {
+      tapCount = 0;
+    }
+    tapAge = 0.0f;
+    tapFlash = 1.0f;
+    beatF = 0.0f; beatN = 0;              // the tap is the downbeat
+  }
+  if (press[1]) { wash = 1.0f; newPhrase(); }
+  if (press[2]) mirror = (mirror + 1) % 3;
+  if (press[3]) paperOn = !paperOn;
+  for (int i = 0; i < 4; i++) press[i] = false;
+
+  const float tempo = tempoKnob + tempoAdj;
   const float kk = dt * 3.0f > 1.0f ? 1.0f : dt * 3.0f;
-  tempoS += (tempo - tempoS) * kk;
-  soloS += (solo - soloS) * kk;
-  dryS += (dry - dryS) * kk;
-  paperS += (paper - paperS) * (kk * 0.5f);
-  if (washReq) { washReq = false; wash = 1.0f; newPhrase(); }
+  tempoS += ((tempo < 60.0f ? 60.0f : tempo > 180.0f ? 180.0f : tempo) - tempoS) * kk;
+  jiveS += (jive - jiveS) * kk;
+  zoomS += (zoom - zoomS) * kk;
+  spinS += (spin - spinS) * kk;
+  paperS += ((paperOn ? 1.0f : 0.0f) - paperS) * (dt * 2.0f > 1.0f ? 1.0f : dt * 2.0f);
+  tapFlash = tapFlash - dt * 4.0f > 0.0f ? tapFlash - dt * 4.0f : 0.0f;
+  noteFlash *= expf(-dt * 8.0f);
 
   const float bps = tempoS / 60.0f;
+  beatF += dt * bps;
+  if (beatF >= 1.0f) { beatF -= 1.0f; beatN = (beatN + 1) & 3; }
+
+  if (fabsf(spinS) < SJ_SPIN_DEAD) {        // let go of the spin: ease back upright
+    const float target = floorf(angle / 3.1416f + 0.5f) * 3.1416f;
+    angle += (target - angle) * (dt * 2.5f > 1.0f ? 1.0f : dt * 2.5f);
+  } else {
+    angle += spinS * fabsf(spinS) * (6.2832f / 8.0f) * bps * dt;
+  }
+  if (angle > 3.1416f) angle -= 6.2832f;
+  if (angle < -3.1416f) angle += 6.2832f;
+
   const float rate = bps / fadeBeats + (wash > 0.0f ? 3.0f : 0.0f);
   if (wash > 0.0f) wash -= dt;
   const float fade = expf(-dt * rate);
@@ -371,9 +432,15 @@ void setup() {
   if (!Sh) Sh = PFMem::allocFloats(SJ_N);
   if (!P) P = PFMem::allocFloats(SJ_N);
   if (!tooth) tooth = PFMem::allocFloats(SJ_N);
-  tempo = 120.0f; solo = 0.5f; dry = 0.5f; paper = 0.5f;
-  tempoS = tempo; soloS = solo; dryS = dry; paperS = paper;
-  washReq = false;
+  tempoKnob = 120.0f; jive = 0.5f; zoom = 0.5f; spin = 0.0f;
+  tempoS = tempoKnob; jiveS = jive; zoomS = zoom; spinS = spin;
+  for (int i = 0; i < 4; i++) press[i] = false;
+  tempoAdj = 0.0f; tapAge = 10.0f; tapCount = 0; tapInt = 0.5f;
+  paperOn = true; paperS = 1.0f;
+  mirror = 0;
+  angle = 0.0f;
+  beatF = 0.0f; beatN = 0;
+  tapFlash = 0.0f; noteFlash = 0.0f;
   wash = 0.0f;
   rng = 0x2468ace1u;
   S = (FRAME_W < FRAME_H ? FRAME_W : FRAME_H) / 64.0f;
@@ -393,12 +460,12 @@ void setup() {
 }
 
 void update(float dt, const InputFrame& input) {
-  PFParams::apply(input, 0, &tempo, 60.0f, 180.0f, 2.5f);
-  PFParams::apply(input, 1, &solo, 0.0f, 1.0f, 0.020833f);
-  PFParams::apply(input, 2, &dry, 0.0f, 1.0f, 0.020833f);
-  PFParams::apply(input, 3, &paper, 0.0f, 1.0f, 0.020833f);
+  PFParams::apply(input, 0, &tempoKnob, 60.0f, 180.0f, 2.5f);
+  PFParams::apply(input, 1, &jive, 0.0f, 1.0f, 0.020833f);
+  PFParams::apply(input, 2, &zoom, 0.0f, 1.0f, 0.020833f);
+  PFParams::apply(input, 3, &spin, -1.0f, 1.0f, 0.041667f);
   for (int i = 0; i < 4; i++) {
-    if (input.btnPressed[i] && !input.paramAbsoluteActive[i] && !input.knobAudioActive[i]) washReq = true;
+    if (input.btnPressed[i] && !input.paramAbsoluteActive[i] && !input.knobAudioActive[i]) press[i] = true;
   }
   if (!buffersOk()) return;
   step(dt > 0.1f ? 0.1f : dt);
@@ -407,24 +474,55 @@ void update(float dt, const InputFrame& input) {
 void draw() {
   PFCanvas::setFrame(FRAME_W, FRAME_H);
   if (!buffersOk()) { PFCanvas::present(); return; }
-  const float pa = 1.0f - (1.0f - paperS) * (1.0f - paperS);   // mid-knob is already cream, not grey
+  const float pa = SJ_PAPER_LEVEL * paperS;
+  const float kick = expf(-beatF * 5.0f);
+  const float zm = expf((zoomS - 0.5f) * 3.2f * 0.693147f) * (1.0f + 0.06f * jiveS * kick);
+  const float ca = cosf(angle) / zm, sa = sinf(angle) / zm;
+  const float jiveA = S * 3.2f * jiveS * (0.35f + 0.65f * kick);   // the purple dances on the beat
+  const float jiveL = 6.0f * S, jiveShift = (beatN & 1) * 0.5f;
   for (int y = 0; y < FRAME_H; y++) {
+    float sy = y + 0.5f - FRAME_H * 0.5f;
+    if (mirror == 2) sy = fabsf(sy);
     for (int x = 0; x < FRAME_W; x++) {
-      const int i = y * FRAME_W + x;
-      const float grain = (h01(911u, i) - 0.5f) * 10.0f * pa;
+      float sx = x + 0.5f - FRAME_W * 0.5f;
+      if (mirror >= 1) sx = fabsf(sx);
+      const float u = ca * sx + sa * sy + FRAME_W * 0.5f, v = -sa * sx + ca * sy + FRAME_H * 0.5f;
+      const int iu = wrapI((int)floorf(u), FRAME_W);
+      const int i = wrapI((int)floorf(v), FRAME_H) * FRAME_W + iu;
+      const int j = wrapI((int)floorf(v + jiveA * tri(u / jiveL + jiveShift)), FRAME_H) * FRAME_W + iu;
       const float tc = clamp01((T[i] - SJ_TEAL_FLOOR - tooth[i] * SJ_TEAL_TOOTH) / SJ_GRIP);
-      const float pc = clamp01((P[i] - SJ_PURPLE_FLOOR - tooth[i] * SJ_PURPLE_TOOTH) / SJ_GRIP), sh = Sh[i];
+      const float pc = clamp01((P[j] - SJ_PURPLE_FLOOR - tooth[j] * SJ_PURPLE_TOOTH) / SJ_GRIP), sh = Sh[i];
+      const float grain = (h01(911u, y * FRAME_W + x) - 0.5f) * 10.0f * pa;
       float c[3];
       for (int ch = 0; ch < 3; ch++) {
-        float v = SJ_PAPER[ch] * pa + grain;
-        v += (SJ_TEAL_LIGHT[ch] + (SJ_TEAL_DARK[ch] - SJ_TEAL_LIGHT[ch]) * sh - v) * tc;
-        v += (SJ_PURPLE[ch] - v) * pc;
-        c[ch] = v < 0.0f ? 0.0f : v;
+        float val = SJ_PAPER[ch] * pa + grain;
+        val += (SJ_TEAL_LIGHT[ch] + (SJ_TEAL_DARK[ch] - SJ_TEAL_LIGHT[ch]) * sh - val) * tc;
+        val += (SJ_PURPLE[ch] - val) * pc;
+        c[ch] = val < 0.0f ? 0.0f : val;
       }
       PFCanvas::setPixel(x, y, (uint8_t)(int)c[0], (uint8_t)(int)c[1], (uint8_t)(int)c[2]);
     }
   }
   PFCanvas::present();
+}
+
+// For knobs with lights (0..1 RGB each): k0 flashes teal on the beat, brightest on the
+// downbeat, white on a tap; k1 flashes purple on every note the pen plays; k2 shows the
+// mirror (white off, teal mirror, purple kaleidoscope), brighter the further from 1x;
+// k3 is the paper's colour, pulsing as it spins.
+void knobLights(float out[4][3]) {
+  const float beat = expf(-beatF * 6.0f) * (beatN == 0 ? 1.0f : 0.55f);
+  const float teal[3] = {0.25f, 0.78f, 0.8f}, purple[3] = {0.55f, 0.15f, 1.0f}, white[3] = {1.0f, 0.95f, 0.85f};
+  const float cream[3] = {1.0f, 0.88f, 0.7f}, night[3] = {0.15f, 0.2f, 0.6f};
+  const float* modes[3] = {white, teal, purple};
+  const float zl = 0.2f + 0.8f * clamp01(fabsf(zoomS - 0.5f) * 2.0f);
+  const float sl = 0.25f + 0.75f * fabsf(sinf(angle));
+  for (int c = 0; c < 3; c++) {
+    out[0][c] = clamp01(teal[c] * (0.12f + 0.88f * beat) + white[c] * tapFlash);
+    out[1][c] = clamp01(purple[c] * (0.1f + 0.15f * jiveS + 0.75f * noteFlash));
+    out[2][c] = clamp01(modes[mirror][c] * zl);
+    out[3][c] = clamp01((cream[c] * paperS + night[c] * (1.0f - paperS)) * sl);
+  }
 }
 
 }  // namespace SoloJazz

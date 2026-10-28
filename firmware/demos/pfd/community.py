@@ -262,6 +262,22 @@ def _js_knobs(code):
     return " " + ", ".join(f"k{k} {n[:14]}" for k, n in named) + "." if named else ""
 
 
+class Original(Upstream):
+    """One of ours: lit by the pattern itself where it has knobLights() (community.py's pf_lights)."""
+
+    def __init__(self, rt):
+        super().__init__(rt)
+        self.has_lights = hasattr(self.lib, "pf_lights")
+        self.light_buf = (ctypes.c_float * 12)()
+
+    def lights(self):
+        if not self.has_lights:
+            return super().lights()
+        self.lib.pf_lights(self.light_buf)
+        b = self.light_buf
+        return [(b[3 * k], b[3 * k + 1], b[3 * k + 2]) for k in range(4)]
+
+
 def _originals(cm):
     """Our own patterns for the wall (upstream_host/originals/), to lead the two shelves -> (best, as published):
     at 128 x 128 on COMMUNITY, as written (centred) on COMMUNITY 1:1."""
@@ -282,7 +298,7 @@ def _originals(cm):
                 continue
             blurb = f"Ours, for the community wall (originals/{e['id']}.js).{size}{knobs_blurb(lib, 0)}"
             (best if shelf == "community" else as_published).append(
-                type(f"PFO_{e['id']}_{name}", (Upstream,), {"lib": lib, "index": 0, "name": e["title"],
+                type(f"PFO_{e['id']}_{name}", (Original,), {"lib": lib, "index": 0, "name": e["title"],
                                                              "group": shelf, "blurb": blurb}))
     return best, as_published
 

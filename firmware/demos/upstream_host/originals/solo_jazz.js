@@ -4,22 +4,25 @@
 // SPDX-License-Identifier: CC-BY-SA-4.0
 // ===============================
 
-// @knobs Tempo=60..180, Solo=0..1, Dry=0..1, Paper=0..1
+// @knobs Tempo=60..180, Jive=0..1, Zoom=0..1, Spin=-1..1
 // @matrix 64x128
 
-// Solo Jazz: the 1990s paper-cup swash, improvised live. A teal dry brush lays down
-// the chord (one bar, its pressure on an attack/release envelope, each bristle running
-// out of ink at its own rate), and a purple pen plays a solo over it: a random walk on
-// scale degrees in swung eighths, triplets or sixteenths, gliding between notes, with a
-// calligraphic nib. Both are crayon on toothy paper: ink is rub pressure, showing only where
-// it beats the grain, so strokes are rough when fresh and wear into streaks as they fade.
-// Each phrase lands where the paper is emptiest.
+// Solo Jazz: the 1990s paper-cup swash, improvised live, for playing like an instrument.
+// A teal dry brush lays down the chord (one bar, its pressure on an attack/release envelope,
+// each bristle running out of ink at its own rate), and a purple pen plays a zigzag solo
+// over it: a walk on scale degrees in swung eighths, triplets or sixteenths that mostly
+// turns back on itself. Both are crayon on toothy paper: ink is rub pressure, showing only
+// where it beats the grain, so strokes are rough when fresh and wear into streaks as they
+// fade. Each phrase lands where the paper is emptiest. The paper wraps round like the cup,
+// so it tiles when you zoom out and never shows an edge when it spins.
 // Written for any frame size: everything scales with the short side.
-// Knob 1 Tempo: beats per minute, how fast the brush and pen move.
-// Knob 2 Solo: 0 a lazy wave in swung eighths, 1 a bebop zigzag of sixteenths and leaps.
-// Knob 3 Dry: 0 a wet, solid swash; 1 a dry brush, streaky and breaking up.
-// Knob 4 Paper: 0 black (the inks glow), 1 cream cup paper.
-// Push any knob: wash the paper and start a new phrase.
+// Knob 1 Tempo: beats per minute. Push: tap tempo (and the tap is the downbeat).
+// Knob 2 Jive: how wild the solo is, and how hard the purple dances: a zigzag warp that
+//   kicks on every beat, zig and zag trading places. Push: a break, a fresh phrase on clean paper.
+// Knob 3 Zoom: middle as painted; down to a third, the cup's pattern tiling; up to 3x, a
+//   crayon close-up. Pumps a little on the beat. Push: mirror off, mirror, kaleidoscope.
+// Knob 4 Spin: middle still; either way, up to a turn every two bars. Back near the middle
+//   it eases upright. Push: cream paper or night.
 
 const BRUSH_BEATS = 4, PEN_DELAY = 1.5, PEN_BEATS = 4;
 const MAX_LANES = 96, MAX_NOTES = 24;
@@ -30,10 +33,12 @@ const PREROLL_BEATS = 7;
 // Crayon on paper: ink is rub pressure, and a pixel takes colour only where the pressure
 // beats its paper tooth (fixed grain), so light strokes and fading ones break into specks.
 const TOOTH_SEED = 0x1b873593, TOOTH_SEED2 = 0xcc9e2d51;
-const TEAL_FLOOR = 0.45, TEAL_TOOTH = 0.9, PURPLE_FLOOR = 0.45, PURPLE_TOOTH = 0.9, GRIP = 0.5;
-const PAPER_HI = [242, 228, 198];
+const TEAL_FLOOR = 0.45, TEAL_TOOTH = 0.9, PURPLE_FLOOR = 0.4, PURPLE_TOOTH = 0.9, GRIP = 0.5;
+const PAPER_HI = [242, 228, 198], PAPER_LEVEL = 0.8;
 const TEAL_LIGHT = [64, 198, 204], TEAL_DARK = [10, 112, 148];
 const PURPLE = [96, 26, 176];
+const SPIN_DEAD = 0.06;               // about a detent either side of the middle: still
+const TAP_WINDOW = 2;                 // seconds: taps further apart start a new count
 
 function hash32(x) {
   x = (x ^ (x >>> 16)) >>> 0;
@@ -76,6 +81,16 @@ function clamp01(x) {
   return x < 0 ? 0 : x > 1 ? 1 : x;
 }
 
+function wrap(n, m) {
+  n %= m;
+  return n < 0 ? n + m : n;
+}
+
+// -1 at whole numbers, +1 halfway: a zigzag
+function tri(x) {
+  return 1 - 4 * Math.abs(x - Math.floor(x) - 0.5);
+}
+
 function nextU32(p) {
   let x = p.rng;
   x = (x ^ (x << 13)) >>> 0;
@@ -90,21 +105,21 @@ function rnd(p) {
 }
 
 export function setup(params) {
-  params.tempo = 120; params.solo = 0.5; params.dry = 0.5; params.paper = 0.5;
+  params.tempoKnob = 120; params.jive = 0.5; params.zoom = 0.5; params.spin = 0;
   params.w = 0; params.h = 0;
   params.dt = 0;
-  params.washReq = false;
+  params.press = [false, false, false, false];
 }
 
 export function update(dt, input, params) {
   if (input && input.knobValues) {
-    params.tempo = input.knobValues[0];
-    params.solo = input.knobValues[1];
-    params.dry = input.knobValues[2];
-    params.paper = input.knobValues[3];
+    params.tempoKnob = input.knobValues[0];
+    params.jive = input.knobValues[1];
+    params.zoom = input.knobValues[2];
+    params.spin = input.knobValues[3];
   }
   if (input && input.btnPressed) {
-    for (let i = 0; i < 4; i++) if (input.btnPressed[i]) params.washReq = true;
+    for (let i = 0; i < 4; i++) if (input.btnPressed[i]) params.press[i] = true;
   }
   params.dt = dt > 0.1 ? 0.1 : dt;
 }
@@ -124,7 +139,13 @@ function init(p, w, h) {
   }
   p.fadeBeats = 2.8 * (8 + 6 * h / (64 * p.S));   // slow: a stroke spends its life wearing into the grain
   p.rng = 0x2468ace1;
-  p.tempoS = p.tempo; p.soloS = p.solo; p.dryS = p.dry; p.paperS = p.paper;
+  p.tempoAdj = 0; p.tapAge = 10; p.tapCount = 0; p.tapInt = 0.5;
+  p.tempoS = p.tempoKnob; p.jiveS = p.jive; p.zoomS = p.zoom; p.spinS = p.spin;
+  p.paperOn = true; p.paperS = 1;
+  p.mirror = 0;
+  p.angle = 0;
+  p.beatF = 0; p.beatN = 0;
+  p.tapFlash = 0; p.noteFlash = 0;
   p.wash = 0;
   p.lastY = -1000;
   p.lanes = [];
@@ -142,9 +163,10 @@ function pickY(p, hw) {
   for (let k = 0; k < 6; k++) {
     const y = p.h * (0.1 + 0.8 * rnd(p));
     let score = Math.abs(y - p.lastY) < hw * 1.5 ? 1e6 : 0;
-    const y0 = Math.max(0, Math.floor(y - hw)), y1 = Math.min(p.h - 1, Math.floor(y + hw));
+    const y0 = Math.floor(y - hw), y1 = Math.floor(y + hw);
     for (let yy = y0; yy <= y1; yy += 2) {
-      for (let x = 0; x < p.w; x += 2) score += p.T[yy * p.w + x] + p.P[yy * p.w + x];
+      const row = wrap(yy, p.h) * p.w;
+      for (let x = 0; x < p.w; x += 2) score += p.T[row + x] + p.P[row + x];
     }
     if (score < bestScore) { bestScore = score; best = y; }
   }
@@ -159,11 +181,12 @@ function newPhrase(p) {
   p.hasPen = r < 0.1 || r >= 0.16;        // and one in sixteen: the brush alone
   const rest = [0.5, 1, 1, 2][Math.floor(rnd(p) * 4)];
   p.phraseLen = PEN_DELAY + PEN_BEATS + rest;
+  p.dryP = 0.15 + 0.7 * rnd(p);
 
   const th = (rnd(p) * 2 - 1) * 0.38;
   const dir = rnd(p) < 0.8 ? 1 : -1;
   p.hw = S * (6.0 + rnd(p) * 3.0);
-  p.L = W * (0.85 + rnd(p) * 0.45) / Math.cos(th);
+  p.L = W * (0.75 + rnd(p) * 0.3) / Math.cos(th);    // under a turn of the wrapped paper
   p.cx = W * (0.3 + rnd(p) * 0.4);
   p.cy = pickY(p, p.hw);
   p.lastY = p.cy;
@@ -193,16 +216,16 @@ function newPhrase(p) {
     lane.t1 = 1 - (0.06 + 0.06 * rnd(p)) * u * u;      // and lift sooner: a round start, a pointed tail
   }
 
-  // The solo: a walk on scale degrees -5..5, one beat at a time.
-  const solo = p.soloS;
+  // The solo: a zigzag walk on scale degrees -6..6, one beat at a time.
+  const jive = p.jiveS;
   p.bias = (rnd(p) * 2 - 1) * 0.3 * p.hw;
-  p.amp = p.hw * (1.0 + 0.8 * solo) / 5;
-  let deg = Math.round((rnd(p) * 2 - 1) * 2);
+  p.amp = p.hw * (1.4 + 1.2 * jive) / 6;
+  let deg = Math.floor((rnd(p) * 2 - 1) * 2 + 0.5);
   let up = rnd(p) < 0.5;
   let n = 0;
   for (let b = 0; b < PEN_BEATS; b++) {
     const rs = rnd(p);
-    const sub = rs < solo * 0.75 ? 4 : rs < solo ? 3 : 2;
+    const sub = rs < 0.25 + 0.6 * jive ? 4 : rs < 0.45 + 0.5 * jive ? 3 : 2;
     for (let s = 0; s < sub; s++) {
       const note = p.notes[n++];
       note.t = (b + (sub === 2 ? (s === 0 ? 0 : SWING) : s / sub)) / PEN_BEATS;
@@ -210,17 +233,20 @@ function newPhrase(p) {
       note.acc = s === 0 ? (b % 2 === 0 ? 1 : 0.6) : 0;
       note.rest = n > 1 && b < PEN_BEATS - 1 && rnd(p) < 0.04;
       let size;
-      if (rnd(p) < 0.08 + 0.25 * solo) size = 3 + Math.floor(rnd(p) * 3);
-      else size = rnd(p) < 0.4 ? 2 : 1;
-      if (rnd(p) < 0.7) up = !up;         // a squiggle mostly turns back
+      if (rnd(p) < 0.15 + 0.35 * jive) size = 4 + Math.floor(rnd(p) * 3);
+      else size = rnd(p) < 0.5 ? 3 : 2;
+      if (rnd(p) < 0.88) up = !up;        // a zigzag: it nearly always turns back
       deg += up ? size : -size;
-      if (deg > 5) deg = 10 - deg;
-      if (deg < -5) deg = -10 - deg;
+      if (deg > 6) deg = 12 - deg;
+      if (deg < -6) deg = -12 - deg;
+      if (deg > 6) deg = 6;
+      if (deg < -6) deg = -6;
     }
   }
   const last = p.notes[n++];
   last.t = 1; last.deg = deg; last.acc = 0; last.rest = false;
   p.nNotes = n;
+  p.lastNote = -1;
   p.penX = p.penY = -1e9;
 }
 
@@ -240,8 +266,7 @@ function splat(p, x, y, a, shade) {
   const ix = Math.floor(x), iy = Math.floor(y);
   const fx = x - ix, fy = y - iy;
   for (let k = 0; k < 4; k++) {
-    const px = ix + (k & 1), py = iy + (k >> 1);
-    if (px < 0 || py < 0 || px >= p.w || py >= p.h) continue;
+    const px = wrap(ix + (k & 1), p.w), py = wrap(iy + (k >> 1), p.h);
     const wgt = ((k & 1) ? fx : 1 - fx) * ((k >> 1) ? fy : 1 - fy);
     const aa = a * wgt;
     const i = py * p.w + px;
@@ -255,7 +280,7 @@ function splat(p, x, y, a, shade) {
 }
 
 function paintBrush(p, t0, t1) {
-  const S = p.S, dry = p.dryS;
+  const S = p.S, dry = p.dryP;
   const along = (t1 - t0) * p.L;
   const n = Math.max(1, Math.ceil(along / 0.45));
   const stepAlong = along / n;
@@ -291,15 +316,15 @@ function paintBrush(p, t0, t1) {
 }
 
 function disc(p, x, y, r, press) {
-  const x0 = Math.max(0, Math.floor(x - r - 1)), x1 = Math.min(p.w - 1, Math.ceil(x + r + 1));
-  const y0 = Math.max(0, Math.floor(y - r - 1)), y1 = Math.min(p.h - 1, Math.ceil(y + r + 1));
+  const x0 = Math.floor(x - r - 1), x1 = Math.ceil(x + r + 1);
+  const y0 = Math.floor(y - r - 1), y1 = Math.ceil(y + r + 1);
   for (let py = y0; py <= y1; py++) {
     for (let px = x0; px <= x1; px++) {
       const ddx = px - x, ddy = py - y;
       const c = r + 0.5 - Math.sqrt(ddx * ddx + ddy * ddy);
       if (c <= 0) continue;
       const v = (c > 1 ? 1 : c) * P_MAX * press;
-      const i = py * p.w + px;
+      const i = wrap(py, p.h) * p.w + wrap(px, p.w);
       if (v > p.P[i]) p.P[i] = v;
     }
   }
@@ -308,15 +333,19 @@ function disc(p, x, y, r, press) {
 function paintPen(p, tp0, tp1) {
   const along = (tp1 - tp0) * 1.08 * p.L;
   const n = Math.max(1, Math.ceil(along / 0.12));
-  const bend = 0.85 * p.soloS * p.soloS;  // 0: notes joined by cosine glides, 1: nearly straight
+  const glide = 0.55 + 0.45 * p.jiveS;  // 0: notes joined by cosine glides, 1: straight, sharp corners
   for (let i = 1; i <= n; i++) {
     const tp = tp0 + (tp1 - tp0) * i / n;
     let k = 0;
     while (k < p.nNotes - 2 && p.notes[k + 1].t <= tp) k++;
     const a = p.notes[k], b = p.notes[k + 1];
+    if (k !== p.lastNote) {
+      p.lastNote = k;
+      if (!a.rest) p.noteFlash = 0.6 + 0.4 * a.acc;
+    }
     const f = clamp01((tp - a.t) / (b.t - a.t));
     const cs = (1 - Math.cos(3.1416 * f)) * 0.5;
-    const s = cs + (f - cs) * bend;
+    const s = cs + (f - cs) * glide;
     const m = a.deg + (b.deg - a.deg) * s;
     const accent = a.acc * Math.exp(-(tp - a.t) * PEN_BEATS * 6);
     const t = -0.04 + 1.08 * tp;
@@ -329,20 +358,55 @@ function paintPen(p, tp0, tp1) {
     p.penX = x; p.penY = y;
     if (a.rest) continue;
     const taper = 0.35 + 0.65 * smooth(tp / 0.05) * smooth((1 - tp) / 0.05);
-    const press = 0.7 + 0.4 * vnoise(p.penSeed, tp * 1.08 * p.L / (2.5 * p.S));   // the crayon skips
+    const press = 0.8 + 0.4 * vnoise(p.penSeed, tp * 1.08 * p.L / (2.5 * p.S));   // the crayon skips
     disc(p, x, y, p.S * 1.1 * p.nib * (1 + 0.45 * accent) * taper, press);
   }
 }
 
 function step(p, dt) {
+  // The clicks: tap tempo, a break, the mirror, the paper.
+  p.tapAge = p.tapAge + dt > 10 ? 10 : p.tapAge + dt;
+  if (p.press[0]) {
+    if (p.tapAge < TAP_WINDOW) {
+      p.tapInt = p.tapCount > 0 ? 0.5 * p.tapInt + 0.5 * p.tapAge : p.tapAge;
+      p.tapCount++;
+      const bpm = 60 / p.tapInt;
+      p.tempoAdj = (bpm < 60 ? 60 : bpm > 180 ? 180 : bpm) - p.tempoKnob;
+    } else {
+      p.tapCount = 0;
+    }
+    p.tapAge = 0;
+    p.tapFlash = 1;
+    p.beatF = 0; p.beatN = 0;           // the tap is the downbeat
+  }
+  if (p.press[1]) { p.wash = 1; newPhrase(p); }
+  if (p.press[2]) p.mirror = (p.mirror + 1) % 3;
+  if (p.press[3]) p.paperOn = !p.paperOn;
+  for (let i = 0; i < 4; i++) p.press[i] = false;
+
+  const tempo = p.tempoKnob + p.tempoAdj;
   const kk = dt * 3 > 1 ? 1 : dt * 3;
-  p.tempoS += (p.tempo - p.tempoS) * kk;
-  p.soloS += (p.solo - p.soloS) * kk;
-  p.dryS += (p.dry - p.dryS) * kk;
-  p.paperS += (p.paper - p.paperS) * (kk * 0.5);
-  if (p.washReq) { p.washReq = false; p.wash = 1; newPhrase(p); }
+  p.tempoS += ((tempo < 60 ? 60 : tempo > 180 ? 180 : tempo) - p.tempoS) * kk;
+  p.jiveS += (p.jive - p.jiveS) * kk;
+  p.zoomS += (p.zoom - p.zoomS) * kk;
+  p.spinS += (p.spin - p.spinS) * kk;
+  p.paperS += ((p.paperOn ? 1 : 0) - p.paperS) * (dt * 2 > 1 ? 1 : dt * 2);
+  p.tapFlash = p.tapFlash - dt * 4 > 0 ? p.tapFlash - dt * 4 : 0;
+  p.noteFlash *= Math.exp(-dt * 8);
 
   const bps = p.tempoS / 60;
+  p.beatF += dt * bps;
+  if (p.beatF >= 1) { p.beatF -= 1; p.beatN = (p.beatN + 1) & 3; }
+
+  if (Math.abs(p.spinS) < SPIN_DEAD) {     // let go of the spin: ease back upright
+    const target = Math.floor(p.angle / 3.1416 + 0.5) * 3.1416;
+    p.angle += (target - p.angle) * (dt * 2.5 > 1 ? 1 : dt * 2.5);
+  } else {
+    p.angle += p.spinS * Math.abs(p.spinS) * (6.2832 / 8) * bps * dt;
+  }
+  if (p.angle > 3.1416) p.angle -= 6.2832;
+  if (p.angle < -3.1416) p.angle += 6.2832;
+
   const rate = bps / p.fadeBeats + (p.wash > 0 ? 3 : 0);
   if (p.wash > 0) p.wash -= dt;
   const fade = Math.exp(-dt * rate);
@@ -367,14 +431,25 @@ export function draw(display, params, time) {
   if (p.w !== W || p.h !== H) init(p, W, H);
   step(p, p.dt);
 
-  const pa = 1 - (1 - p.paperS) * (1 - p.paperS);   // mid-knob is already cream, not grey
+  const pa = PAPER_LEVEL * p.paperS;
+  const kick = Math.exp(-p.beatF * 5);
+  const zoom = Math.exp((p.zoomS - 0.5) * 3.2 * 0.693147) * (1 + 0.06 * p.jiveS * kick);
+  const ca = Math.cos(p.angle) / zoom, sa = Math.sin(p.angle) / zoom;
+  const jiveA = p.S * 3.2 * p.jiveS * (0.35 + 0.65 * kick);   // the purple dances on the beat
+  const jiveL = 6 * p.S, jiveShift = (p.beatN & 1) * 0.5;
   for (let y = 0; y < H; y++) {
+    let sy = y + 0.5 - H * 0.5;
+    if (p.mirror === 2) sy = Math.abs(sy);
     for (let x = 0; x < W; x++) {
-      const i = y * W + x;
-      const grain = (h01(911, i) - 0.5) * 10 * pa;
-      const tooth = p.tooth[i];
-      const tc = clamp01((p.T[i] - TEAL_FLOOR - tooth * TEAL_TOOTH) / GRIP);
-      const pc = clamp01((p.P[i] - PURPLE_FLOOR - tooth * PURPLE_TOOTH) / GRIP), sh = p.Sh[i];
+      let sx = x + 0.5 - W * 0.5;
+      if (p.mirror >= 1) sx = Math.abs(sx);
+      const u = ca * sx + sa * sy + W * 0.5, v = -sa * sx + ca * sy + H * 0.5;
+      const iu = wrap(Math.floor(u), W);
+      const i = wrap(Math.floor(v), H) * W + iu;
+      const j = wrap(Math.floor(v + jiveA * tri(u / jiveL + jiveShift)), H) * W + iu;
+      const tc = clamp01((p.T[i] - TEAL_FLOOR - p.tooth[i] * TEAL_TOOTH) / GRIP);
+      const pc = clamp01((p.P[j] - PURPLE_FLOOR - p.tooth[j] * PURPLE_TOOTH) / GRIP), sh = p.Sh[i];
+      const grain = (h01(911, y * W + x) - 0.5) * 10 * pa;
       let r = PAPER_HI[0] * pa + grain, g = PAPER_HI[1] * pa + grain, b = PAPER_HI[2] * pa + grain;
       r += (TEAL_LIGHT[0] + (TEAL_DARK[0] - TEAL_LIGHT[0]) * sh - r) * tc;
       g += (TEAL_LIGHT[1] + (TEAL_DARK[1] - TEAL_LIGHT[1]) * sh - g) * tc;

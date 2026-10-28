@@ -644,26 +644,38 @@ line-for-line twin rather than left to the Lab's AI conversion. Both are CC BY-S
   128 as it does for the wall's headers.
 - **On the box** they lead both shelves: at 128 × 128 on Community, as written (centred) on
   Community 1:1. They need a `sync`, for upstream main's cores.
+- **Knob lights.** Upstream's API has none, so a header may add `void knobLights(float out[4][3])`
+  (0..1 RGB per knob). The firmware never calls it. `community.py` exports it as `pf_lights`
+  when it's there, and `pfd/community.py` (`Original`) lights the knobs with it.
 - **`twin`** runs the script (in the harness, sandboxed) and the header (under ASan) through
   `check`'s scripted player at both sizes, and reports how far apart their frames are. The two use the same
   integer hash and PRNG and draw in the same order, so they should agree to float rounding. The
   last shot, after the audio phase that only the header gets, is expected to differ.
 
-**Solo Jazz** (`solo_jazz`) is the 1990s paper-cup swash, improvised live.
+**Solo Jazz** (`solo_jazz`) is the 1990s paper-cup swash, improvised live and played like
+an instrument (for VJing).
 - A teal dry brush lays down one bar. Its pressure follows an attack/release envelope, and each
   bristle runs out of ink at its own rate, in clumps.
-- A purple pen plays a solo over it: a walk on scale degrees in swung eighths, triplets or
-  sixteenths, gliding between notes, with a 45° nib.
+- A purple pen plays a zigzag solo over it: a walk on scale degrees in swung eighths, triplets
+  or sixteenths that turns back nearly every note, with a 45° nib.
 - Both are crayon on toothy paper. Ink is rub pressure, and a pixel shows colour only where
   the pressure beats that pixel's grain (fixed noise, streaky along the strokes). Fresh strokes
   are dense but flecked, the brush scribbles in diagonal bands, and fading is wear into streaks
   rather than translucency.
-- Phrases land where the paper is emptiest.
-- Knobs: k0 tempo (60–180 BPM), k1 solo (a lazy wave to a bebop zigzag), k2 dry (wet to
-  streaky), k3 paper (black to cream). A click washes the paper and starts a new phrase. The
-  knobs ease, so the audio edition drifts rather than flickers.
-- Twin check (2026-10-28, after the crayon rework): the frames differ by at most 0.03 on
-  average, at both sizes.
+- Phrases land where the paper is emptiest, and each has its own dryness. The paper wraps round
+  like the cup, so it tiles when zoomed out and shows no edge when it spins.
+
+| Knob | Turn | Click | Light |
+|---|---|---|---|
+| k0 Tempo | 60–180 BPM | tap tempo; the tap is the downbeat | teal on every beat, brightest on the downbeat; white on a tap |
+| k1 Jive | how wild the solo is, and a zigzag warp of the purple that kicks on each beat, zig and zag trading places | a break: a fresh phrase on clean paper | purple on every note the pen plays |
+| k2 Zoom | ⅓× (tiled) to 3×, as painted in the middle; pumps on the beat with Jive | mirror: off, mirror, kaleidoscope | white, teal, purple for the mirror; brighter further from 1× |
+| k3 Spin | either way, up to a turn every two bars; still in the middle, where it eases upright | paper: cream or night | the paper's colour, pulsing as it spins |
+
+- The knobs ease, so the audio edition drifts rather than flickers. With it, bass pumps the zoom
+  and the treble spins.
+- Twin check (2026-10-28, with the VJ controls): the frames differ by at most 0.02 on average,
+  at both sizes, through the scripted player's turns and clicks.
 
 To publish one:
 1. In Pattern Lab, set the resolution to 64 × 128 and paste the `.js`. Its `@knobs` line names
