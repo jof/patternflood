@@ -702,7 +702,8 @@ def main():
           "(they sit in the margin, clear of every part, so nothing is lost if one is left in). "
           "It is a lot of "
           "line: ~101 m on the back cover, ~23 m on the bezel, ~10–12 m per wall — budget roughly "
-          "20–30 min for sheet 2 and 5–15 for sheets 1 and 3 at a typical score speed. Set the score "
+          "2.5–3 h for sheet 2 (as scored on the xTool P2), and at the same rate about 40 min for sheet 1 "
+          "and an hour for sheet 3. Set the score "
           "settings on test piece 16 first (`../test-cuts/part-2/`): you want a fine, even, light "
           "line and a QR code that scans. The art faces up on the bed, which "
           "is the outside face. Skip it by loading the DXF instead: same cuts.",

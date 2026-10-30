@@ -276,8 +276,9 @@ That README covers the settings in detail. In short:
   box, so the face up on the bed becomes the outside. Mask it.
 - **Inner shapes first** (XCS's default). The knob ribs are nested inside the
   inner bezel's display aperture on sheet 4.
-- The art is a lot of line: about 20 to 30 minutes for the back cover's score,
-  5 to 15 for the bezel and each wall.
+- The art is a lot of line, about 160 m in all: the back cover's score alone
+  took 2.5 to 3 hours on the xTool P2. At that rate, budget about 40 minutes
+  for the bezel (sheet 1) and an hour for the three walls (sheet 3).
 - Cut the **paper knob diffusers** too
   ([`hardware/laser/diffusers/`](../../hardware/laser/diffusers/README.md)).
 
