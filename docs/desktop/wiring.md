@@ -123,9 +123,9 @@ pulls it low.
                    (21) (22)  GPIO25  ┘
 ```
 
-Pins 9, 11, 13 and 15 sit next to each other in the odd column, so one 4-way
-Dupont housing carries the row and its ground. The sleep button is a 2-way on
-pins 14 and 16. Its lead runs the length of the top wall, ~270 mm, under the
+Pins 9, 11, 13 and 15 sit next to each other in the odd column, so one 4-pin
+Dupont wire connector (female, 2.54 mm) carries the row and its ground. The
+sleep button is a 2-pin Dupont connector on pins 14 and 16. Its lead runs the length of the top wall, ~270 mm, under the
 top doubler.
 
 - **⚠ 3.3 V only, and switch to ground.** Never wire a button to 5 V. If the

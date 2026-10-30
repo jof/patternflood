@@ -57,7 +57,7 @@ knobs below it on the left, the supply behind the bezel on the right.
 | 3 | STEMMA QT / Qwiic cable, 100 mm | Between the encoders |
 | 1 | STEMMA QT to female sockets (Adafruit 4397) | Last encoder to the Pi's header |
 | 4 | 12 mm waterproof momentary push buttons, with a keyed lip | The VanMoof S3 boost-button type (Amazon B07F24Y1TB has the drawing). Two blue, one orange, one black, in the build as drawn |
-| — | Dupont housings (one 4-way, one 2-way) and hook-up wire | Button leads |
+| — | Dupont (2.54 mm) female wire connectors, one 4-pin and one 2-pin, with crimp pins and hook-up wire | Button leads, plugged onto the Pi's header pins |
 
 ### Power
 
@@ -463,8 +463,8 @@ side facing the back cover.
    | Black (GND) | **6** |
 
 6. **Buttons**, each switching its GPIO to ground (no resistors; the Pi's
-   pull-ups are used). The row is one 4-way housing on pins 9 (GND), 11, 13 and
-   15; the sleep button is a 2-way on pins 14 (GND) and 16. The sleep lead runs
+   pull-ups are used). The row is one 4-pin Dupont connector on pins 9 (GND), 11, 13 and
+   15; the sleep button is a 2-pin one on pins 14 (GND) and 16. The sleep lead runs
    ~270 mm along the top wall, under the top doubler.
 7. **5 V** to the panels, the card's terminal and the Pi's pigtail, from the
    bus.
