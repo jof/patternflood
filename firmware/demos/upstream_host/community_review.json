@@ -203,7 +203,8 @@
  },
  "169a7c52727f4531": {
   "title": "seacoast",
-  "big": "auto"
+  "big": "port",
+  "note": "ported: the drawn sand's lower half at 2 x under the water at full size; grown as written, the 64-wide drawing filled only the top half"
  },
  "162a58cdbbdc4992": {
   "title": "ChladniAcousticWaves",
@@ -314,7 +315,8 @@
  },
  "7e7dda3524f544a3": {
   "title": "Animated Ocular Vortex Blinking Gaze Pupil RGB Remix",
-  "big": "auto"
+  "big": "port",
+  "note": "ported: the face centred with a forehead and chin, the nose dropped below the eyes; grown as written, the 128 x 64 drawing filled only the top half"
  },
  "b2683ba1d9fc4647": {
   "title": "Starlight Jester Ribbon",
