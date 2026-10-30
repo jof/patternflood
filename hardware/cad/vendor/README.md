@@ -9,7 +9,7 @@ Third-party models, unmodified. Import into Onshape with **Insert → Import**.
 | `adafruit-5991-husb238-pd-sink.step` | HUSB238 USB-C PD sink, I2C / switchable, STEMMA QT | [Adafruit_CAD_Parts](https://github.com/adafruit/Adafruit_CAD_Parts) `5991 HUSB238 USBC` | MIT |
 | `adafruit-5807-husb238-pd-sink-fixed.step` | HUSB238 USB-C PD sink, I2C / fixed | [Adafruit_CAD_Parts](https://github.com/adafruit/Adafruit_CAD_Parts) `5807 HUSB238 Breakout` | MIT |
 | `meanwell-lrs-50-5.step` | **Mean Well LRS-50 PSU** — the real one, 31 bodies | Mean Well vendor STEP (2017), via the public Onshape doc [`a46bc672`](https://cad.onshape.com/documents/a46bc672af8b94f9d83c7e9c) *MeanWell LRS-50* (Bukovinets) | vendor CAD |
-| `waveshare-p2.5-64x64-rgb-matrix.step` | **Waveshare P2.5 64×64 RGB matrix** — ⚠ 160 × 160, and internally inconsistent; **no longer used**, see below | public Onshape doc [`731770dc`](https://cad.onshape.com/documents/731770dceeb7b7026a08d951) *HegBoard GanArray* (Samuel Gan) | third-party |
+| *(not kept)* | **Waveshare P2.5 64×64 RGB matrix**, measured only: ⚠ 160 × 160, internally inconsistent, and not the panel this build uses | public Onshape doc [`731770dc`](https://cad.onshape.com/documents/731770dceeb7b7026a08d951) *HegBoard GanArray* (Samuel Gan) | unclear, so not redistributed here |
 | *(not imported)* | **IEC AC-14-F16A** inlet — consulted for the flange screw spacing only | public Onshape doc [`a0851c0b`](https://cad.onshape.com/documents/a0851c0ba6a0a5e0e3d6bbcf) *DC POWER SUPPLY* (Simon Page), `AC INLET` studio | third-party |
 
 That repo indexes 472 parts by Adafruit product ID and also carries `.f3d` and
@@ -17,10 +17,11 @@ That repo indexes 472 parts by Adafruit product ID and also carries `.f3d` and
 encoder, both knob sets and the STEMMA QT cables are not in it, and are modelled
 as proxies instead. See [`onshape-workflow.md`](../../../docs/desktop/onshape-workflow.md) §4.
 
-A Waveshare panel model now exists in this folder, but **it is the P2.5
-(160 × 160), not the P2 64×64 (128 × 128) this build uses** — see the warning in
-the measured table below. It is here as shape and layout evidence, not as the
-part. The enclosure still drives off the parametric proxy.
+A Waveshare panel model was measured too, but **it is the P2.5 (160 × 160),
+not the P2 64×64 (128 × 128) this build uses**, and its licence is unclear, so it
+is not kept in this folder: it is in the Onshape document linked above. It was
+shape and layout evidence, not the part. The enclosure drives off a parametric
+proxy of the measured P2.
 
 ## Measured from these STEPs
 
