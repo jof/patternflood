@@ -95,6 +95,9 @@ sensor arrives: [`docs/wall/`](docs/wall/README.md).
   each credited to its author on the panel.
 - **[receiver75](https://github.com/dgym/receiver75)** by Jim Bailey: the open
   gateware for the Colorlight card (MIT).
+- **[Sequoia Fabrica](https://sequoiafabrica.org)**, the community makerspace
+  where much of this box was made: fertile ground for creative fabrication and
+  artful programming.
 - Vendor CAD models from Adafruit and Mean Well
   ([`hardware/cad/vendor/`](hardware/cad/vendor/README.md)).
 - [JetBrains Mono](https://www.jetbrains.com/lp/mono/) for the etched lettering
