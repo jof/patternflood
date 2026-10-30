@@ -58,6 +58,7 @@ knobs below it on the left, the supply behind the bezel on the right.
 | 1 | STEMMA QT to female sockets (Adafruit 4397) | Last encoder to the Pi's header |
 | 4 | 12 mm waterproof momentary push buttons, with a keyed lip | The VanMoof S3 boost-button type (Amazon B07F24Y1TB has the drawing). Two blue, one orange, one black, in the build as drawn |
 | — | Dupont (2.54 mm) female wire connector, 2 × 3 (or a 1 × 3 and a 1 × 2), with crimp pins and hook-up wire | Button leads, plugged onto the Pi's header pins |
+| — | Insulated female spade terminals to fit the button tags, and WAGO 221 inline splices | How ours are wired, with no soldering. Solder the leads to the tags instead if you prefer |
 
 ### Power
 
@@ -108,8 +109,9 @@ of screw into its case) or on the tray (M3 × 18 touches the panel).
 - A JTAG adapter for the card's one-time flash: a
   [Glasgow](https://glasgow-embedded.org/) (what we used), or an FT232H with
   openFPGALoader (what receiver75 documents; not tried here).
-- Soldering iron (encoders, buttons, maybe the card's JTAG header), wire
-  strippers, a crimper for the Dupont pins, small screwdrivers, a 2 mm hex key.
+- Soldering iron (encoders, maybe the card's JTAG header), wire strippers, a
+  crimper for the Dupont pins, a ratchet crimper for insulated terminals (the
+  mains forks and the button spades), small screwdrivers, a 2 mm hex key.
 - Clamps and two flat boards for the glue-ups.
 - A multimeter, for trimming the supply.
 - A Linux machine with an SD card reader, to provision the Pi's card.
@@ -352,6 +354,12 @@ Bezel face down on a flat surface.
 - Daisy-chain the encoders with the STEMMA QT cables, through the cable holes
   in knob rib 1. Order doesn't matter: the knobs are numbered by address.
 
+<img src="img/build/rev2.7-buttons-inside.jpg" width="60%" alt="The four buttons in the top wall, seen from inside before wiring">
+
+*The buttons from inside, before wiring. This is the back view, so the sleep
+button is the one alone at the left; the top doubler is notched behind the
+nuts.*
+
 ### 7.4 Panels
 
 Each panel's two registration pins drop into holes in a brace, and four M3
@@ -443,10 +451,21 @@ side facing the back cover.
    **M3 × 8** through the Colorlight, **M2.5 × 8** through the Pi. The card lies
    horizontal, its RJ45 end toward the left; the Pi stands on end at the left,
    Ethernet jack pointing down past the tray's edge. Fit the Active Cooler.
+
+   <img src="img/build/rev2.7-tray-bench.jpg" width="60%" alt="The electronics tray on the bench: the Pi 5 on end beside the Colorlight card, a patch cable between them">
+
+   *The tray on the bench, upside down from how it goes in, with the patch
+   cable and the Pi's pigtail already fitted.*
 2. **Plug the four HUB75 ribbons into the card** (J5, J8, J4, J1, as in
    [§4](#4-bench-test-before-you-cut)).
 3. **Tray in from the back.** Plug each ribbon into its panel's IN, then four
    **M3 × 16** through the tray and a spacer ring into the brace's nuts.
+
+   <img src="img/build/rev2.7-tray-ribbons.jpg" width="60%" alt="The tray in the box, its four ribbons running from the card to the panels">
+
+   *The tray in, seen from the back: four ribbons from the card to the
+   panels' IN connectors, and the Pi on end at the right, its jack pointing
+   down.*
 4. **Cat6** from the Pi's jack round the tray's bottom edge to the card.
 5. **Knob chain** to the Pi's header, at **3.3 V**:
 
@@ -478,10 +497,30 @@ side facing the back cover.
    One 2 × 3 Dupont connector over pins 11 to 16 takes all five, with pin 12
    empty. The sleep button's leads run ~270 mm along the top wall, under the
    top doubler.
+
+   <p><img src="img/build/rev2.7-button-crimps.jpg" width="49%" alt="Crimping spade terminals onto the button leads with a ratchet crimper"> <img src="img/build/rev2.7-buttons-wired.jpg" width="49%" alt="The buttons wired, their leads ending in Dupont tails"></p>
+
+   *Wiring the buttons without solder: insulated spades on the button tags,
+   each button's ground looped on to the next, and WAGO splices joining the
+   leads to their Dupont tails. Back view, so the sleep button is at the
+   left.*
 7. **5 V:** harness plugs into the four panels and the card's 4-pin input,
    the Pi's pigtail into the card's screw terminal, and the spare plug capped
    and tied back ([§8](#8-mains-and-5-v)).
+
+   <img src="img/build/rev2.7-tray-power.jpg" width="60%" alt="The Colorlight card's power: a harness plug in its 4-pin input and the Pi's pigtail in its screw terminal">
+
+   *The card's 4-pin input, and the Pi's pigtail in its 5 V screw terminal in
+   ferrules, red to D5V and black to GND. Two panels' plugs are at the top.*
+
 8. Back cover on: six M3 × 10 low-head screws into the nuts in rail B.
+
+<img src="img/build/rev2.7-inside.jpg" width="60%" alt="Rev 2.7 from the back with the cover off: the electronics tray, the wiring, the supply and the knob boards">
+
+*Rev 2.7 with the back cover off: the tray on the middle brace, the button
+leads down the right-hand side to the Pi's header, the IEC inlet and the
+supply along the bottom, and the knob boards in their pockets at the bottom
+right.*
 
 [`wiring.md`](wiring.md) has the whole wiring in one place, with header
 diagrams and the serial console.
