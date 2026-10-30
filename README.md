@@ -1,5 +1,7 @@
 # Patternflood
 
+![The etched back cover of Patternflood Rev 2.7: title block and credits plate](docs/desktop/img/build/banner.jpg)
+
 A four-knob LED instrument: a 256 mm square of 128 × 128 pixels in a laser-cut
 birch box, made to be played. Turn the knobs and the patterns answer. There are
 toys, games, generative art, music visualizers, and a TV that surfs very weird
@@ -9,7 +11,11 @@ It is inspired by [**Patternflow**](https://github.com/engmung/patternflow), an
 open-source LED synthesizer by SeungHun Lee, and it runs every one of
 Patternflow's patterns, along with the ones its community has shared.
 
-<p><img src="docs/desktop/img/build/rev2.7-front.jpg" width="49%" alt="Patternflood Rev 2.7, front"> <img src="docs/desktop/img/build/rev2.7-back.jpg" width="49%" alt="Rev 2.7, the etched back cover"></p>
+<p><img src="docs/desktop/img/build/knob-play.gif" width="41%" alt="Turning a knob on Patternflood: one shape splits into a field of coloured blobs"> <img src="docs/desktop/img/build/rev2.7-front.jpg" width="55%" alt="Patternflood Rev 2.7, front"></p>
+
+<p><img src="docs/desktop/img/demos/solo-jazz.gif" width="19%" alt="Solo Jazz"> <img src="docs/desktop/img/demos/obra.gif" width="19%" alt="Obra"> <img src="docs/desktop/img/demos/riso.gif" width="19%" alt="Riso"> <img src="docs/desktop/img/demos/valley.gif" width="19%" alt="Valley"> <img src="docs/desktop/img/demos/sea.gif" width="19%" alt="Sea"></p>
+
+*Five of [our demos](firmware/demos/README.md), straight from the renderer with nobody at the knobs: Solo Jazz, Obra, Riso, Valley and Sea.*
 
 | | |
 |---|---|
@@ -25,8 +31,9 @@ Rev 2.7 is the current one.
 
 <p><img src="docs/desktop/img/build/rev1-front.jpg" width="32%" alt="Rev 1, plain birch, single sheets"> <img src="docs/desktop/img/build/rev2.7-buttons.jpg" width="32%" alt="Rev 2.7, with its buttons along the top"> <img src="docs/desktop/img/build/boot-splash.gif" width="25%" alt="The boot splash"></p>
 
-*Rev 1, plain and single-sheet; Rev 2.7, laminated and etched, with buttons; the boot splash.* A second, wall-sized project is at the concept
-stage ([below](#the-wall-project)).
+*Rev 1, plain and single-sheet; Rev 2.7, laminated and etched, with buttons; the boot splash.*
+
+A second, wall-sized project is at the concept stage ([below](#the-wall-project)).
 
 ## Build one
 

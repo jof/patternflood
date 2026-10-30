@@ -1,5 +1,9 @@
 # Demos
 
+<p><img src="../../docs/desktop/img/demos/solo-jazz.gif" width="19%" alt="Solo Jazz"> <img src="../../docs/desktop/img/demos/obra.gif" width="19%" alt="Obra"> <img src="../../docs/desktop/img/demos/riso.gif" width="19%" alt="Riso"> <img src="../../docs/desktop/img/demos/valley.gif" width="19%" alt="Valley"> <img src="../../docs/desktop/img/demos/sea.gif" width="19%" alt="Sea"></p>
+
+*Solo Jazz, Obra, Riso, Valley and Sea, rendered with `--out preview:` and no knob input.*
+
 Interactive demos for the 2×2 (128 × 128), written once and run in either place.
 There are 140: 92 of ours, plus all 48 of upstream Patternflow's patterns, run
 natively ([below](#upstream-patternflow-presets)). That's the 34 firmware presets and
