@@ -202,7 +202,7 @@ clean, every QR decodes, every decal attaches.
   to 11 mm past the last button, and from its rear edge to 11 mm in front of
   the row). Under them is open bay over the top-left panel's back.
 - **The left wall is as it was before the buttons**: 14 exhaust slots, a plain
-  doubler. Both DXFs and the left wall's art are byte-identical to `8fcdaa5`
+  doubler. Both DXFs and the left wall's art are byte-identical to `dbfaf69`
   again.
 - **The stiffener shelf has a 20 × 9 mm wire passthrough over each knob
   column**, not just the right one, so either column's wiring can run up past
