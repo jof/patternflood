@@ -244,8 +244,8 @@ box, check that your laser and your ply match.
    on a 12 × 12" sheet: finger-joint and tenon combs, nut pockets, a hole
    gauge, a panel fit jig, board templates, the IEC cutout and the supply's
    holes. Each piece's README section says what a good result looks like.
-3. Cut [`hardware/laser/test-cuts/since-rev-1/`](../../hardware/laser/test-cuts/since-rev-1/README.md)
-   too. It covers the two-sheet knob stack with its light slits and dial, the
+3. Cut [`hardware/laser/test-cuts/part-2/`](../../hardware/laser/test-cuts/part-2/README.md)
+   on a second 12 × 12. It covers the two-sheet knob stack with its light slits and dial, the
    Pi 5 template, the button holes, and an etch sampler to tune the Score
    setting on (a fine, even line, and a QR code that scans).
 

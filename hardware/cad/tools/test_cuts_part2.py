@@ -1,30 +1,28 @@
 #!/usr/bin/env python3
-"""Test cuts for what has changed since the last ones were cut.
+"""Test cuts, part 2: the two-sheet and etched details.
 
-    hardware/cad/tools/test_cuts_delta.py [out_dir]   (default hardware/laser/test-cuts/since-rev-1/)
+    hardware/cad/tools/test_cuts_part2.py [out_dir]   (default hardware/laser/test-cuts/part-2/)
 
-The full set (test_cuts.py) was cut and measured on 2026-10-18, and Rev 1 was
-built from it on 2026-10-20, which proved everything it had. This is one
-small sheet for the fit-critical things added or changed since, so the box can
-be cut with confidence without re-cutting what is already known:
+Part 1 (test_cuts.py) settles kerf, thickness, joints, nut pockets and the
+boards' holes. This is one small sheet for the fit-critical details of the
+laminated box, the Pi 5, the buttons and the etched art:
 
   12, 13  a knob, as the bezel cuts it: the outer sheet's bore and light slits
-          with its etched dial, and the inner sheet's 35 mm pocket (rev 2 made
-          the bezel two sheets; rev 2.1 added the slits) — real geometry,
+          with its etched dial, and the inner sheet's 35 mm pocket — real geometry,
           cropped out of the bezel DXFs
-   8      the Pi 5 template and its M2.5 nut pockets (rev 2)
-  17      the Pi's M2.5 spacer rings (rev 2), out of the sheet DXF
-  11      the push buttons' keyed holes (rev 2.2)
-  10, 14  the PSU screw strip at the new #psuHoleDia, and the matching
-          outer-sheet strip with the head recesses, to stack under it (rev 2.3+)
-  15      a hole gauge for the new holes: cleat, PSU clamp, head recess
+   8      the Pi 5 template and its M2.5 nut pockets
+  17      the Pi's M2.5 spacer rings, out of the sheet DXF
+  11      the push buttons' keyed holes
+  10, 14  the PSU screw strip at #psuHoleDia, and the matching
+          outer-sheet strip with the head recesses, to stack under it
+  15      a hole gauge for the holes part 1 lacks: cleat, PSU clamp, head recess
   16      the etch: a crop of the back cover's credits plate, with its QR code
           and plate lettering, to set the Score process on before 100 m of it
 
 Pieces 8, 10 and 11 are test_cuts.py's own. Writes one DXF per piece, the sheet
 as a DXF (cut + engraved labels only, safe to cut even if the laser ignores
 layers) and as an SVG with the art too (cut red, score blue), a preview, and a
-README listing every change since rev 1 and how it is covered. Needs what art.py
+README listing what each piece checks. Needs what art.py
 needs (it re-runs the back cover's art to find the credits plate).
 """
 import os
@@ -37,7 +35,7 @@ import test_cuts as T  # noqa: E402
 from nest_sheets import read_art, read_dxf, write_split_svgs  # noqa: E402
 
 LASER = os.path.join(HERE, "..", "..", "laser")
-OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(LASER, "test-cuts", "since-rev-1")
+OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(LASER, "test-cuts", "part-2")
 CUT, SCORE, ART = T.CUT, T.SCORE, "ART"
 BAND = 7.0                     # mm, a label strip under the cropped coupons, clear of their art
 
@@ -187,7 +185,7 @@ def main():
              var="Score speed/power (laser settings, not the model)"),
         dict(id=17, file="17-pi-spacer-rings.dxf", ents=ring_pair("spacer-ring-pi-m2.5.dxf"),
              title="Pi 5 spacer rings (M2.5)",
-             test="Two of the tray's M2.5 spacer rings, 7 mm round, as on sheet 3.",
+             test="Two of the tray's M2.5 spacer rings, 7 mm round, as on sheet 6.",
              read="They should come out whole (1.8 mm of wood round the hole) and an M2.5 screw pass through.",
              var="#piScrewDia"),
     ]
@@ -205,56 +203,56 @@ def main():
     for i, p in enumerate(pieces):
         x, y, rot = placed[i]
         sheet += T.shift(T.rotate90(p["ents"])[0] if rot else p["ents"], x, y)
-    T.write_dxf(os.path.join(OUT, "all-since-rev-1.dxf"), cut_only(sheet))
+    T.write_dxf(os.path.join(OUT, "all-part-2.dxf"), cut_only(sheet))
     # the SVGs get a 3 mm border, so the registration marks clear the pieces packed to the edge
     m = 3.0
     page = (T.SHEET + 2 * m, used + 2 * m)
     framed = T.shift(sheet, m, m)
     cut = [e[:-1] for e in framed if e[-1] == CUT]
     score = [e[:-1] for e in framed if e[-1] in (SCORE, ART)]
-    art.write_svg(os.path.join(OUT, "all-since-rev-1.svg"), *page, art.svg_body(cut, score, []))
-    write_split_svgs(os.path.join(OUT, "all-since-rev-1"), page, page, cut, score, [])
+    art.write_svg(os.path.join(OUT, "all-part-2.svg"), *page, art.svg_body(cut, score, []))
+    write_split_svgs(os.path.join(OUT, "all-part-2"), page, page, cut, score, [])
     T.render(os.path.join(OUT, "preview.png"), T.shift(sheet, 1.5, 1.5), (T.SHEET + 3, used + 3), k=4.0)
 
     changes = [
-        ("Bezel two sheets, inner one pocketed 35 mm at each knob (rev 2)", "12 + 13"),
-        ("Knob light slits, 36 × 0.7 mm per knob (rev 2.1)", "12"),
-        ("Etched art: dials, QR codes, JetBrains Mono plates, score fill (rev 2 – 2.3)", "12 (dial), 16"),
-        ("Raspberry Pi 5 holes, M2.5 nut pockets and spacer rings (rev 2)", "8, 17"),
-        ("Push buttons, keyed 12 mm holes (rev 2.2)", "11"),
-        (f"`#psuHoleDia` {T.fmt(v['psuHoleDia'])} and the head recesses, M3 × 8 no washer (after rev 2.3)",
-         "10 + 14, 15"),
-        ("French cleat holes Ø5.2 (rev 2.3)", "15"),
-        ("Knob rib tabs in blind slots in the inner bezel (rev 2)", "13 (slot); same kerf rule as piece 2"),
-        ("Wall doublers and the back cover doubler, glued; mortises through both sheets (rev 2, 2.3)",
+        ("Two-sheet bezel: the outer sheet clamped by the encoder, the inner one pocketed 35 mm at each knob",
+         "12 + 13"),
+        ("Knob light slits, 36 × 0.7 mm per knob", "12"),
+        ("Etched art: dials, QR codes, JetBrains Mono plates, score fill", "12 (dial), 16"),
+        ("Raspberry Pi 5 holes, M2.5 nut pockets and spacer rings", "8, 17"),
+        ("Push buttons, keyed 12 mm holes", "11"),
+        (f"`#psuHoleDia` {T.fmt(v['psuHoleDia'])} and the head recesses, M3 × 8 no washer", "10 + 14, 15"),
+        ("French cleat holes Ø5.2", "15"),
+        ("Knob rib tabs in blind slots in the inner bezel", "13 (slot); same kerf rule as piece 2"),
+        ("Wall doublers and the back cover doubler, glued; mortises through both sheets",
          "not cut: the same 2-D fits as pieces 1–2, now through two glued sheets — glue them with a brace "
-         "pushed through to register, as REVISIONS.md says"),
-        ("Back cover doubler between the rail A strips, 0.5 mm clear; its relief windows (rev 2.3)",
+         "pushed through to register, as BUILD.md §7.1 says"),
+        ("Back cover doubler between the rail A strips, 0.5 mm clear; its relief windows",
          "not cut: clearances, checked in the model"),
-        ("Intake/exhaust vents, shelf wire passthroughs, the top doubler's button notch (rev 2 – 2.2)",
+        ("Intake/exhaust vents, shelf wire passthroughs, the top doubler's button notches",
          "not cut: openings, nothing fits in them"),
-        ("Paper knob diffusers (rev 2.3)", "paper, not birch: `../../diffusers/`; try one with 12 + 13"),
+        ("Paper knob diffusers", "paper, not birch: `../../diffusers/`; try one with 12 + 13"),
     ]
-    md = ["# Test cuts since rev 1", "",
-          "Generated by `hardware/cad/tools/test_cuts_delta.py` from the live variables, `enclosure.fs` and "
+    md = ["# Test cuts, part 2", "",
+          "Generated by `hardware/cad/tools/test_cuts_part2.py` from the live variables, `enclosure.fs` and "
           "the part DXFs; re-run after changing any of them.", "",
-          "The full set in `../` was cut and measured on 2026-10-18 and Rev 1 was built on it on 2026-10-20, so "
-          "kerf, thickness, finger joints, tenons, M3 nut pockets, the panel jig, the Colorlight and IEC holes "
-          "are known good. This one sheet covers what is new since then.", "",
-          f"**Load `all-since-rev-1.svg`** ({T.fmt(T.SHEET)} × {T.fmt(used)} mm, fits a 12 × 12\" sheet): one "
+          "Cut this after [part 1](../README.md), which settles kerf, thickness, joints and nut pockets. This "
+          "sheet checks the details of the laminated bezel and knobs, the Pi 5, the buttons, the supply's "
+          "screws, and the etched art. Pieces 8, 10 and 11 are on both sheets; cut them once.", "",
+          f"**Load `all-part-2.svg`** ({T.fmt(T.SHEET)} × {T.fmt(used)} mm, fits a 12 × 12\" sheet): one "
           "file, so the art stays registered on its coupons. In xTool Creative Space every colour imports as "
           "its own layer — set **red = Cut** and **blue = Score**, put the blue layer above the red one and "
           "process **by layer**, so all the scoring runs before anything is cut loose. XCS keeps those "
           "settings with the objects, not the colour: save the set-up as a project (.xcs) and reuse the "
-          "settings you settle on here for the box's sheets. Or import `all-since-rev-1-cut.svg` and "
-          "`all-since-rev-1-score.svg` separately: both have the same green corner marks, so select both, "
+          "settings you settle on here for the box's sheets. Or import `all-part-2-cut.svg` and "
+          "`all-part-2-score.svg` separately: both have the same green corner marks, so select both, "
           "align left and align bottom, and they register; then delete the marks. The DXF "
-          "(`all-since-rev-1.dxf`) has the cuts and engraved labels only, no art, and is safe to cut even if "
+          "(`all-part-2.dxf`) has the cuts and engraved labels only, no art, and is safe to cut even if "
           "the software ignores layers.", "",
           "Same 3 mm Baltic birch and the same settings as the box, or the results mean nothing.", "",
-          "![Since rev 1](preview.png)", "",
-          "## What changed since rev 1, and what covers it", "",
-          "| Change | Test piece |", "|---|---|"]
+          "![Part 2](preview.png)", "",
+          "## What it checks", "",
+          "| Detail | Test piece |", "|---|---|"]
     md += [f"| {a} | {b} |" for a, b in changes]
     md += [""]
     for p in pieces:

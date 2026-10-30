@@ -220,22 +220,6 @@ LAYOUT = [
 ]
 
 
-# Re-cuts: parts cut once already that have to be cut again, laid out on
-# their own sheet so the full set above stays as it was. Not counted against
-# MANIFEST.md. 2026-10-26: the art changed after sheet 3 was cut (no more
-# space-filling curves), so the three walls that carry art go again; their
-# doublers and the bottom wall have none and stand. Rev 2.7 (the sleep
-# button) adds the top doubler: it needs a second notch, at its right end.
-# Stacked tight, all four along the sheet from its start edge, so they take
-# the first ~380 mm and leave the rest as one full-width offcut (or fit a
-# 16 x 10" piece). Plywood, so turning the top wall and its doubler to lie
-# along the sheet costs nothing (enclosure-lasercut.md §1).
-RECUT = {"stem": "recut-walls",
-         "title": "Re-cut — the three walls with art, and the top doubler",
-         "stack": [("wall-left.dxf", True), ("wall-right-iec.dxf", True),
-                   ("wall-top.dxf", False), ("wall-top-doubler.dxf", False)]}
-
-
 ART_DIR = os.path.join(LASER, "art")
 ART_OF = {}        # id(part entities as loaded) -> its art, in the same frame
 SHEET_ART = {}     # sheet title -> {placed index: art in sheet coordinates}
@@ -672,44 +656,6 @@ PART = {  # file -> what to call it on the cut sheet
 }
 
 
-def write_recut(spec):
-    """The re-cut sheet: built, checked for margins and gaps, written like the
-    others (DXF, SVG and the -cut/-score pair, PNG). -> its README section."""
-    placed = build(spec)
-    boxes = [(n, bbox(e)) for n, e in placed]
-    for name, b in boxes:
-        if b[0] < MARGIN - 1e-6 or b[1] < SIDE - 1e-6 or b[2] > CUT_L - MARGIN + 1e-6 or b[3] > USE_W - SIDE + 1e-6:
-            sys.exit(f"{spec['stem']}: {name} outside the cut area: {[round(v, 1) for v in b]}")
-    for i in range(len(boxes)):
-        for j in range(i + 1, len(boxes)):
-            a, b = boxes[i][1], boxes[j][1]
-            if max(b[0] - a[2], a[0] - b[2], b[1] - a[3], a[1] - b[3]) < GAP - 1e-6:
-                sys.exit(f"{spec['stem']}: {boxes[i][0]} and {boxes[j][0]} too close")
-    stem = spec["stem"]
-    all_ents = [e for _, ents in placed for e in ents]
-    write_dxf(os.path.join(OUT, stem + ".dxf"), all_ents)
-    arts = SHEET_ART.get(spec["title"], {})
-    write_sheet_svg(os.path.join(OUT, stem + ".svg"), placed, arts)
-    preview(os.path.join(OUT, stem + ".png"), spec["title"], placed, [str(i + 1) for i in range(len(placed))], arts)
-    x1 = max(b[2] for _, b in boxes)
-    print(f"{stem}.dxf: {len(placed)} parts, {len(all_ents)} entities, span {x1:.1f}")
-    md = [f"## {spec['title']} — `{stem}.svg` (or `{stem}-cut.svg` + `{stem}-score.svg`)", "",
-          "Not part of the set above: parts that were cut once and have to go again. The art "
-          "changed after sheet 3 was cut (2026-10-26: no space-filling curves any more), so the "
-          "three walls that carry art are re-cut here; from the first sheet 3 keep the two side "
-          "doublers and the bottom wall, which have none. Rev 2.7 added the sleep button at the "
-          "top wall's right end, so the top doubler goes again too, with a second notch there: "
-          "the one from sheet 4 is notched for the left row only.", "",
-          f"Packed tight into the corner at the sheet's start edge, {x1 - MARGIN:.0f} × "
-          f"{max(b[3] for _, b in boxes) - SIDE:.0f} mm of parts, so the rest comes off as one "
-          f"full-width offcut, ~{SHEET_L - x1 - GAP:.0f} × {SHEET_W:.0f} mm. Or cut it from an offcut of "
-          f"at least {x1 + MARGIN:.0f} × {max(b[3] for _, b in boxes) + SIDE:.0f} mm, its corner at the "
-          "cut area's corner.", "",
-          f"![{spec['title']}]({stem}.png)", "", "| # | Part | Qty | From |", "|---|---|---|---|"]
-    md += [f"| {i + 1} | {PART.get(n, n)} | 1 | `{n}` |" for i, (n, _) in enumerate(placed)]
-    return md + [""]
-
-
 def main():
     qty = manifest()
     sheets = [build(s) for s in LAYOUT]
@@ -748,7 +694,7 @@ def main():
           "ones first) and cuts each one in a single pass. The art's rings and closed traces are merged "
           f"into compound paths, one per {SCORE_TILE:.0f} mm patch of each part; the open traces stay "
           "one polyline each, because XCS closes every subpath of a compound path (it folded each trace "
-          "back to its start, in blobs). Sheet 2 is ~21,000 objects, down from ~36,000: XCS is slow "
+          "back to its start, in blobs). Sheet 2 is ~21,000 objects: XCS is slow "
           "on it but draws it right. **Or import the cuts and "
           "the art separately**, `sheet-N-cut.svg` and `sheet-N-score.svg`: both carry the same green "
           "L-marks at the corners of the cut area, so the two imports are the same size — select both, "
@@ -757,19 +703,19 @@ def main():
           "It is a lot of "
           "line: ~101 m on the back cover, ~23 m on the bezel, ~10–12 m per wall — budget roughly "
           "20–30 min for sheet 2 and 5–15 for sheets 1 and 3 at a typical score speed. Set the score "
-          "settings on test piece 16 first (`../test-cuts/since-rev-1/`): you want a fine, even, light "
+          "settings on test piece 16 first (`../test-cuts/part-2/`): you want a fine, even, light "
           "line and a QR code that scans. The art faces up on the bed, which "
           "is the outside face. Skip it by loading the DXF instead: same cuts.",
-          "- **Cut the test sheet first** ([`../test-cuts/`](../test-cuts/README.md), a 12 × 12) if you "
-          "haven't, or after any change of stock.",
+          "- **Cut the test sheets first** ([`../test-cuts/`](../test-cuts/README.md), parts 1 and 2, a "
+          "12 × 12 each), and again after any change of stock.",
           "- **Good face up, and don't mirror anything.** Every part is drawn as seen from outside the "
           "box, so the face that is up on the bed becomes the outside: the bezel's front, each wall's "
           "outer face, the back of the back cover. Mask that face (transfer tape) against smoke marks; "
           "the face against the honeycomb, with its flash-back marks, ends up inside.",
-          f"- **Buy {len(LAYOUT) + 2}:** {len(LAYOUT)} for the box, one 12 × 12 for the test cuts, "
-          "one spare for a recut.",
-          "- **Rev 2:** the bezel, every wall and (rev 2.3) the back cover are two sheets, the second glued on (PVA, clamped flat) "
-          "before the box goes together — `docs/desktop/enclosure-lasercut.md` §2.", ""]
+          f"- **Buy {len(LAYOUT) + 2}:** {len(LAYOUT)} for the box, one for the test cuts (two 12 × 12s), "
+          "and one spare.",
+          "- **Laminated:** the bezel, every wall and the back cover are two sheets, the second glued on (PVA, "
+          "clamped flat) before the box goes together — `docs/desktop/BUILD.md` §7.1.", ""]
     for si, (spec, placed) in enumerate(zip(LAYOUT, sheets), 1):
         all_ents = [e for _, ents in placed for e in ents]
         dxf = f"sheet-{si}.dxf"
@@ -809,7 +755,6 @@ def main():
     ring_sheet = next(i for i, s in enumerate(LAYOUT, 1) if s.get("spares"))
     md += ["", f"**{sum(qty.values())} parts on {len(LAYOUT)} sheets**, plus {nsp} spare spacer rings on sheet "
            f"{ring_sheet} (the 7 mm board ring is only 1.8 mm of wood round its hole).", ""]
-    md += write_recut(RECUT)
     with open(os.path.join(OUT, "README.md"), "w") as fh:
         fh.write("\n".join(md))
 

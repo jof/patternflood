@@ -267,14 +267,13 @@ Git tag **`rev-2.4`**. Onshape version **"Rev 2.4 - for cutting"** (`d0e91de0dd2
 made from the main workspace once it matched the tag's `enclosure.fs` exactly.
 Rev 2.3 plus the PSU screw-head recesses below. This is the one to cut.
 
-**Before cutting it:** cut [`laser/test-cuts/since-rev-1/`](laser/test-cuts/since-rev-1/README.md)
-(`test_cuts_delta.py`, one 300 × 114 mm sheet). The full test set was last cut
-on 2026-10-18 and Rev 1 was built on it, so that sheet covers only what has
-changed since: the two-sheet knob stack with its light slits and dial (real
+**Test cuts:** a second test sheet, now
+[`laser/test-cuts/part-2/`](laser/test-cuts/part-2/README.md) (`test_cuts_part2.py`,
+one 300 × 114 mm sheet), covers what part 1 doesn't: the two-sheet knob stack with its light slits and dial (real
 bezel geometry), the Pi 5 template and M2.5 rings, the push-button keys, the
 PSU strip and its head-recess strip, a gauge for the new holes, and an etch
 sampler (the back cover's credits plate and QR code) to set the Score process
-on. Its README lists every change since rev 1 and what covers it.
+on.
 
 ### PSU screw heads recessed
 
@@ -302,7 +301,7 @@ on. Its README lists every change since rev 1 and what covers it.
 
 Git tag **`rev-2.5`**. Onshape version **"Rev 2.5 - for cutting"** (`40f4d6594f676c359a84be50`),
 made from the main workspace once it matched the tag's `enclosure.fs` exactly.
-Rev 2.4 plus the one fix the `since-rev-1` test cuts called for: the push-button
+Rev 2.4 plus the one fix the part 2 test cuts called for: the push-button
 hole. Everything on that sheet now checks out. This is the one to cut.
 
 **Sheets re-packed for margin** (the tag includes this; the model is unchanged,
@@ -317,7 +316,7 @@ lower brace, a rail C and the spacer rings went to a new **sheet 6** (181 ×
 
 ### Test-cut results; the button hole fits the lip
 
-From the `since-rev-1` sheet:
+From the part 2 test sheet:
 
 - **Scoring, fonts, QR codes (16), art and the dial (12): good** as drawn.
 - **Push buttons (11): only 0.4 took the thread,** and none took the button
@@ -353,9 +352,8 @@ etched art.
     meandered dipoles; the strain gauge and the spirals stay.
 - Every part's art re-rolled; checks clean, every QR decodes, decals
   re-uploaded.
-- **Re-cut** (`sheets/recut-walls*`, one 12 × 24): the three walls with art —
-  left, right (IEC) and top. From the first sheet 3 keep both side doublers and
-  the bottom wall (no art). Sheets 4, 5 and 6 as cut stand.
+- The three walls with art (left, right and top) were re-cut for the build;
+  the sheets carry the new art.
 
 ## Rev 2.7 — sleep button; screws and buttons in the model (2026-10-26)
 
@@ -399,9 +397,7 @@ Rev 2.6 plus a fourth push button. Only the top wall and the top doubler changed
   (its depth is unmeasured). The button nut is drawn 16 AF × 2 thick:
   **VERIFY** on the part. The French cleat's wood screws aren't drawn: there are
   none until a cleat goes on.
-- **Cut:** the top doubler goes on the **re-cut sheet** (`sheets/recut-walls*`),
-  beside the three art walls. The one cut on sheet 4 is notched for the row only.
-  Sheets 1 and 2 are unchanged.
+- **Cut:** only the top wall and top doubler changed (sheets 3 and 4).
 - Pushed, exported, art re-run and re-nested, decals re-uploaded. Only `wall-top.dxf`, `wall-top-doubler.dxf` and the top wall's art
   changed (it gets a fourth halo). The other parts and their art regenerate
   byte-identical. Checks clean, every QR decodes, every decal attaches.
