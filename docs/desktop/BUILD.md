@@ -7,7 +7,9 @@ that runs off mains. A Raspberry Pi 5 renders the frames, and a Colorlight
 
 This guide builds **Rev 2.7**, the revision that is built and running
 ([`hardware/REVISIONS.md`](../../hardware/REVISIONS.md) has the history). Every
-cut file, model and script referred to here is in this repository.
+cut file, model and script referred to here is in this repository, and the CAD
+model is public on Onshape: **[the Patternflood desktop document](https://cad.onshape.com/documents/8cfb8d4f799392c05f62f6ad/w/b5dfed0b24d2121a79e8b1a8/e/06ba580a80083894ed24609b)**
+(open it to look around, or make a copy to change it).
 
 <p><img src="img/build/rev2.7-front.jpg" width="49%" alt=""> <img src="img/build/rev2.7-buttons.jpg" width="49%" alt=""></p>
 
@@ -258,8 +260,8 @@ box, check that your laser and your ply match.
 ![A strip of hole and nut-pocket test cuts, still in the laser](img/build/test-cut-holes.jpg)
 
 If the joints are loose or tight, or your stock isn't 3.18 mm, change
-`#thickness` and `#kerf` in the model and re-export the cut files
-([`onshape-workflow.md`](onshape-workflow.md),
+`#thickness` and `#kerf` in [the model](https://cad.onshape.com/documents/8cfb8d4f799392c05f62f6ad/w/b5dfed0b24d2121a79e8b1a8/e/06ba580a80083894ed24609b) (in your own copy) and
+re-export the cut files ([`onshape-workflow.md`](onshape-workflow.md),
 `hardware/cad/tools/export_dxf.py`, then `nest_sheets.py`).
 
 ---

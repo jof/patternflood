@@ -2,6 +2,9 @@
 
 > **Design reference.** How the Onshape model is built and how the cut files, test cuts and art are exported from it. You need this only to change the design; the cut files in [`../../hardware/laser/`](../../hardware/laser/MANIFEST.md) are ready to cut.
 
+**The document is public:
+[Patternflood desktop in Onshape](https://cad.onshape.com/documents/8cfb8d4f799392c05f62f6ad/w/b5dfed0b24d2121a79e8b1a8/e/06ba580a80083894ed24609b)** (§8 lists its tabs).
+
 How to get the hardware into Onshape and design the enclosure around it.
 Companion to [`enclosure-lasercut.md`](enclosure-lasercut.md), which has the
 design itself.
@@ -229,7 +232,7 @@ Studio while the parts are still in your hand.
 
 | | |
 |---|---|
-| Document | [`8cfb8d4f799392c05f62f6ad`](https://cad.onshape.com/documents/8cfb8d4f799392c05f62f6ad/w/b5dfed0b24d2121a79e8b1a8) |
+| Document | [`8cfb8d4f799392c05f62f6ad`](https://cad.onshape.com/documents/8cfb8d4f799392c05f62f6ad/w/b5dfed0b24d2121a79e8b1a8/e/06ba580a80083894ed24609b) |
 | Workspace | `b5dfed0b24d2121a79e8b1a8` |
 | Variables | `ecb5fd1eaa5c82ce2840db45` — 17 variables |
 | Patternflow FS | `3c1a0a201f41714feba73536` — from [`../../hardware/cad/featurescript/enclosure.fs`](../../hardware/cad/featurescript/enclosure.fs) |

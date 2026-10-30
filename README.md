@@ -41,7 +41,8 @@ A second, wall-sized project is at the concept stage ([below](#the-wall-project)
 parts list, flashing the Colorlight card, the Pi image, test cuts, cutting the
 box, glue-up, wiring and first power-up. Everything it needs is in this
 repository: the Onshape FeatureScript model, the cut sheets, the gateware and
-the software.
+the software. The model itself is public on Onshape:
+**[Patternflood desktop in Onshape](https://cad.onshape.com/documents/8cfb8d4f799392c05f62f6ad/w/b5dfed0b24d2121a79e8b1a8/e/06ba580a80083894ed24609b)**.
 
 <img src="docs/desktop/img/wiring-blocks.svg" width="100%" alt="Block wiring of the desktop build: supply, Pi 5, Colorlight card, panels, knobs and buttons">
 
