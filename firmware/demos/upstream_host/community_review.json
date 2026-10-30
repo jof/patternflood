@@ -320,7 +320,8 @@
  },
  "b2683ba1d9fc4647": {
   "title": "Starlight Jester Ribbon",
-  "big": "auto"
+  "big": "port",
+  "note": "ported: room for the whole ribbon; grown as written, its baked pixel list filled at row 100 and cut off the tail"
  },
  "138f77104c5e4610": {
   "title": "ChladniPlasma",
