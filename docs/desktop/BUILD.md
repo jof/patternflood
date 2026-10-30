@@ -45,12 +45,14 @@ knobs below it on the left, the supply behind the bezel on the right.
 |---|---|---|
 | 4 | **Waveshare RGB-Matrix-P2-64x64-B** (GOB) | 128 × 128 mm, FM6124 column drivers, RUC7258 row drivers, 1/32 scan. Measured in [`enclosure-lasercut.md`](enclosure-lasercut.md) §11. Other panels need a different box: hole positions differ between panel types ([`enclosure-lasercut.md`](enclosure-lasercut.md) §11) |
 | 4 | HUB75 ribbon cables, 16-way IDC | One per panel, from the card to the panel's IN |
-| 3 | Waveshare panel power harness | The ones that come with the panels: a spade pair at the supply, split to two 4-pin panel plugs. Six plugs: four panels, the card, one spare |
+| 3 | Waveshare panel power harness | The ones that come with the panels: a fork pair at the 5 V bus, split to two 4-pin panel plugs. Six plugs: four panels, the card, one spare |
+| 2 | 4-way barrier terminal strip, 25 A (TB-2504L or similar) | The 5 V bus: one strip for +5 V, one for GND |
+| — | 16 AWG red and black wire, insulated fork terminals | Supply to the bus |
 | 1 | **Colorlight 5A-75B**, v8.x | Ours is a v8.2. The gateware is built for the v8.0 pinout, which v8.2 shares |
 | 1 | **Raspberry Pi 5** | With the official **Active Cooler**. The box is closed |
 | 1 | microSD card | 16 GB or more |
 | 1 | 5 V → USB-C pigtail, bare leads | Feeds the Pi from the card's 5 V screw terminal. No USB-PD |
-| 1 | Flat Cat6 patch cable, ~20 cm | Pi to card. The card will not link at 100 Mbit |
+| 1 | Ethernet patch cable, Cat5e or better, ~20 cm | Pi to card. The card will not link at 100 Mbit |
 | 4 | **Adafruit 4991** I²C QT rotary encoder breakout | Each has a NeoPixel, which lights the knob's ring |
 | 4 | **Adafruit 377** rotary encoder (EC11) | Soldered to the 4991s |
 | 4 | Knobs for a 6 mm D shaft, about 1" (25.4 mm) | The light slits sit just outside a 1" knob's skirt |
@@ -221,9 +223,9 @@ debug a ribbon or a panel lying flat.
    J2, J3, J6 and J7 stay free. The mapping is also compiled into the card's
    splash, so keep to it.
 3. Power the panels, the card and the Pi from the LRS-50-5 (temporary leads are
-   fine on the bench; [§8](#8-mains-and-5-v) has the harness layout), Cat6 from
-   the Pi to either of the card's jacks, and the encoder chain to the Pi
-   ([`wiring.md`](wiring.md) §1).
+   fine on the bench; [§8](#8-mains-and-5-v) has the harness layout), a
+   patch cable from the Pi to either of the card's jacks, and the encoder chain
+   to the Pi ([`wiring.md`](wiring.md) §1).
 4. Power on. The card shows its spinner within a couple of seconds, the bar
    steps forward as the Pi boots, and the demos start about 17 s after power-on.
 
@@ -409,11 +411,20 @@ The terminals are, in order: **L, N, FG (earth), −V, +V.**
 
 ### 5 V
 
-<img src="img/wiring-blocks.svg" width="100%" alt="Block wiring: mains through the IEC inlet to the LRS-50-5; three Waveshare panel harnesses off its 5 V screws, two feeding two panels each and one feeding the Colorlight card plus a spare plug; the Pi 5 powered by a USB-C pigtail from the card's screw terminal; Pi to card over gigabit Cat6, card to the four panels over HUB75; knobs on I²C and buttons on GPIO to the Pi">
+<img src="img/wiring-blocks.svg" width="100%" alt="Block wiring: mains through the IEC inlet to the LRS-50-5; a 5 V bus of two barrier strips off its +V and −V screws; three Waveshare panel harnesses off the bus, two feeding two panels each and one feeding the Colorlight card plus a spare plug; the Pi 5 powered by a USB-C pigtail from the card's screw terminal; Pi to card over gigabit Ethernet, card to the four panels over HUB75; knobs on I²C and buttons on GPIO to the Pi">
 
-The 5 V side needs no bus: it's three of the power harnesses that come with
-the panels, each a spade pair split to two 4-pin panel plugs. **Stack all
-three spade pairs under the supply's +V and −V screws.** That gives six plugs:
+The 5 V side is a small bus and three of the power harnesses that come with
+the panels, each a fork pair split to two 4-pin panel plugs. Three fork pairs
+stacked under the supply's screws is too crowded, so:
+
+1. **Two 4-way barrier strips make the bus**, one for +5 V and one for GND.
+   Bridge each strip's four positions with its jumper bar or short links. Ours
+   sit on the lower brace, just above the supply.
+2. **One pair from the supply**, 16 AWG with forks: +V to the +5 V strip, −V
+   to the GND strip.
+3. **The three harnesses' forks onto the strips**, red on +5 V, black on GND.
+
+That gives six plugs:
 
 - **four panels**, two on each of two harnesses;
 - **the card's 4-pin power input**, on the third harness. The card also has a
@@ -466,7 +477,7 @@ side facing the back cover.
    *The tray in, seen from the back: four ribbons from the card to the
    panels' IN connectors, and the Pi on end at the right, its jack pointing
    down.*
-4. **Cat6** from the Pi's jack round the tray's bottom edge to the card.
+4. **Patch cable** from the Pi's jack round the tray's bottom edge to the card.
 5. **Knob chain** to the Pi's header, at **3.3 V**:
 
    <img src="img/build/pi5-header.jpg" width="50%" alt="Leads on the Pi 5's header, beside the Active Cooler">
@@ -518,9 +529,9 @@ side facing the back cover.
 <img src="img/build/rev2.7-inside.jpg" width="60%" alt="Rev 2.7 from the back with the cover off: the electronics tray, the wiring, the supply and the knob boards">
 
 *Rev 2.7 with the back cover off: the tray on the middle brace, the button
-leads down the right-hand side to the Pi's header, the IEC inlet and the
-supply along the bottom, and the knob boards in their pockets at the bottom
-right.*
+leads down the right-hand side to the Pi's header, the two 5 V bus strips
+just above the supply, the IEC inlet and the supply along the bottom, and the
+knob boards in their pockets at the bottom right.*
 
 [`wiring.md`](wiring.md) has the whole wiring in one place, with header
 diagrams and the serial console.
