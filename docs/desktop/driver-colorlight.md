@@ -61,7 +61,10 @@ is kept for history.
   ([FPP forum](https://falconchristmas.com/forum/index.php?topic=15657.0)).
 - **Cooling:** fit the Pi 5 **Active Cooler**. The box is closed, and the
   cooler's top is ~5 mm from the back cover (`Bay obstructions` carries an
-  envelope for it). Vent slots in the cover over the Pi are an open item.
+  envelope for it; the cover's doubler has a relief window over it). The box
+  breathes like a chimney: intake slots in the bottom wall, exhaust slots high
+  in both side walls. The back cover is left plain, since the box sometimes
+  stands against a wall.
 
 ---
 
