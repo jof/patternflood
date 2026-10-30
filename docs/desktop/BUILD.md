@@ -18,7 +18,7 @@ knobs below it on the left, the supply behind the bezel on the right.
 
 > ⚠️ **This build has mains wiring inside a wooden box.** The supply's input
 > terminals are open screw terminals behind a removable back. Read
-> [§8](#8-mains-and-the-5-v-bus) before wiring anything, and if you are not
+> [§8](#8-mains-and-5-v) before wiring anything, and if you are not
 > comfortable working on mains, have someone who is check your wiring.
 
 **Contents**
@@ -30,7 +30,7 @@ knobs below it on the left, the supply behind the bezel on the right.
 5. [Test cuts](#5-test-cuts)
 6. [Cut the box](#6-cut-the-box)
 7. [Glue and assemble the box](#7-glue-and-assemble-the-box)
-8. [Mains and the 5 V bus](#8-mains-and-the-5-v-bus)
+8. [Mains and 5 V](#8-mains-and-5-v)
 9. [Electronics in](#9-electronics-in)
 10. [First power-up](#10-first-power-up)
 11. [Known gaps](#11-known-gaps)
@@ -45,11 +45,11 @@ knobs below it on the left, the supply behind the bezel on the right.
 |---|---|---|
 | 4 | **Waveshare RGB-Matrix-P2-64x64-B** (GOB) | 128 × 128 mm, FM6124 column drivers, RUC7258 row drivers, 1/32 scan. Measured in [`enclosure-lasercut.md`](enclosure-lasercut.md) §11. Other panels need a different box: hole positions differ between panel types ([`enclosure-lasercut.md`](enclosure-lasercut.md) §11) |
 | 4 | HUB75 ribbon cables, 16-way IDC | One per panel, from the card to the panel's IN |
-| 4 | Panel power leads | One per panel, to the 5 V bus |
+| 3 | Waveshare panel power harness | The ones that come with the panels: a spade pair at the supply, split to two 4-pin panel plugs. Six plugs: four panels, the card, one spare |
 | 1 | **Colorlight 5A-75B**, v8.x | Ours is a v8.2. The gateware is built for the v8.0 pinout, which v8.2 shares |
 | 1 | **Raspberry Pi 5** | With the official **Active Cooler**. The box is closed |
 | 1 | microSD card | 16 GB or more |
-| 1 | 5 V → USB-C pigtail | Feeds the Pi from the 5 V bus. No USB-PD |
+| 1 | 5 V → USB-C pigtail, bare leads | Feeds the Pi from the card's 5 V screw terminal. No USB-PD |
 | 1 | Flat Cat6 patch cable, ~20 cm | Pi to card. The card will not link at 100 Mbit |
 | 4 | **Adafruit 4991** I²C QT rotary encoder breakout | Each has a NeoPixel, which lights the knob's ring |
 | 4 | **Adafruit 377** rotary encoder (EC11) | Soldered to the 4991s |
@@ -69,8 +69,6 @@ knobs below it on the left, the supply behind the bezel on the right.
 | 1 | IEC power cord | |
 | — | 18 AWG mains wire (L, N, earth), insulated fork terminals, heatshrink | |
 | 1 | Insulating boot or shroud for the supply's input terminals | |
-| — | 22 AWG red and black wire | The bus is four strands per pole ([§8](#8-mains-and-the-5-v-bus)) |
-| — | 1.5 mm² (16 AWG) ferrules, 10 mm | One per bundled pole at the supply |
 
 ### Enclosure
 
@@ -111,7 +109,7 @@ of screw into its case) or on the tray (M3 × 18 touches the panel).
   [Glasgow](https://glasgow-embedded.org/) (what we used), or an FT232H with
   openFPGALoader (what receiver75 documents; not tried here).
 - Soldering iron (encoders, buttons, maybe the card's JTAG header), wire
-  strippers, a ferrule crimper, small screwdrivers, a 2 mm hex key.
+  strippers, a crimper for the Dupont pins, small screwdrivers, a 2 mm hex key.
 - Clamps and two flat boards for the glue-ups.
 - A multimeter, for trimming the supply.
 - A Linux machine with an SD card reader, to provision the Pi's card.
@@ -221,7 +219,7 @@ debug a ribbon or a panel lying flat.
    J2, J3, J6 and J7 stay free. The mapping is also compiled into the card's
    splash, so keep to it.
 3. Power the panels, the card and the Pi from the LRS-50-5 (temporary leads are
-   fine on the bench; [§8](#8-mains-and-the-5-v-bus) has the gauges), Cat6 from
+   fine on the bench; [§8](#8-mains-and-5-v) has the harness layout), Cat6 from
    the Pi to either of the card's jacks, and the encoder chain to the Pi
    ([`wiring.md`](wiring.md) §1).
 4. Power on. The card shows its spinner within a couple of seconds, the bar
@@ -371,7 +369,7 @@ Panel screws are only reachable with the electronics tray out.
 
 ---
 
-## 8. Mains and the 5 V bus
+## 8. Mains and 5 V
 
 The supply sits in the bottom corner on the bottom doubler, against the bezel,
 fixed by two **M3 × 8** screws up through the bottom wall. Their heads sit in
@@ -401,22 +399,25 @@ Four things are not optional:
 
 The terminals are, in order: **L, N, FG (earth), −V, +V.**
 
-### The 5 V bus
+### 5 V
 
-The supply has one +V and one −V screw, so the loads meet on a bus. In 22 AWG:
+<img src="img/wiring-blocks.svg" width="100%" alt="Block wiring: mains through the IEC inlet to the LRS-50-5; three Waveshare panel harnesses off its 5 V screws, two feeding two panels each and one feeding the Colorlight card plus a spare plug; the Pi 5 powered by a USB-C pigtail from the card's screw terminal; Pi to card over gigabit Cat6, card to the four panels over HUB75; knobs on I²C and buttons on GPIO to the Pi">
 
-| Run | Carries | Strands per pole |
-|---|---|---|
-| Supply → bus | up to 10 A (8 A planned) | **4**, same length, crimped into one 1.5 mm² ferrule at the supply |
-| Bus → each panel | 1.4 A capped, 2.4 A at full white | 1 (2 for headroom) |
-| Bus → Pi 5 (USB-C pigtail) | ~1.6 A | 1 (2 for less drop) |
-| Bus → Colorlight terminal (D5V / GND) | ~0.8 A | 1 |
+The 5 V side needs no bus: it's three of the power harnesses that come with
+the panels, each a spade pair split to two 4-pin panel plugs. **Stack all
+three spade pairs under the supply's +V and −V screws.** That gives six plugs:
+
+- **four panels**, two on each of two harnesses;
+- **the card's 4-pin power input**, on the third harness. The card also has a
+  5 V screw terminal on the same rail: **screw the Pi's USB-C pigtail into
+  it**, red to +, black to −;
+- **one spare**, on the third harness with the card. It's live: cap or tape
+  it, and tie it back away from the boards.
 
 **Trim the supply to about 5.15 V** with its adjustment pot, measured at the
-bus, so the Pi sees at least 5.0 V under load.
+card's screw terminal, so the Pi sees at least 5.0 V under load.
 
-The Pi takes its power from the bus, never through a panel's harness. The
-pigtail does no USB-PD, so the Pi assumes a 3 A supply and warns. Tell it
+The pigtail does no USB-PD, so the Pi assumes a 3 A supply and warns. Tell it
 otherwise, once it's running:
 
 ```sh
@@ -466,8 +467,9 @@ side facing the back cover.
    pull-ups are used). The row is one 4-pin Dupont connector on pins 9 (GND), 11, 13 and
    15; the sleep button is a 2-pin one on pins 14 (GND) and 16. The sleep lead runs
    ~270 mm along the top wall, under the top doubler.
-7. **5 V** to the panels, the card's terminal and the Pi's pigtail, from the
-   bus.
+7. **5 V:** harness plugs into the four panels and the card's 4-pin input,
+   the Pi's pigtail into the card's screw terminal, and the spare plug capped
+   and tied back ([§8](#8-mains-and-5-v)).
 8. Back cover on: six M3 × 10 low-head screws into the nuts in rail B.
 
 [`wiring.md`](wiring.md) has the whole wiring in one place, with header

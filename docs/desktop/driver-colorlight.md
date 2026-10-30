@@ -35,9 +35,10 @@ is kept for history.
 ## 2. Parts and topology
 
 ```
-   mains ─► IEC (right wall) ─► LRS-50-5 ─┬─ 5 V ─► 4 × panel power (star)
-                                          ├─ 5 V ─► Colorlight 5A-75B
-                                          └─ 5 V ─► Pi 5 (own leads, USB-C pigtail)
+   mains ─► IEC (right wall) ─► LRS-50-5 ─┬─ harness A ─► 2 panels
+                                          ├─ harness B ─► 2 panels
+                                          └─ harness C ─┬─► 5A-75B ─ screw terminal ─► Pi 5 (USB-C pigtail)
+                                                        └─► spare plug
 
    Pi 5 ─ on-board gigabit Ethernet ─ Cat6 ─► 5A-75B
                                               HUB75 ×4 (J1–J4)
@@ -90,14 +91,15 @@ So the panels need a cap, but it rarely engages:
   DMA driver; the Colorlight may run a higher output duty. Measure one panel at
   full white, and full red, green and blue separately for per-channel weights.
 
-The Pi takes its 5 V from its own pair off the 5 V bus, not through a panel's
-harness — the same arrangement as Adafruit's RGB matrix bonnet, which
-back-powers the Pi from the panel supply. Set the LRS trim to ~5.15 V so the Pi
-sees ≥ 5.0 V under load. Wire gauges for the bus and each branch, in 22 AWG,
-are in [`wiring.md`](wiring.md#3-power). The Pi 5 is fed
-through a **5 V → USB-C pigtail**, which does no USB-PD, so it assumes a 3 A
-supply and warns. The LRS can deliver more,
-so set `PSU_MAX_CURRENT=5000` in the bootloader config (`rpi-eeprom-config -e`).
+The Pi takes its 5 V from the card's screw terminal, which shares a rail with
+the card's 4-pin power input. That input is fed by the third of the panels'
+own harnesses, so the Pi shares no harness with a panel: the same idea as
+Adafruit's RGB matrix bonnet, which back-powers the Pi from the panel supply.
+Set the LRS trim to ~5.15 V so the Pi sees ≥ 5.0 V under load. The harness
+layout is in [`wiring.md`](wiring.md#3-power). The Pi 5 is fed through a
+**5 V → USB-C pigtail**, which does no USB-PD, so it assumes a 3 A supply and
+warns. The LRS can deliver more, so set `PSU_MAX_CURRENT=5000` in the
+bootloader config (`rpi-eeprom-config -e`).
 
 ---
 

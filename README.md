@@ -43,6 +43,8 @@ box, glue-up, wiring and first power-up. Everything it needs is in this
 repository: the Onshape FeatureScript model, the cut sheets, the gateware and
 the software.
 
+<img src="docs/desktop/img/wiring-blocks.svg" width="100%" alt="Block wiring of the desktop build: supply, Pi 5, Colorlight card, panels, knobs and buttons">
+
 [`docs/desktop/`](docs/desktop/README.md) has the reference docs and the design
 notes behind the build.
 

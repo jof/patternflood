@@ -1,0 +1,372 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 760" width="1240" height="760" role="img" aria-label="Patternflood desktop wiring: power, data and controls between the supply, Pi 5, Colorlight card, panels, knobs and buttons">
+<rect width="1240" height="760" rx="14" fill="#fbf8f2"/>
+<text x="40" y="52" font-size="22" fill="#2b2622" font-weight="700" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">Patternflood desktop</text>
+<text x="40" y="74" font-size="13" fill="#7d7268" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">Block wiring, Rev 2.7</text>
+<rect x="40" y="120" width="200" height="128" rx="10" fill="#ffffff" stroke="#2b2622" stroke-width="1.4"/>
+<rect x="40" y="120" width="5" height="128" rx="2" fill="#2e8a63"/>
+<text x="56" y="146" font-size="15" fill="#2b2622" font-weight="650" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">Knobs</text>
+<text x="56" y="166" font-size="12" fill="#7d7268" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">4 × Adafruit 4991, chained</text>
+<path d="M72,196 L204,196" fill="none" stroke="#2e8a63" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="72" cy="196" r="13" fill="#ffffff" stroke="#2b2622" stroke-width="1.4"/>
+<circle cx="72" cy="196" r="5" fill="#2b2622"/>
+<text x="72" y="227" font-size="11" fill="#2b2622" font-weight="600" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">k0</text>
+<text x="72" y="240" font-size="9.5" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">0x37</text>
+<circle cx="116" cy="196" r="13" fill="#ffffff" stroke="#2b2622" stroke-width="1.4"/>
+<circle cx="116" cy="196" r="5" fill="#2b2622"/>
+<text x="116" y="227" font-size="11" fill="#2b2622" font-weight="600" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">k1</text>
+<text x="116" y="240" font-size="9.5" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">0x38</text>
+<circle cx="160" cy="196" r="13" fill="#ffffff" stroke="#2b2622" stroke-width="1.4"/>
+<circle cx="160" cy="196" r="5" fill="#2b2622"/>
+<text x="160" y="227" font-size="11" fill="#2b2622" font-weight="600" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">k2</text>
+<text x="160" y="240" font-size="9.5" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">0x39</text>
+<circle cx="204" cy="196" r="13" fill="#ffffff" stroke="#2b2622" stroke-width="1.4"/>
+<circle cx="204" cy="196" r="5" fill="#2b2622"/>
+<text x="204" y="227" font-size="11" fill="#2b2622" font-weight="600" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">k3</text>
+<text x="204" y="240" font-size="9.5" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">0x3A</text>
+<rect x="40" y="268" width="200" height="112" rx="10" fill="#ffffff" stroke="#2b2622" stroke-width="1.4"/>
+<rect x="40" y="268" width="5" height="112" rx="2" fill="#c08a1e"/>
+<text x="56" y="294" font-size="15" fill="#2b2622" font-weight="650" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">Buttons</text>
+<text x="56" y="314" font-size="12" fill="#7d7268" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">top wall, to ground</text>
+<circle cx="72" cy="338" r="10" fill="#3f6fb0" stroke="#2b2622" stroke-width="1.2"/>
+<text x="72" y="366" font-size="10.5" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">prev</text>
+<circle cx="116" cy="338" r="10" fill="#e07a2a" stroke="#2b2622" stroke-width="1.2"/>
+<text x="116" y="366" font-size="10.5" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">select</text>
+<circle cx="160" cy="338" r="10" fill="#3f6fb0" stroke="#2b2622" stroke-width="1.2"/>
+<text x="160" y="366" font-size="10.5" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">next</text>
+<circle cx="204" cy="338" r="10" fill="#2b2622" stroke="#2b2622" stroke-width="1.2"/>
+<text x="204" y="366" font-size="10.5" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">sleep</text>
+<rect x="340" y="120" width="190" height="252" rx="10" fill="#ffffff" stroke="#2b2622" stroke-width="1.4"/>
+<text x="356" y="146" font-size="15" fill="#2b2622" font-weight="650" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">Raspberry Pi 5</text>
+<text x="356" y="166" font-size="12" fill="#7d7268" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">Active Cooler</text>
+<text x="356" y="183" font-size="12" fill="#7d7268" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">renders the demos,</text>
+<text x="356" y="200" font-size="12" fill="#7d7268" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">caps panel current</text>
+<circle cx="340" cy="184" r="3.5" fill="#2e8a63"/>
+<circle cx="340" cy="324" r="3.5" fill="#c08a1e"/>
+<circle cx="530" cy="200" r="3.5" fill="#2f6db5"/>
+<circle cx="435" cy="372" r="3.5" fill="#c8442f"/>
+<text x="435" y="363" font-size="10.5" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">USB-C</text>
+<path d="M240,184 L340,184" fill="none" stroke="#2e8a63" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="290" y="172" font-size="11.5" fill="#2e8a63" font-weight="600" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">I²C, 3.3 V</text>
+<text x="290" y="202" font-size="10" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">pins 1 3 5 6</text>
+<path d="M240,324 L340,324" fill="none" stroke="#c08a1e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="290" y="312" font-size="11.5" fill="#c08a1e" font-weight="600" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">GPIO</text>
+<text x="290" y="342" font-size="10" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">pins 9–16</text>
+<path d="M435,120 L435,92" fill="none" stroke="#7d7268" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 5"/>
+<text x="435" y="84" font-size="11" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-style="italic">Wi-Fi: your network, for ssh and updates</text>
+<rect x="620" y="150" width="200" height="170" rx="10" fill="#ffffff" stroke="#2b2622" stroke-width="1.4"/>
+<text x="636" y="176" font-size="15" fill="#2b2622" font-weight="650" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">Colorlight 5A-75B</text>
+<text x="636" y="196" font-size="12" fill="#7d7268" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">receiver75 gateware</text>
+<text x="636" y="213" font-size="12" fill="#7d7268" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">192.168.75.39</text>
+<circle cx="620" cy="200" r="3.5" fill="#2f6db5"/>
+<path d="M530,200 L620,200" fill="none" stroke="#2f6db5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="575" y="188" font-size="11.5" fill="#2f6db5" font-weight="600" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">Cat6, gigabit</text>
+<text x="575" y="218" font-size="10" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">~20 cm</text>
+<circle cx="820" cy="196" r="3.5" fill="#6a4fb3"/>
+<text x="811" y="200" font-size="10.5" fill="#7d7268" font-weight="400" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">J5</text>
+<circle cx="820" cy="222" r="3.5" fill="#6a4fb3"/>
+<text x="811" y="226" font-size="10.5" fill="#7d7268" font-weight="400" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">J8</text>
+<circle cx="820" cy="248" r="3.5" fill="#6a4fb3"/>
+<text x="811" y="252" font-size="10.5" fill="#7d7268" font-weight="400" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">J4</text>
+<circle cx="820" cy="274" r="3.5" fill="#6a4fb3"/>
+<text x="811" y="278" font-size="10.5" fill="#7d7268" font-weight="400" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">J1</text>
+<circle cx="670" cy="320" r="3.5" fill="#c8442f"/>
+<text x="670" y="311" font-size="10.5" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">screw terminal</text>
+<circle cx="770" cy="320" r="3.5" fill="#c8442f"/>
+<text x="770" y="311" font-size="10.5" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">4-pin in</text>
+<rect x="930" y="100" width="160" height="84" rx="8" fill="#1f1c1a" stroke="#2b2622" stroke-width="1.4"/>
+<circle cx="1022" cy="114" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="123" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="132" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="141" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="150" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="159" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="168" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="114" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="123" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="132" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="141" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="150" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="159" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="168" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="114" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="123" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="132" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="141" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="150" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="159" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="168" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="114" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="123" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="132" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="141" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="150" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="159" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="168" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="114" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="123" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="132" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="141" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="150" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="159" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="168" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="114" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="123" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="132" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="141" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="150" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="159" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="168" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="114" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="123" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="132" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="141" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="150" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="159" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="168" r="1.3" fill="#4a433d"/>
+<text x="944" y="128" font-size="13.5" fill="#f4efe8" font-weight="650" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">Upper left</text>
+<text x="944" y="146" font-size="11" fill="#b9ada1" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">P2 64 × 64</text>
+<rect x="930" y="202" width="160" height="84" rx="8" fill="#1f1c1a" stroke="#2b2622" stroke-width="1.4"/>
+<circle cx="1022" cy="216" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="225" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="234" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="243" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="252" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="261" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="270" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="216" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="225" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="234" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="243" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="252" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="261" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="270" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="216" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="225" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="234" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="243" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="252" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="261" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="270" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="216" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="225" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="234" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="243" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="252" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="261" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="270" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="216" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="225" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="234" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="243" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="252" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="261" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="270" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="216" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="225" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="234" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="243" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="252" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="261" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="270" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="216" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="225" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="234" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="243" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="252" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="261" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="270" r="1.3" fill="#4a433d"/>
+<text x="944" y="230" font-size="13.5" fill="#f4efe8" font-weight="650" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">Upper right</text>
+<text x="944" y="248" font-size="11" fill="#b9ada1" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">P2 64 × 64</text>
+<rect x="930" y="304" width="160" height="84" rx="8" fill="#1f1c1a" stroke="#2b2622" stroke-width="1.4"/>
+<circle cx="1022" cy="318" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="327" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="336" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="345" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="354" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="363" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="372" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="318" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="327" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="336" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="345" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="354" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="363" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="372" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="318" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="327" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="336" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="345" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="354" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="363" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="372" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="318" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="327" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="336" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="345" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="354" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="363" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="372" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="318" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="327" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="336" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="345" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="354" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="363" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="372" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="318" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="327" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="336" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="345" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="354" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="363" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="372" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="318" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="327" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="336" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="345" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="354" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="363" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="372" r="1.3" fill="#4a433d"/>
+<text x="944" y="332" font-size="13.5" fill="#f4efe8" font-weight="650" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">Lower left</text>
+<text x="944" y="350" font-size="11" fill="#b9ada1" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">P2 64 × 64</text>
+<rect x="930" y="406" width="160" height="84" rx="8" fill="#1f1c1a" stroke="#2b2622" stroke-width="1.4"/>
+<circle cx="1022" cy="420" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="429" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="438" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="447" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="456" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="465" r="1.3" fill="#4a433d"/>
+<circle cx="1022" cy="474" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="420" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="429" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="438" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="447" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="456" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="465" r="1.3" fill="#4a433d"/>
+<circle cx="1031" cy="474" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="420" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="429" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="438" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="447" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="456" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="465" r="1.3" fill="#4a433d"/>
+<circle cx="1040" cy="474" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="420" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="429" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="438" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="447" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="456" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="465" r="1.3" fill="#4a433d"/>
+<circle cx="1049" cy="474" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="420" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="429" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="438" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="447" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="456" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="465" r="1.3" fill="#4a433d"/>
+<circle cx="1058" cy="474" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="420" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="429" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="438" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="447" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="456" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="465" r="1.3" fill="#4a433d"/>
+<circle cx="1067" cy="474" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="420" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="429" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="438" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="447" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="456" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="465" r="1.3" fill="#4a433d"/>
+<circle cx="1076" cy="474" r="1.3" fill="#4a433d"/>
+<text x="944" y="434" font-size="13.5" fill="#f4efe8" font-weight="650" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">Lower right</text>
+<text x="944" y="452" font-size="11" fill="#b9ada1" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">P2 64 × 64</text>
+<text x="1010.0" y="520" font-size="12" fill="#2b2622" font-weight="650" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">4 × Waveshare P2 64 × 64</text>
+<text x="1010.0" y="536" font-size="11" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">named as seen from the front</text>
+<path d="M820,196 L887,196 Q895,196 895,188 L895,150 Q895,142 903,142 L930,142" fill="none" stroke="#6a4fb3" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M820,222 L867,222 Q875,222 875,230 L875,236 Q875,244 883,244 L930,244" fill="none" stroke="#6a4fb3" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M820,248 L847,248 Q855,248 855,256 L855,338 Q855,346 863,346 L930,346" fill="none" stroke="#6a4fb3" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M820,274 L827.5,274 Q835,274 835,282 L835,440 Q835,448 843,448 L930,448" fill="none" stroke="#6a4fb3" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="870" y="140" font-size="11.5" fill="#6a4fb3" font-weight="600" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">HUB75 ribbons</text>
+<text x="870" y="155" font-size="10.5" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">one per panel</text>
+<text x="40" y="588" font-size="12" fill="#7d7268" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">mains</text>
+<path d="M44,610 h10 m-10,-7 h10 m-10,14 h10" stroke="#6f6156" stroke-width="2" stroke-linecap="round"/>
+<rect x="90" y="570" width="170" height="92" rx="10" fill="#ffffff" stroke="#2b2622" stroke-width="1.4"/>
+<rect x="90" y="570" width="5" height="92" rx="2" fill="#6f6156"/>
+<text x="106" y="596" font-size="15" fill="#2b2622" font-weight="650" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">IEC inlet</text>
+<text x="106" y="616" font-size="12" fill="#7d7268" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">switch</text>
+<text x="106" y="633" font-size="12" fill="#7d7268" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">1 A T fuse</text>
+<path d="M58,610 L90,610" fill="none" stroke="#6f6156" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="330" y="556" width="200" height="120" rx="10" fill="#ffffff" stroke="#2b2622" stroke-width="1.4"/>
+<rect x="330" y="556" width="5" height="120" rx="2" fill="#c8442f"/>
+<text x="346" y="582" font-size="15" fill="#2b2622" font-weight="650" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">Mean Well LRS-50-5</text>
+<text x="346" y="602" font-size="12" fill="#7d7268" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">5 V, 10 A (8 A planned)</text>
+<text x="346" y="619" font-size="12" fill="#7d7268" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">trimmed to ~5.15 V</text>
+<path d="M260,616 L330,616" fill="none" stroke="#6f6156" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="295" y="604" font-size="11" fill="#6f6156" font-weight="600" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">L N ⏚</text>
+<path d="M548,584 L540,584 M540,580 L532,580 M540,588 L532,588 M540,580 L540,588" stroke="#c8442f" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+<path d="M548,616 L540,616 M540,612 L532,612 M540,620 L532,620 M540,612 L540,620" stroke="#c8442f" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+<path d="M548,648 L540,648 M540,644 L532,644 M540,652 L532,652 M540,644 L540,652" stroke="#c8442f" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+<text x="556" y="702" font-size="11.5" fill="#c8442f" font-weight="600" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">3 × Waveshare panel harness: one spade pair → two 4-pin plugs</text>
+<text x="556" y="718" font-size="11" fill="#7d7268" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">all three spade pairs share the supply's +V and −V screws; each red line is a +5 V / GND pair</text>
+<path d="M548,584 L760,584 Q770,584 770,574 L770,320" fill="none" stroke="#c8442f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="770" cy="470" r="4.5" fill="#c8442f"/>
+<path d="M770,470 L700,470" fill="none" stroke="#c8442f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 5"/>
+<rect x="677.0" y="465.0" width="22" height="10" rx="2" fill="#ffffff" stroke="#c8442f" stroke-width="2"/>
+<circle cx="680.5" cy="470" r="1.2" fill="#c8442f"/>
+<circle cx="685.5" cy="470" r="1.2" fill="#c8442f"/>
+<circle cx="690.5" cy="470" r="1.2" fill="#c8442f"/>
+<circle cx="695.5" cy="470" r="1.2" fill="#c8442f"/>
+<text x="670" y="474" font-size="11" fill="#7d7268" font-weight="400" text-anchor="end" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-style="italic">spare plug, unused</text>
+<rect x="765.0" y="325.0" width="10" height="22" rx="2" fill="#ffffff" stroke="#c8442f" stroke-width="2"/>
+<circle cx="770" cy="328.5" r="1.2" fill="#c8442f"/>
+<circle cx="770" cy="333.5" r="1.2" fill="#c8442f"/>
+<circle cx="770" cy="338.5" r="1.2" fill="#c8442f"/>
+<circle cx="770" cy="343.5" r="1.2" fill="#c8442f"/>
+<text x="760" y="540" font-size="11" fill="#c8442f" font-weight="600" text-anchor="end" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">card + Pi, ~2.4 A</text>
+<path d="M670,320 L670,410 Q670,420 660,420 L445,420 Q435,420 435,410 L435,372" fill="none" stroke="#c8442f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="552.5" y="410" font-size="11" fill="#c8442f" font-weight="600" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">USB-C pigtail, ~1.6 A</text>
+<text x="552.5" y="438" font-size="10" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">no USB-PD: PSU_MAX_CURRENT=5000</text>
+<path d="M548,616 L1120,616 Q1130,616 1130,606 L1130,397.0" fill="none" stroke="#c8442f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1130,397.0 L1130,354 Q1130,346 1122,346 L1090,346" fill="none" stroke="#c8442f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1091.0" y="341.0" width="22" height="10" rx="2" fill="#ffffff" stroke="#c8442f" stroke-width="2"/>
+<circle cx="1094.5" cy="346" r="1.2" fill="#c8442f"/>
+<circle cx="1099.5" cy="346" r="1.2" fill="#c8442f"/>
+<circle cx="1104.5" cy="346" r="1.2" fill="#c8442f"/>
+<circle cx="1109.5" cy="346" r="1.2" fill="#c8442f"/>
+<path d="M1130,397.0 L1130,440 Q1130,448 1122,448 L1090,448" fill="none" stroke="#c8442f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1091.0" y="443.0" width="22" height="10" rx="2" fill="#ffffff" stroke="#c8442f" stroke-width="2"/>
+<circle cx="1094.5" cy="448" r="1.2" fill="#c8442f"/>
+<circle cx="1099.5" cy="448" r="1.2" fill="#c8442f"/>
+<circle cx="1104.5" cy="448" r="1.2" fill="#c8442f"/>
+<circle cx="1109.5" cy="448" r="1.2" fill="#c8442f"/>
+<circle cx="1130" cy="397.0" r="4.5" fill="#c8442f"/>
+<text x="1140" y="401.0" font-size="11" fill="#c8442f" font-weight="600" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">2 panels</text>
+<path d="M548,648 L1140,648 Q1150,648 1150,638 L1150,193.0" fill="none" stroke="#c8442f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1150,193.0 L1150,150 Q1150,142 1142,142 L1090,142" fill="none" stroke="#c8442f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1091.0" y="137.0" width="22" height="10" rx="2" fill="#ffffff" stroke="#c8442f" stroke-width="2"/>
+<circle cx="1094.5" cy="142" r="1.2" fill="#c8442f"/>
+<circle cx="1099.5" cy="142" r="1.2" fill="#c8442f"/>
+<circle cx="1104.5" cy="142" r="1.2" fill="#c8442f"/>
+<circle cx="1109.5" cy="142" r="1.2" fill="#c8442f"/>
+<path d="M1150,193.0 L1150,236 Q1150,244 1142,244 L1090,244" fill="none" stroke="#c8442f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1091.0" y="239.0" width="22" height="10" rx="2" fill="#ffffff" stroke="#c8442f" stroke-width="2"/>
+<circle cx="1094.5" cy="244" r="1.2" fill="#c8442f"/>
+<circle cx="1099.5" cy="244" r="1.2" fill="#c8442f"/>
+<circle cx="1104.5" cy="244" r="1.2" fill="#c8442f"/>
+<circle cx="1109.5" cy="244" r="1.2" fill="#c8442f"/>
+<circle cx="1150" cy="193.0" r="4.5" fill="#c8442f"/>
+<text x="1160" y="197.0" font-size="11" fill="#c8442f" font-weight="600" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">2 panels</text>
+<path d="M830,46 L854,46" fill="none" stroke="#c8442f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="862" y="50" font-size="11.5" fill="#2b2622" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">5 V</text>
+<path d="M942,46 L966,46" fill="none" stroke="#6f6156" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="974" y="50" font-size="11.5" fill="#2b2622" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">mains</text>
+<path d="M1054,46 L1078,46" fill="none" stroke="#2f6db5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1086" y="50" font-size="11.5" fill="#2b2622" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">Ethernet</text>
+<path d="M830,68 L854,68" fill="none" stroke="#6a4fb3" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="862" y="72" font-size="11.5" fill="#2b2622" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">HUB75</text>
+<path d="M942,68 L966,68" fill="none" stroke="#2e8a63" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="974" y="72" font-size="11.5" fill="#2b2622" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">I²C</text>
+<path d="M1054,68 L1078,68" fill="none" stroke="#c08a1e" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1086" y="72" font-size="11.5" fill="#2b2622" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">GPIO</text>
+</svg>

@@ -29,7 +29,7 @@ image, test cuts, cutting, glue-up, wiring and first power-up.
 
 | Reference | Covers |
 |---|---|
-| [`wiring.md`](wiring.md) | All the wiring: knobs, buttons, Ethernet, HUB75 mapping, 5 V bus, serial console |
+| [`wiring.md`](wiring.md) | All the wiring: knobs, buttons, Ethernet, HUB75 mapping, 5 V harnesses, serial console |
 | [`../../hardware/laser/sheets/`](../../hardware/laser/sheets/README.md) | The cut sheets, with laser settings and parts tables |
 | [`../../hardware/laser/test-cuts/`](../../hardware/laser/test-cuts/README.md) | Test cuts to calibrate kerf and fits before cutting the box |
 | [`../../hardware/laser/`](../../hardware/laser/MANIFEST.md) | One DXF per part, with quantities |

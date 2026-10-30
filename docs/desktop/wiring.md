@@ -4,16 +4,7 @@ Everything electrical in the Rev 2.7 desktop build, in one place. For the order
 to do it in, see [`BUILD.md`](BUILD.md). The design reasoning is in
 [`driver-colorlight.md`](driver-colorlight.md).
 
-```
-   mains ─► IEC inlet (switch, 1 A T fuse) ─► LRS-50-5 ─┬─ 5 V ─► 4 × panel power
-                                                        ├─ 5 V ─► Colorlight 5A-75B
-                                                        └─ 5 V ─► Pi 5 (USB-C pigtail)
-
-   Pi 5 ─ gigabit Ethernet ─ Cat6 ─► 5A-75B ─ HUB75 J5 J8 J4 J1 ─► the four panels
-   Pi 5 ─ I²C (header pins 1 3 5 6) ─► 4 × Adafruit 4991 encoders, daisy-chained
-   Pi 5 ─ GPIO (header) ─► 4 push buttons
-   Pi 5 ─ Wi-Fi ─► your network (ssh, updates)
-```
+<img src="img/wiring-blocks.svg" width="100%" alt="Block wiring: mains through the IEC inlet to the LRS-50-5; three Waveshare panel harnesses off its 5 V screws, two feeding two panels each and one feeding the Colorlight card plus a spare plug; the Pi 5 powered by a USB-C pigtail from the card's screw terminal; Pi to card over gigabit Cat6, card to the four panels over HUB75; knobs on I²C and buttons on GPIO to the Pi">
 
 ## 1. Knob chain → Pi header (I²C)
 
@@ -79,23 +70,31 @@ both if you rewire.
 
 ## 3. Power
 
-From the LRS-50-5, **trimmed to ~5.15 V** at the bus. Mains wiring and safety
-are in [`BUILD.md` §8](BUILD.md#8-mains-and-the-5-v-bus); read that first.
+From the LRS-50-5, **trimmed to ~5.15 V**. Mains wiring and safety are in
+[`BUILD.md` §8](BUILD.md#8-mains-and-5-v); read that first.
 
-| Run | Carries | 22 AWG strands per pole |
+The 5 V side is three of the power harnesses that come with Waveshare's
+panels. Each is one pair of spade (fork) terminals at the supply end, split to
+two 4-pin panel power plugs, the Molex-style plug HUB75 panels use. All three
+spade pairs go under the supply's +V and −V screws, which gives six plugs:
+
+| Harness | Plugs into | Carries |
 |---|---|---|
-| Supply → bus | up to 10 A (8 A planned) | **4**, same length, one 1.5 mm² ferrule at the supply |
-| Bus → each panel | 1.4 A capped, 2.4 A full white | 1 (2 for headroom) |
-| Bus → Pi 5 | ~1.6 A | 1 (2 for less drop) |
-| Bus → Colorlight (D5V / GND terminal) | ~0.8 A | 1 |
+| A | two panels | ≤ 2.8 A capped; 4.8 A if both were full white |
+| B | the other two panels | the same |
+| C | the Colorlight's 4-pin power input, and a spare | ~2.4 A: the card's ~0.8 A and the Pi's ~1.6 A |
 
-- **Four strands are 16 AWG.** 22 AWG is 0.33 mm², so four make 1.30 mm².
-  Bundled in a closed box a 22 AWG strand is good for about 2.5–3 A, so heat
-  sets the count as much as voltage drop does.
-- **The Pi is fed through a 5 V → USB-C pigtail** from the bus, never through
-  a panel's harness. The pigtail does no USB-PD, so set
-  `PSU_MAX_CURRENT=5000` with `sudo rpi-eeprom-config -e`, or the Pi limits
-  its USB ports and warns about the supply.
+- **The card has two 5 V inputs on one rail:** a 4-pin plug the same as a
+  panel's, and a screw terminal. Harness C goes into the plug, and the Pi's
+  **5 V → USB-C pigtail** screws into the terminal, so the card passes the
+  Pi's power through. Harness C carries less than one panel at full white,
+  which is what the harness is made for, and the Pi shares no harness with a
+  panel.
+- **The spare plug is live.** Cap or tape it, and tie it back away from the
+  boards. It's there for a fifth 5 V load.
+- **The pigtail does no USB-PD**, so set `PSU_MAX_CURRENT=5000` with
+  `sudo rpi-eeprom-config -e`, or the Pi limits its USB ports and warns about
+  the supply.
 
 ## 4. Buttons (GPIO)
 
