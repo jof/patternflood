@@ -25,33 +25,14 @@ spells out the cost: this build **no longer runs upstream Patternflow
 firmware**. The `.pfm` loader, the frozen ABI, the web console and the compiled
 community pattern library are all ESP32 binaries. A Pi host renders its own
 frames. The patterns' JavaScript source form is the bridge back to that
-library, if one is wanted (§5).
+library, if one is wanted (§4).
 
 [`firmware-delta.md`](design-notes/firmware-delta.md) describes the abandoned ESP32 fork and
 is kept for history.
 
 ---
 
-## 2. The panels are the easy kind
-
-Chip markings read off one panel, 2026-10-11:
-
-| Marking | Part | Meaning for the driver |
-|---|---|---|
-| `6124HJ C003173` | FM6124-family column driver | Plain shift-register driver, **no init sequence** — not an FM6126A-style "needs a config write" chip, and not S-PWM |
-| `RUC7258G PAE45012` | Ruichips RUC7258 | 8-channel row driver with an internal 3-to-8 decoder and anti-ghost blanking; two cascade for 16 rows, so plain **A–E binary addressing** at 1/32 scan |
-| `MW245BC` | MW74HC245 | Signal buffer, no effect |
-
-Every HUB75 driver handles this combination. **Expect an hour of LEDVision
-"smart settings"** at bring-up anyway: a user with a 64 × 32 RUC7258 panel
-reported only a garbled top half on a 5A-75B
-([ESP32-HUB75 discussion #501](https://github.com/mrcodetastic/ESP32-HUB75-MatrixPanel-DMA/discussions/501)),
-which is the classic symptom of a wrong scan or data-group setting, not of a
-chip that cannot be driven.
-
----
-
-## 3. Parts and topology
+## 2. Parts and topology
 
 ```
    mains ─► IEC (right wall) ─► LRS-50-5 ─┬─ 5 V ─► 4 × panel power (star)
@@ -84,7 +65,7 @@ chip that cannot be driven.
 
 ---
 
-## 4. Power: one LRS-50-5, capped
+## 3. Power: one LRS-50-5, capped
 
 | Load | Draw |
 |---|---|
@@ -117,7 +98,7 @@ so set `PSU_MAX_CURRENT=5000` in the bootloader config (`rpi-eeprom-config -e`).
 
 ---
 
-## 5. Software path
+## 4. Software path
 
 > 🔁 **2026-10-21: no LEDVision.** The stock gateware was replaced by the open
 > [receiver75](https://github.com/dgym/receiver75) gateware, loaded over JTAG
@@ -151,7 +132,7 @@ so set `PSU_MAX_CURRENT=5000` in the bootloader config (`rpi-eeprom-config -e`).
 
 ---
 
-## 6. Where it lives in the box
+## 5. Where it lives in the box
 
 The electronics live on a removable **electronics tray**: two 3 mm ply sheets,
 286 × 94, screwed to the back of the middle panel brace, every board on its rear

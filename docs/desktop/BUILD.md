@@ -427,7 +427,7 @@ Power budget: the supply is good for 8 A continuous. The Pi takes ~1.6 A and
 the card ~0.8 A, which leaves ~1.4 A per panel. A typical pattern draws about
 0.8 A per panel; full white draws 2.4 A. The renderer caps each frame's
 estimated current, so full-white frames are scaled down rather than tripping
-the supply ([`driver-colorlight.md`](driver-colorlight.md) §4).
+the supply ([`driver-colorlight.md`](driver-colorlight.md) §3).
 
 ---
 

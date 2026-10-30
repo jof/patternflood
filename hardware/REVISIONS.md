@@ -94,7 +94,7 @@ The tray is 6.36 narrower (279.3).
   the back cover). Test piece 8 is now a Pi 5 template with three M2.5 nut
   pockets to settle `#piNutAF`.
 - Power budget: the Pi 5 takes ~1 A more than the Zero did, so the panels'
-  share drops to ~1.4 A each (`driver-colorlight.md` §4).
+  share drops to ~1.4 A each (`driver-colorlight.md` §3).
 
 ## Rev 2.1 — knob light slits (2026-10-21, after the `rev-2` tag)
 

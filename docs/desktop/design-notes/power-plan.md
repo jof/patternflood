@@ -6,7 +6,7 @@
 > the IEC inlet into one **Mean Well LRS-50-5** (5 V, 10 A), feeding four panels,
 > a Colorlight 5A-75B and a Pi Zero 2 W, with the panel load **capped per frame
 > at ~6.6 A** (~1.65 A per panel). The budget and the cap are in
-> [`driver-colorlight.md`](../driver-colorlight.md) §4. The bank, PD-trigger and
+> [`driver-colorlight.md`](../driver-colorlight.md) §3. The bank, PD-trigger and
 > buck analysis below is kept as the record; none of it is in the build.
 
 Companion to [`mechanical-plan.md`](mechanical-plan.md).
