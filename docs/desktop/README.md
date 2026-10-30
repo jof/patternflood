@@ -3,6 +3,10 @@
 **Status: built and running (Rev 2.7).** Two physical revisions have been built:
 Rev 1 (2026-10-20) and Rev 2.7 (2026-10).
 
+<p><img src="img/build/rev1-front.jpg" width="49%" alt="Rev 1"> <img src="img/build/rev2.7-front.jpg" width="49%" alt="Rev 2.7"></p>
+
+*Rev 1 (left): single sheets, no art; pushing a knob flexed the box. Rev 2.7 (right): laminated walls and bezel, etched art, knob light rings, buttons and a Pi 5.*
+
 A four-knob LED instrument inspired by
 [Patternflow](https://github.com/engmung/patternflow): a **2 × 2 array of P2 GOB
 panels** (128 × 128 px, 256 mm square) in a laser-cut birch ply box, with four

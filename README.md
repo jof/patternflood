@@ -9,7 +9,7 @@ It is inspired by [**Patternflow**](https://github.com/engmung/patternflow), an
 open-source LED synthesizer by SeungHun Lee, and it runs every one of
 Patternflow's patterns, along with the ones its community has shared.
 
-![The etched faces of the box as cut: bezel, walls and back cover](hardware/laser/art/preview.png)
+<p><img src="docs/desktop/img/build/rev2.7-front.jpg" width="49%" alt="Patternflood Rev 2.7, front"> <img src="docs/desktop/img/build/rev2.7-back.jpg" width="49%" alt="Rev 2.7, the etched back cover"></p>
 
 | | |
 |---|---|
@@ -21,7 +21,11 @@ Patternflow's patterns, along with the ones its community has shared.
 | Software | 92 demos of our own, all of Patternflow's patterns, and the Patternflow community's, compiled and run natively on the Pi |
 
 **Status:** the desktop build is complete. Two revisions have been built, and
-Rev 2.7 is the current one. A second, wall-sized project is at the concept
+Rev 2.7 is the current one.
+
+<p><img src="docs/desktop/img/build/rev1-front.jpg" width="32%" alt="Rev 1, plain birch, single sheets"> <img src="docs/desktop/img/build/rev2.7-buttons.jpg" width="32%" alt="Rev 2.7, with its buttons along the top"> <img src="docs/desktop/img/build/boot-splash.gif" width="25%" alt="The boot splash"></p>
+
+*Rev 1, plain and single-sheet; Rev 2.7, laminated and etched, with buttons; the boot splash.* A second, wall-sized project is at the concept
 stage ([below](#the-wall-project)).
 
 ## Build one

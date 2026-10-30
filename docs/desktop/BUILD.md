@@ -9,7 +9,9 @@ This guide builds **Rev 2.7**, the revision that is built and running
 ([`hardware/REVISIONS.md`](../../hardware/REVISIONS.md) has the history). Every
 cut file, model and script referred to here is in this repository.
 
-![The etched outer faces as cut: bezel, left, right and top walls, back cover](../../hardware/laser/art/preview.png)
+<p><img src="img/build/rev2.7-front.jpg" width="49%" alt=""> <img src="img/build/rev2.7-buttons.jpg" width="49%" alt=""></p>
+
+*Rev 2.7, front and top: the knobs with their light rings, and the four buttons along the top wall.*
 
 The box stands upright, 293 × 373 × 61 mm: the display at the top, the four
 knobs below it on the left, the supply behind the bezel on the right.
@@ -117,6 +119,10 @@ of screw into its case) or on the tray (M3 × 18 touches the panel).
 ---
 
 ## 2. Flash the Colorlight card
+
+![The card on the Rev 1 tray, with a Glasgow on its JTAG pads and the four HUB75 ribbons fitted](img/build/rev1-colorlight-jtag.jpg)
+
+*Flashing in place on Rev 1: the Glasgow's port A on the card's JTAG pads. Doing it on the bench, before the card goes on the tray, is easier.*
 
 The card ships with Colorlight's own gateware, which needs Windows software to
 configure. Patternflood replaces it with
@@ -243,6 +249,12 @@ box, check that your laser and your ply match.
    Pi 5 template, the button holes, and an etch sampler to tune the Score
    setting on (a fine, even line, and a QR code that scans).
 
+<p><img src="img/build/test-cut-joints.jpg" width="49%" alt=""> <img src="img/build/test-cut-panel-jig.jpg" width="49%" alt=""></p>
+
+*The first test cuts (Rev 1): finger-joint and tenon combs, and the panel fit jig against a real P2 panel.*
+
+![A strip of hole and nut-pocket test cuts, still in the laser](img/build/test-cut-holes.jpg)
+
 If the joints are loose or tight, or your stock isn't 3.18 mm, change
 `#thickness` and `#kerf` in the model and re-export the cut files
 ([`onshape-workflow.md`](onshape-workflow.md),
@@ -271,6 +283,14 @@ That README covers the settings in detail. In short:
 
 Label the parts as they come off; the sheet pictures tell them apart.
 
+<p><img src="img/build/rev1-cutting-bezel.jpg" width="49%" alt=""> <img src="img/build/rev2-cutting-wall.jpg" width="49%" alt=""></p>
+
+*Cutting: Rev 1's bezel, and a Rev 2 wall with its vent slots and keyed button holes.*
+
+<p><img src="img/build/rev2.7-back.jpg" width="49%" alt=""> <img src="img/build/rev2.7-credits.jpg" width="49%" alt=""></p>
+
+*The back cover's etched art, and its title block and credits plate. Every QR code on the box scans.*
+
 ---
 
 ## 7. Glue and assemble the box
@@ -278,6 +298,10 @@ Label the parts as they come off; the sheet pictures tell them apart.
 The bezel, every wall and the back cover are two sheets glued together. Glued,
 two sheets bend as one section about eight times as stiff as a single sheet.
 Rev 1 used single sheets, and pushing a knob visibly flexed the box.
+
+<p><img src="img/build/rev1-frame.jpg" width="49%" alt=""> <img src="img/build/rev2-walls.jpg" width="49%" alt=""></p>
+
+*Rev 1's frame going together (single sheets, braces dry-fitted), and Rev 2's laminated walls with their art, vents and button holes.*
 
 ### 7.1 Laminate
 
@@ -340,6 +364,10 @@ thing on the box.
 
 Panel screws are only reachable with the electronics tray out.
 
+![Rev 1 from the back: the panels on the three braces, the supply and IEC inlet wired, no electronics yet](img/build/rev1-back.jpg)
+
+*Rev 1 from the back, before the electronics. Rev 2 adds the doublers, the knob ribs and shelf, and puts the supply on the bottom doubler instead of on spacers.*
+
 ---
 
 ## 8. Mains and the 5 V bus
@@ -349,6 +377,8 @@ fixed by two **M3 × 8** screws up through the bottom wall. Their heads sit in
 recesses, flush, so tighten gently: the supply rests on the doubler and the
 screws only locate it. **Its terminals must face the back cover**, or they
 can't be reached. The IEC inlet is in the right wall beside it.
+
+<img src="img/build/rev2.7-inlet.jpg" width="40%" alt="The IEC inlet and switch in the right wall">
 
 **Wire the supply before the rear rails get in the way.** There is about
 19 mm above its terminals with the back cover off.
@@ -418,6 +448,8 @@ side facing the back cover.
 4. **Cat6** from the Pi's jack round the tray's bottom edge to the card.
 5. **Knob chain** to the Pi's header, at **3.3 V**:
 
+   <img src="img/build/pi5-header.jpg" width="50%" alt="Leads on the Pi 5's header, beside the Active Cooler">
+
    | STEMMA QT wire | Pi pin |
    |---|---|
    | Red (V+) | **1** (3V3, *not* 5 V) |
@@ -439,6 +471,8 @@ diagrams and the serial console.
 ---
 
 ## 10. First power-up
+
+<img src="img/build/boot-splash.gif" width="280" alt="The card's boot splash: a spinner and a five-step bar">
 
 1. Switch on at the inlet. Within two seconds the card shows its spinner and the
    first segment of a five-step bar.
