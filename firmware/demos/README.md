@@ -43,7 +43,11 @@ and the `upstream/` clone; without them they're skipped. It imports `r75_frame`,
 
 ## Menu
 
-**Hold the two outer knobs (k0 and k3) for a second.** The demos sit on six shelves:
+**Press select**, the orange button. The buttons along the top, left to right, are
+previous, select, next and sleep: playing, previous and next step along the current
+shelf (hold one to keep going), and sleep blanks the panels and the knob lights until
+any button or knob push. The bench has no buttons, so the terminal you run `run.py`
+in stands in: `,` previous, Enter select, `.` next, `s` sleep. The demos sit on six shelves:
 
 | Shelf | What's on it |
 |---|---|
@@ -55,7 +59,7 @@ and the `upstream/` clone; without them they're skipped. It imports `r75_frame`,
 | **Community 1:1** | the same patterns as published, at their own canvas, centred |
 
 In the menu:
-- **k1** moves between shelves, back to wherever you were on each.
+- **Previous and next**, or **k1**, move between shelves, back to wherever you were on each.
 - **k0** steps along the shelf. Demos switch live behind the overlay and keep their state.
   Spin it to skip ahead (`rt.accel`), which is how to cross the Community shelf.
 - **k3** sets brightness (0.3 at start).
@@ -144,7 +148,7 @@ always looks the same:
 Cross-cutting questions, worth noting on every demo:
 
 1. **Acceleration curve.** 1× to about 6 detents/s, then up to 6×. Too twitchy? Too slow?
-2. **The menu chord.** Is holding two knobs discoverable, and does it ever fire by accident (e.g. two Squash players clicking at once)?
+2. **The buttons.** Do people find select for the menu, and is previous/next on a shelf enough without it?
 3. **Knob lights.** Are they read at a glance, or ignored? If they're ignored, they may be worth less than the NeoPixel power and the light-slit work in the enclosure.
 4. **Attract mode.** `--knobs auto` plays the demos by itself. Does an idle box running it draw people in?
 
@@ -857,5 +861,5 @@ units; the runtime applies gamma, brightness and the current cap. Check it with 
 before it goes near the panels:
 
 ```sh
-./run.py --demo NAME --knobs "script:0.5:k0+12,1.5:k1 click,2:k3 down,3:k3 up" --out preview:/tmp/x.gif
+./run.py --demo NAME --knobs "script:0.5:k0+12,1.5:k1 click,2:k3 down,3:k3 up,4:b2 click" --out preview:/tmp/x.gif
 ```

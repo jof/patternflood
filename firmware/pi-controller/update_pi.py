@@ -7,10 +7,13 @@
 Installs what provision_card.py puts in /opt/patternflood (the demo suite, the
 renderer, the upstream presets' source tree and the community's patterns as
 this checkout last synced them), plus patternflood.service. An existing
-/etc/default/patternflood is kept: it holds the box's own settings. The Pi
+/etc/default/patternflood is kept: it holds the box's own settings. A box from
+before the push buttons gets their overlays in config.txt (read at the next
+reboot) and the renderer's user joins group input. The Pi
 compiles new or changed community patterns before the restart, and the presets
 again on the restart if any of their sources changed.
 """
+import shlex
 import subprocess
 import sys
 import tarfile
@@ -21,6 +24,14 @@ from provision_card import HERE, install_payload
 
 UNIT = "etc/systemd/system/patternflood.service"
 DEFAULTS = "etc/default/patternflood"
+
+
+def button_lines():
+    """config-append.txt's push-button block: its comment and the gpio-key overlays."""
+    lines = (HERE / "boot/config-append.txt").read_text().splitlines()
+    start = next(i for i, s in enumerate(lines) if s.startswith("# Push buttons"))
+    end = max(i for i, s in enumerate(lines) if s.startswith("dtoverlay=gpio-key"))
+    return ["[all]"] + lines[start:end + 1]
 
 
 def main():
@@ -62,6 +73,11 @@ def main():
             # before this returns, so the power switch is safe as soon as it does.
             # Boxes provisioned before user-data switched cloud-init off after its first boot.
             "if [ -e /var/lib/cloud/instance/boot-finished ]; then sudo touch /etc/cloud/cloud-init.disabled; fi; "
+            # Boxes from before the push buttons: their overlays (from the next boot), and access to them.
+            "if ! grep -q '^dtoverlay=gpio-key' /boot/firmware/config.txt; then "
+            f"printf '%s\\n' {' '.join(map(shlex.quote, button_lines()))} | sudo tee -a /boot/firmware/config.txt >/dev/null; "
+            "echo 'buttons: added to config.txt; reboot to read them'; fi; "
+            "sudo usermod -aG input patternflood; "
             "sudo systemctl daemon-reload; sudo systemctl restart patternflood; sync; echo restarted"
         )
         with open(tgz, "rb") as f:

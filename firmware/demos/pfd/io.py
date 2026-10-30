@@ -8,7 +8,14 @@ and take knob lights as a list of (r, g, b) 0..255.
     serial:PORT    FeatherS3 knob_bridge on USB (bench)
     i2c[:BUS]      4991 seesaw boards on this host's I2C bus (Pi)
     auto[:SEED]    a random player, for previews and attract mode
-    script:SPEC    timed gestures, e.g. "0.5:k0+12,1:k3 click,2:k1 down,3:k1 up"
+    script:SPEC    timed gestures, e.g. "0.5:k0+12,1:k3 click,2:k1 down,3:k1 up,4:b1 click"
+    none
+
+Button sources yield ("bdown", b) and ("bup", b) for the box's four push buttons:
+
+    gpio           the gpio-key overlay's devices (Pi)
+    keys           the terminal: , . Enter s (bench)
+    auto           gpio if there are any, else keys on a terminal
     none
 
 Frame sinks take uint8 (128, 128, 3) frames, post-gamma, as receiver75 shows them:
@@ -195,7 +202,8 @@ class I2CKnobs(_QueueSource):
 
 
 class ScriptKnobs:
-    """Timed gestures. "T:kN+D" turns knob N by D detents over ~0.3 s; "T:kN click|down|up"."""
+    """Timed gestures. "T:kN+D" turns knob N by D detents over ~0.3 s; "T:kN click|down|up";
+    "T:bN click|down|up" for button N."""
 
     def __init__(self, spec):
         self.n = 4
@@ -206,10 +214,11 @@ class ScriptKnobs:
             if " " in what:
                 knob, act = what.split()
                 k = int(knob[1:])
+                down, up = ("bdown", "bup") if knob[0] == "b" else ("down", "up")
                 if act == "click":
-                    self.events += [(t, ("down", k)), (t + 0.12, ("up", k))]
+                    self.events += [(t, (down, k)), (t + 0.12, (up, k))]
                 else:
-                    self.events.append((t, (act, k)))
+                    self.events.append((t, (down if act == "down" else up, k)))
             else:
                 sign = "+" if "+" in what else "-"
                 knob, n = what.split(sign)
@@ -287,6 +296,104 @@ def knob_source(spec):
     if kind == "none":
         return NoKnobs()
     raise SystemExit(f"unknown knob source {spec!r}")
+
+
+# ---------------------------------------------------------------- button sources
+#
+# The box's four push buttons (docs/desktop/wiring.md §4), as events ("bdown", b) and ("bup", b).
+
+BTN_0 = 0x100           # the gpio-key overlay gives btn0..btn3 the codes BTN_0..BTN_3: the console's
+NBUTTONS = 4            # keyboard handler ignores codes from BTN_MISC (= BTN_0) up, so a press can't
+                        # type at the HDMI login or switch VTs
+
+
+class GpioButtons(_QueueSource):
+    """The buttons as the kernel's gpio-keys devices, one per button (dtoverlay=gpio-key in
+    config.txt), read from /dev/input. The kernel debounces them; the pull-ups are the Pi's own."""
+    EV_KEY = 1
+    EVENT = struct.Struct("llHHi")      # struct input_event: timeval, type, code, value
+    REBOUND_S = 0.03                    # a press this soon after a release is the switch bouncing
+
+    def __init__(self):
+        super().__init__()
+        self.fds = []
+        for dev in sorted(Path("/sys/class/input").glob("event*")):
+            if self._is_ours(dev):
+                try:
+                    self.fds.append(os.open(f"/dev/input/{dev.name}", os.O_RDONLY))
+                except OSError as e:
+                    log(f"buttons: /dev/input/{dev.name}: {e}")
+        log(f"buttons: {len(self.fds)} found")
+        if self.fds:
+            threading.Thread(target=self._reader, daemon=True).start()
+
+    @staticmethod
+    def _is_ours(dev):
+        try:
+            if (dev / "device/device/driver").resolve().name != "gpio-keys":
+                return False                # not the HDMI CEC remotes
+            words = (dev / "device/capabilities/key").read_text().split()
+        except OSError:
+            return False
+        bits = 8 * struct.calcsize("l")     # the kernel prints its key bitmap a long at a time, high first
+        keys = sum(int(w, 16) << (bits * i) for i, w in enumerate(reversed(words)))
+        return any(keys >> (BTN_0 + b) & 1 for b in range(NBUTTONS))     # not the Pi 5's power button
+
+    def _reader(self):
+        import select
+        t_up = [0.0] * NBUTTONS
+        while True:
+            for fd in select.select(self.fds, [], [])[0]:
+                data = os.read(fd, self.EVENT.size * 16)
+                for _, _, typ, code, value in self.EVENT.iter_unpack(data):
+                    b = code - BTN_0
+                    if typ != self.EV_KEY or not 0 <= b < NBUTTONS or value == 2:
+                        continue
+                    if value:
+                        if time.monotonic() - t_up[b] > self.REBOUND_S:
+                            self.q.put(("bdown", b))
+                    else:
+                        t_up[b] = time.monotonic()
+                        self.q.put(("bup", b))
+
+
+class KeyButtons(_QueueSource):
+    """The buttons on the terminal's keys, for the bench: , previous, Enter select, . next, s sleep."""
+    KEYS = {",": 0, "\n": 1, " ": 1, ".": 2, "s": 3}
+
+    def __init__(self):
+        super().__init__()
+        import atexit
+        import termios
+        import tty
+        fd = sys.stdin.fileno()
+        saved = termios.tcgetattr(fd)
+        atexit.register(termios.tcsetattr, fd, termios.TCSADRAIN, saved)
+        tty.setcbreak(fd)               # keys as they're typed, unechoed; Ctrl-C still stops us
+        log("buttons: keys  , previous  Enter select  . next  s sleep")
+        threading.Thread(target=self._reader, args=(fd,), daemon=True).start()
+
+    def _reader(self, fd):
+        while True:
+            b = self.KEYS.get(os.read(fd, 1).decode(errors="ignore"))
+            if b is not None:
+                self.q.put(("bdown", b))
+                self.q.put(("bup", b))
+
+
+def button_source(spec):
+    """gpio (the box's), keys (the terminal's), auto (gpio if there are any, else keys on a
+    terminal), or none."""
+    if spec == "none":
+        return _QueueSource()
+    if spec in ("gpio", "auto"):
+        buttons = GpioButtons()
+        if buttons.fds or spec == "gpio":
+            return buttons
+        return KeyButtons() if sys.stdin.isatty() else _QueueSource()
+    if spec == "keys":
+        return KeyButtons()
+    raise SystemExit(f"unknown button source {spec!r}")
 
 
 # ---------------------------------------------------------------- frame sinks

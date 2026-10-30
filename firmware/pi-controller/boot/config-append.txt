@@ -3,6 +3,13 @@
 # Knob chain (4x Adafruit 4991 seesaw) on the header's I2C: GPIO2 SDA (pin 3), GPIO3 SCL (pin 5).
 dtparam=i2c_arm=on
 dtparam=i2c_arm_baudrate=100000
+# Push buttons (previous, select, next, sleep), each switching its GPIO to a common ground:
+# GPIO17/27/22/23 (pins 11/13/15/16, ground on 14), on the Pi's own pull-ups. Keys BTN_0..BTN_3
+# on /dev/input, which the console's keyboard ignores. update_pi.py adds these lines to older boxes.
+dtoverlay=gpio-key,gpio=17,keycode=256,label=btn0
+dtoverlay=gpio-key,gpio=27,keycode=257,label=btn1
+dtoverlay=gpio-key,gpio=22,keycode=258,label=btn2
+dtoverlay=gpio-key,gpio=23,keycode=259,label=btn3
 # No Bluetooth on the appliance.
 dtoverlay=disable-bt
 # Serial console on GPIO14/15 (pins 8/10), 115200; cmdline.txt already has console=serial0.

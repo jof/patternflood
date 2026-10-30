@@ -98,60 +98,67 @@ spade pairs go under the supply's +V and −V screws, which gives six plugs:
 
 ## 4. Buttons (GPIO)
 
-Four momentary buttons on the top wall. Each joins its GPIO to ground. There
-are no resistors: the Pi's internal pull-up holds the line high, and a press
-pulls it low.
+Four momentary buttons on the top wall. One leg of each goes to a common
+ground, and the other has its own wire to a GPIO. There are no resistors: the
+Pi's internal pull-up holds the line high, and a press pulls it low.
 
-| Button | Where (top wall, seen from the front) | Colour | Does | Pi header pin | Pi name | Ground |
-|---|---|---|---|---|---|---|
-| **btn0** | left end, 1st of the row | blue | **previous** demo | **pin 11** | GPIO17 | pin 9 |
-| **btn1** | 2nd | orange | **select** | **pin 13** | GPIO27 | pin 9 |
-| **btn2** | 3rd | blue | **next** demo | **pin 15** | GPIO22 | pin 9 |
-| **btn3** | right end, alone | black | **sleep** (blackout) | **pin 16** | GPIO23 | pin 14 |
+| Button | Where (top wall, seen from the front) | Colour | Does | Pi header pin | Pi name |
+|---|---|---|---|---|---|
+| **common ground** | all four, chained button to button | | | **pin 14** | GND |
+| **btn0** | left end, 1st of the row | blue | **previous** | **pin 11** | GPIO17 |
+| **btn1** | 2nd | orange | **select** (menu) | **pin 13** | GPIO27 |
+| **btn2** | 3rd | blue | **next** | **pin 15** | GPIO22 |
+| **btn3** | right end, alone | black | **sleep** (blackout) | **pin 16** | GPIO23 |
 
 ```
             Pi 40-pin header
 
-                    (7) (8)   TXD     console (§5)
-  common ── GND     (9) (10)  RXD     console (§5)
-    btn0 ── GPIO17 (11) (12)
-    btn1 ── GPIO27 (13) (14)  GND     ── btn3's ground
+    btn0 ── GPIO17 (11) (12)  GPIO18  (leave empty)
+    btn1 ── GPIO27 (13) (14)  GND     ── common ground
     btn2 ── GPIO22 (15) (16)  GPIO23  ── btn3
                    (17) (18)  GPIO24  ┐
                    (19) (20)  GND     │ free for two more
                    (21) (22)  GPIO25  ┘
 ```
 
-Pins 9, 11, 13 and 15 sit next to each other in the odd column, so one 4-pin
-Dupont wire connector (female, 2.54 mm) carries the row and its ground. The
-sleep button is a 2-pin Dupont connector on pins 14 and 16. Its lead runs the length of the top wall, ~270 mm, under the
-top doubler.
+All five wires land in pins 11 to 16, so one 2 × 3 Dupont connector (female,
+2.54 mm) carries them, with pin 12 left empty. Two 1-row connectors do as well:
+a 3-pin on 11, 13 and 15, and a 2-pin on 14 and 16. The ground runs from button
+to button along the row and on to the sleep button, ~270 mm along the top wall
+under the top doubler, and the sleep button's own wire runs beside it.
 
-- **⚠ 3.3 V only, and switch to ground.** Never wire a button to 5 V. If the
-  buttons have LEDs, power those separately.
+- **⚠ 3.3 V only, and switch to ground.** Never wire a button to 5 V or 3V3. If
+  the buttons have LEDs, power those separately.
 - **Room for more:** GPIO24 (pin 18) and GPIO25 (pin 22), with GND on pin 20.
   Past that, MCP23017 expanders on the knob chain (0x20–0x27) don't clash with
   the knobs.
 
-**What they will do.** Playing: previous and next step through the demos on
-the current shelf, and select opens the menu. In the menu, previous and next
-step along the shelf, and select picks the highlighted demo. Sleep blanks the
-panels and wakes them again. The k0 + k3 chord stays, for a box without
-buttons.
+**What they do.** Playing, previous and next step through the demos on the
+current shelf (hold one to keep stepping), and select opens the menu. In the
+menu, previous and next move between shelves, the knobs work as before (k0 the
+demo, k1 the shelf, k3 brightness), and select closes it. Sleep blanks the
+panels and the knob lights. The sleep button, any other button or a knob push
+wakes them. The buttons are the only way into the menu: the old k0 + k3 chord
+is gone.
 
-**Software: not done yet.** The plan is the kernel's `gpio-key` overlay, which
-turns each button into a debounced key on `/dev/input` (pull-up and active-low
-are its defaults), so the renderer decides what each one does:
+**Software.** The kernel's `gpio-key` overlay turns each button into a
+debounced key on `/dev/input` (pull-up and active-low are its defaults).
+`boot/config-append.txt` has these lines, and `update_pi.py` adds them to a box
+provisioned before the buttons:
 
 ```
-dtoverlay=gpio-key,gpio=17,keycode=59,label=btn0
-dtoverlay=gpio-key,gpio=27,keycode=60,label=btn1
-dtoverlay=gpio-key,gpio=22,keycode=61,label=btn2
-dtoverlay=gpio-key,gpio=23,keycode=62,label=btn3
+dtoverlay=gpio-key,gpio=17,keycode=256,label=btn0
+dtoverlay=gpio-key,gpio=27,keycode=257,label=btn1
+dtoverlay=gpio-key,gpio=22,keycode=258,label=btn2
+dtoverlay=gpio-key,gpio=23,keycode=259,label=btn3
 ```
 
-The keycodes are F1–F4. The renderer's user, `patternflood`, will need group
-`input` as well as `i2c`. Once that's in, `evtest` lists `btn0`–`btn3`.
+The keycodes are BTN_0 to BTN_3. The console's keyboard handler ignores codes
+from BTN_0 up, so a press can't type at the HDMI login or switch VTs. The
+renderer (`--buttons gpio`, `PF_BUTTONS` in `/etc/default/patternflood`) finds
+these devices by their driver and keycodes, which skips the Pi 5's power button,
+another gpio-keys device. Its user, `patternflood`, is in group `input`. The
+overlays take effect at boot, so reboot after the first update.
 
 ## 5. Serial console
 

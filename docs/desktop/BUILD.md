@@ -57,7 +57,7 @@ knobs below it on the left, the supply behind the bezel on the right.
 | 3 | STEMMA QT / Qwiic cable, 100 mm | Between the encoders |
 | 1 | STEMMA QT to female sockets (Adafruit 4397) | Last encoder to the Pi's header |
 | 4 | 12 mm waterproof momentary push buttons, with a keyed lip | The VanMoof S3 boost-button type (Amazon B07F24Y1TB has the drawing). Two blue, one orange, one black, in the build as drawn |
-| — | Dupont (2.54 mm) female wire connectors, one 4-pin and one 2-pin, with crimp pins and hook-up wire | Button leads, plugged onto the Pi's header pins |
+| — | Dupont (2.54 mm) female wire connector, 2 × 3 (or a 1 × 3 and a 1 × 2), with crimp pins and hook-up wire | Button leads, plugged onto the Pi's header pins |
 
 ### Power
 
@@ -463,10 +463,21 @@ side facing the back cover.
    | Yellow (SCL) | **5** |
    | Black (GND) | **6** |
 
-6. **Buttons**, each switching its GPIO to ground (no resistors; the Pi's
-   pull-ups are used). The row is one 4-pin Dupont connector on pins 9 (GND), 11, 13 and
-   15; the sleep button is a 2-pin one on pins 14 (GND) and 16. The sleep lead runs
-   ~270 mm along the top wall, under the top doubler.
+6. **Buttons**, each switching its GPIO to a common ground (no resistors; the
+   Pi's pull-ups are used). Chain one ground wire from button to button, and
+   give each button its own wire:
+
+   | Wire | Pi pin |
+   |---|---|
+   | Common ground | **14** (GND) |
+   | Previous (blue, left end) | **11** (GPIO17) |
+   | Select (orange) | **13** (GPIO27) |
+   | Next (blue) | **15** (GPIO22) |
+   | Sleep (black, right end) | **16** (GPIO23) |
+
+   One 2 × 3 Dupont connector over pins 11 to 16 takes all five, with pin 12
+   empty. The sleep button's leads run ~270 mm along the top wall, under the
+   top doubler.
 7. **5 V:** harness plugs into the four panels and the card's 4-pin input,
    the Pi's pigtail into the card's screw terminal, and the spare plug capped
    and tied back ([§8](#8-mains-and-5-v)).
@@ -486,8 +497,11 @@ diagrams and the serial console.
 2. The bar steps forward as the Pi boots. The first demo starts about 17 s after
    power-on (the Pi's bootloader takes ~9 s of that).
 3. Turn the knobs: their rings light up, following the brightness.
-4. **Hold the two outer knobs (k0 and k3) for a second** for the menu. k1 picks
-   a shelf, k0 a demo, k3 sets brightness, and a click on any knob closes it.
+4. **The buttons:** previous and next step through the demos, and **select**
+   opens the menu. In it, previous and next (or k1) pick a shelf, k0 a demo,
+   k3 sets brightness, and select or a click on any knob closes it. Sleep
+   blanks the box. A box provisioned before the buttons gets their overlays
+   from `update_pi.py`, then needs one reboot.
    [`firmware/demos/README.md`](../../firmware/demos/README.md) describes the
    demos and the shelves.
 
@@ -495,7 +509,7 @@ If something is wrong, `ssh patternflood.local`:
 
 ```sh
 i2cdetect -y 1                  # 37 38 39 3a: the four knobs
-journalctl -u patternflood -f   # a "knobs:" line, then frames per second every 5 s
+journalctl -u patternflood -f   # "knobs: 4 found", "buttons: 4 found", then frames per second every 5 s
 ```
 
 Settings (start demo, brightness, which shelves) are in
@@ -512,9 +526,6 @@ a renderer that stops sending frames.
 
 These are open in Rev 2.7:
 
-- **The buttons are wired but not read yet.** The `gpio-key` overlay lines and
-  the renderer side are in [`wiring.md`](wiring.md) §4, not yet in the
-  provisioned image. The knob chord (k0 + k3) does everything meanwhile.
 - **The power cap is uncalibrated.** It assumes 2.4 A per panel at full white,
   measured upstream on a different driver. Measure one panel at full white,
   and at full red, green and blue, on this card.

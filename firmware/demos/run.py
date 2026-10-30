@@ -15,8 +15,10 @@ Audio (what this machine is playing, by default; previews take --audio file:PATH
     ./run.py --demo tempo                  # the calibration demo: tap tempo, mark the one, A/V delay
     ./run.py --audio file:~/Music/set.mp4@600 --out preview:/tmp/viz.gif --demo spectrum
 
-Hold k0 and k3 together for a second for the menu: k0 picks the demo, k3 sets brightness,
-k2 lets the music turn the upstream patterns' knobs.
+The box's buttons, left to right: previous, select (the menu), next, sleep. The bench has
+none, so its terminal stands in: , previous, Enter select, . next, s sleep. In the menu k0
+picks the demo, k1 the shelf, k3 sets brightness, k2 lets the music turn the upstream
+patterns' knobs.
 """
 import argparse
 import glob
@@ -29,7 +31,7 @@ sys.path.insert(0, os.path.join(HERE, "..", "colorlight"))     # r75_frame, sees
 
 from pfd.demos import ALL                   # noqa: E402
 from pfd.audio import audio_source          # noqa: E402
-from pfd.io import frame_sink, knob_source  # noqa: E402
+from pfd.io import button_source, frame_sink, knob_source  # noqa: E402
 from pfd.runtime import Runtime             # noqa: E402
 from pfd.upstream import Upstream           # noqa: E402
 
@@ -60,6 +62,9 @@ def main():
                                 formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
     p.add_argument("--knobs", default=default_knobs(),
                    help="serial:PORT | i2c[:BUS] | auto[:SEED] | script:SPEC | none (default: $PF_KNOBS, a knob bridge, or auto)")
+    p.add_argument("--buttons", default=os.environ.get("PF_BUTTONS"),
+                   help="gpio | keys | auto (gpio if any, else the terminal's keys) | none "
+                        "(default: $PF_BUTTONS, or auto; none for previews)")
     p.add_argument("--out", default=os.environ.get("PF_OUT", "auto"),
                    help="auto[:HOST] (udp if the card is on our link, else pipe via HOST) | pipe:HOST[:IP] | udp[:IP] | "
                         "preview:FILE.gif (default: $PF_OUT, or auto)")
@@ -96,9 +101,11 @@ def main():
 
     out = frame_sink(args.out, preview_fps=fps)
     knobs = knob_source(args.knobs)
+    buttons = button_source(args.buttons or ("none" if preview else "auto"))
     spec = args.audio or ("none" if preview else "pulse")
     audio = audio_source(spec, delay=args.audio_delay, preview=preview)
-    Runtime(demos, knobs, out, fps=fps, bright=bright, start=start, duration=seconds, audio=audio).run()
+    Runtime(demos, knobs, out, fps=fps, bright=bright, start=start, duration=seconds, audio=audio,
+            buttons=buttons).run()
 
 
 if __name__ == "__main__":

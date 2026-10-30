@@ -1,9 +1,10 @@
 # Patternflood demos: settings for patternflood.service (firmware/demos/run.py).
 # Edit, then: sudo systemctl restart patternflood
 #
-# Switch demos live by holding the two outer knobs (k0 and k3) for a second: the
-# menu opens. k1 picks the shelf, k0 the demo, k3 sets brightness; a click on
-# any knob closes it.
+# The buttons on top, left to right: previous, select, next, sleep. Previous and
+# next step through the demos on a shelf; select opens the menu, where previous
+# and next (or k1) change shelf, k0 picks the demo and k3 sets brightness. Select
+# or a click on any knob closes it.
 
 # Which demos the menu offers: empty for all, shelves comma-separated (play,audio,cable,patternflow,community,community-1to1),
 # or "upstream" for SeungHun's 48 presets alone. Those are native code, so they run far
@@ -19,6 +20,8 @@ PF_FPS=60
 PF_BRIGHT=0.3
 # Knobs: i2c[:BUS] (the 4991 chain on the header), or none.
 PF_KNOBS=i2c:1
+# Buttons: gpio (the four on top, via the gpio-key overlay in config.txt), or none.
+PF_BUTTONS=gpio
 # Frames: udp[:IP], straight to the card on this Pi's Ethernet.
 PF_OUT=udp:192.168.75.39
 # Audio for the visualizers: none, alsa[:DEVICE] or pulse[:SOURCE]. The box has no microphone yet.
