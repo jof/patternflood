@@ -25,7 +25,8 @@ lit knobs and four push buttons. A **Raspberry Pi 5** renders the frames and a
 ## Build it
 
 **[`BUILD.md`](BUILD.md)** is the build guide: parts, flashing the card, the Pi
-image, test cuts, cutting, glue-up, wiring and first power-up.
+image, test cuts, cutting, glue-up, wiring and first power-up. The CAD model is
+public on Onshape: **[Patternflood desktop](https://cad.onshape.com/documents/8cfb8d4f799392c05f62f6ad/w/b5dfed0b24d2121a79e8b1a8/e/06ba580a80083894ed24609b)**.
 
 | Reference | Covers |
 |---|---|

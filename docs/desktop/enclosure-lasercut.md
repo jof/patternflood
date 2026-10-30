@@ -7,7 +7,7 @@ Replaces the fabrication section of an earlier plan,
 
 **Material:** 3 mm Baltic birch ply, finger-jointed. Rev 2: the bezel and every wall are two sheets, glued (§2).
 *(Switched from basswood 2026-09-12 — the reasoning is in §13.)*
-**CAD:** Onshape. **Cut:** CO₂ laser.
+**CAD:** Onshape ([the public document](https://cad.onshape.com/documents/8cfb8d4f799392c05f62f6ad/w/b5dfed0b24d2121a79e8b1a8/e/06ba580a80083894ed24609b)). **Cut:** CO₂ laser.
 
 ---
 

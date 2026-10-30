@@ -1,8 +1,9 @@
 # Hardware revisions
 
 Each revision is frozen twice: a git tag on the repo, and a named version in the
-Onshape document (`8cfb8d4f799392c05f62f6ad`). Fork from either. The Onshape
-main workspace always holds the revision in progress.
+public Onshape document ([`8cfb8d4f799392c05f62f6ad`](https://cad.onshape.com/documents/8cfb8d4f799392c05f62f6ad/w/b5dfed0b24d2121a79e8b1a8/e/06ba580a80083894ed24609b)).
+Fork from either. The Onshape main workspace always holds the revision in
+progress.
 
 To get a revision's cut files back: `git checkout rev-1 -- hardware/laser`.
 
