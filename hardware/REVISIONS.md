@@ -8,7 +8,7 @@ To get a revision's cut files back: `git checkout rev-1 -- hardware/laser`.
 
 ## Rev 1 — as built (2026-10-20)
 
-Git tag **`rev-1`** (c1b00f8). Onshape version **"Rev 1 - as built"**
+Git tag **`rev-1`** (3383397). Onshape version **"Rev 1 - as built"**
 (`ab89ff622434de960ad866e2`).
 
 One-sheet bezel, single-sheet walls, PSU 5 mm off the bottom wall on spacers,
@@ -202,7 +202,7 @@ clean, every QR decodes, every decal attaches.
   to 11 mm past the last button, and from its rear edge to 11 mm in front of
   the row). Under them is open bay over the top-left panel's back.
 - **The left wall is as it was before the buttons**: 14 exhaust slots, a plain
-  doubler. Both DXFs and the left wall's art are byte-identical to `dbfaf69`
+  doubler. Both DXFs and the left wall's art are byte-identical to `7cadbdc`
   again.
 - **The stiffener shelf has a 20 × 9 mm wire passthrough over each knob
   column**, not just the right one, so either column's wiring can run up past
