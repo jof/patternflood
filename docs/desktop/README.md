@@ -1,7 +1,7 @@
 # Patternflood desktop
 
 **Status: built and running (Rev 2.7).** Two physical revisions have been built:
-Rev 1 (2026-10-20) and Rev 2.7 (2026-10).
+Rev 1 (2026-10-20) and Rev 2.7 (finished 2026-10-28).
 
 <p><img src="img/build/rev1-front.jpg" width="49%" alt="Rev 1"> <img src="img/build/rev2.7-front.jpg" width="49%" alt="Rev 2.7"></p>
 
@@ -47,7 +47,6 @@ How it got this way. Useful if you want to change the design.
 | [`driver-colorlight.md`](driver-colorlight.md) | Why a Colorlight and a Pi; the panel chips; the power budget and cap; the measured 5A-75B; the electronics tray |
 | [`enclosure-lasercut.md`](enclosure-lasercut.md) | The finger-joint box: laminations, encoder bores, panel mounting, the back cover, material choice; measured panel data (§11) |
 | [`onshape-workflow.md`](onshape-workflow.md) | The Onshape model: FeatureScript, variables, proxies, exporting the cut files and art |
-| [`design-notes/`](design-notes/README.md) | Superseded plans: the Matrix Portal / ESP32 build, battery power, glueless fasteners, the Pi Zero W controller |
 
 ## History
 
@@ -57,3 +56,9 @@ want a driver that scales: the Colorlight 5A-75B with a Pi. That means it no
 longer runs upstream's ESP32 firmware. Instead, the Pi compiles upstream's
 pattern sources and runs them natively, alongside our own demos. It was renamed
 Patternflood on 2026-10-22.
+
+The research and plans from those earlier stages are in
+[`design-notes/`](design-notes/README.md): the Matrix Portal / ESP32 build,
+battery power, glueless fasteners, the Pi Zero W controller. They record what
+was tried and why it changed, for comparison with what was built. They are not
+a reference for building, and parts of them contradict the current design.

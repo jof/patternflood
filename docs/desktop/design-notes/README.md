@@ -1,9 +1,13 @@
-# Design notes (superseded)
+# Design notes: earlier research and project states
 
-Plans that the build has moved past, kept as written because they record why
-the design is the way it is. Each starts with a note saying what replaced it.
-Dates, open questions and "next steps" in them are as of when they were
-written. For the build as it stands, see [`../BUILD.md`](../BUILD.md).
+**Historical. Don't build from these.** They are the research and plans from
+earlier stages of the project, kept as written, to compare with what was
+finally built and to show why it changed. Parts, layouts and numbers in them
+were superseded, and some contradict the current design. Dates, open questions
+and "next steps" are as of when each was written. Each starts with a note
+saying what replaced it.
+
+The build as it stands: [`../BUILD.md`](../BUILD.md) and [`../wiring.md`](../wiring.md).
 
 | Doc | What it was |
 |---|---|

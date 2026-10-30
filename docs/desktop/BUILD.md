@@ -43,7 +43,7 @@ knobs below it on the left, the supply behind the bezel on the right.
 
 | Qty | Part | Notes |
 |---|---|---|
-| 4 | **Waveshare RGB-Matrix-P2-64x64-B** (GOB) | 128 × 128 mm, FM6124 column drivers, RUC7258 row drivers, 1/32 scan. Measured in [`design-notes/mechanical-plan.md`](design-notes/mechanical-plan.md) §2.1. Other panels need a different box: hole positions differ between panel types ([`enclosure-lasercut.md`](enclosure-lasercut.md) §11) |
+| 4 | **Waveshare RGB-Matrix-P2-64x64-B** (GOB) | 128 × 128 mm, FM6124 column drivers, RUC7258 row drivers, 1/32 scan. Measured in [`enclosure-lasercut.md`](enclosure-lasercut.md) §11. Other panels need a different box: hole positions differ between panel types ([`enclosure-lasercut.md`](enclosure-lasercut.md) §11) |
 | 4 | HUB75 ribbon cables, 16-way IDC | One per panel, from the card to the panel's IN |
 | 4 | Panel power leads | One per panel, to the 5 V bus |
 | 1 | **Colorlight 5A-75B**, v8.x | Ours is a v8.2. The gateware is built for the v8.0 pinout, which v8.2 shares |

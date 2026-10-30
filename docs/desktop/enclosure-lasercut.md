@@ -2,8 +2,8 @@
 
 > **Design reference.** The reasoning behind the box, written as it was designed; some sections predate the current revision (Rev 2.7, [`../../hardware/REVISIONS.md`](../../hardware/REVISIONS.md)). To build it, follow [`BUILD.md`](BUILD.md).
 
-Supersedes the fabrication section of [`mechanical-plan.md`](design-notes/mechanical-plan.md) §3.
-Geometry, stackup and clearances there still hold; this is the how.
+Replaces the fabrication section of an earlier plan,
+[`design-notes/mechanical-plan.md`](design-notes/mechanical-plan.md) §3, kept as design history.
 
 **Material:** 3 mm Baltic birch ply, finger-jointed. Rev 2: the bezel and every wall are two sheets, glued (§2).
 *(Switched from basswood 2026-09-12 — the reasoning is in §13.)*
@@ -87,8 +87,8 @@ The EC11 clamps one 3.18 mm sheet, so the bezel's glued inner sheet is pocketed
 - **Anti-rotation nub.** Many EC11s have a small locating boss beside the
   bushing. Check the PID 377 and add the relief hole if it's there — otherwise
   the body rotates and the wiring twists.
-- **Bushing thread length caps the clamped thickness.** Measured 5.5 mm
-  (measurement #1 in [`build-prep.md`](design-notes/build-prep.md) §B), hence one sheet.
+- **Bushing thread length caps the clamped thickness.** Measured 5.5 mm,
+  hence one sheet.
 
 ---
 
@@ -123,7 +123,7 @@ Consequences:
   invisible; going further starts eating real pixels.
 - Use the **measured** butted width, not 256 nominal — measurement #2.
 - The face sits **flush on the GOB panel front**. No air gap, no diffuser: the
-  epoxy fill already diffuses. See [`mechanical-plan.md`](design-notes/mechanical-plan.md) §2.2.
+  epoxy fill already diffuses.
 
 ---
 
@@ -168,7 +168,7 @@ pin hole is 3.5 mm of birch.
 
 ## 6. Depth
 
-Mains-first (no battery bay), from [`mechanical-plan.md`](design-notes/mechanical-plan.md) §2.2:
+Mains-first (no battery bay):
 
 | Layer | Depth |
 |---|---|

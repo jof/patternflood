@@ -110,7 +110,7 @@ The Pi takes its 5 V from its own pair off the 5 V bus, not through a panel's
 harness — the same arrangement as Adafruit's RGB matrix bonnet, which
 back-powers the Pi from the panel supply. Set the LRS trim to ~5.15 V so the Pi
 sees ≥ 5.0 V under load. Wire gauges for the bus and each branch, in 22 AWG,
-are in [`power-plan.md`](design-notes/power-plan.md#the-5-v-bus-in-22-awg). The Pi 5 is fed
+are in [`wiring.md`](wiring.md#3-power). The Pi 5 is fed
 through a **5 V → USB-C pigtail**, which does no USB-PD, so it assumes a 3 A
 supply and warns. The LRS can deliver more,
 so set `PSU_MAX_CURRENT=5000` in the bootloader config (`rpi-eeprom-config -e`).

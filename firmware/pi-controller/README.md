@@ -5,7 +5,7 @@ Raspberry Pi OS Lite (trixie), set up to boot straight into the demos
 receiver75 on the Colorlight card. Hold k0 and k3 for a second for the menu
 that switches demos. The Pi 5 runs the arm64 image and uses its own gigabit port. (The
 Pi Zero W, the first controller, runs the armhf image with a USB gigabit adapter:
-[`pi-zero-w-controller.md`](../../docs/desktop/design-notes/pi-zero-w-controller.md).) Wiring: [`docs/desktop/wiring-pi-controller.md`](../../docs/desktop/wiring.md).
+[`pi-zero-w-controller.md`](../../docs/desktop/design-notes/pi-zero-w-controller.md).) Wiring: [`docs/desktop/wiring.md`](../../docs/desktop/wiring.md).
 
 ## Making a card
 

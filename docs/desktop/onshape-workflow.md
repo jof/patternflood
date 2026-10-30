@@ -137,8 +137,7 @@ that run is 90 mm of empty bay.
    └───────────┘
 ```
 
-The **bushing thread length** is measurement #1 in
-[`build-prep.md`](design-notes/build-prep.md) §B, and it decides whether a 6 mm doubled front
+The **bushing thread length** is a caliper measurement, and it decides whether a 6 mm doubled front
 is viable. Model it from calipers, not the datasheet. *(Measured 2026-10-18:
 5.5 mm, so it is not — the bezel is one sheet, `#frontLayers` = 1.)*
 
@@ -218,8 +217,7 @@ or black for the knobs, matte black for the panel face between pixels.
   9. DXF export → test comb → front face → rest
 ```
 
-Steps 1–5 are worth doing **before** the caliper session in
-[`build-prep.md`](design-notes/build-prep.md) §B, because the model tells you exactly which
+Steps 1–5 are worth doing **before** measuring the real parts, because the model tells you exactly which
 dimensions you need to measure, and you can drop them straight into the Variable
 Studio while the parts are still in your hand.
 
@@ -374,7 +372,7 @@ Assembly places parts at the same numbers. Both read; neither writes.
   PSU datum. The PSU one earns its keep: it encodes the corner-mapping
   `ours = (psuXHi − X, psuYLo + Y, psuZFront − Z)`, and the **z flip in that
   expression is what puts the terminal screws toward the removable back cover**
-  rather than the glued bezel (see [`power-plan.md`](design-notes/power-plan.md) §8).
+  rather than the glued bezel (see [`BUILD.md`](BUILD.md) §8).
 
 ### Placements, so they are reproducible
 
