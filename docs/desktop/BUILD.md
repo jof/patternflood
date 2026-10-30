@@ -45,12 +45,14 @@ knobs below it on the left, the supply behind the bezel on the right.
 |---|---|---|
 | 4 | **Waveshare RGB-Matrix-P2-64x64-B** (GOB) | 128 × 128 mm, FM6124 column drivers, RUC7258 row drivers, 1/32 scan. Measured in [`enclosure-lasercut.md`](enclosure-lasercut.md) §11. Other panels need a different box: hole positions differ between panel types ([`enclosure-lasercut.md`](enclosure-lasercut.md) §11) |
 | 4 | HUB75 ribbon cables, 16-way IDC | One per panel, from the card to the panel's IN |
-| 3 | Waveshare panel power harness | The ones that come with the panels: a spade pair at the supply, split to two 4-pin panel plugs. Six plugs: four panels, the card, one spare |
+| 3 | Waveshare panel power harness | The ones that come with the panels: a fork pair at the 5 V bus, split to two 4-pin panel plugs. Six plugs: four panels, the card, one spare |
+| 2 | 4-way barrier terminal strip, 25 A (TB-2504L or similar) | The 5 V bus: one strip for +5 V, one for GND |
+| — | 16 AWG red and black wire, insulated fork terminals | Supply to the bus |
 | 1 | **Colorlight 5A-75B**, v8.x | Ours is a v8.2. The gateware is built for the v8.0 pinout, which v8.2 shares |
 | 1 | **Raspberry Pi 5** | With the official **Active Cooler**. The box is closed |
 | 1 | microSD card | 16 GB or more |
 | 1 | 5 V → USB-C pigtail, bare leads | Feeds the Pi from the card's 5 V screw terminal. No USB-PD |
-| 1 | Flat Cat6 patch cable, ~20 cm | Pi to card. The card will not link at 100 Mbit |
+| 1 | Ethernet patch cable, Cat5e or better, ~20 cm | Pi to card. The card will not link at 100 Mbit |
 | 4 | **Adafruit 4991** I²C QT rotary encoder breakout | Each has a NeoPixel, which lights the knob's ring |
 | 4 | **Adafruit 377** rotary encoder (EC11) | Soldered to the 4991s |
 | 4 | Knobs for a 6 mm D shaft, about 1" (25.4 mm) | The light slits sit just outside a 1" knob's skirt |
@@ -58,6 +60,7 @@ knobs below it on the left, the supply behind the bezel on the right.
 | 1 | STEMMA QT to female sockets (Adafruit 4397) | Last encoder to the Pi's header |
 | 4 | 12 mm waterproof momentary push buttons, with a keyed lip | The VanMoof S3 boost-button type (Amazon B07F24Y1TB has the drawing). Two blue, one orange, one black, in the build as drawn |
 | — | Dupont (2.54 mm) female wire connector, 2 × 3 (or a 1 × 3 and a 1 × 2), with crimp pins and hook-up wire | Button leads, plugged onto the Pi's header pins |
+| — | Insulated female spade terminals to fit the button tags, and WAGO 221 inline splices | How ours are wired, with no soldering. Solder the leads to the tags instead if you prefer |
 
 ### Power
 
@@ -108,8 +111,9 @@ of screw into its case) or on the tray (M3 × 18 touches the panel).
 - A JTAG adapter for the card's one-time flash: a
   [Glasgow](https://glasgow-embedded.org/) (what we used), or an FT232H with
   openFPGALoader (what receiver75 documents; not tried here).
-- Soldering iron (encoders, buttons, maybe the card's JTAG header), wire
-  strippers, a crimper for the Dupont pins, small screwdrivers, a 2 mm hex key.
+- Soldering iron (encoders, maybe the card's JTAG header), wire strippers, a
+  crimper for the Dupont pins, a ratchet crimper for insulated terminals (the
+  mains forks and the button spades), small screwdrivers, a 2 mm hex key.
 - Clamps and two flat boards for the glue-ups.
 - A multimeter, for trimming the supply.
 - A Linux machine with an SD card reader, to provision the Pi's card.
@@ -219,9 +223,9 @@ debug a ribbon or a panel lying flat.
    J2, J3, J6 and J7 stay free. The mapping is also compiled into the card's
    splash, so keep to it.
 3. Power the panels, the card and the Pi from the LRS-50-5 (temporary leads are
-   fine on the bench; [§8](#8-mains-and-5-v) has the harness layout), Cat6 from
-   the Pi to either of the card's jacks, and the encoder chain to the Pi
-   ([`wiring.md`](wiring.md) §1).
+   fine on the bench; [§8](#8-mains-and-5-v) has the harness layout), a
+   patch cable from the Pi to either of the card's jacks, and the encoder chain
+   to the Pi ([`wiring.md`](wiring.md) §1).
 4. Power on. The card shows its spinner within a couple of seconds, the bar
    steps forward as the Pi boots, and the demos start about 17 s after power-on.
 
@@ -352,6 +356,12 @@ Bezel face down on a flat surface.
 - Daisy-chain the encoders with the STEMMA QT cables, through the cable holes
   in knob rib 1. Order doesn't matter: the knobs are numbered by address.
 
+<img src="img/build/rev2.7-buttons-inside.jpg" width="60%" alt="The four buttons in the top wall, seen from inside before wiring">
+
+*The buttons from inside, before wiring. This is the back view, so the sleep
+button is the one alone at the left; the top doubler is notched behind the
+nuts.*
+
 ### 7.4 Panels
 
 Each panel's two registration pins drop into holes in a brace, and four M3
@@ -401,11 +411,20 @@ The terminals are, in order: **L, N, FG (earth), −V, +V.**
 
 ### 5 V
 
-<img src="img/wiring-blocks.svg" width="100%" alt="Block wiring: mains through the IEC inlet to the LRS-50-5; three Waveshare panel harnesses off its 5 V screws, two feeding two panels each and one feeding the Colorlight card plus a spare plug; the Pi 5 powered by a USB-C pigtail from the card's screw terminal; Pi to card over gigabit Cat6, card to the four panels over HUB75; knobs on I²C and buttons on GPIO to the Pi">
+<img src="img/wiring-blocks.svg" width="100%" alt="Block wiring: mains through the IEC inlet to the LRS-50-5; a 5 V bus of two barrier strips off its +V and −V screws; three Waveshare panel harnesses off the bus, two feeding two panels each and one feeding the Colorlight card plus a spare plug; the Pi 5 powered by a USB-C pigtail from the card's screw terminal; Pi to card over gigabit Ethernet, card to the four panels over HUB75; knobs on I²C and buttons on GPIO to the Pi">
 
-The 5 V side needs no bus: it's three of the power harnesses that come with
-the panels, each a spade pair split to two 4-pin panel plugs. **Stack all
-three spade pairs under the supply's +V and −V screws.** That gives six plugs:
+The 5 V side is a small bus and three of the power harnesses that come with
+the panels, each a fork pair split to two 4-pin panel plugs. Three fork pairs
+stacked under the supply's screws is too crowded, so:
+
+1. **Two 4-way barrier strips make the bus**, one for +5 V and one for GND.
+   Bridge each strip's four positions with its jumper bar or short links. Ours
+   sit on the lower brace, just above the supply.
+2. **One pair from the supply**, 16 AWG with forks: +V to the +5 V strip, −V
+   to the GND strip.
+3. **The three harnesses' forks onto the strips**, red on +5 V, black on GND.
+
+That gives six plugs:
 
 - **four panels**, two on each of two harnesses;
 - **the card's 4-pin power input**, on the third harness. The card also has a
@@ -443,11 +462,22 @@ side facing the back cover.
    **M3 × 8** through the Colorlight, **M2.5 × 8** through the Pi. The card lies
    horizontal, its RJ45 end toward the left; the Pi stands on end at the left,
    Ethernet jack pointing down past the tray's edge. Fit the Active Cooler.
+
+   <img src="img/build/rev2.7-tray-bench.jpg" width="60%" alt="The electronics tray on the bench: the Pi 5 on end beside the Colorlight card, a patch cable between them">
+
+   *The tray on the bench, upside down from how it goes in, with the patch
+   cable and the Pi's pigtail already fitted.*
 2. **Plug the four HUB75 ribbons into the card** (J5, J8, J4, J1, as in
    [§4](#4-bench-test-before-you-cut)).
 3. **Tray in from the back.** Plug each ribbon into its panel's IN, then four
    **M3 × 16** through the tray and a spacer ring into the brace's nuts.
-4. **Cat6** from the Pi's jack round the tray's bottom edge to the card.
+
+   <img src="img/build/rev2.7-tray-ribbons.jpg" width="60%" alt="The tray in the box, its four ribbons running from the card to the panels">
+
+   *The tray in, seen from the back: four ribbons from the card to the
+   panels' IN connectors, and the Pi on end at the right, its jack pointing
+   down.*
+4. **Patch cable** from the Pi's jack round the tray's bottom edge to the card.
 5. **Knob chain** to the Pi's header, at **3.3 V**:
 
    <img src="img/build/pi5-header.jpg" width="50%" alt="Leads on the Pi 5's header, beside the Active Cooler">
@@ -478,10 +508,30 @@ side facing the back cover.
    One 2 × 3 Dupont connector over pins 11 to 16 takes all five, with pin 12
    empty. The sleep button's leads run ~270 mm along the top wall, under the
    top doubler.
+
+   <p><img src="img/build/rev2.7-button-crimps.jpg" width="49%" alt="Crimping spade terminals onto the button leads with a ratchet crimper"> <img src="img/build/rev2.7-buttons-wired.jpg" width="49%" alt="The buttons wired, their leads ending in Dupont tails"></p>
+
+   *Wiring the buttons without solder: insulated spades on the button tags,
+   each button's ground looped on to the next, and WAGO splices joining the
+   leads to their Dupont tails. Back view, so the sleep button is at the
+   left.*
 7. **5 V:** harness plugs into the four panels and the card's 4-pin input,
    the Pi's pigtail into the card's screw terminal, and the spare plug capped
    and tied back ([§8](#8-mains-and-5-v)).
+
+   <img src="img/build/rev2.7-tray-power.jpg" width="60%" alt="The Colorlight card's power: a harness plug in its 4-pin input and the Pi's pigtail in its screw terminal">
+
+   *The card's 4-pin input, and the Pi's pigtail in its 5 V screw terminal in
+   ferrules, red to D5V and black to GND. Two panels' plugs are at the top.*
+
 8. Back cover on: six M3 × 10 low-head screws into the nuts in rail B.
+
+<img src="img/build/rev2.7-inside.jpg" width="60%" alt="Rev 2.7 from the back with the cover off: the electronics tray, the wiring, the supply and the knob boards">
+
+*Rev 2.7 with the back cover off: the tray on the middle brace, the button
+leads down the right-hand side to the Pi's header, the two 5 V bus strips
+just above the supply, the IEC inlet and the supply along the bottom, and the
+knob boards in their pockets at the bottom right.*
 
 [`wiring.md`](wiring.md) has the whole wiring in one place, with header
 diagrams and the serial console.

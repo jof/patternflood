@@ -35,14 +35,14 @@ is kept for history.
 ## 2. Parts and topology
 
 ```
-   mains ─► IEC (right wall) ─► LRS-50-5 ─┬─ harness A ─► 2 panels
-                                          ├─ harness B ─► 2 panels
-                                          └─ harness C ─┬─► 5A-75B ─ screw terminal ─► Pi 5 (USB-C pigtail)
-                                                        └─► spare plug
+   mains ─► IEC (right wall) ─► LRS-50-5 ─► 5 V bus ─┬─ harness A ─► 2 panels
+                                                     ├─ harness B ─► 2 panels
+                                                     └─ harness C ─┬─► 5A-75B ─ screw terminal ─► Pi 5 (USB-C pigtail)
+                                                                   └─► spare plug
 
-   Pi 5 ─ on-board gigabit Ethernet ─ Cat6 ─► 5A-75B
-                                              HUB75 ×4 (J1–J4)
-                                                one panel each
+   Pi 5 ─ on-board gigabit Ethernet ─ Cat5e+ ─► 5A-75B
+                                                HUB75 ×4 (J1–J4)
+                                                  one panel each
    Pi 5 ─ I²C (STEMMA QT) ─► 4 × Adafruit 4991 encoders
    Pi 5 ─ Wi-Fi ─► your network
 ```

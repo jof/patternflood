@@ -59,8 +59,9 @@
 <text x="636" y="213" font-size="12" fill="#7d7268" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">192.168.75.39</text>
 <circle cx="620" cy="200" r="3.5" fill="#2f6db5"/>
 <path d="M530,200 L620,200" fill="none" stroke="#2f6db5" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="575" y="188" font-size="11.5" fill="#2f6db5" font-weight="600" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">Cat6, gigabit</text>
-<text x="575" y="218" font-size="10" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">~20 cm</text>
+<text x="575" y="188" font-size="11.5" fill="#2f6db5" font-weight="600" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">gigabit</text>
+<text x="575" y="218" font-size="10" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">Cat5e or</text>
+<text x="575" y="231" font-size="10" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">better</text>
 <circle cx="820" cy="196" r="3.5" fill="#6a4fb3"/>
 <text x="811" y="200" font-size="10.5" fill="#7d7268" font-weight="400" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">J5</text>
 <circle cx="820" cy="222" r="3.5" fill="#6a4fb3"/>
@@ -304,12 +305,20 @@
 <text x="346" y="619" font-size="12" fill="#7d7268" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">trimmed to ~5.15 V</text>
 <path d="M260,616 L330,616" fill="none" stroke="#6f6156" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="295" y="604" font-size="11" fill="#6f6156" font-weight="600" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">L N ⏚</text>
-<path d="M548,584 L540,584 M540,580 L532,580 M540,588 L532,588 M540,580 L540,588" stroke="#c8442f" stroke-width="2.2" fill="none" stroke-linecap="round"/>
 <path d="M548,616 L540,616 M540,612 L532,612 M540,620 L532,620 M540,612 L540,620" stroke="#c8442f" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-<path d="M548,648 L540,648 M540,644 L532,644 M540,652 L532,652 M540,644 L540,652" stroke="#c8442f" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-<text x="556" y="702" font-size="11.5" fill="#c8442f" font-weight="600" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">3 × Waveshare panel harness: one spade pair → two 4-pin plugs</text>
-<text x="556" y="718" font-size="11" fill="#7d7268" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">all three spade pairs share the supply's +V and −V screws; each red line is a +5 V / GND pair</text>
-<path d="M548,584 L760,584 Q770,584 770,574 L770,320" fill="none" stroke="#c8442f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M548,616 L590,616" fill="none" stroke="#c8442f" stroke-width="3.6" stroke-linecap="round"/>
+<rect x="590" y="566" width="130" height="100" rx="10" fill="#ffffff" stroke="#2b2622" stroke-width="1.4"/>
+<rect x="590" y="566" width="5" height="100" rx="2" fill="#c8442f"/>
+<text x="606" y="592" font-size="15" fill="#2b2622" font-weight="650" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">5 V bus</text>
+<text x="606" y="612" font-size="12" fill="#7d7268" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">2 × 4-way</text>
+<text x="606" y="629" font-size="12" fill="#7d7268" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">barrier strip</text>
+<text x="606" y="648" font-size="10.5" fill="#7d7268" font-weight="400" text-anchor="start" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">+5 V · GND</text>
+<path d="M736,584 L728,584 M728,580 L720,580 M728,588 L720,588 M728,580 L728,588" stroke="#c8442f" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+<path d="M736,616 L728,616 M728,612 L720,612 M728,620 L720,620 M728,612 L728,620" stroke="#c8442f" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+<path d="M736,648 L728,648 M728,644 L720,644 M728,652 L720,652 M728,644 L728,652" stroke="#c8442f" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+<text x="556" y="702" font-size="11.5" fill="#c8442f" font-weight="600" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">5 V bus: two 4-way barrier strips, +5 V and GND, fed by one pair from the supply</text>
+<text x="556" y="718" font-size="11" fill="#7d7268" font-weight="400" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">3 × Waveshare panel harness on the strips, one fork pair → two 4-pin plugs; each red line is a +5 V / GND pair</text>
+<path d="M736,584 L760,584 Q770,584 770,574 L770,320" fill="none" stroke="#c8442f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="770" cy="470" r="4.5" fill="#c8442f"/>
 <path d="M770,470 L700,470" fill="none" stroke="#c8442f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 5"/>
 <rect x="677.0" y="465.0" width="22" height="10" rx="2" fill="#ffffff" stroke="#c8442f" stroke-width="2"/>
@@ -327,7 +336,7 @@
 <path d="M670,320 L670,410 Q670,420 660,420 L445,420 Q435,420 435,410 L435,372" fill="none" stroke="#c8442f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="552.5" y="410" font-size="11" fill="#c8442f" font-weight="600" text-anchor="middle" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">USB-C pigtail, ~1.6 A</text>
 <text x="552.5" y="438" font-size="10" fill="#7d7268" font-weight="400" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">no USB-PD: PSU_MAX_CURRENT=5000</text>
-<path d="M548,616 L1120,616 Q1130,616 1130,606 L1130,397.0" fill="none" stroke="#c8442f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M736,616 L1120,616 Q1130,616 1130,606 L1130,397.0" fill="none" stroke="#c8442f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M1130,397.0 L1130,354 Q1130,346 1122,346 L1090,346" fill="none" stroke="#c8442f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="1091.0" y="341.0" width="22" height="10" rx="2" fill="#ffffff" stroke="#c8442f" stroke-width="2"/>
 <circle cx="1094.5" cy="346" r="1.2" fill="#c8442f"/>
@@ -342,7 +351,7 @@
 <circle cx="1109.5" cy="448" r="1.2" fill="#c8442f"/>
 <circle cx="1130" cy="397.0" r="4.5" fill="#c8442f"/>
 <text x="1140" y="401.0" font-size="11" fill="#c8442f" font-weight="600" text-anchor="start" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">2 panels</text>
-<path d="M548,648 L1140,648 Q1150,648 1150,638 L1150,193.0" fill="none" stroke="#c8442f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M736,648 L1140,648 Q1150,648 1150,638 L1150,193.0" fill="none" stroke="#c8442f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M1150,193.0 L1150,150 Q1150,142 1142,142 L1090,142" fill="none" stroke="#c8442f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="1091.0" y="137.0" width="22" height="10" rx="2" fill="#ffffff" stroke="#c8442f" stroke-width="2"/>
 <circle cx="1094.5" cy="142" r="1.2" fill="#c8442f"/>

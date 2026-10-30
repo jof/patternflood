@@ -4,7 +4,7 @@ Everything electrical in the Rev 2.7 desktop build, in one place. For the order
 to do it in, see [`BUILD.md`](BUILD.md). The design reasoning is in
 [`driver-colorlight.md`](driver-colorlight.md).
 
-<img src="img/wiring-blocks.svg" width="100%" alt="Block wiring: mains through the IEC inlet to the LRS-50-5; three Waveshare panel harnesses off its 5 V screws, two feeding two panels each and one feeding the Colorlight card plus a spare plug; the Pi 5 powered by a USB-C pigtail from the card's screw terminal; Pi to card over gigabit Cat6, card to the four panels over HUB75; knobs on I²C and buttons on GPIO to the Pi">
+<img src="img/wiring-blocks.svg" width="100%" alt="Block wiring: mains through the IEC inlet to the LRS-50-5; a 5 V bus of two barrier strips off its +V and −V screws; three Waveshare panel harnesses off the bus, two feeding two panels each and one feeding the Colorlight card plus a spare plug; the Pi 5 powered by a USB-C pigtail from the card's screw terminal; Pi to card over gigabit Ethernet, card to the four panels over HUB75; knobs on I²C and buttons on GPIO to the Pi">
 
 ## 1. Knob chain → Pi header (I²C)
 
@@ -45,7 +45,7 @@ connectors. The free end goes to the Pi's 40-pin header.
 
 ## 2. Pi → Colorlight card (Ethernet)
 
-A ~20 cm flat Cat6 patch cable from the Pi's own jack to either of the card's.
+A ~20 cm patch cable, Cat5e or better, from the Pi's own jack to either of the card's.
 The card **won't link at 100 Mbit**, so it must be a gigabit port, which the
 Pi 5's is.
 
@@ -73,10 +73,13 @@ both if you rewire.
 From the LRS-50-5, **trimmed to ~5.15 V**. Mains wiring and safety are in
 [`BUILD.md` §8](BUILD.md#8-mains-and-5-v); read that first.
 
-The 5 V side is three of the power harnesses that come with Waveshare's
-panels. Each is one pair of spade (fork) terminals at the supply end, split to
-two 4-pin panel power plugs, the Molex-style plug HUB75 panels use. All three
-spade pairs go under the supply's +V and −V screws, which gives six plugs:
+The 5 V side is a small bus and three of the power harnesses that come with
+Waveshare's panels. The bus is two 4-way barrier strips (25 A, TB-2504L or
+similar), one for +5 V and one for GND, each strip's positions bridged, fed by
+one 16 AWG pair from the supply's +V and −V screws; three fork pairs stacked on
+the supply were too crowded. Each harness is one pair of fork terminals at the
+bus, split to two 4-pin panel power plugs, the Molex-style plug HUB75 panels
+use. Three harnesses on the strips give six plugs:
 
 | Harness | Plugs into | Carries |
 |---|---|---|
