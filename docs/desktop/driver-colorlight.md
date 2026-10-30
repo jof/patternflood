@@ -1,5 +1,7 @@
 # Driving the Panels: Colorlight 5A-75B + Raspberry Pi 5
 
+> **Design reference.** Why the controller is what it is, as decided and measured. To build it, follow [`BUILD.md`](BUILD.md); the wiring as built is in [`wiring.md`](wiring.md).
+
 > 🔁 **2026-10-21: the Pi Zero 2 W + USB gigabit adapter became a Raspberry Pi 5**, which has gigabit
 > Ethernet on board. The Zero's reasoning is kept below where it still explains a choice.
 
@@ -25,7 +27,7 @@ community pattern library are all ESP32 binaries. A Pi host renders its own
 frames. The patterns' JavaScript source form is the bridge back to that
 library, if one is wanted (§5).
 
-[`firmware-delta.md`](firmware-delta.md) describes the abandoned ESP32 fork and
+[`firmware-delta.md`](design-notes/firmware-delta.md) describes the abandoned ESP32 fork and
 is kept for history.
 
 ---
@@ -108,7 +110,7 @@ The Pi takes its 5 V from its own pair off the 5 V bus, not through a panel's
 harness — the same arrangement as Adafruit's RGB matrix bonnet, which
 back-powers the Pi from the panel supply. Set the LRS trim to ~5.15 V so the Pi
 sees ≥ 5.0 V under load. Wire gauges for the bus and each branch, in 22 AWG,
-are in [`power-plan.md`](power-plan.md#the-5-v-bus-in-22-awg). The Pi 5 is fed
+are in [`power-plan.md`](design-notes/power-plan.md#the-5-v-bus-in-22-awg). The Pi 5 is fed
 through a **5 V → USB-C pigtail**, which does no USB-PD, so it assumes a 3 A
 supply and warns. The LRS can deliver more,
 so set `PSU_MAX_CURRENT=5000` in the bootloader config (`rpi-eeprom-config -e`).

@@ -1,6 +1,6 @@
 """Patternflow's community patterns (community.patternflow.work), on their own shelf.
 
-upstream_host/community.py fetches the wall (`sync`, on ash). Patterns with a firmware
+upstream_host/community.py fetches the wall (`sync`, on a PC). Patterns with a firmware
 header are compiled, each into its own library, and run as an upstream preset runs
 (pfd/upstream.py). The JavaScript-only ones run under node, in upstream's own harness
 (upstream_host/jsrun.mjs, one child process for them all). Each comes as published, at
@@ -57,7 +57,7 @@ class JSHost:
         self.inflight = None        # (key, nbytes, deadline) of the frame node is drawing
 
     def _start(self):
-        # A session of its own, so stop() can kill all of it: under bwrap (ash) node is bwrap's
+        # A session of its own, so stop() can kill all of it: under bwrap (Ubuntu) node is bwrap's
         # child, and killing bwrap alone leaves node running.
         self.proc = subprocess.Popen(self.argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE, bufsize=0,
                                      start_new_session=True)

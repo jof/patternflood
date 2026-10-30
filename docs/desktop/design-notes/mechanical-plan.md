@@ -1,15 +1,17 @@
 # Mechanical & Enclosure Plan
 
+> **Design history:** the mechanical plan from before the laser-cut box: front-panel layouts, sensor mounting and the measured P2 panel (§2.1, still the reference). The as-built geometry is in the Onshape model and [`../enclosure-lasercut.md`](../enclosure-lasercut.md).
+
 Fork of [engmung/patternflow](https://github.com/engmung/patternflow) (pristine clone in `upstream/`, at `87700bd`, v3.9.5).
 
 This plan covers geometry, stackup, mounting and fabrication. Power is in
 [`power-plan.md`](power-plan.md). The controller is in
-[`driver-colorlight.md`](driver-colorlight.md).
+[`driver-colorlight.md`](../driver-colorlight.md).
 
 > 🔁 **2026-10-12: redesigned as a 2 × 2 array on a Colorlight 5A-75B + Pi
 > Zero 2 W.** The Matrix Portal S3 and the 2 × 1 landscape layout are gone, and
 > with them the "every upstream pattern runs unmodified" property — see
-> [`driver-colorlight.md`](driver-colorlight.md) §1. Sections below are
+> [`driver-colorlight.md`](../driver-colorlight.md) §1. Sections below are
 > updated where the change reaches them. The upstream comparison in §1 and the
 > sensor notes in §2.4 are kept as the record of how the build got here.
 
@@ -29,7 +31,7 @@ everything else.
 | Resolution | 128 × 64 px | **128 × 128 px** (was 128 × 64, upstream's grid) |
 | Encoders | 4× EC11 soldered to PCB, on GPIO | **4× Adafruit 4991 seesaw breakouts on I²C** (to the Pi) |
 | Power in | Screw terminal, sacrificial USB cable | **IEC mains → Mean Well LRS-50-5**, capped panel load |
-| Extra sensing | none | none in v1 (the lidar moved to the [wall project](../wall/)) |
+| Extra sensing | none | none in v1 (the lidar moved to the [wall project](../../wall/)) |
 
 The single most important consequence: **the upstream enclosure does not
 fit and cannot be adapted.** It is dimensioned around a 320×160 mm panel and
@@ -77,7 +79,7 @@ Four Waveshare 64×64 GOB panels in a 2 × 2 grid: 128 × 128 px, 256 × 256 mm.
 >
 > *(2026-10-12: that is the trade this build has now made — four panels, a
 > 128 × 128 grid, and a Pi host instead of the `.pfm` loader. See
-> [`driver-colorlight.md`](driver-colorlight.md) §1.)*
+> [`driver-colorlight.md`](../driver-colorlight.md) §1.)*
 
 > ✅ **2026-10-03: the panels are on the bench, and the model is now at P2.**
 > It was built at P2.5 from 2026-09-12 because a measured vendor model existed
@@ -87,9 +89,9 @@ Current external size is **293 wide × 373 tall × 60.7 deep** (at the measured 
 its bottom wall: display on top, the knob and PSU band below. (The 2 × 1 box
 was 297 × 245 × 60 and lived on its side. The side margin went 20 → 18 mm on
 2026-10-12 so the widest part fits the laser and 12"-wide stock with room to
-spare — [`enclosure-lasercut.md`](enclosure-lasercut.md) §13.)
+spare — [`enclosure-lasercut.md`](../enclosure-lasercut.md) §13.)
 
-![The 2 x 2 box](img/box-2x2.png)
+![The 2 x 2 box](../img/box-2x2.png)
 
 > ⚠️ **It is 373 mm tall on a 60 mm footprint** — about 6 : 1. The PSU sits low,
 > which helps, but it will tip if knocked. Feet that splay to the rear, or a
@@ -121,7 +123,7 @@ panel's rear face — `#plugProj`, `#pwrPlugProj`) clear the braces by 2.55 mm
 (HUB75) and 8.85 mm (5 V) in y. Those depths are placeholders until a plugged
 connector is calipered.
 
-![Rear of one panel proxy, seen from behind](img/panel-p2-rear.png)
+![Rear of one panel proxy, seen from behind](../img/panel-p2-rear.png)
 
 Two things came out of it that the model had wrong:
 
@@ -289,7 +291,7 @@ tolerates being an afterthought.
 
 > ⚠️ This is a **depth camera**, not a proximity sensor — 2268 zones, 5 cm–9 m,
 > 55°×42°, up to 100 Hz. It is the one genuinely new feature in the build and
-> it has its own document: **[`lidar-plan.md`](../wall/lidar-plan.md)**. What follows is
+> it has its own document: **[`lidar-plan.md`](../../wall/lidar-plan.md)**. What follows is
 > the mechanical summary; §5 there is the full version.
 
 - Optical. Needs a genuinely **open aperture**. Cover-glass crosstalk — VCSEL
@@ -313,7 +315,7 @@ aperture into a finished bezel is the one change that ruins a front panel.
 ### 2.5 Panel and board mounting
 
 - **Panels:** all four hang from shared **cross-braces** that span the box
-  (the carrier plate, in wood — [`enclosure-lasercut.md`](enclosure-lasercut.md)
+  (the carrier plate, in wood — [`enclosure-lasercut.md`](../enclosure-lasercut.md)
   §5). Do not rely on the bezel to hold panel alignment: the seams are the most
   visible feature of the whole build, and they need a rigid common datum. Each
   panel gets **four M3 screws** into its side inserts for clamping, and its
@@ -330,7 +332,7 @@ aperture into a finished bezel is the one change that ruins a front panel.
 - **Electronics:** on a removable two-sheet tray screwed to the back of the
   middle brace (now three sheets), component side facing back. Every nut —
   tray to brace, board to tray, cover to rails — sits in a clearance / hex /
-  clearance sandwich; see [`driver-colorlight.md`](driver-colorlight.md) §6 for
+  clearance sandwich; see [`driver-colorlight.md`](../driver-colorlight.md) §6 for
   the stacks and the assembly order. No glue; the back cover carries nothing;
   the tray comes out to reach the panel screws.
 - **Mains:** the IEC inlet is in the **right wall**, low, beside the PSU
@@ -342,8 +344,8 @@ aperture into a finished bezel is the one change that ruins a front panel.
 
 > ✅ **Decided: laser-cut 3 mm Baltic birch ply, finger-jointed; the bezel is
 > one sheet (2026-10-18).** (Basswood originally; changed 2026-09-12 — the material survey
-> is [`enclosure-lasercut.md`](enclosure-lasercut.md) §13.) The full design is in
-> [`enclosure-lasercut.md`](enclosure-lasercut.md). The survey below is kept for
+> is [`enclosure-lasercut.md`](../enclosure-lasercut.md) §13.) The full design is in
+> [`enclosure-lasercut.md`](../enclosure-lasercut.md). The survey below is kept for
 > the reasoning; note that the "hybrid" row is essentially what was chosen, with
 > wood laminations in place of printed internals.
 
@@ -367,7 +369,7 @@ dimensions don't carry over.
 Ordered by how expensive they are to get wrong:
 
 1. ~~**EC11 bushing thread length**~~ → ✅ 5.5 mm of thread, 2.3 mm jam nut (2026-10-18): it clamps **one** 3.18 sheet, so only the bezel's outer sheet is clamped. Rev 2 glues a second sheet behind it (`#frontLayers` 2), pocketed 35 mm square at each knob; rev 1's single sheet flexed when the knobs were pushed. The 15 mm encoder body and the 4991 breakout behind it (~26 mm board plus its STEMMA QT plugs, 35 mm square, `#knobPocket`) sit in free space, clear for ~44 mm back to the lower rail stack; 10 mm stays between neighbours at the 45 mm pitch. Skip the washer or use a thin one. Still to check: the bore fit (test-cut row 3) and the encoder's anti-rotation tab.
-1a. ~~Colorlight 5A-75B outline, holes and heights~~ → ✅ scans and calipers, 2026-10-12 ([`driver-colorlight.md`](driver-colorlight.md) §6). Pi 5 PCB thickness still assumed (1.6 mm).
+1a. ~~Colorlight 5A-75B outline, holes and heights~~ → ✅ scans and calipers, 2026-10-12 ([`driver-colorlight.md`](../driver-colorlight.md) §6). Pi 5 PCB thickness still assumed (1.6 mm).
 1b. ~~Panel connector heights~~ → ✅ plugged HUB75 cable 7 mm, 5 V 19 mm proud of the rear face (2026-10-12).
 2. ~~**Actual two-panel butted width**~~ → ✅ 256 × 128, zero seam (§2.1).
 3. ~~**Panel body depth incl. connectors**~~ → ✅ 14.5, 17.8 over the pins (§2.1).

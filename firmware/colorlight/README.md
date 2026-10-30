@@ -68,7 +68,7 @@ leads, should cure it.
 ## receiver75 in flash, 2026-10-21
 
 ```sh
-glasgow script ecp5_flash_write.py jtag-probe -V 3.3 -f 2000 -- colorlight_5a_75b.bit 0
+glasgow script ecp5_flash_write.py jtag-probe -V 3.3 -f 2000 -- receiver75/receiver75-splash-5f2185b.bit 0
 glasgow script ecp5_flash_write.py jtag-probe -V 3.3 -f 2000 -- status   # read-only
 ```
 
@@ -89,11 +89,9 @@ glasgow script ecp5_flash_write.py jtag-probe -V 3.3 -f 2000 -- status   # read-
 
 ## Boot splash
 
-Built 2026-10-22 on receiver75 branch `boot-splash` (worktree
-`~/src/ext/receiver75-boot-splash`). **In flash since 2026-10-22, verified byte
-for byte. The spinner was seen after an SRAM load; at power-on from flash it
-hasn't been looked at yet.** The image flashed before it is kept at
-`~/colorlight-5a75b-v8.2-backup/receiver75/receiver75-74a525e-before-splash.bit`.
+Built 2026-10-22 as three patches on receiver75; the patches and the built
+bitstream are in [`receiver75/`](receiver75/README.md). In flash since
+2026-10-22, verified byte for byte; it draws the splash from power-on.
 
 - The first load stayed dark. LiteX's `sdram_init()` memtests 2 MiB from
   `MAIN_RAM_BASE`, but `main_ram` here is the 4 KiB integrated RAM. The test
@@ -121,7 +119,7 @@ hasn't been looked at yet.** The image flashed before it is kept at
 To test, load it into SRAM (a power cycle reverts to the flashed image):
 
 ```sh
-B=~/src/ext/receiver75-boot-splash/gateware/build/colorlight_5a_75b/gateware
+B=path/to/receiver75/gateware/build/colorlight_5a_75b/gateware
 glasgow script svf_play.py jtag-probe -V 3.3 -f 2000 -- $B/colorlight_5a_75b.svf
 ```
 
@@ -136,21 +134,11 @@ That should light three segments. Starting `knob_renderer.py` should take the
 display over. If all of that works, flash it with
 `ecp5_flash_write.py ... -- $B/colorlight_5a_75b.bit 0`, as below.
 
-## Knobs → patterns (bench demo)
+## Knobs → patterns (the first bench demo)
 
-*Superseded on 2026-10-23 by [`../demos/`](../demos/README.md)*. There, ash renders
-everything and durian only forwards UDP. The arrangement below, which renders on
-durian, still works.
-
-The FeatherS3 knob bridge is on ash's USB, and the card is on durian's USB NIC.
-`knob_link.py` (on ash) pipes knob events over SSH to `knob_renderer.py` (on
-durian) and passes knob-light commands back:
-
-```sh
-scp r75_frame.py knob_renderer.py durian:/tmp/r75/tools/
-./knob_link.py /dev/serial/by-id/usb-Espressif_USB_JTAG_serial_debug_unit_XX:XX:XX:XX:XX:XX-if00 \
-    durian -- python3 -u /tmp/r75/tools/knob_renderer.py --eth-ip 192.168.75.39
-```
+*Superseded on 2026-10-23 by [`../demos/`](../demos/README.md).* `knob_renderer.py`
+was the first renderer: three patterns, the knob bridge's events piped to it over
+SSH by `knob_link.py`. The demos still import its knob and power-cap code.
 
 | Knob | Turn | Press |
 |---|---|---|
@@ -163,7 +151,6 @@ scp r75_frame.py knob_renderer.py durian:/tmp/r75/tools/
 - Gamma is 2.2, applied on the host.
 - Per-frame current cap, from estimated duty: 1.2 A a panel, 4 A in total. It
   assumes 2.4 A per panel at full white, so recalibrate on this driver.
-- Ctrl-C blanks the display.
 
 ## Loading a bitstream into SRAM
 
@@ -187,5 +174,4 @@ before the next JTAG session: one started straight after a refresh read the
 flash ID as `ffffff`.
 
 The stock image (two bitstreams, at 0x000000 and 0x200000, plus data blocks) is
-kept outside the repo, in `~/colorlight-5a75b-v8.2-backup/`. It is Colorlight's
-proprietary gateware.
+kept outside the repo: it is Colorlight's proprietary gateware.

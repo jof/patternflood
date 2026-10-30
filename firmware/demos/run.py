@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Run the Patternflood demos.
 
-Bench (ash renders; the FeatherS3 knobs are on ash's USB; durian is only a pipe to the card):
-    ./run.py --knobs serial:/dev/serial/by-id/usb-Espressif_USB_JTAG_serial_debug_unit_XX:XX:XX:XX:XX:XX-if00 \\
-             --out pipe:durian
+Bench (a PC renders; the FeatherS3 knob bridge is on its USB, found by itself; the card is on
+its Ethernet, or on HOST's, which only forwards the frames):
+    ./run.py                               # or: --knobs serial:PORT --out pipe:HOST
 
 Pi 5 (knobs on I2C, card on the Pi's own Ethernet):
     ./run.py --knobs i2c:1 --out udp:192.168.75.39
@@ -11,7 +11,7 @@ Pi 5 (knobs on I2C, card on the Pi's own Ethernet):
 Preview without hardware (writes a GIF; --knobs auto plays by itself):
     ./run.py --demo etch --knobs auto --out preview:/tmp/etch.gif --seconds 8
 
-Audio (what ash is playing, by default; previews take --audio file:PATH):
+Audio (what this machine is playing, by default; previews take --audio file:PATH):
     ./run.py --demo tempo                  # the calibration demo: tap tempo, mark the one, A/V delay
     ./run.py --audio file:~/Music/set.mp4@600 --out preview:/tmp/viz.gif --demo spectrum
 
@@ -19,6 +19,7 @@ Hold k0 and k3 together for a second for the menu: k0 picks the demo, k3 sets br
 k2 lets the music turn the upstream patterns' knobs.
 """
 import argparse
+import glob
 import os
 import signal
 import sys
@@ -32,7 +33,14 @@ from pfd.io import frame_sink, knob_source  # noqa: E402
 from pfd.runtime import Runtime             # noqa: E402
 from pfd.upstream import Upstream           # noqa: E402
 
-BRIDGE = "/dev/serial/by-id/usb-Espressif_USB_JTAG_serial_debug_unit_XX:XX:XX:XX:XX:XX-if00"
+
+
+def default_knobs():
+    """$PF_KNOBS, else a FeatherS3 knob bridge if one is plugged in, else the random player."""
+    if os.environ.get("PF_KNOBS"):
+        return os.environ["PF_KNOBS"]
+    bridges = sorted(glob.glob("/dev/serial/by-id/usb-Espressif_*"))
+    return f"serial:{bridges[0]}" if bridges else "auto"
 
 
 def pick(demos, only):
@@ -50,9 +58,11 @@ def pick(demos, only):
 def main():
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0],
                                 formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
-    p.add_argument("--knobs", default=f"serial:{BRIDGE}", help="serial:PORT | i2c[:BUS] | auto[:SEED] | script:SPEC | none")
-    p.add_argument("--out", default="auto:durian",
-                   help="auto[:HOST] (udp if the card is on our link, else pipe) | pipe:HOST[:IP] | udp[:IP] | preview:FILE.gif")
+    p.add_argument("--knobs", default=default_knobs(),
+                   help="serial:PORT | i2c[:BUS] | auto[:SEED] | script:SPEC | none (default: $PF_KNOBS, a knob bridge, or auto)")
+    p.add_argument("--out", default=os.environ.get("PF_OUT", "auto"),
+                   help="auto[:HOST] (udp if the card is on our link, else pipe via HOST) | pipe:HOST[:IP] | udp[:IP] | "
+                        "preview:FILE.gif (default: $PF_OUT, or auto)")
     p.add_argument("--demo", default="0", help="start demo, by name or index")
     p.add_argument("--only", default="",
                    help="limit the demos: shelves, comma-separated (play,audio,cable,patternflow,community,community-1to1), or 'upstream' for "

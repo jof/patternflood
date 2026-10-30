@@ -1,0 +1,454 @@
+From f4a15ed848a2b8c3ee7d26b1640c51f048393ff7 Mon Sep 17 00:00:00 2001
+From: Jonathan Lassoff <jof@thejof.com>
+Date: Thu, 22 Oct 2026 18:20:46 -0700
+Subject: [PATCH 2/3] Boot splash: BIOS draws a spinner and progress bar until
+ a host takes over
+
+From power-on the BIOS clears framebuffer bank 2, draws a spinner and a
+five-step bar there, shows it, and animates it every 80 ms. It stops
+drawing once base_addr points at another bank, and resumes if pointed
+back. The bar shows ctrl_scratch (1-5), so a host can report its boot
+progress with one CSR write.
+
+The CPU writes the SDRAM through a new CsrDramWriter, a whole 64-bit
+word at a time: the board grounds the SDRAM's DQM pins, so narrower
+writes would clobber the rest of the word. Its three CSRs go at the end
+of the hub75_soc bank, so no existing CSR address moves.
+---
+ README.md                   |  16 +++
+ bios/Makefile               |   2 +-
+ bios/main.c                 |   5 +
+ bios/splash.c               | 247 ++++++++++++++++++++++++++++++++++++
+ bios/splash.h               |   8 ++
+ gateware/csr_dram_writer.py |  46 +++++++
+ gateware/receiver75.py      |  15 ++-
+ 7 files changed, 337 insertions(+), 2 deletions(-)
+ create mode 100644 bios/splash.c
+ create mode 100644 bios/splash.h
+ create mode 100644 gateware/csr_dram_writer.py
+
+diff --git a/README.md b/README.md
+index 452462d..694e0c2 100644
+--- a/README.md
++++ b/README.md
+@@ -44,6 +44,22 @@ The Hub75Controller reads frames from DRAM into row buffers. Hub75Drivers
+ send the row buffers to the panels. Then the Hub75Controller drives the latch,
+ row address, and output enable signals.
+ 
++## Boot splash
++
++Until a host sends frames, the BIOS (`bios/splash.c`) draws a spinner and a
++five-step progress bar into framebuffer bank 2 (32-bit word 98304 on) and
++displays it. It leaves bank 2 alone once `base_addr` points elsewhere, and
++resumes if it's pointed back. The bar shows `ctrl_scratch` (1-5; the BIOS sets
++1), so a host can report its own boot progress with one CSR write.
++
++The CPU writes the SDRAM through `CsrDramWriter`: `fb_address` sets a 64-bit
++word address, and each write to `fb_data_hi` commits `{fb_data_hi, fb_data_lo}`
++and steps on. The board grounds the SDRAM's DQM pins, so only whole 64-bit
++words can be written safely.
++
++The splash's panel layout (a 2x2 of 64x64 panels on slots 9, 15, 7 and 1) is
++compiled in.
++
+ # Installation
+ 
+ To flash the prebuilt bit file to the board use a JTAG programmer and
+diff --git a/bios/Makefile b/bios/Makefile
+index 62c5aa5..43ba65b 100644
+--- a/bios/Makefile
++++ b/bios/Makefile
+@@ -1,7 +1,7 @@
+ include ../include/generated/variables.mak
+ include $(SOC_DIRECTORY)/software/common.mak
+ 
+-OBJECTS = main.o
++OBJECTS = main.o splash.o
+ 
+ all: bios.bin
+ 	$(PYTHON) -m litex.soc.software.memusage bios.elf $(CURDIR)/../include/generated/regions.ld $(TRIPLE)
+diff --git a/bios/main.c b/bios/main.c
+index 1552497..0e4aa8f 100644
+--- a/bios/main.c
++++ b/bios/main.c
+@@ -8,6 +8,8 @@
+ 
+ #include <liblitedram/sdram.h>
+ 
++#include "splash.h"
++
+ 
+ #ifdef CSR_SPIFLASH_SPI_MOSI_ADDR
+ static uint32_t spi_flash_read(uint32_t addr) {
+@@ -66,6 +68,9 @@ int main(int i, char **c)
+ 
+     sdram_init();
+ 
++    // Something on the panels until a host sends frames.
++    splash_run();
++
+     while(1) {
+     }
+ 
+diff --git a/bios/splash.c b/bios/splash.c
+new file mode 100644
+index 0000000..f93c5dc
+--- /dev/null
++++ b/bios/splash.c
+@@ -0,0 +1,247 @@
++// SPDX-License-Identifier: MIT
++//
++// Boot splash: a spinner and a five-step progress bar, drawn into framebuffer
++// bank 2 from power-on until a host takes the display by pointing base_addr at
++// bank 0 or 1 (patternflood's knob_renderer.py does, every frame).
++//
++// A host moves the bar on by writing the step, 1-5, to ctrl_scratch over UDP
++// port 4344; patternflood's pf-splash does that from the Pi's initramfs and
++// systemd. Pointing base_addr back at bank 2 brings the splash back.
++//
++// The CPU can only write the SDRAM, a 64-bit word at a time (CsrDramWriter), so
++// the splash is redrawn in whole words from a scene function.
++
++#include <stdint.h>
++
++#include <generated/csr.h>
++#include <generated/soc.h>
++
++#include "splash.h"
++
++#define SLOTS       16
++#define SLOT_WORDS  (64 * 48)       // 64 rows of 64 RGB pixels, in 32-bit words
++#define SPLASH_BASE (2 * SLOTS * SLOT_WORDS)    // the host double-buffers in banks 0 and 1
++#define STEPS       5
++#define DOTS        12
++#define FRAME_TICKS (CONFIG_CLOCK_FREQUENCY / 1000 * 80)
++
++// The 2x2's quadrants -> receiver75 slots, as wired in the desktop box
++// (patternflood firmware/colorlight/r75_frame.py, QUADRANT_SLOTS).
++static const uint8_t quadrant_slot[2][2] = { { 9, 15 }, { 7, 1 } };
++
++// Spinner: DOTS dots on a ring of radius 24; each dot is 5x5 less its corners.
++#define CX 64
++#define CY 54
++static const int8_t ring[DOTS][2] = {
++    {   0, -24 }, {  12, -21 }, {  21, -12 }, {  24,   0 },
++    {  21,  12 }, {  12,  21 }, {   0,  24 }, { -12,  21 },
++    { -21,  12 }, { -24,   0 }, { -21, -12 }, { -12, -21 },
++};
++
++// Bar: STEPS segments of 16 x 4, 4 apart, centred under the spinner.
++#define BAR_X   16
++#define BAR_Y   96
++#define SEG_W   16
++#define SEG_GAP 4
++#define SEG_H   4
++
++// Raw channel values, no gamma. Dim: it's up for seconds to minutes.
++#define RGB(r, g, b) (((uint32_t)(r) << 16) | ((uint32_t)(g) << 8) | (uint32_t)(b))
++#define HEAD RGB(64, 150, 190)
++#define DONE RGB(24, 70, 90)
++#define DIM  RGB(3, 6, 8)
++
++static int head;        // the spinner's brightest dot
++static int step;        // bar segments lit
++static int phase;       // pulse of the segment in progress
++
++static int8_t row_dots[DOTS];
++static int n_row_dots;
++
++static uint32_t dimmed(uint32_t c, int shift)
++{
++    return ((c >> 16 & 0xff) >> shift) << 16 | ((c >> 8 & 0xff) >> shift) << 8 | (c & 0xff) >> shift;
++}
++
++static uint32_t dot_colour(int k)
++{
++    int age = head - k;
++    if (age < 0)
++        age += DOTS;
++    return age < 5 ? dimmed(HEAD, age) : DIM;
++}
++
++static uint32_t segment_colour(int i)
++{
++    static const uint8_t pulse[8] = { 3, 2, 1, 0, 0, 1, 2, 3 };
++    if (i < step)
++        return DONE;
++    if (i == step)
++        return dimmed(DONE, pulse[phase & 7]);
++    return DIM;
++}
++
++// The dots that reach row y, so scene() only looks at those.
++static void prepare_row(int y)
++{
++    n_row_dots = 0;
++    for (int k = 0; k < DOTS; k++) {
++        int dy = y - (CY + ring[k][1]);
++        if (dy >= -2 && dy <= 2)
++            row_dots[n_row_dots++] = k;
++    }
++}
++
++static uint32_t scene(int x, int y)
++{
++    for (int i = 0; i < n_row_dots; i++) {
++        int k = row_dots[i];
++        int dx = x - (CX + ring[k][0]);
++        if (dx < -2 || dx > 2)
++            continue;
++        int dy = y - (CY + ring[k][1]);
++        if ((dx == 2 || dx == -2) && (dy == 2 || dy == -2))
++            return 0;
++        return dot_colour(k);
++    }
++    if (y >= BAR_Y && y < BAR_Y + SEG_H && x >= BAR_X) {
++        int off = x - BAR_X;
++        for (int i = 0; i < STEPS; i++) {
++            if (off < SEG_W)
++                return segment_colour(i);
++            off -= SEG_W;
++            if (off < SEG_GAP)
++                return 0;
++            off -= SEG_GAP;
++        }
++    }
++    return 0;
++}
++
++// Redraw the whole 64-bit words that cover pixels x0..x1 of row y, in one panel.
++// A framebuffer word holds the host's byte stream (R, G, B, R, ...) first byte
++// highest, the even word of each pair in data_lo; see receiver75's UdpDramWriter.
++static void draw_span(int x0, int x1, int y)
++{
++    int qx = x0 >> 6;
++    int slot = quadrant_slot[y >> 6][qx];
++    int j0 = ((x0 & 63) * 3) >> 3;
++    int j1 = ((x1 & 63) * 3 + 2) >> 3;
++    hub75_soc_fb_address_write((SPLASH_BASE + slot * SLOT_WORDS + (y & 63) * 48) / 2 + j0);
++
++    int p = 0, c = j0 * 8;      // pixel and channel of the first byte, without a divide
++    while (c >= 3) {
++        c -= 3;
++        p++;
++    }
++    uint32_t px = scene(qx * 64 + p, y);
++    for (int j = j0; j <= j1; j++) {
++        uint32_t w[2];
++        for (int h = 0; h < 2; h++) {
++            uint32_t v = 0;
++            for (int b = 0; b < 4; b++) {
++                v = v << 8 | (px >> (16 - 8 * c) & 0xff);
++                if (++c == 3) {
++                    c = 0;
++                    p++;
++                    px = p < 64 ? scene(qx * 64 + p, y) : 0;
++                }
++            }
++            w[h] = v;
++        }
++        hub75_soc_fb_data_lo_write(w[0]);
++        hub75_soc_fb_data_hi_write(w[1]);
++    }
++}
++
++static void draw_rect(int x0, int y0, int x1, int y1)
++{
++    for (int y = y0; y <= y1; y++) {
++        prepare_row(y);
++        if (x0 < 64)
++            draw_span(x0, x1 < 63 ? x1 : 63, y);
++        if (x1 >= 64)
++            draw_span(x0 > 64 ? x0 : 64, x1, y);
++    }
++}
++
++static void draw_dot(int k)
++{
++    int x = CX + ring[k][0], y = CY + ring[k][1];
++    draw_rect(x - 2, y - 2, x + 2, y + 2);
++}
++
++static void draw_segment(int i)
++{
++    int x = BAR_X + i * (SEG_W + SEG_GAP);
++    draw_rect(x, BAR_Y, x + SEG_W - 1, BAR_Y + SEG_H - 1);
++}
++
++static void clear_bank(void)
++{
++    hub75_soc_fb_address_write(SPLASH_BASE / 2);
++    hub75_soc_fb_data_lo_write(0);
++    for (int i = 0; i < SLOTS * SLOT_WORDS / 2; i++)
++        hub75_soc_fb_data_hi_write(0);
++}
++
++static void frame_start(void)
++{
++    timer0_en_write(0);
++    timer0_reload_write(0);
++    timer0_load_write(FRAME_TICKS);
++    timer0_en_write(1);
++}
++
++static void frame_wait(void)
++{
++    do
++        timer0_update_value_write(1);
++    while (timer0_value_read());
++}
++
++void splash_run(void)
++{
++    ctrl_scratch_write(1);
++    step = 1;
++    clear_bank();
++    for (int k = 0; k < DOTS; k++)
++        draw_dot(k);
++    for (int i = 0; i < STEPS; i++)
++        draw_segment(i);
++    hub75_controller_base_addr_write(SPLASH_BASE);
++    hub75_controller_enable_write(1);
++
++    int showing = 1;
++    for (;;) {
++        frame_start();
++        if (hub75_controller_base_addr_read() != SPLASH_BASE || !hub75_controller_enable_read()) {
++            showing = 0;            // the host has the display; leave bank 2 alone
++        } else {
++            uint32_t s = ctrl_scratch_read();
++            int valid = s >= 1 && s <= STEPS;
++            int bar = 0;
++            if (!showing) {         // given back (pf-splash --show): take its step as is
++                showing = 1;
++                if (valid)
++                    step = s;
++                bar = 1;
++            } else if (valid && (int)s > step) {
++                step = s;           // only forward: steps can arrive out of order
++                bar = 1;
++            }
++            if (++head == DOTS)
++                head = 0;
++            phase++;
++            for (int k = 0; k < DOTS; k++)
++                draw_dot(k);
++            if (bar) {
++                for (int i = 0; i < STEPS; i++)
++                    draw_segment(i);
++            } else if (step < STEPS) {
++                draw_segment(step);
++            }
++        }
++        frame_wait();
++    }
++}
+diff --git a/bios/splash.h b/bios/splash.h
+new file mode 100644
+index 0000000..41e143f
+--- /dev/null
++++ b/bios/splash.h
+@@ -0,0 +1,8 @@
++// SPDX-License-Identifier: MIT
++#ifndef SPLASH_H
++#define SPLASH_H
++
++// Draw the boot splash and animate it until a host takes the display. Never returns.
++void splash_run(void);
++
++#endif
+diff --git a/gateware/csr_dram_writer.py b/gateware/csr_dram_writer.py
+new file mode 100644
+index 0000000..1435c95
+--- /dev/null
++++ b/gateware/csr_dram_writer.py
+@@ -0,0 +1,46 @@
++# SPDX-License-Identifier: MIT
++
++from migen import *
++
++from litedram.frontend.dma import LiteDRAMDMAWriter
++
++
++class CsrDramWriter(Module):
++    '''
++    Lets the CPU write the framebuffer, one 64-bit SDRAM word at a time.
++
++    The 5A-75B grounds the SDRAM's DQM pins, so every write stores a whole
++    native word. A 32-bit store through a Wishbone bridge would clobber the
++    other half; LiteX only gets away with it behind an L2 cache.
++
++    Writing `address` sets the native (64-bit) word address. Each write to
++    `data_hi` commits {data_hi, data_lo} there and steps the address on.
++    data_lo is the even 32-bit word, as in UdpDramWriter.
++    '''
++    def __init__(self, sdram, address, data_lo, data_hi):
++        port = sdram.crossbar.get_port(mode='write', data_width=64)
++        self.submodules.dma = dma = LiteDRAMDMAWriter(port, fifo_depth=16)
++
++        addr = Signal(port.address_width)
++        data = Signal(64)
++        pending = Signal()
++
++        self.comb += [
++            dma.sink.valid.eq(pending),
++            dma.sink.address.eq(addr),
++            dma.sink.data.eq(data),
++        ]
++
++        self.sync += [
++            If(dma.sink.valid & dma.sink.ready,
++                pending.eq(0),
++                addr.eq(addr + 1),
++            ),
++            If(address.re,
++                addr.eq(address.storage),
++            ),
++            If(data_hi.re,
++                data.eq(Cat(data_lo.storage, data_hi.storage)),
++                pending.eq(1),
++            ),
++        ]
+diff --git a/gateware/receiver75.py b/gateware/receiver75.py
+index bf4020e..a5f8502 100755
+--- a/gateware/receiver75.py
++++ b/gateware/receiver75.py
+@@ -33,6 +33,7 @@ from liteeth.phy.ecp5rgmii import LiteEthPHYRGMII
+ from liteeth.phy.model import LiteEthPHYModel
+ 
+ from clockdiv3 import ClockDiv3
++from csr_dram_writer import CsrDramWriter
+ from hub75_multi_driver import Hub75MultiDriver
+ from hub75_controller import Hub75Controller
+ from row_filler import RowFiller
+@@ -78,7 +79,7 @@ class Receiver75(SoCCore):
+             sdram_rate=sdram_rate,
+         )
+ 
+-        # SDRAM - not used directly by the CPU
++        # SDRAM - not on the CPU bus; the CPU writes it through fb_writer
+         sdrphy_cls = HalfRateGENSDRPHY if sdram_rate == "1:2" else GENSDRPHY
+         self.submodules.sdrphy = sdrphy_cls(platform.request("sdram"), sys_clk_freq)
+         sdram_cls  = M12L64322A
+@@ -96,6 +97,18 @@ class Receiver75(SoCCore):
+         self.hub75_soc.mac_address = csr.CSRStorage(6*8, 0x10e2d5000000, name='mac_address')
+         self.hub75_soc.ip_address = csr.CSRStorage(4*8, convert_ip(eth_ip))
+ 
++        # Framebuffer writes from the CPU, for the BIOS's boot splash. Kept at
++        # the end of this bank so no existing CSR address moves.
++        self.hub75_soc.fb_address = csr.CSRStorage(32, name='fb_address')
++        self.hub75_soc.fb_data_lo = csr.CSRStorage(32, name='fb_data_lo')
++        self.hub75_soc.fb_data_hi = csr.CSRStorage(32, name='fb_data_hi')
++        self.submodules.fb_writer = CsrDramWriter(
++            self.sdram,
++            self.hub75_soc.fb_address,
++            self.hub75_soc.fb_data_lo,
++            self.hub75_soc.fb_data_hi,
++        )
++
+         # Etherbone
+         if with_ethernet or with_etherbone:
+             self.submodules.ethphy = LiteEthPHYRGMII(
+-- 
+2.43.0
+

@@ -1,6 +1,6 @@
-# Project A — Room-Interactive LED Wall
+# Room-interactive LED wall
 
-**Status: concept.** Blocked on the VL53L9CX breakout, which is on order.
+> **Status: paused until the VL53L9CX sensor arrives. Nothing here is built.** These are design notes. Where they compare against the desktop build, they describe it as it was planned in September 2026 (battery, ESP32, tracking upstream), not as it was built: see [`../desktop/`](../desktop/README.md).
 
 A large LED wall that responds to the people in front of it. The lidar is not
 an accessory here — it is the input device, and the reason the project exists.

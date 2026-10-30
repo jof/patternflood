@@ -15,6 +15,7 @@ and are never part of the repo. Safe to re-run: config.txt is only appended once
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -69,7 +70,7 @@ def install_payload(opt):
     tree = opt / "demos/upstream_host/build/tree"
     subprocess.run([sys.executable, str(DEMOS / "upstream_host/build.py"), "--tree-only", "--out", str(tree)],
                    check=True)
-    # The community's patterns: their headers, upstream's cores and ash's check. The Pi compiles them too.
+    # The community's patterns: their headers, upstream's cores and the PC's check. The Pi compiles them too.
     if (COMMUNITY / "index.json").exists():
         n = 0
         for f in sorted(COMMUNITY.rglob("*")):
@@ -144,6 +145,11 @@ def main():
             else:
                 mode = 0o644
             install(src, root / rel, mode)
+    # Passwordless sudo for the appliance user (the image's pi, renamed by userconf.txt).
+    # Pi OS trixie no longer ships a pi-nopasswd rule that would follow the rename.
+    user = args.userconf.read_text().split(":", 1)[0].strip()
+    assert re.fullmatch(r"[a-z_][a-z0-9_-]*", user), f"odd user name in {args.userconf}: {user!r}"
+    write(root / f"etc/sudoers.d/010_{user}-nopasswd", f"{user} ALL=(ALL) NOPASSWD: ALL\n", 0o440)
     install_payload(root / "opt/patternflood")
     install(HERE / "pf-splash" / splash, root / "usr/local/sbin/pf-splash", 0o755)
     for unit, target in UNITS.items():
@@ -153,7 +159,7 @@ def main():
             wants.symlink_to(f"/etc/systemd/system/{unit}")
             print(f"  {wants} -> /etc/systemd/system/{unit}")
 
-    home = root / "home/pi"                 # usermod -m moves it to /home/jof at first boot
+    home = root / "home/pi"                 # usermod -m moves it to the new user's home at first boot
     ssh_dir = home / ".ssh"
     ssh_dir.mkdir(mode=0o700, exist_ok=True)
     os.chown(ssh_dir, FIRST_UID, FIRST_UID)

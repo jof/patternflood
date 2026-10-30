@@ -1,8 +1,10 @@
 # Firmware Delta
 
+> **Design history:** the ESP32 / Matrix Portal fork of upstream firmware, abandoned on 2026-10-12 for the Colorlight + Pi controller ([`../driver-colorlight.md`](../driver-colorlight.md)).
+
 > 🔁 **2026-10-12: superseded.** The desktop build no longer runs upstream
 > Patternflow on an ESP32: a Raspberry Pi Zero 2 W renders frames and a
-> Colorlight 5A-75B drives the panels — [`driver-colorlight.md`](driver-colorlight.md).
+> Colorlight 5A-75B drives the panels — [`driver-colorlight.md`](../driver-colorlight.md).
 > This document describes the Matrix Portal S3 fork that was planned instead,
 > and is kept for that history.
 
@@ -183,7 +185,7 @@ Both are additive; neither has any hook in upstream firmware.
   the most novel thing in the whole build and the furthest from upstream.
 - **VL53L9CX** (I²C, shares the encoder bus): a **2268-zone 3D dToF lidar**, not
   a proximity sensor. This is the largest piece of new work in the fork and it
-  has its own document — **[`lidar-plan.md`](../wall/lidar-plan.md)**. The headline:
+  has its own document — **[`lidar-plan.md`](../../wall/lidar-plan.md)**. The headline:
   upstream's `paramAbsolute` tier already provides a way for a non-knob source
   to drive pattern parameters, so gesture control needs **no ABI change** and
   works with every existing community pattern. Bus speed, binning and the ULD

@@ -12,18 +12,18 @@ node. One of those has a bug of its own and is left off, so 287 are on the shelf
 
 | | Knobs | Frames | Renders on |
 |---|---|---|---|
-| **Bench, now** | FeatherS3 knob bridge on ash's USB (`serial:`) | UDP over the LAN, straight to the card (`auto`); or via durian (`pipe:durian`) | ash |
+| **Bench** | FeatherS3 knob bridge on the PC's USB (`serial:`) | UDP straight to the card on the PC's Ethernet (`auto`, `udp`); or through another host on the card's link (`pipe:HOST`) | a PC |
 | **Production** | 4991s on the Pi 5's I²C (`i2c:1`) | the Pi's own Ethernet (`udp:`) | Pi 5 |
 | **No hardware** | a random or scripted player (`auto`, `script:`) | an animated GIF (`preview:`) | anywhere |
 
-Durian is a dumb pipe. `pipe:durian` sends `pfd/r75_pipe.py`'s source on the ssh
+The pipe host is a dumb pipe. `pipe:HOST` sends `pfd/r75_pipe.py`'s source on the ssh
 command line, so nothing is installed there. The pipe then turns
-`(port, length, payload)` records on stdin into UDP datagrams. Durian's only
+`(port, length, payload)` records on stdin into UDP datagrams. The host's only
 requirement is an address on the card's link (below). The demos never know which
 path they're on: the Pi 5 port is a change of flags.
 
 ```sh
-./run.py                                   # bench defaults: FeatherS3 on ash, pipe through durian
+./run.py                                   # bench: a plugged-in knob bridge, the card on this PC's link
 ./run.py --demo sand                       # start on a given demo
 ./run.py --knobs i2c:1 --out udp           # Pi 5
 ./run.py --demo etch --knobs auto --out preview:/tmp/etch.gif --seconds 8
@@ -134,7 +134,7 @@ always looks the same:
 - k3 turns the hue of the sky, sea, sun and pool continuously, in YIQ so brightness holds, through cobalt,
   lagoon, vivid and violet. Pools turn only a third as far, so they never go green.
 - Speed: lots are cached per lighting state, and palms are cached as part maps, recoloured per lighting and
-  drawn in seven real sway poses (picked per frame, so the whole tree bends). Frames take about 0.9 ms on ash while panning, and under 3 ms while turning
+  drawn in seven real sway poses (picked per frame, so the whole tree bends). Frames take about 0.9 ms on the bench PC while panning, and under 3 ms while turning
   the light or colour.
 
 Cross-cutting questions, worth noting on every demo:
@@ -147,7 +147,7 @@ Cross-cutting questions, worth noting on every demo:
 ## Audio
 
 Every demo can hear music: `rt.audio`, refreshed each frame (`pfd/audio.py`). On the bench
-it listens to whatever ash is playing, through the default output's PulseAudio/PipeWire
+it listens to whatever the PC is playing, through the default output's PulseAudio/PipeWire
 monitor, so nothing has to be wired in.
 
 ```sh
@@ -158,7 +158,7 @@ monitor, so nothing has to be wired in.
 ```
 
 **Sync.** The analysis runs on audio held back by `--audio-delay`, so beats land on the panel
-when they're heard. Bluetooth (A2DP, SBC; e.g. to headphones) trails its own
+when they're heard. Bluetooth output (A2DP, SBC) trails its own
 monitor by ~0.2 s, and the panel shows a frame ~30-50 ms after the analysis sees it, so the
 default for a `bluez` sink is 0.15 s (0 for wired output). Fine-tune it live with k2 in Tempo.
 
@@ -244,7 +244,7 @@ Winamp's visualizers inspire the first six.
   - Frame-to-frame motion roughly doubled.
   - The first quarter of each beat now moves 1.8-1.9x as much as the rest (Milk, Milk Tunnel).
   - Downbeats now move ~2x as much as other beats; before, they were indistinguishable.
-- Frames take 1.3-2.8 ms on ash.
+- Frames take 1.3-2.8 ms on the bench PC.
 - Knobs: k0 preset (click for a random one), k1 hue, k2 trails, k3 sensitivity.
 
 | Demo | Presets | Look |
@@ -355,7 +355,7 @@ checks it against the archive's MD5. Then it cuts the trims, about 5 MB in all:
 ./tools/cable_trims.py fetch                   # ~485 MB, once, into ~/.cache/patternflood/cable-sources
 ./tools/cable_trims.py cut ~/cable             # 22 clips, 128 x 128
 ./tools/cable_trims.py scan one-week --start 920 --length 80 --every 1   # contact sheets, to find more gags
-scp ~/cable/*.mp4 jof@patternflood.local:/tmp/ && ssh jof@patternflood.local \
+scp ~/cable/*.mp4 patternflood.local:/tmp/ && ssh patternflood.local \
     'sudo install -D -m 644 -t /var/lib/patternflood/cable /tmp/*.mp4 && sudo systemctl restart patternflood'
 ```
 
@@ -546,15 +546,15 @@ Lab's own harness ([below](#the-javascript-only-patterns)).
 
 ```sh
 ./upstream_host/community.py sync     # the wall: headers, scripts, titles, authors, likes; upstream main's cores and harness
-./upstream_host/community.py check    # each through a scripted player: C++ under AddressSanitizer, JS sandboxed (11 s on ash)
-./upstream_host/community.py build    # compile what's new (run.py does this itself, 6 s on ash for all)
+./upstream_host/community.py check    # each through a scripted player: C++ under AddressSanitizer, JS sandboxed (11 s on the bench PC)
+./upstream_host/community.py build    # compile what's new (run.py does this itself, 6 s on the bench PC for all)
 ./upstream_host/community.py sheet /tmp/cs   # contact sheets: each pattern as published beside its 128 x 128 version
 ./upstream_host/community.py strip /tmp/cs --only ID   # one pattern's versions over time, to judge a port
 ./upstream_host/community.py twin /tmp/tw    # our originals: the script and its header, frame against frame
 ./run.py --only community
 ```
 
-`sync` needs node 22.6 or later, to strip the harness's TypeScript; ash has 24. Re-run `sync`
+`sync` needs node 22.6 or later, to strip the harness's TypeScript; the bench PC has 24. Re-run `sync`
 and `check` to pick up new patterns, then `../pi-controller/update_pi.py` to send them to the
 box. It compiles only what's new or changed, over ssh, before the restart. All of them from
 scratch (211 as published and 185 at 128 × 128) take 138 s on the Pi 5.
@@ -580,7 +580,7 @@ How the compiled ones differ from the presets:
   `community.py`, by eye).
 - **Vetted before it runs.** Anyone can post to the wall, including C++ ports of other people's
   patterns, and a pattern runs as native code in the demo process. So every built library is
-  inspected before anything of it runs, on ash or on the Pi (`vet` in `community.py`):
+  inspected before anything of it runs, on the PC or on the Pi (`vet` in `community.py`):
   - Its dynamic imports must all be maths, memory, strings or the C++ runtime's plumbing
     (`ALLOWED`), so nothing that opens a file or a socket or starts a process gets through,
     however the source spells it.
@@ -682,12 +682,12 @@ The 77 without a header run as the Pattern Lab runs them, in **upstream's own ha
 
 **Sandboxed, with no network.** A vm context would keep pattern code from node, but it makes
 a frame about 80 times slower: every `Math.sin` goes through the context's global interceptor
-(0.23 ms against 19.4 ms for one pattern on ash). So the isolation is the process's
+(0.23 ms against 19.4 ms for one pattern on the bench PC). So the isolation is the process's
 (`node_argv` in `community.py`):
 - **Node's permission model.** It may read only `upstream_host/`. It can't write (except `check`'s
   frames), start processes, or load workers or addons.
 - **A network namespace of its own, with no network at all.** On the Pi that's `unshare -rn`. On
-  ash it's `bwrap --unshare-net`, because Ubuntu's AppArmor lets bwrap have a user namespace but
+  Ubuntu it's `bwrap --unshare-net`, because Ubuntu's AppArmor lets bwrap have a user namespace but
   not unshare.
 - `fetch`, `WebSocket` and the rest are deleted before any pattern code is seen.
 
@@ -700,7 +700,7 @@ succeeds.
 - A frame that takes over 1 s gets node killed and restarted, and that pattern goes dark. The
   first frame after a load gets 5 s, because some patterns warm up then (CALM TURING's first
   takes 1.05 s on the Pi 5).
-- Node runs in a session of its own, and the whole group is killed. Under bwrap (ash) node is
+- Node runs in a session of its own, and the whole group is killed. Under bwrap (Ubuntu) node is
   bwrap's child, and killing bwrap alone would leave it running. The check found one broken
 pattern: *Neon Heart Ring Resonance* throws (`cx is not defined`) once its buttons are clicked,
 so it's left off. Node is in the card's cloud-init packages. On a running box:
@@ -789,7 +789,7 @@ To publish one:
 
 ## Speed
 
-Measured per frame on ash:
+Measured per frame on the bench PC:
 - Most of our demos take 0.4–1.1 ms (render, gamma, cap). Rotor, Echo, Rocket, Vault and
   Mandala take under 1 ms; Droplet, Terrain and Glitch about 1 ms; **Kaleido 3.1 ms**; and
   Pool 1.4 ms (it was 8.3 ms before drawing a diagonal of pillars at a time).
@@ -821,32 +821,27 @@ everything. If Reaction doesn't, turn its k2 (speed) down. Obra watches its own 
 its render averages over 12 ms, it marches at half resolution (one ray per 2 × 2 block, about
 half the cost). The dither and outline stay at full resolution, so it looks nearly the same.
 It logs when it does this. Mandel does the same past 14 ms, and goes back to full resolution
-once a frame would be cheap again, so on ash only the deepest seconds of a dive (into a
+once a frame would be cheap again, so on the bench PC only the deepest seconds of a dive (into a
 mini-Mandelbrot, whose inside burns every iteration) drop to half.
 
 ## Bench network
 
-Since 2026-10-23 the card is on the home LAN, through a gigabit switch port, since the 5A-75B
-won't link at 100 Mbit. Ash renders and sends UDP straight to it over its own wired port, with
-no Wi-Fi in the loop:
-- **The card keeps its built-in 192.168.75.39.** Ash's NetworkManager connection `wired` carries
-  an extra address, 192.168.75.2/24, beside its DHCP one, so the card's subnet is on the same wire.
-  Remove it with `nmcli con modify wired -ipv4.addresses 192.168.75.2/24`.
-- **`--out auto` (the default)** checks at start whether the card answers ARP on one of ash's own
-  links. If it does, frames go over UDP; if not, they fall back to `pipe:durian`.
+The 5A-75B won't link at 100 Mbit, so a bench PC needs a gigabit port on the card's link: a
+direct cable, or a gigabit switch port on the same LAN.
+- **The card keeps its built-in 192.168.75.39.** Give the PC an address on that subnet too, beside
+  its usual one. With NetworkManager:
+  `nmcli con modify CONNECTION +ipv4.addresses 192.168.75.2/24`, and `-ipv4.addresses` to remove it.
+- **`--out auto` (the default)** checks at start whether the card answers ARP on one of this
+  host's links. If it does, frames go straight over UDP. If not, `auto:HOST` falls back to
+  `pipe:HOST`; plain `auto` stops and says so.
 
-**The durian pipe**, still there as the fallback:
-- `pipe:durian` sends `pfd/r75_pipe.py`'s source over ssh and streams frames to it. Durian
-  forwards them as UDP from its USB NIC `enx000000000000`, through NetworkManager profile
-  `colorlight` (static 192.168.75.1/24, no default route).
+**The pipe**, for when the renderer's machine can't reach the card itself (on Wi-Fi, say):
+- `pipe:HOST` sends `pfd/r75_pipe.py`'s source over ssh and streams frames to it. HOST forwards
+  them as UDP from its own wired port, which needs an address on 192.168.75.0/24 and no default
+  route.
 - `pipe:` keeps only the newest frame, so a Wi-Fi stall drops frames rather than building lag.
-- Durian's Wi-Fi power saving is off in its Wi-Fi profile (2026-10-23). With it on, the link
-  spiked to 100-270 ms.
-- Durian also stays awake on AC power (2026-10-23):
-  - The GDM greeter's `sleep-inactive-ac-type='nothing'` is in `/etc/gdm3/greeter.dconf-defaults`.
-    The original is kept as `.orig-2026-10-23`.
-  - jof's GNOME session has the same setting.
-  - `HandleLidSwitchExternalPower=ignore` is in `/etc/systemd/logind.conf.d/50-patternflood-ac-awake.conf`.
+- Turn off Wi-Fi power saving on both ends. With it on, the link spiked to 100-270 ms. Keep a
+  laptop pipe host awake on AC power with the lid closed (`HandleLidSwitchExternalPower=ignore`).
 
 ## Adding a demo
 

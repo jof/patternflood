@@ -1,7 +1,7 @@
 // Run the community's JavaScript-only patterns as upstream's Pattern Lab does, with
 // upstream's own harness (PatternRuntime, @knobs, @matrix, @ramp), for pfd/community.py.
 //
-//   node jsrun.mjs bundle SRC                    (sync, on ash: node >= 22.6) SRC/web/**/*.ts -> SRC/web/harness.js
+//   node jsrun.mjs bundle SRC                    (sync, on a PC: node >= 22.6) SRC/web/**/*.ts -> SRC/web/harness.js
 //   node jsrun.mjs serve SRC                     requests on stdin, frames on stdout (the demo process's child)
 //   node jsrun.mjs check SRC ID FILE NAME FRAMES SHOTS OUT [WxH]   (SHOTS: frames to keep, "30,90,...")
 //                                                one version of a pattern through the scripted player -> a JSON line

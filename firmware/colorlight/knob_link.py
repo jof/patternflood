@@ -5,7 +5,7 @@ Knob JSON lines go from the serial port to the renderer's stdin; "px ..." knob
 light commands come back from its stdout to the serial port. Renderer logs pass
 through to this terminal. Ctrl-C stops both (the renderer blanks the display).
 
-    knob_link.py /dev/ttyACM1 durian -- python3 -u /tmp/r75/tools/knob_renderer.py
+    knob_link.py /dev/ttyACM1 HOST -- python3 -u /tmp/r75/tools/knob_renderer.py
 """
 import subprocess
 import sys

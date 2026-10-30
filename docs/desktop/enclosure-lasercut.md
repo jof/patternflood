@@ -1,6 +1,8 @@
 # Enclosure — Laser-Cut Finger-Joint Box
 
-Supersedes the fabrication section of [`mechanical-plan.md`](mechanical-plan.md) §3.
+> **Design reference.** The reasoning behind the box, written as it was designed; some sections predate the current revision (Rev 2.7, [`../../hardware/REVISIONS.md`](../../hardware/REVISIONS.md)). To build it, follow [`BUILD.md`](BUILD.md).
+
+Supersedes the fabrication section of [`mechanical-plan.md`](design-notes/mechanical-plan.md) §3.
 Geometry, stackup and clearances there still hold; this is the how.
 
 **Material:** 3 mm Baltic birch ply, finger-jointed. Rev 2: the bezel and every wall are two sheets, glued (§2).
@@ -86,7 +88,7 @@ The EC11 clamps one 3.18 mm sheet, so the bezel's glued inner sheet is pocketed
   bushing. Check the PID 377 and add the relief hole if it's there — otherwise
   the body rotates and the wiring twists.
 - **Bushing thread length caps the clamped thickness.** Measured 5.5 mm
-  (measurement #1 in [`build-prep.md`](build-prep.md) §B), hence one sheet.
+  (measurement #1 in [`build-prep.md`](design-notes/build-prep.md) §B), hence one sheet.
 
 ---
 
@@ -121,7 +123,7 @@ Consequences:
   invisible; going further starts eating real pixels.
 - Use the **measured** butted width, not 256 nominal — measurement #2.
 - The face sits **flush on the GOB panel front**. No air gap, no diffuser: the
-  epoxy fill already diffuses. See [`mechanical-plan.md`](mechanical-plan.md) §2.2.
+  epoxy fill already diffuses. See [`mechanical-plan.md`](design-notes/mechanical-plan.md) §2.2.
 
 ---
 
@@ -166,7 +168,7 @@ pin hole is 3.5 mm of birch.
 
 ## 6. Depth
 
-Mains-first (no battery bay), from [`mechanical-plan.md`](mechanical-plan.md) §2.2:
+Mains-first (no battery bay), from [`mechanical-plan.md`](design-notes/mechanical-plan.md) §2.2:
 
 | Layer | Depth |
 |---|---|
@@ -294,7 +296,7 @@ downgrade and isn't, because the tenon was never the strong part:
 
 The tenon is 15× weaker either way — 8× on birch — so which lamination carries
 it changes nothing that matters. (The glue-line row assumes the rails stay
-glued; [`fastener-concepts.md`](fastener-concepts.md) §3C bolts them instead,
+glued; [`fastener-concepts.md`](design-notes/fastener-concepts.md) §3C bolts them instead,
 and the back-cover screws already clamp that stack for free.) Face-glued laminations loaded normal to the glue line are
 how plywood works.
 
@@ -318,7 +320,7 @@ how plywood works.
   longer matters (§13.3), so orientation is free. Watch for cupping on a
   300 mm face — clamp between something rigid while it dries. *(Whether there is
   any glue at all is an open question — see
-  [`fastener-concepts.md`](fastener-concepts.md), which asks whether the box can
+  [`fastener-concepts.md`](design-notes/fastener-concepts.md), which asks whether the box can
   be held together with M3 hardware alone.)*
 - **Finish before assembly.** Much easier flat.
 
@@ -327,7 +329,7 @@ how plywood works.
 ## 9. Order of operations
 
 1. **Measure** — stock thickness, kerf, and items #1–#4 from
-   [`build-prep.md`](build-prep.md) §B.
+   [`build-prep.md`](design-notes/build-prep.md) §B.
 2. **Cut a test comb + one encoder bore** in scrap. Confirm the joint fit and
    that the jam nut clamps one sheet (✅ done: `hardware/laser/test-cuts/`).
 3. **Cut the front face first** and dry-fit the panels and encoders
@@ -508,7 +510,7 @@ both axes — which is more than could be assumed before, and it is the axis
 
 > ✅ **Superseded 2026-10-03 — the design is now built at the measured P2.**
 > It was built at P2.5 in the meantime — see
-> [`mechanical-plan.md`](mechanical-plan.md) §2.1 for the decision and the list
+> [`mechanical-plan.md`](design-notes/mechanical-plan.md) §2.1 for the decision and the list
 > of variables to flip when the panels arrive. The note below is kept because it
 > is the arithmetic that makes the two interchangeable on paper and very much
 > not interchangeable in wood.
@@ -572,11 +574,11 @@ adds to the stack.
 
 ## 13. Material — and why the laser is not the constraint
 
-Basswood was picked in [`mechanical-plan.md`](mechanical-plan.md) §3 without much
+Basswood was picked in [`mechanical-plan.md`](design-notes/mechanical-plan.md) §3 without much
 argument, and three things have happened since that make it worth revisiting:
 §1's cross-grain lamination trick exists only to work around basswood's grain,
 §7b's mortise rules exist because it splits, and the whole of
-[`fastener-concepts.md`](fastener-concepts.md) §1.2 — "you cannot develop preload
+[`fastener-concepts.md`](design-notes/fastener-concepts.md) §1.2 — "you cannot develop preload
 against basswood" — is a material property, not a geometry one.
 
 ### 13.1 The laser barely narrows the field
@@ -637,7 +639,7 @@ Two things to read off that:
 Not strength — **plywood is already cross-plied, and that deletes the one place
 glue was still earning its keep.**
 
-[`fastener-concepts.md`](fastener-concepts.md) §6.5 concluded that the front
+[`fastener-concepts.md`](design-notes/fastener-concepts.md) §6.5 concluded that the front
 face's two laminations should stay glued, because bolted at 60 mm centres they
 are not plywood between the bolts, and the narrow bezel rails around the aperture
 are exactly where the cross-grain trick was protecting the part. **On plywood

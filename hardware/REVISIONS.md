@@ -363,6 +363,8 @@ Git tag **`rev-2.7`**. Onshape version **"Rev 2.7 - for cutting"** (`48712a22bdd
 made from the main workspace once it matched the tag's `enclosure.fs` exactly.
 Rev 2.6 plus a fourth push button. Only the top wall and the top doubler changed.
 
+**Built and running** (2026-10): the current build, and the one [`docs/desktop/BUILD.md`](../docs/desktop/BUILD.md) describes.
+
 - **A fourth button, for sleep (blackout)**, alone at the top wall's **right**
   end: x +128.1, mirroring the row's first button, z −32.6 like the row. A hand on
   the row can't hit it by mistake. It has the same keyed hole, and the **top
@@ -373,7 +375,7 @@ Rev 2.6 plus a fourth push button. Only the top wall and the top doubler changed
 - **The buttons have roles and colours** (`BTN_ROLES`, `BTN_COLOURS`, `BTN_GPIO`):
   previous (blue, GPIO17), select (orange, GPIO27), next (blue, GPIO22), left to
   right seen from the front, and sleep (black, GPIO23). Wiring and what they do:
-  [`wiring-pi-controller.md` §7](../docs/desktop/wiring-pi-controller.md).
+  [`wiring.md` §4](../docs/desktop/wiring.md#4-buttons-gpio).
 - **Hardware in the model**, in the Enclosure shell, in situ and coloured: 88 bodies,
   visual only. Nothing cuts by them, their names don't match `export_dxf.py`'s
   part pattern, and a failure in them is caught (it renames the origin datum)

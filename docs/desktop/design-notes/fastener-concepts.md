@@ -1,9 +1,11 @@
 # Glueless Assembly — Fastener Concepts
 
+> **Design history:** concepts for a glueless box. The build settled on glued doublers with M3 hardware where things must come apart ([`../enclosure-lasercut.md`](../enclosure-lasercut.md)).
+
 **Status: concepts for review. Concept B is modelled as a study part; nothing is
 in the enclosure yet.**
 
-The enclosure as designed in [`enclosure-lasercut.md`](enclosure-lasercut.md) is a
+The enclosure as designed in [`enclosure-lasercut.md`](../enclosure-lasercut.md) is a
 glued finger-jointed box with one demountable part (the back cover, on captive
 M3 nuts). This doc asks the other question: **can the whole box be held together
 with nothing but laser-cut 3 mm basswood and M3 hardware?**
@@ -77,7 +79,7 @@ whose stiffness depends on clamp force is designing on sand.
 > geometric one, and it is therefore the one a different stock can fix.** Baltic
 > birch ply moves the Ø12 figure to ~620 N and hard maple to ~1050 N — on maple,
 > a hand-snug M3 genuinely stays clamped. See
-> [`enclosure-lasercut.md`](enclosure-lasercut.md) §13.
+> [`enclosure-lasercut.md`](../enclosure-lasercut.md) §13.
 
 ---
 
@@ -156,10 +158,10 @@ dry, every other scheme gets easier.
 ### Concept B — Laminated corner post, bolted and tusked ★ recommended
 
 **Modelled at full scale. Renders and dimensions below are from the CAD, not a
-sketch:** [`concept-b-corner-post.fs`](../../hardware/cad/featurescript/concept-b-corner-post.fs),
+sketch:** [`concept-b-corner-post.fs`](../../../hardware/cad/featurescript/concept-b-corner-post.fs),
 Part Studio *Concept B — corner post*, on the enclosure's own datum.
 
-![Corner post, from inside the bay](img/concept-b-corner-post.png)
+![Corner post, from inside the bay](../img/concept-b-corner-post.png)
 
 A post runs the full height of each corner, parallel to the side wall. §1.1 says
 you can only bolt parallel plates, so **the post takes bolts on the side-wall
@@ -185,7 +187,7 @@ and solves Concept C for the post at the same time.
 **The bottom end is a through-tenon locked with a tusk key** — an interlock, not
 a fastener, because no bolt can reach across that corner:
 
-![Tusk key through the tenon](img/concept-b-tusk-key.png)
+![Tusk key through the tenon](../img/concept-b-tusk-key.png)
 
 The key wedges between the bottom wall's **outer face** and the lower edge of a
 slot cut through the tenon. The slot's upper edge sits `keyDraw` = 0.3 mm *below*
@@ -195,12 +197,12 @@ this is a joint rather than a peg. Both faces of the key are straight cuts in th
 plate outline — nothing here needs a second setup.
 
 **The tenon is made from the two INBOARD laminations, not all four.** This is
-[`enclosure-lasercut.md`](enclosure-lasercut.md) §7b applied again: the mortise
+[`enclosure-lasercut.md`](../enclosure-lasercut.md) §7b applied again: the mortise
 must not sit within 3t of the wall's edge. Tenoning all four plates would put the
 mortise 3 mm from the bottom wall's outer edge — straight into the finger notches.
 Using P1+P2 only puts it **9 mm** clear:
 
-![Outside, showing the corner finger joint and the mortise](img/concept-b-outside.png)
+![Outside, showing the corner finger joint and the mortise](../img/concept-b-outside.png)
 
 | | Modelled | Check |
 |---|---|---|
@@ -252,7 +254,7 @@ Four of the five are already paid for by hardware the design needs anyway.
 Only the front face needs bolts added, and only in the 20 mm bezel margin.
 
 > ⚠️ **A bolted cross-grain lamination is not plywood.** The cross-grain trick in
-> [`enclosure-lasercut.md`](enclosure-lasercut.md) §1 works because glue makes the
+> [`enclosure-lasercut.md`](../enclosure-lasercut.md) §1 works because glue makes the
 > two layers act as one section. Bolted at intervals, the layers can slip between
 > bolts, and the narrow rails above and below the aperture — the exact place the
 > cross-grain trick was protecting — get the least of the benefit. **Bolt spacing
@@ -413,4 +415,4 @@ coupon:
    **Unless the stock changes.** That whole answer is an artefact of solid
    basswood having a grain direction. On plywood the front face is already
    cross-plied and needs no glue at all, which is what makes a fully glueless
-   box reachable — see [`enclosure-lasercut.md`](enclosure-lasercut.md) §13.3.
+   box reachable — see [`enclosure-lasercut.md`](../enclosure-lasercut.md) §13.3.

@@ -2,7 +2,7 @@
 
 Sources (run.py --audio):
     pulse[:SOURCE]        a PulseAudio/PipeWire source; by default the monitor of the
-                          default output, i.e. whatever this machine is playing (ash)
+                          default output, i.e. whatever this machine is playing
     alsa[:DEVICE]         an ALSA capture device via arecord (the Pi 5's line-in or mic)
     file:PATH[@SECONDS]   a track decoded by ffmpeg, paced in real time, or stepped with
                           the frames in a preview; silent, nothing is played

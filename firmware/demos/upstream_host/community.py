@@ -11,7 +11,7 @@ with no network (jsrun.mjs, node_argv()).
 
     ./community.py sync              # the wall's public patterns, headers and scripts; upstream's cores and harness
     ./community.py build             # compile what's new, in parallel (the controller does this on start)
-    ./community.py check             # on ash: run each through a scripted player -> src/checks.json
+    ./community.py check             # on a PC: run each through a scripted player -> src/checks.json
     ./community.py sheet /tmp/cs     # contact sheets of the check's frames, to judge the canvas by eye
     ./community.py strip /tmp/cs --only ID   # one pattern's versions over time, to judge a port
     ./community.py twin /tmp/tw      # our originals: the script and its header side by side, and how far apart
@@ -535,7 +535,7 @@ def _sandbox():
     if ok(["unshare", "-rn", "true"]):                  # the Pi
         return flag, lambda writable: ["unshare", "-rn"]
     bwrap = ["bwrap", "--ro-bind", "/", "/", "--dev", "/dev", "--proc", "/proc", "--unshare-net", "--die-with-parent"]
-    if shutil.which("bwrap") and ok(bwrap + ["true"]):  # ash: Ubuntu lets bwrap have a user namespace, not unshare
+    if shutil.which("bwrap") and ok(bwrap + ["true"]):  # Ubuntu lets bwrap have a user namespace, not unshare
         return flag, lambda writable: bwrap + [a for w in writable for a in ("--bind", str(w), str(w))]
     return None
 

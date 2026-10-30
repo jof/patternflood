@@ -1,10 +1,12 @@
 # Power Plan — Desktop
 
+> **Design history:** the battery and USB-C power plan, then the first mains plan (§8–9). The mains reasoning and the 22 AWG bus still hold; the parts list in §§0–7 does not, and the IEC inlet is now on the right wall. Current wiring: [`../wiring.md`](../wiring.md).
+
 > 🔁 **2026-10-12: superseded for the 2 × 2 build.** Power is now mains through
 > the IEC inlet into one **Mean Well LRS-50-5** (5 V, 10 A), feeding four panels,
 > a Colorlight 5A-75B and a Pi Zero 2 W, with the panel load **capped per frame
 > at ~6.6 A** (~1.65 A per panel). The budget and the cap are in
-> [`driver-colorlight.md`](driver-colorlight.md) §4. The bank, PD-trigger and
+> [`driver-colorlight.md`](../driver-colorlight.md) §4. The bank, PD-trigger and
 > buck analysis below is kept as the record; none of it is in the build.
 
 Companion to [`mechanical-plan.md`](mechanical-plan.md).
@@ -14,7 +16,7 @@ through when plugged in and full**, using a sealed COTS bank rather than
 building a charger.
 
 That instinct was right for the *combined* build. Since the lidar moved to the
-[wall project](../wall/), it's worth asking whether the battery is still wanted
+[wall project](../../wall/), it's worth asking whether the battery is still wanted
 at all — §0 — before spending money on one.
 
 ---
@@ -95,7 +97,7 @@ set bay [4], per [`mechanical-plan.md`](mechanical-plan.md) §2.2.
 | **Total @ 5 V** | **~1.9 A (10 W)** | **~6.5 A (33 W)** |
 
 > The VL53L9CX is **not** in this budget — it moved to the
-> [wall project](../wall/). That removes ~0.15 A of average draw and, more
+> [wall project](../../wall/). That removes ~0.15 A of average draw and, more
 > usefully, a pulsed two-VCSEL load that would have been fighting the panel
 > supply on the same 5 V rail.
 
@@ -362,13 +364,13 @@ IEC C14 + switch + fuse  ──mains──►  LRS-50-5  ──5V──►  Matr
 | Derating | begins ~40 °C ambient |
 
 > ✅ **Confirmed against Mean Well's own STEP**, now in
-> [`hardware/cad/vendor/meanwell-lrs-50-5.step`](../../hardware/cad/vendor/meanwell-lrs-50-5.step)
+> [`hardware/cad/vendor/meanwell-lrs-50-5.step`](../../../hardware/cad/vendor/meanwell-lrs-50-5.step)
 > and imported into the Onshape document. Side holes at **x = 10 and 84 from the
 > terminal end**, **z = 15** — dead centre of the 30 mm height. The spec-sheet
 > read above was right; it was the *proxy* that had drifted to 14.5 and 7
 > terminals, and both are now corrected.
 
-![Mean Well LRS-50, vendor model](img/vendor-lrs-50-5.png)
+![Mean Well LRS-50, vendor model](../img/vendor-lrs-50-5.png)
 
 ### ⚠️ The terminal screws face the cover, and that fixes the PSU's rotation
 
@@ -450,7 +452,7 @@ would not have absorbed 2 mm — the inlet simply would not have bolted on.
 > **Confirm with a rule before cutting** — and if it is wrong, these are two
 > Ø3.4 holes in a flat panel, trivially re-drilled.
 
-![The inlet flange on the bottom wall](img/iec-flange.png)
+![The inlet flange on the bottom wall](../img/iec-flange.png)
 
 The 46.75 dimension runs along **x**, in the bottom wall, with the lobed
 27.25 axis in z. The lobes are what constrain it: `27.25 + 2 × 10.75 = 48.75 mm`

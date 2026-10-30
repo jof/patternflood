@@ -5,7 +5,7 @@ with d > 0 for clockwise. The 4991's seesaw counts down when turned clockwise
 (Adafruit's examples negate it too), so the hardware sources flip the sign.
 and take knob lights as a list of (r, g, b) 0..255.
 
-    serial:PORT    FeatherS3 knob_bridge on USB (bench, ash)
+    serial:PORT    FeatherS3 knob_bridge on USB (bench)
     i2c[:BUS]      4991 seesaw boards on this host's I2C bus (Pi)
     auto[:SEED]    a random player, for previews and attract mode
     script:SPEC    timed gestures, e.g. "0.5:k0+12,1:k3 click,2:k1 down,3:k1 up"
@@ -500,11 +500,14 @@ def frame_sink(spec, preview_fps=20):
     kind, _, arg = spec.partition(":")
     if kind == "auto":
         # straight to the card if it's on our own wire (fastest), else via the bench pipe
-        host, _, ip = (arg or "durian").partition(":")
+        host, _, ip = arg.partition(":")
         ip = ip or "192.168.75.39"
         if card_on_link(ip):
             log(f"out: the card is on this host's link: udp {ip}")
             return UdpOut(ip)
+        if not host:
+            raise SystemExit(f"out: the card ({ip}) isn't on this host's link: give --out pipe:HOST for a host "
+                             f"that is, or --out preview:FILE.gif to run without it")
         log(f"out: card not on this host's link; pipe through {host}")
         return PipeOut(host, ip)
     if kind == "udp":

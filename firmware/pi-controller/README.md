@@ -3,8 +3,9 @@
 Raspberry Pi OS Lite (trixie), set up to boot straight into the demos
 ([`../demos`](../demos/README.md)): knobs on I²C, frames over Ethernet to
 receiver75 on the Colorlight card. Hold k0 and k3 for a second for the menu
-that switches demos. The Pi 5 runs the arm64 image and uses its own gigabit port; the
-Pi Zero W, the first controller, runs armhf and needs a USB gigabit adapter. Wiring: [`docs/desktop/wiring-pi-controller.md`](../../docs/desktop/wiring-pi-controller.md).
+that switches demos. The Pi 5 runs the arm64 image and uses its own gigabit port. (The
+Pi Zero W, the first controller, runs the armhf image with a USB gigabit adapter:
+[`pi-zero-w-controller.md`](../../docs/desktop/design-notes/pi-zero-w-controller.md).) Wiring: [`docs/desktop/wiring-pi-controller.md`](../../docs/desktop/wiring.md).
 
 ## Making a card
 
@@ -20,8 +21,9 @@ Pi Zero W, the first controller, runs armhf and needs a USB gigabit adapter. Wir
    sudo ./provision_card.py --boot BOOT --root ROOT --userconf userconf.txt \
        --wifi-ssid YOUR_SSID --wifi-pass-file wifi.pass --ssh-key ~/.ssh/id_ed25519.pub
    ```
-   `userconf.txt` holds `jof:<openssl passwd -6 hash>`; `wifi.pass` holds the
-   passphrase. Neither belongs in the repo. The script tells the image's
+   `userconf.txt` holds `USER:HASH` (the hash from `openssl passwd -6`); `wifi.pass`
+   holds the passphrase. Neither belongs in the repo. Use the same user name as on
+   your own machine and `ssh patternflood.local` needs no `USER@`. The script tells the image's
    architecture from its rootfs and builds the matching `pf-splash`
    (`arm-linux-gnueabihf-gcc` for armhf, `aarch64-linux-gnu-gcc` for arm64).
 
@@ -29,7 +31,7 @@ Pi Zero W, the first controller, runs armhf and needs a USB gigabit adapter. Wir
 
 | | |
 |---|---|
-| User | `pi` renamed to `jof` by `userconf.txt` (password in `a password file` on ash); SSH key only; passwordless sudo from `/etc/sudoers.d/010_jof-nopasswd` (trixie has no pi-nopasswd rule to inherit) |
+| User | `pi` renamed to yours by `userconf.txt`; SSH key only; passwordless sudo from `/etc/sudoers.d/010_USER-nopasswd`, written for that user (trixie has no pi-nopasswd rule to inherit) |
 | Host | `patternflood` / `patternflood.local` (avahi) |
 | Wi-Fi | via cloud-init `network-config` (regulatory domain US) |
 | Card link | NetworkManager `colorlight`: any wired interface → 192.168.75.1/24, no default route |
@@ -46,8 +48,8 @@ Pi Zero W, the first controller, runs armhf and needs a USB gigabit adapter. Wir
 To update the demos and the renderer on a running Pi (keeps its `/etc/default/patternflood`):
 
 ```sh
-./update_pi.py                                                    # jof@patternflood.local
-./update_pi.py jof@ADDRESS -o HostKeyAlias=patternflood.local   # when mDNS fails
+./update_pi.py                                                    # patternflood.local
+./update_pi.py USER@ADDRESS -o HostKeyAlias=patternflood.local    # when mDNS fails
 ```
 
 ## Boot splash
@@ -86,9 +88,9 @@ The initramfs hook is picked up by cloud-init's `update-initramfs -u` on first
 boot, so step 2 first shows on the second boot. Steps out of order (2 arriving
 after 3) are ignored: the bar only moves forward.
 
-On the Zero W, the USB gigabit adapter needs a micro-B-to-A OTG **cable**. A plug-style dongle
-failed (2026-10-22); a plain cable links at 1000 Mb/s (2026-10-26). Plug the
-adapter in with the Pi off. See [`wiring-pi-controller.md` §5](../../docs/desktop/wiring-pi-controller.md).
+On the Zero W, the USB gigabit adapter needs a micro-B-to-A OTG **cable**, not a plug-style
+dongle, and goes in with the Pi off
+([`pi-zero-w-controller.md`](../../docs/desktop/design-notes/pi-zero-w-controller.md)).
 
 **Power switch.** Cutting the power is safe once the box is running: it writes about 1 KB/s (the
 journal is in RAM, and there are no unattended upgrades), and ext4 replays its journal on the next

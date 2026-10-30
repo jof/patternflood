@@ -31,8 +31,8 @@ decision much easier.
 
 ### A. Matrix Portal S3 — the current plan
 
-What's already planned in [`mechanical-plan.md`](../desktop/mechanical-plan.md) and
-[`firmware-delta.md`](../desktop/firmware-delta.md).
+What's already planned in [`mechanical-plan.md`](../desktop/design-notes/mechanical-plan.md) and
+[`firmware-delta.md`](../desktop/design-notes/firmware-delta.md).
 
 - **Compute:** 240 MHz Xtensa, 2 MB quad PSRAM. Tight — see firmware-delta §2.
 - **Panels:** I²S DMA bit-bang, 5–6 bit colour at this memory budget.
@@ -144,7 +144,7 @@ same patterns", and it's the thing to investigate before committing to C or D.
 
 ## 4. Power, concretely
 
-Against the ~10 W typical panel load from [`power-plan.md`](../desktop/power-plan.md), on a
+Against the ~10 W typical panel load from [`power-plan.md`](../desktop/design-notes/power-plan.md), on a
 20 000 mAh bank:
 
 | | Host overhead | Total typical | Runtime |
@@ -158,7 +158,7 @@ Against the ~10 W typical panel load from [`power-plan.md`](../desktop/power-pla
 Your instinct was right — D roughly halves runtime versus A. It also pushes the
 5 V budget: the Colorlight and Pi want clean, well-regulated 5 V alongside a
 panel load that swings by amps, which makes the buck converter's job harder than
-[`power-plan.md`](../desktop/power-plan.md) assumes.
+[`power-plan.md`](../desktop/design-notes/power-plan.md) assumes.
 
 ---
 
@@ -205,4 +205,4 @@ Investigate in this order, because the first item decides how painful it is:
    firmware, before writing gateware. It may be entirely sufficient.
 3. **Read-only rootfs and power-fail behaviour** before the enclosure closes.
 4. **Re-do the power plan.** The 5 V budget and the converter sizing in
-   [`power-plan.md`](../desktop/power-plan.md) assume a ~1 W host.
+   [`power-plan.md`](../desktop/design-notes/power-plan.md) assume a ~1 W host.

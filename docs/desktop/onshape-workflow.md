@@ -1,5 +1,7 @@
 # Modelling & Rendering in Onshape
 
+> **Design reference.** How the Onshape model is built and how the cut files, test cuts and art are exported from it. You need this only to change the design; the cut files in [`../../hardware/laser/`](../../hardware/laser/MANIFEST.md) are ready to cut.
+
 How to get the hardware into Onshape and design the enclosure around it.
 Companion to [`enclosure-lasercut.md`](enclosure-lasercut.md), which has the
 design itself.
@@ -136,7 +138,7 @@ that run is 90 mm of empty bay.
 ```
 
 The **bushing thread length** is measurement #1 in
-[`build-prep.md`](build-prep.md) §B, and it decides whether a 6 mm doubled front
+[`build-prep.md`](design-notes/build-prep.md) §B, and it decides whether a 6 mm doubled front
 is viable. Model it from calipers, not the datasheet. *(Measured 2026-10-18:
 5.5 mm, so it is not — the bezel is one sheet, `#frontLayers` = 1.)*
 
@@ -217,7 +219,7 @@ or black for the knobs, matte black for the panel face between pixels.
 ```
 
 Steps 1–5 are worth doing **before** the caliper session in
-[`build-prep.md`](build-prep.md) §B, because the model tells you exactly which
+[`build-prep.md`](design-notes/build-prep.md) §B, because the model tells you exactly which
 dimensions you need to measure, and you can drop them straight into the Variable
 Studio while the parts are still in your hand.
 
@@ -235,7 +237,7 @@ Studio while the parts are still in your hand.
 | Patternflow FS | `3c1a0a201f41714feba73536` — from [`../../hardware/cad/featurescript/enclosure.fs`](../../hardware/cad/featurescript/enclosure.fs) |
 | Part Studio 1 | `06ba580a80083894ed24609b` — panel proxy + bezel |
 | Concept B FS | `08032ce8ab6f26772845e4dd` — from [`../../hardware/cad/featurescript/concept-b-corner-post.fs`](../../hardware/cad/featurescript/concept-b-corner-post.fs) |
-| Concept B PS | `22bf9277c43f3b54c05038c8` — glueless corner post study, [`fastener-concepts.md`](fastener-concepts.md) §3B |
+| Concept B PS | `22bf9277c43f3b54c05038c8` — glueless corner post study, [`fastener-concepts.md`](design-notes/fastener-concepts.md) §3B |
 | Proxies PS | `d1c871ec149418978f2eb283` — panel and PSU proxies alone, for looking at. No enclosure, so nothing hides them |
 | **Patternflow Desktop** | `0081005765a967d40fc7b23e` — **the assembly**: 16 named enclosure parts + PSU + 2 panels |
 | LRS-50-5 | `d028b9441f5d077f2950e113` — sub-assembly wrapping the 31 vendor bodies so the PSU arrives as ONE instance |
@@ -372,7 +374,7 @@ Assembly places parts at the same numbers. Both read; neither writes.
   PSU datum. The PSU one earns its keep: it encodes the corner-mapping
   `ours = (psuXHi − X, psuYLo + Y, psuZFront − Z)`, and the **z flip in that
   expression is what puts the terminal screws toward the removable back cover**
-  rather than the glued bezel (see [`power-plan.md`](power-plan.md) §8).
+  rather than the glued bezel (see [`power-plan.md`](design-notes/power-plan.md) §8).
 
 ### Placements, so they are reproducible
 

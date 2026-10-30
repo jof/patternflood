@@ -1,73 +1,104 @@
-# Patternflood — a Patternflow fork, and what grew out of it
+# Patternflood
 
-Two projects with one shared inspiration: [Patternflow](https://github.com/engmung/patternflow),
-an open-source LED synthesizer you play with four knobs.
+A four-knob LED instrument: a 256 mm square of 128 × 128 pixels in a laser-cut
+birch box, made to be played. Turn the knobs and the patterns answer. There are
+toys, games, generative art, music visualizers, and a TV that surfs very weird
+channels.
 
-They started as one build. They're separate because they want opposite things.
+It is inspired by [**Patternflow**](https://github.com/engmung/patternflow), an
+open-source LED synthesizer by SeungHun Lee, and it runs every one of
+Patternflow's patterns, along with the ones its community has shared.
 
-| | [**Desktop**](docs/desktop/) | [**Wall**](docs/wall/) |
-|---|---|---|
-| | Patternflow-inspired, four knobs | Room-interactive LED wall |
-| Display | 128 × 128 px, 256 × 256 mm (2 × 2 P2) | 192 × 192 px, 576 × 576 mm |
-| Input | four seesaw encoders | VL53L9CX lidar, contactless |
-| Compute | Raspberry Pi 5 + Colorlight 5A-75B | Pi + RP2350 front-end |
-| Power | mains, LRS-50-5, panel load capped | mains, ~200 W peak |
-| Enclosure | laser-cut birch ply box | frame + wall mount |
-| Code | Pi renderer (left upstream 2026-10-12) | new codebase |
-| Status | **enclosure modelled; driver bring-up next** | concept — lidar on order |
+![The etched faces of the box as cut: bezel, walls and back cover](hardware/laser/art/preview.png)
 
-## Why two
+| | |
+|---|---|
+| Display | 4 × P2 64 × 64 GOB panels, 2 × 2: 128 × 128 px, 256 × 256 mm |
+| Controls | 4 lit push-knobs (Adafruit 4991 I²C encoders), 4 push buttons |
+| Brains | Raspberry Pi 5 renders; a Colorlight 5A-75B with open [receiver75](https://github.com/dgym/receiver75) gateware drives the panels |
+| Power | Mains in, Mean Well LRS-50-5 inside, current-capped per frame |
+| Box | 3 mm Baltic birch, finger-jointed and laminated, 293 × 373 × 61 mm, etched with generated circuit-board art |
+| Software | 92 demos of our own, all of Patternflow's patterns, and the Patternflow community's, compiled and run natively on the Pi |
 
-The single combined build had to compromise on every axis at once. Battery
-versus 200 W; instant-on versus a Linux boot; knobs versus a depth camera;
-tracking upstream versus diverging from it. The
-[power plan kept fighting the lidar plan](docs/wall/lidar-plan.md), which was
-the signal.
+**Status:** the desktop build is complete. Two revisions have been built, and
+Rev 2.7 is the current one. A second, wall-sized project is at the concept
+stage ([below](#the-wall-project)).
 
-The clean split: **the desktop build stays a Patternflow** and inherits
-everything upstream has — the `.pfm` pattern loader, the frozen ABI, the web
-console, 100+ community patterns. **The wall build is a new thing** that only
-borrows the idea.
+## Build one
 
-*2026-10-12:* the desktop build has since left upstream too. The P2 panels are
-small enough that four of them make the instrument, and four panels want a
-Colorlight 5A-75B and a Pi rather than an ESP32 —
-[`docs/desktop/driver-colorlight.md`](docs/desktop/driver-colorlight.md).
+**[`docs/desktop/BUILD.md`](docs/desktop/BUILD.md)** is the build guide: the
+parts list, flashing the Colorlight card, the Pi image, test cuts, cutting the
+box, glue-up, wiring and first power-up. Everything it needs is in this
+repository: the Onshape FeatureScript model, the cut sheets, the gateware and
+the software.
 
-*2026-10-22:* renamed **Patternflood**. It started as a Patternflow fork, but it
-no longer runs upstream's code, so it gets its own name. "Patternflow" in these
-docs now means the upstream project.
+[`docs/desktop/`](docs/desktop/README.md) has the reference docs and the design
+notes behind the build.
 
-## Layout
+## Try the software without the hardware
 
-```
-docs/desktop/    Project B — Patternflood, the desktop build
-docs/wall/       Project A — the room-interactive wall
-firmware/        patch series against upstream (desktop build)
-hardware/cad/    vendor STEP models (MIT, from Adafruit_CAD_Parts)
-upstream/        clone @ 87700bd (v3.9.5), gitignored; `desktop` branch holds the fork
+The demos run on any Linux machine with Python 3 and numpy (and Pillow, for text), and can
+write an animated GIF instead of driving panels:
+
+```sh
+cd firmware/demos
+./run.py --list
+./run.py --demo etch --knobs auto --out preview:/tmp/etch.gif --seconds 8
 ```
 
-## The findings that shaped both
+`--knobs auto` is a random player turning the knobs. Upstream Patternflow's
+patterns also need `g++` and a clone of upstream in `upstream/`
+([`firmware/demos/README.md`](firmware/demos/README.md)).
 
-Four things came out of reading the upstream tree that decided most of the rest:
+## Repository layout
 
-- **The HUB75 pinout is four `#define`s apart.** Upstream's `config.h` matches
-  the Matrix Portal S3 on 10 of 14 pins — they used it as their reference.
-  ([desktop/firmware-delta §1](docs/desktop/firmware-delta.md))
-- **The I²C encoders were forced, not chosen.** Nine of upstream's twelve
-  encoder GPIOs collide with fixed Matrix Portal functions.
-  ([desktop/firmware-delta §3](docs/desktop/firmware-delta.md))
-- **Upstream already has a hook for non-knob input.** `pf_params.h` has an
-  absolute-param tier, added for audio, which lets an outside source drive
-  pattern parameters with **no ABI change** — so sensor input works with every
-  existing community pattern. ([wall/lidar-plan §2](docs/wall/lidar-plan.md))
-- **I³C, not I²C, is what makes the lidar a camera.** 2268 zones at ~27 fps
-  instead of ~3. The ESP32-S3 has no I³C, which is what removed it from the
-  wall project. ([wall/README §2](docs/wall/README.md))
+```
+docs/desktop/          the desktop build: build guide, wiring, design notes
+docs/wall/             the wall project (concept)
+hardware/cad/          Onshape FeatureScript, export and art tools, vendor STEP models
+hardware/laser/        cut files: one DXF per part, nested sheets, test cuts, diffusers
+hardware/REVISIONS.md  what changed in each revision
+firmware/demos/        the demos and the renderer (Python; runs on the Pi or a PC)
+firmware/pi-controller/  the Raspberry Pi appliance image: provisioning, services, boot splash
+firmware/colorlight/   the Colorlight card: JTAG tools, receiver75 build, frame protocol
+firmware/knob_bridge/  a FeatherS3 that reads the knobs over USB, for bench work
+firmware/patches/      the abandoned ESP32 / Matrix Portal fork of upstream
+upstream/              a clone of upstream Patternflow (not in this repo; see .gitignore)
+```
 
-## Licensing
+## The wall project
 
-Upstream is dual-licensed: MIT for code, CC BY-SA 4.0 for hardware. Enclosure
-work derived from `upstream/hardware/` inherits **CC BY-SA 4.0** and must be
-shared alike. The wall project derives from none of it.
+A room-sized LED wall (nine P3 panels, 576 mm square) that responds to the
+people in front of it through a VL53L9CX depth sensor rather than knobs. It
+shares the inspiration but not the code or the parts. It is a concept until the
+sensor arrives: [`docs/wall/`](docs/wall/README.md).
+
+## Credits
+
+- **[Patternflow](https://github.com/engmung/patternflow)** by SeungHun Lee: the
+  idea, the instrument's feel, and the patterns this box runs. Its community's
+  patterns come from [community.patternflow.work](https://community.patternflow.work),
+  each credited to its author on the panel.
+- **[receiver75](https://github.com/dgym/receiver75)** by Jim Bailey: the open
+  gateware for the Colorlight card (MIT).
+- Vendor CAD models from Adafruit and Mean Well
+  ([`hardware/cad/vendor/`](hardware/cad/vendor/README.md)).
+- [JetBrains Mono](https://www.jetbrains.com/lp/mono/) for the etched lettering
+  (SIL OFL 1.1).
+- The Interdimensional Cable shelf's tapes are cut from public-domain films on
+  the Internet Archive, and its news ticker reads headlines from The Onion,
+  credited on screen.
+
+## License
+
+- **Code** (`firmware/`, `hardware/cad/tools/`, the FeatureScript): [MIT](LICENSE).
+- **Hardware design and documentation** (the model, cut files, art, `docs/`):
+  [CC BY-SA 4.0](LICENSE-hardware). Share alike: if you publish a modified box,
+  publish its files under the same terms.
+
+Third-party pieces keep their own licenses: receiver75 (MIT,
+[`firmware/colorlight/receiver75/LICENSE`](firmware/colorlight/receiver75/LICENSE)),
+JetBrains Mono (OFL, `hardware/cad/tools/fonts/OFL.txt`), the vendor STEP models
+([`hardware/cad/vendor/README.md`](hardware/cad/vendor/README.md)), and the
+ported Patternflow and community patterns, which are CC BY-SA 4.0 with their
+authors' credits in each file's header.

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Update a running controller's renderer and demos from this checkout, then restart it.
 
-    ./update_pi.py                          # jof@patternflood.local
-    ./update_pi.py jof@ADDRESS -o HostKeyAlias=patternflood.local
+    ./update_pi.py                          # patternflood.local, as your local user name
+    ./update_pi.py USER@ADDRESS -o HostKeyAlias=patternflood.local     # when mDNS fails
 
 Installs what provision_card.py puts in /opt/patternflood (the demo suite, the
 renderer, the upstream presets' source tree and the community's patterns as
@@ -24,7 +24,7 @@ DEFAULTS = "etc/default/patternflood"
 
 
 def main():
-    host, ssh_opts = (sys.argv[1], sys.argv[2:]) if len(sys.argv) > 1 else ("jof@patternflood.local", [])
+    host, ssh_opts = (sys.argv[1], sys.argv[2:]) if len(sys.argv) > 1 else ("patternflood.local", [])
     with tempfile.TemporaryDirectory() as tmp:
         stage = Path(tmp) / "stage"
         install_payload(stage / "opt/patternflood")

@@ -1,10 +1,12 @@
 # Build Prep — Desktop
 
+> **Design history:** the ordered plan for the abandoned Matrix Portal S3 build. The build as it stands is in [`../BUILD.md`](../BUILD.md).
+
 > 🔁 **2026-10-12: the controller changed.** The Matrix Portal S3 steps below
 > (first light on its pins, the `desktop` firmware branch) no longer apply.
 > First light is now one panel on a Colorlight 5A-75B configured in LEDVision,
 > then the Pi Zero 2 W + USB gigabit adapter in front of it —
-> [`driver-colorlight.md`](driver-colorlight.md) §5. The enclosure is a 2 × 2
+> [`driver-colorlight.md`](../driver-colorlight.md) §5. The enclosure is a 2 × 2
 > array — [`mechanical-plan.md`](mechanical-plan.md). The caliper items and the
 > mechanical hardware below still apply.
 
@@ -194,7 +196,7 @@ and encoder pin defines in `#ifndef`, and **any** variant — Matrix Portal
 included — becomes an `overrides.h` file with **zero patches**.
 
 Upstream explicitly wants this kind of contribution. The
-[core-and-variants RFC](../../upstream/docs/rfc-core-and-variants.md) exists
+[core-and-variants RFC](../../../upstream/docs/rfc-core-and-variants.md) exists
 precisely so that variants don't have to fork the tree, and `overrides.h` is
 described as the mechanism for exactly this. The pins were simply missed.
 

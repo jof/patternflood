@@ -1,0 +1,47 @@
+From 5f2185b4a7ae8bf9b2e7236227e72781661beec1 Mon Sep 17 00:00:00 2001
+From: Jonathan Lassoff <jof@thejof.com>
+Date: Thu, 22 Oct 2026 19:48:53 -0700
+Subject: [PATCH 3/3] BIOS: run the SDRAM init sequence without sdram_init()'s
+ memtest
+
+sdram_init() memtests 2 MiB from MAIN_RAM_BASE, but main_ram here is the
+4 KiB integrated RAM. The test runs into unmapped addresses that each
+wait out the bus timeout, so the BIOS never got past it. That went
+unnoticed while the host enabled the display over UDP; the boot splash
+needs the BIOS to carry on.
+
+Checked on the card: with this, the splash appears after an SRAM load.
+---
+ bios/main.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/bios/main.c b/bios/main.c
+index 0e4aa8f..72fd232 100644
+--- a/bios/main.c
++++ b/bios/main.c
+@@ -7,6 +7,7 @@
+ #include <generated/csr.h>
+ 
+ #include <liblitedram/sdram.h>
++#include <generated/sdram_phy.h>
+ 
+ #include "splash.h"
+ 
+@@ -66,7 +67,13 @@ int main(int i, char **c)
+     }
+ #endif
+ 
+-    sdram_init();
++    // Not sdram_init(): after the init sequence it memtests 2 MiB from
++    // MAIN_RAM_BASE, which here is the 4 KiB integrated RAM, so the test runs
++    // into unmapped addresses that each wait out the bus timeout, and the BIOS
++    // never gets past it.
++    sdram_software_control_on();
++    init_sequence();
++    sdram_software_control_off();
+ 
+     // Something on the panels until a host sends frames.
+     splash_run();
+-- 
+2.43.0
+
