@@ -451,6 +451,10 @@ side facing the back cover.
 
    <img src="img/build/pi5-header.jpg" width="50%" alt="Leads on the Pi 5's header, beside the Active Cooler">
 
+   *Where the knob chain lands on the header. Ignore the wire colours in the
+   photo: we didn't have STEMMA QT-coloured leads on hand. Wire it by the
+   table below.*
+
    | STEMMA QT wire | Pi pin |
    |---|---|
    | Red (V+) | **1** (3V3, *not* 5 V) |
