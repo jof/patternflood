@@ -5,6 +5,8 @@ A demo is a class with any of these methods; all have defaults:
     turn(k, d)            knob k turned d detents (+ = clockwise)
     press(k)              knob k pushed down
     release(k, click)     knob k let go; click is True for a short press with no turn in it
+    skip(d)               the previous (d = -1) or next (+1) button, playing: return True to
+                          take it (Cable changes channel); else the runtime steps along the shelf
     step(dt)              advance the simulation by dt seconds
     render()              -> float RGB (128, 128, 3), 0..1, perceptual (the runtime applies gamma)
     lights()              -> four (r, g, b) 0..1 knob light colours
@@ -22,7 +24,8 @@ and these runtime helpers on self.rt:
 The box's four push buttons (left to right: previous, select, next, sleep) belong to
 the runtime, in every demo. Demos sit on shelves (Play, Audio, Interdimensional Cable,
 Patternflow, Community, Community 1:1, from each class's `group`). Playing, previous
-and next step along the shelf, holding them repeats, and select opens the menu. In the
+and next step along the shelf (or the demo takes them: Cable changes channel), holding
+them repeats, and select opens the menu. In the
 menu, previous and next move between shelves, and the knobs work it: k1 moves between
 shelves, k0 picks the demo on the shelf (live, faster when spun), k3 sets brightness,
 and on the Patternflow and Community shelves k2 lets the music turn the patterns'
@@ -76,6 +79,9 @@ class Demo:
 
     def release(self, k, click):
         pass
+
+    def skip(self, d):
+        return False
 
     def step(self, dt):
         pass
@@ -252,7 +258,7 @@ class Runtime:
         d = 1 if b == BTN_NEXT else -1
         if self.menu:
             self._step_shelf(d)
-        else:
+        elif not self.demo.skip(d):
             self._step_demo(d)
 
     def _wake(self):

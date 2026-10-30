@@ -10,8 +10,11 @@ tune-in plays a random excerpt, cropped square, silent like everything else here
 comedy plays best.
 
 Any knob steps forward or back through the shuffled order, one channel a detent (back goes
-back to what you were just watching); a click skips ahead; hold a knob for a moment to stay
-tuned (the clip loops for good), and again to surf. The knob lights glow with the picture and
+back to what you were just watching), and so do the previous and next buttons; a click skips
+ahead; hold a knob for a moment to stay tuned (the clip loops for good), and again to surf.
+
+Starting is quick, as the menu passes through it: each channel is made the first time it's
+tuned, and the tapes are probed in the background, joining the lap in progress when ready. The knob lights glow with the picture and
 fill left to right as the channel's time runs out.
 """
 import os
@@ -116,17 +119,15 @@ def tapes(start):
 class Cable(Demo):
     name = "Cable"
     group = "cable"
-    blurb = "TV from other dimensions. Any knob changes channel, a click skips, hold one to stay tuned."
+    blurb = "TV from other dimensions. Any knob or previous/next changes channel, a click skips, hold one to stay tuned."
     flare = False
 
     def __init__(self, rt):
         super().__init__(rt)
         headlines.start()
-        self.shows = sorted((c() for c in CHANNELS), key=lambda s: s.num)
-        found = tapes(TAPE_NUM)
-        log(f"cable: {len(self.shows)} channels" + (f" and {len(found)} tapes" if found else ""))
-        self.shows += found
-        self.shows.sort(key=lambda s: s.num)
+        self.shows = sorted(CHANNELS, key=lambda c: c.num)     # classes, made when first tuned
+        self.found = None
+        threading.Thread(target=self._find_tapes, daemon=True).start()     # ffprobe: ~0.1 s a tape on the Pi
         self.rng = np.random.default_rng()
         self.order = random.sample(range(len(self.shows)), len(self.shows))
         self.pos = 0
@@ -143,6 +144,27 @@ class Cable(Demo):
         self.vignette = (1 - 0.35 * (np.hypot(np.arange(N) - 63.5, (np.arange(N) - 63.5)[:, None]) / 90) ** 2)[..., None]
         self.vignette = self.vignette.astype(np.float32) * np.where(Y % 2 == 1, 0.82, 1.0).astype(np.float32)[..., None]
         self._tune(0)
+
+    def _find_tapes(self):
+        self.found = tapes(TAPE_NUM)
+
+    def _add_tapes(self):
+        """The tapes, once probed: into the rest of this lap, at random."""
+        found, self.found = self.found, None
+        log(f"cable: {len(self.shows)} channels" + (f" and {len(found)} tapes" if found else ""))
+        if not found:
+            return
+        new = list(range(len(self.shows), len(self.shows) + len(found)))
+        self.shows += found
+        rest = self.order[self.pos + 1:] + new
+        random.shuffle(rest)
+        self.order[self.pos + 1:] = rest
+
+    def _show(self):
+        show = self.shows[self.idx]
+        if isinstance(show, type):
+            show = self.shows[self.idx] = show()
+        return show
 
     def _loops(self, show):
         return max(LOOPS[0], min(LOOPS[1], round(LOOP_S / show.length)))
@@ -163,13 +185,16 @@ class Cable(Demo):
         self.t_show = 0.0
         self.loop = 0
         self.t_change = self.rt.t
-        show = self.shows[self.idx]
-        show.tune()
+        self._show().tune()
         if k is not None:
             self.t_flash[k] = self.rt.t
 
     def turn(self, k, d):
         self._tune(d, k)
+
+    def skip(self, d):
+        self._tune(d)
+        return True
 
     def press(self, k):
         self.held_done[k] = False
@@ -179,6 +204,8 @@ class Cable(Demo):
             self._tune(1, k)
 
     def step(self, dt):
+        if self.found is not None:                  # the tapes are probed
+            self._add_tapes()
         t = self.rt.t
         if t - self.t_change >= STATIC_S:
             self.t_show += dt
