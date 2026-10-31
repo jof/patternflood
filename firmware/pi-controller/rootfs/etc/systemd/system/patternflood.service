@@ -23,7 +23,8 @@ WorkingDirectory=/opt/patternflood/demos
 # /var/cache/patternflood, the renderer's own ($CACHE_DIRECTORY): Cable keeps the day's headlines there.
 CacheDirectory=patternflood
 # /var/lib/patternflood, the renderer's home: Cable's tapes go in its cable/ (copy them in as root,
-# readable by all; the directory survives update_pi.py, which only replaces /opt/patternflood).
+# readable by all; the directory survives update_pi.py, which only replaces /opt/patternflood), and
+# session.json keeps where it was left ($STATE_DIRECTORY: run.py starts there, not on PF_DEMO).
 StateDirectory=patternflood
 # Settings: the defaults here, overridden by /etc/default/patternflood (edit it, then
 # `sudo systemctl restart patternflood`).

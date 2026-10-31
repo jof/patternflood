@@ -121,6 +121,7 @@ class Cable(Demo):
     group = "cable"
     blurb = "TV from other dimensions. Any knob or previous/next changes channel, a click skips, hold one to stay tuned."
     flare = False
+    remembers = False       # a new shuffle each start, so channel changes don't carry over
 
     def __init__(self, rt):
         super().__init__(rt)

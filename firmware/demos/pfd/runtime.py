@@ -31,6 +31,10 @@ shelves, k0 picks the demo on the shelf (live, faster when spun), k3 sets bright
 and on a pattern that takes it (`audio_knobs_ok`: SeungHun's, the community's and our
 originals) k2 lets the music turn its knobs. Select, a click on any knob, or 6 s with no input closes it. Sleep blanks the
 panels and the knob lights; it, any other button or a knob push wakes them.
+
+Given a session file, the runtime starts where it was left: the demo, each shelf's place, the
+brightness, and each demo's knobs (pfd.session replays the input a demo had into a fresh
+instance; `replay(records)` may do that its own way, and `remembers = False` opts out).
 """
 import math
 import signal
@@ -39,7 +43,7 @@ import time
 import numpy as np
 
 from knob_renderer import GAMMA, capped_u8
-from . import draw
+from . import draw, session
 from .audio import SilentState
 from .io import log, sd_notify
 
@@ -68,9 +72,16 @@ class Demo:
     blurb = ""
     group = "patternflood"
     audio_knobs_ok = False      # the menu's audio knobs (k2) may turn this one's knobs
+    remembers = True            # its knob input is kept across restarts (pfd.session)
 
     def __init__(self, rt):
         self.rt = rt
+
+    def replay(self, records):
+        """A fresh instance brought to where saved input left it: each frame's input, then a step."""
+        for rec in records:
+            session.apply(self, rec, self.rt.replay_held)
+            self.step(session.REPLAY_DT)
 
     def turn(self, k, d):
         pass
@@ -105,7 +116,8 @@ class Knob:
 
 
 class Runtime:
-    def __init__(self, demos, knobs, out, fps=60.0, bright=0.3, start=0, duration=None, audio=None, buttons=None):
+    def __init__(self, demos, knobs, out, fps=60.0, bright=0.3, start=0, duration=None, audio=None, buttons=None,
+                 state=None):
         self.demo_classes = demos
         self.instances = {}
         self.knobs_in, self.buttons_in, self.out = knobs, buttons, out
@@ -123,12 +135,20 @@ class Runtime:
         self.index = start % len(demos)
         self.shelves = list(dict.fromkeys(d.group for d in demos))
         self.shelf_pos = {g: next(i for i, d in enumerate(demos) if d.group == g) for g in self.shelves}
+        # where it was left (pfd.session)
+        self.saver = session.Saver(state) if state else None
+        self.replaying, self.replay_held = False, None
+        self.inputs = {}                # demo key -> its frames of input, oldest first
+        self.taking = None              # (key, tokens) of the input this frame, not yet in self.inputs
+        self.t_dirty = None             # when the session last changed, while unsaved
+        if state:
+            self._restore(session.load(state))
         self.demo = self._instance(self.index)
 
     # ---- helpers for demos
 
     def held(self, k):
-        return self.k[k].down
+        return self.replay_held[k] if self.replaying else self.k[k].down
 
     def held_for(self, k):
         return self.t - self.k[k].t_down if self.k[k].down else 0.0
@@ -141,10 +161,84 @@ class Runtime:
 
     def _instance(self, i):
         if i not in self.instances:
-            self.instances[i] = self.demo_classes[i](self)
-            log(f"demo: {self.demo_classes[i].name}")
+            cls = self.demo_classes[i]
+            demo = self.instances[i] = cls(self)
+            log(f"demo: {cls.name}")
+            records = self.inputs.get(session.key(cls)) if cls.remembers else None
+            if records:
+                self._replay(demo, records)
         self.t_banner = self.t
+        self._changed()
         return self.instances[i]
+
+    # ---- the session: where the box was left
+
+    def _restore(self, s):
+        keys = {session.key(d): i for i, d in enumerate(self.demo_classes)}
+        self.inputs = {k: v for k, v in s.get("inputs", {}).items()
+                       if isinstance(v, list) and all(isinstance(r, str) for r in v)}
+        for g, k in s.get("shelves", {}).items():
+            if g in self.shelf_pos and keys.get(k) is not None and self.demo_classes[keys[k]].group == g:
+                self.shelf_pos[g] = keys[k]
+        if s.get("demo") in keys:
+            self.index = keys[s["demo"]]
+        if isinstance(s.get("bright"), (int, float)):
+            self.bright = min(1.0, max(0.02, float(s["bright"])))
+        self.audio_knobs = bool(s.get("audio_knobs", False))
+        if s:
+            log(f"session: back on {self.demo_classes[self.index].name}, bright {self.bright:.2f}, "
+                f"knobs kept for {len(self.inputs)} demos")
+
+    def _replay(self, demo, records):
+        t0 = time.monotonic()
+        self.replaying, self.replay_held = True, [False] * NKNOBS
+        try:
+            demo.replay(records)
+        except Exception as e:          # input from an older version of the pattern, say: start it fresh
+            log(f"session: {demo.name}: replay failed ({e!r}); its knobs start afresh")
+            self.inputs.pop(session.key(type(demo)), None)
+        finally:
+            self.replaying, self.replay_held = False, None
+        log(f"session: {demo.name}: {len(records)} frames of knob input replayed in {time.monotonic() - t0:.2f} s")
+
+    def _take(self, tok):
+        """Input that reached the demo, kept for the session."""
+        if self.saver is None or not self.demo.remembers:
+            return
+        k = session.key(type(self.demo))
+        if self.taking and self.taking[0] != k:
+            self._took()
+        if not self.taking:
+            self.taking = (k, [])
+        self.taking[1].append(tok)
+
+    def _took(self):
+        """This frame's input onto its demo's record."""
+        if self.taking:
+            k, toks = self.taking
+            self.inputs[k] = session.trim(self.inputs.get(k, []) + [" ".join(toks)])
+            self.taking = None
+            self._changed()
+
+    def _changed(self):
+        if self.saver is not None:
+            self.t_dirty = time.monotonic()
+
+    def _snapshot(self):
+        return {"v": session.VERSION,
+                "demo": session.key(self.demo_classes[self.index]),
+                "shelves": {g: session.key(self.demo_classes[i]) for g, i in self.shelf_pos.items()},
+                "bright": round(self.bright, 4),
+                "audio_knobs": self.audio_knobs,
+                "inputs": self.inputs}
+
+    def _maybe_save(self, final=False):
+        self._took()
+        if self.t_dirty is None:
+            return
+        if final or time.monotonic() - self.t_dirty >= session.SAVE_AFTER_S:
+            self.t_dirty = None
+            self.saver.save(self._snapshot(), wait=final)
 
     def _event(self, ev):
         kind = ev[0]
@@ -177,10 +271,12 @@ class Runtime:
                 self._menu_turn(k, d)
             else:
                 self.demo.turn(k, d)
+                self._take(f"t{k}{d:+d}")
         elif kind == "down":
             kn.down, kn.t_down, kn.turned, kn.consumed = True, self.t, False, False
             if not self.menu:
                 self.demo.press(k)
+                self._take(f"p{k}")
         elif kind == "up":
             if not kn.down:
                 return
@@ -192,8 +288,10 @@ class Runtime:
                     log("menu: closed")
                 if kn.consumed:
                     self.demo.release(k, False)
+                    self._take(f"r{k}")
             else:
                 self.demo.release(k, click and not kn.consumed)
+                self._take(f"r{k}{'c' if click and not kn.consumed else ''}")
         if self.menu:
             self.t_menu_input = self.t
 
@@ -222,8 +320,10 @@ class Runtime:
             self._step_shelf(d)
         elif k == 3:
             self.bright = min(1.0, max(0.02, self.bright * (1.08 ** d)))
+            self._changed()
         elif k == 2 and self.demo_classes[self.index].audio_knobs_ok:
             self.audio_knobs = d > 0
+            self._changed()
             log(f"menu: audio drives pattern knobs {'on' if self.audio_knobs else 'off'}")
 
     def _button(self, b, down):
@@ -259,7 +359,9 @@ class Runtime:
         d = 1 if b == BTN_NEXT else -1
         if self.menu:
             self._step_shelf(d)
-        elif not self.demo.skip(d):
+        elif self.demo.skip(d):
+            self._take(f"s{d:+d}")
+        else:
             self._step_demo(d)
 
     def _wake(self):
@@ -351,6 +453,8 @@ class Runtime:
                     for ev in self.buttons_in.poll(self.t):
                         self._event(ev)
                 self._check_timers()
+                if self.saver is not None:
+                    self._maybe_save()
                 if self.audio_in:
                     self.audio = self.audio_in.frame(dt)
                 else:
@@ -396,6 +500,8 @@ class Runtime:
             pass
         finally:
             signal.signal(signal.SIGINT, signal.SIG_IGN)       # a second Ctrl-C mustn't stop the blanking
+            if self.saver is not None:
+                self._maybe_save(final=True)
             self.knobs_in.set_lights([(0, 0, 0)] * NKNOBS)
             self.knobs_in.close()
             if self.buttons_in:

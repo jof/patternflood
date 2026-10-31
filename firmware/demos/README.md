@@ -62,14 +62,29 @@ In the menu:
 - **Previous and next**, or **k1**, move between shelves, back to wherever you were on each.
 - **k0** steps along the shelf. Demos switch live behind the overlay and keep their state.
   Spin it to skip ahead (`rt.accel`), which is how to cross the Community shelf.
-- **k3** sets brightness (0.3 at start).
+- **k3** sets brightness (0.3 on a fresh box; then kept).
 - **k2,** on a pattern that takes it (SeungHun's, the community's and our originals), turns *audio knobs* on
   or off (below).
 - **A click on any knob** closes the menu, or it closes after 6 s with no input.
 
 A demo's shelf is its class's `group`: `patternflow`, `community-1to1`, `community`, `patternflood` (the
-default), `audio` or `cable`. The menu order is `SHELF_NAMES`'s, in `pfd/runtime.py`, and the box starts on
-the first demo of the first shelf.
+default), `audio` or `cable`. The menu order is `SHELF_NAMES`'s, in `pfd/runtime.py`.
+
+**The box starts where it was left**, after a restart, an update or a power cut: on the same demo, with
+each shelf where it was, the same brightness and audio-knobs switch, and each demo's knobs as they were.
+That's `/var/lib/patternflood/session.json` (systemd's `StateDirectory`; on the bench, `--state FILE` or
+`$PF_STATE`), saved 2 s after the last change. A fresh box (or one with that file deleted) starts on `PF_DEMO`
+at `PF_BRIGHT`. Sleep isn't kept: it always wakes up showing something.
+
+The knobs are the hard part: SeungHun's presets and the community's keep their knob values in their own
+code (compiled C++, or a script in node), out of Python's reach. So the runtime keeps the knob input each
+demo has had, a frame at a time (`pfd/session.py`), and replays it into a fresh instance the first time
+the demo comes up, which takes a few milliseconds. Patterns add each turn to a value and clamp or wrap it,
+so that lands on the same settings; what a pattern did with time (a game's score, a drawing toy's
+picture, a random scene) isn't kept. The JavaScript patterns get their input with their next frames
+instead, since node draws in its own time. Past 1000 frames of input a demo's runs of turns are merged.
+A demo whose input would mean nothing on a fresh start opts out with `remembers = False`: Cable (a new
+shuffle each start) and Tempo (taps on the live beat tracker).
 
 The power cap is the same as `knob_renderer.py`'s and still uncalibrated: 1.2 A
 a panel and 4 A in total, from estimated duty.
