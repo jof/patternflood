@@ -41,11 +41,12 @@ knobs below it on the left, the supply behind the bezel on the right.
 
 ## 1. What you need
 
-Prices are US dollars, checked on 2026-10-30, before shipping and tax. Where a
-part only comes in a pack, the price is the whole pack, and the leftovers are
-spares. The links are where to find each part, not the only place: the cheapest
-source is given first, and Amazon is listed where it's the easy alternative.
-Expect them to drift. A summary of the cost is [at the end of this section](#what-it-costs).
+Prices are US dollars, checked on 2026-10-30, before shipping and tax. They are
+what one box uses: where a part comes in a pack, the price is the box's share of
+it (the pack price is in the Source column). The links are where to find each
+part, not the only place: the cheapest source is given first, and Amazon is
+listed where it's the easy alternative. Expect them to drift. A summary of the
+cost is [at the end of this section](#what-it-costs).
 
 ### Electronics
 
@@ -54,44 +55,44 @@ Expect them to drift. A summary of the cost is [at the end of this section](#wha
 | 4 | **Waveshare RGB-Matrix-P2-64x64-B** (GOB) | [Waveshare](https://www.waveshare.com/rgb-matrix-p2-64x64.htm?sku=33838) (SKU 33838); [Amazon](https://www.amazon.com/dp/B0GMTLNFL2) at $48 each | 123 | 128 × 128 mm, FM6124 column drivers, RUC7258 row drivers, 1/32 scan. Measured in [`enclosure-lasercut.md`](enclosure-lasercut.md) §11. Other panels need a different box: hole positions differ between panel types ([`enclosure-lasercut.md`](enclosure-lasercut.md) §11). Each panel comes with a HUB75 ribbon and a power harness (the next two rows) |
 | 4 | HUB75 ribbon cables, 16-way IDC | With the panels | — | One per panel, from the card to the panel's IN |
 | 3 | Waveshare panel power harness | With the panels | — | A fork pair at the 5 V bus, split to two 4-pin panel plugs. Six plugs: four panels, the card, one spare. The fourth harness is spare |
-| 2 | 4-way barrier terminal strip, 25 A (TB-2504L or similar), with jumper bars | Amazon, a 6-pack with jumpers ([B0D7VTMTBH](https://www.amazon.com/dp/B0D7VTMTBH)) | 10 | The 5 V bus: one strip for +5 V, one for GND |
+| 2 | 4-way barrier terminal strip, 25 A (TB-2504L or similar), with jumper bars | Amazon, a 6-pack with jumpers, $10 ([B0D7VTMTBH](https://www.amazon.com/dp/B0D7VTMTBH)) | 3 | The 5 V bus: one strip for +5 V, one for GND |
 | 1 | **Colorlight 5A-75B**, v8.x | AliExpress (search "5A-75B V8.2"); Amazon at about $36 | 22 | Ours is a v8.2. The gateware is built for the v8.0 pinout, which v8.2 shares |
 | 1 | **Raspberry Pi 5, 2 GB** | [PiShop.us](https://www.pishop.us/product/raspberry-pi-5-2gb/) or another approved reseller | 78 | Ours is an 8 GB, which is far more than needed: the running box uses about 350 MB, and the CPU is 96 % idle at 60 fps. Memory prices have pushed Pi 5 prices up through 2026 (4 GB $110, 8 GB $175), so buy the 2 GB. The 1 GB ($45) should also work, but hasn't been tried. A Pi Zero W was too slow ([design note](design-notes/pi-zero-w-controller.md)) |
 | 1 | Raspberry Pi **Active Cooler** (official) | [Adafruit 5815](https://www.adafruit.com/product/5815) | 14 | The box is closed |
 | 1 | microSD card, 16 GB or more | SanDisk Ultra 32 GB, Amazon | 18 | |
-| 1 | 5 V → USB-C pigtail, bare leads, 20 AWG | Amazon, 5-pack ([B0H3BRQ2X1](https://www.amazon.com/dp/B0H3BRQ2X1)) | 8 | Feeds the Pi from the card's 5 V screw terminal. No USB-PD |
-| 1 | Ethernet patch cable, Cat5e or better, 15–30 cm | Amazon, a 10-pack of short Cat6 | 8 | Pi to card. The card will not link at 100 Mbit |
+| 1 | 5 V → USB-C pigtail, bare leads, 20 AWG | Amazon, 5-pack, $8 ([B0H3BRQ2X1](https://www.amazon.com/dp/B0H3BRQ2X1)) | 2 | Feeds the Pi from the card's 5 V screw terminal. No USB-PD |
+| 1 | Ethernet patch cable, Cat5e or better, 15–30 cm | Amazon, a 10-pack of short Cat6, $8 | 1 | Pi to card. The card will not link at 100 Mbit |
 | 4 | **Adafruit 4991** I²C QT rotary encoder breakout | [Adafruit](https://www.adafruit.com/product/4991) | 24 | Each has a NeoPixel, which lights the knob's ring |
 | 4 | **Adafruit 377** rotary encoder (EC11) | [Adafruit](https://www.adafruit.com/product/377) | 18 | Soldered to the 4991s. Adafruit 5880 is a 4991 with an encoder already fitted ($7.95), but it hasn't been tried in this box |
 | 4 | Knobs for a 6 mm D shaft, about 1" (25.4 mm) | Amazon, aluminium set-screw knobs | 10 | The light slits sit just outside a 1" knob's skirt. Adafruit's knobs are 20 mm, too small for the slits |
 | 3 | STEMMA QT / Qwiic cable, 100 mm | [Adafruit 4210](https://www.adafruit.com/product/4210), or DigiKey 1528-4210-ND | 3 | Between the encoders |
 | 1 | STEMMA QT to female sockets, plus a 4-wire extension to about 300 mm (12") | [Adafruit 4397](https://www.adafruit.com/product/4397) (150 mm), extended with four female-to-male jumper wires or a lead crimped from the Dupont kit below | 1 | Last encoder to the Pi's header. The 4397 alone is too short. Estimated from the model, the run is about 270 mm: from the header, around the tray's edge, through the shelf hole over the right knob column, to the top-right encoder. Even pulled tight it's about 190 mm |
-| 4 | 12 mm waterproof momentary push buttons, with a keyed lip | Amazon, a 15-pack in five colours ([B07F24Y1TB](https://www.amazon.com/dp/B07F24Y1TB)) | 7 | Any 12 mm panel-mount momentary will do. We used these because a pack was left over from repairing a VanMoof S3's boost button. The top wall's holes are keyed to this type (12 mm thread with two flats 11 mm apart), so change the hole in the model for a different button. Two blue, one orange, one black, in the build as drawn |
-| — | Dupont (2.54 mm) female wire connector, 2 × 3 (or a 1 × 3 and a 1 × 2), with crimp pins and hook-up wire | Amazon, a Dupont crimp kit | 10 | Button leads, plugged onto the Pi's header pins |
-| — | Insulated female spade terminals to fit the button tags, and WAGO 221 inline splices | Amazon: a spade assortment ($8) and a 10-pack of 221 inline splices ($9) | 17 | How ours are wired, with no soldering. Solder the leads to the tags instead if you prefer |
+| 4 | 12 mm waterproof momentary push buttons, with a keyed lip | Amazon, a 15-pack in five colours, $7 ([B07F24Y1TB](https://www.amazon.com/dp/B07F24Y1TB)) | 2 | Any 12 mm panel-mount momentary will do. We used these because a pack was left over from repairing a VanMoof S3's boost button. The top wall's holes are keyed to this type (12 mm thread with two flats 11 mm apart), so change the hole in the model for a different button. Two blue, one orange, one black, in the build as drawn |
+| — | Dupont (2.54 mm) female wire connector, 2 × 3 (or a 1 × 3 and a 1 × 2), with crimp pins and hook-up wire | Amazon, a Dupont crimp kit, $10 | 1 | Button leads, plugged onto the Pi's header pins |
+| — | Insulated female spade terminals to fit the button tags, and WAGO 221 inline splices | Amazon: a spade assortment ($8) and a 10-pack of 221 inline splices ($9) | 6 | How ours are wired, with no soldering. Solder the leads to the tags instead if you prefer |
 
 ### Power
 
 | Qty | Part | Source | ≈ USD | Notes |
 |---|---|---|---|---|
-| 1 | **Mean Well LRS-50-5** | [DigiKey](https://www.digikey.com/en/products/detail/mean-well-usa-inc/LRS-50-5/7705050) 1866-3358-ND (about $15), or Amazon ([B019GYOCMM](https://www.amazon.com/dp/B019GYOCMM)) | 18 | 5 V, 10 A. Buy a genuine one: it sits on mains in a wooden box |
-| 1 | IEC C14 inlet with rocker switch and 5 × 20 mm fuse holder | Amazon, a 3-pack ([B0BXDKKQ15](https://www.amazon.com/dp/B0BXDKKQ15)) | 9 | AC-14-F16A; cutout 46.75 × 27.25 mm, flange screws 40 mm apart. It comes with a 10 A fuse: swap it for the 1 A below |
-| 1 | **1 A time-delay (T) fuse**, 5 × 20 mm | Littelfuse 0218001.MXP from DigiKey or Mouser (about $1.20), or an Amazon pack of T1AL250V | 7 | Sized for the supply's 45 A inrush, not its load. A fast-blow fuse will trip at switch-on |
-| 1 | IEC power cord | Amazon | 9 | |
-| — | 18 AWG wire for mains (L, N, earth), rated 300 V or more | Amazon, silicone wire | 14 | |
-| — | 16 AWG red and black wire | Amazon, silicone wire | 8 | Supply to the 5 V bus |
-| — | Insulated fork terminals (#8, 22–10 AWG), heatshrink | Amazon, a fork assortment | 9 | Mains and 5 V at the supply. Heatshrink not priced |
+| 1 | **Mean Well LRS-50-5** | [DigiKey](https://www.digikey.com/en/products/detail/mean-well-usa-inc/LRS-50-5/7705050) 1866-3358-ND (about $15), or Amazon at about $18 ([B019GYOCMM](https://www.amazon.com/dp/B019GYOCMM)) | 15 | 5 V, 10 A. Buy a genuine one: it sits on mains in a wooden box |
+| 1 | IEC C14 inlet with rocker switch and 5 × 20 mm fuse holder | Amazon, a 3-pack, $9 ([B0BXDKKQ15](https://www.amazon.com/dp/B0BXDKKQ15)) | 3 | AC-14-F16A; cutout 46.75 × 27.25 mm, flange screws 40 mm apart. It comes with a fuse: check that it's the 1 A time-delay below |
+| 1 | **1 A time-delay (T) fuse**, 5 × 20 mm | With the inlet. If it isn't 1 A time-delay: Littelfuse 0218001.MXP from DigiKey or Mouser, about $1.20 | — | Sized for the supply's 45 A inrush, not its load. A fast-blow fuse will trip at switch-on |
+| 1 | IEC power cord | Any | 2 | |
+| — | 18 AWG wire for mains (L, N, earth), rated 300 V or more | Amazon, silicone wire, $14 for 25 ft each of red and black | 1 | About 30 cm of each |
+| — | 16 AWG red and black wire | Amazon, silicone wire, $8 for 10 ft each | 1 | Supply to the 5 V bus |
+| — | Insulated fork terminals (#8, 22–10 AWG), heatshrink | Amazon, a fork assortment, $9 | 1 | Mains and 5 V at the supply. Heatshrink not priced |
 | 1 | Insulating boot or shroud for the supply's input terminals | — | — | Not priced. See [§11](#11-known-gaps) |
 
 ### Enclosure
 
 | Qty | Part | Source | ≈ USD | Notes |
 |---|---|---|---|---|
-| 8 | **3 mm Baltic birch ply, B/BB, 12 × 24"** | [Woodpeckers](https://woodpeckerscrafts.com/products/baltic-birch-plywood-1-8-x-12-x-24) ($5.57 a sheet), or a 12-pack on Amazon ($55) | 45 | 6 for the box, 1 for the test cuts, 1 spare. Every part fits a 305 mm wide bed. Check the edges for voids: [`enclosure-lasercut.md`](enclosure-lasercut.md) §13.5 |
-| — | PVA wood glue | Titebond II, 4 oz | 4 | The laminations are glued; the box's finger joints are glued |
-| — | Transfer tape (masking), 12" wide | Amazon, a 12" × 100' roll | 24 | For the good face, against smoke marks |
+| 6 | **3 mm Baltic birch ply, B/BB, 12 × 24"** | [Woodpeckers](https://woodpeckerscrafts.com/products/baltic-birch-plywood-1-8-x-12-x-24) ($5.57 a sheet), or a 12-pack on Amazon ($55) | 33 | For the box. Buy two more for your first: one for the test cuts and one spare. Every part fits a 305 mm wide bed. Check the edges for voids: [`enclosure-lasercut.md`](enclosure-lasercut.md) §13.5 |
+| — | PVA wood glue | Titebond II, 4 oz, $4 | 1 | The laminations are glued; the box's finger joints are glued |
+| — | Transfer tape (masking), 12" wide | Amazon, a 12" × 100' roll, $24 | 3 | For the good face, against smoke marks |
 | — | Printer paper | — | — | Knob light diffusers |
-| 4 | Feet, ≥ 8 mm tall (optional) | Amazon, self-adhesive rubber feet | 10 | Estimated: most stick-on feet are 3–6 mm, so look for taller ones. The intake vents are in the bottom wall. It runs fine standing flat for a while; on feet for long runs at brightness |
+| 4 | Feet, ≥ 8 mm tall (optional) | Amazon, self-adhesive rubber feet, about $10 | 2 | Estimated: most stick-on feet are 3–6 mm, so look for taller ones. The intake vents are in the bottom wall. It runs fine standing flat for a while; on feet for long runs at brightness |
 
 ### Fasteners
 
@@ -117,24 +118,24 @@ of screw into its case) or on the tray (M3 × 18 touches the panel).
 most of this (Amazon, $10–23). Check that it has M3 × 8, 12, 14 and 16 and
 M2.5 × 8; many kits skip 14 mm. McMaster sells M3 × 14 alone (91292A027, a
 pack of 100). The back cover's low heads come from Accu (ZUL602M3X10, UK) or
-as DIN 7984 M3 × 10 from McMaster (92855A310). Budget about $35 for all the
-fasteners. (These prices are estimates: the McMaster and Accu pages couldn't be
-checked.)
+as DIN 7984 M3 × 10 from McMaster (92855A310). One box uses about $8 of
+fasteners, most of it the six low heads. (An estimate: the McMaster and Accu
+pages couldn't be checked.)
 
 ### What it costs
 
 | Group | ≈ USD |
 |---|---|
-| Electronics | 370 |
-| Power | 75 |
-| Enclosure | 85 |
-| Fasteners | 35 |
-| **Total** | **about 565** |
+| Electronics | 325 |
+| Power | 25 |
+| Enclosure | 40 |
+| Fasteners | 8 |
+| **Total** | **about 400** |
 
-That is before shipping and tax, and before tools. About $240 of it is the four
-panels, the card and the Pi, which is most of the cost. The rest is mostly
-packs, so a second box costs much less. Buying the panels and the card on
-Amazon instead adds about $80.
+That is what one box uses, before shipping and tax, and before tools. About
+$240 of it is the four panels, the card, the Pi and its cooler. Buying whole
+packs for a single build costs more up front (about $550), and leaves spares.
+Buying the panels and the card on Amazon instead adds about $80.
 
 ### Tools
 
