@@ -6,7 +6,7 @@
 # and next (or k1) change shelf, k0 picks the demo and k3 sets brightness. Select
 # or a click on any knob closes it.
 
-# Which demos the menu offers: empty for all, shelves comma-separated (play,audio,cable,patternflow,community,community-1to1),
+# Which demos the menu offers: empty for all, shelves comma-separated (patternflow,community-1to1,community,patternflood,audio,cable),
 # or "upstream" for SeungHun's 48 presets alone. Those are native code, so they run far
 # faster on a Pi Zero than our numpy demos: on the Zero W use PF_ONLY=upstream.
 PF_ONLY=
