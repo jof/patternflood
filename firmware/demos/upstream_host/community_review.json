@@ -1218,5 +1218,38 @@
  "a261483768ab4581": {
   "title": "Leopard Changing Spots",
   "big": "auto"
+ },
+ "add3418b3b03413f": {
+  "title": "Train",
+  "big": "native",
+  "note": "big identical to native but padded: a fixed-size framed scene"
+ },
+ "9fee649bdb5e4321": {
+  "title": "HYPERSPACE RIBBONS",
+  "big": "auto"
+ },
+ "15f53c6769574b2f": {
+  "title": "no.3 Black Rose",
+  "big": "native",
+  "note": "big splits the rose: its halves drift apart at 128 x 128"
+ },
+ "8260c02df6b241cd": {
+  "title": "Hi how are you?",
+  "big": "auto"
+ },
+ "2ae66e4aabc4495c": {
+  "title": "Quousque Tandem",
+  "big": "auto",
+  "note": "added unseen, 2026-10-31"
+ },
+ "5f054e4c64914291": {
+  "title": "Haunted Clearing",
+  "big": "auto",
+  "note": "added unseen, 2026-10-31"
+ },
+ "fe143083d2114ed6": {
+  "title": "Candle light",
+  "big": "auto",
+  "note": "added unseen, 2026-10-31"
  }
 }
