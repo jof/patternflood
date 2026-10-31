@@ -22,14 +22,14 @@ and these runtime helpers on self.rt:
                           no audio it's a quiet, steady 120 BPM, so visualizers still move.
 
 The box's four push buttons (left to right: previous, select, next, sleep) belong to
-the runtime, in every demo. Demos sit on shelves (Play, Audio, Interdimensional Cable,
-Patternflow, Community, Community 1:1, from each class's `group`). Playing, previous
+the runtime, in every demo. Demos sit on shelves (Patternflow, Community 1:1, Community,
+Patternflood, Audio, Interdimensional Cable, from each class's `group`). Playing, previous
 and next step along the shelf (or the demo takes them: Cable changes channel), holding
 them repeats, and select opens the menu. In the
 menu, previous and next move between shelves, and the knobs work it: k1 moves between
 shelves, k0 picks the demo on the shelf (live, faster when spun), k3 sets brightness,
-and on the Patternflow and Community shelves k2 lets the music turn the patterns'
-knobs. Select, a click on any knob, or 6 s with no input closes it. Sleep blanks the
+and on a pattern that takes it (`audio_knobs_ok`: SeungHun's, the community's and our
+originals) k2 lets the music turn its knobs. Select, a click on any knob, or 6 s with no input closes it. Sleep blanks the
 panels and the knob lights; it, any other button or a knob push wakes them.
 """
 import math
@@ -48,9 +48,9 @@ MENU_IDLE_S = 6.0
 BTN_PREV, BTN_SELECT, BTN_NEXT, BTN_SLEEP = range(4)
 REPEAT_DELAY_S = 0.5    # holding previous or next repeats after this long
 REPEAT_S = 0.15         # at this rate
-SHELF_NAMES = {"play": "PLAY", "audio": "AUDIO", "patternflow": "PATTERNFLOW", "community": "COMMUNITY",
-               "community-1to1": "COMMUNITY 1:1", "cable": "INTERDIM. CABLE"}
-AUDIO_KNOB_SHELVES = ("patternflow", "community", "community-1to1")     # Patternflow patterns: sound can turn their knobs
+# The shelves, in menu order (pfd.demos sorts ALL by it)
+SHELF_NAMES = {"patternflow": "PATTERNFLOW", "community-1to1": "COMMUNITY 1:1", "community": "COMMUNITY",
+               "patternflood": "PATTERNFLOOD", "audio": "AUDIO", "cable": "INTERDIM. CABLE"}
 LIGHT_MAX = 255         # the 4991 NeoPixels at full scale; they dim with the panel's brightness (k3)
 LIGHT_FLOOR = 0.15      # but no dimmer than this fraction of it, so the knobs still read on a dark panel
 NKNOBS = 4
@@ -66,7 +66,8 @@ def _gamma_table(bright):
 class Demo:
     name = "?"
     blurb = ""
-    group = "play"
+    group = "patternflood"
+    audio_knobs_ok = False      # the menu's audio knobs (k2) may turn this one's knobs
 
     def __init__(self, rt):
         self.rt = rt
@@ -110,7 +111,7 @@ class Runtime:
         self.knobs_in, self.buttons_in, self.out = knobs, buttons, out
         self.audio_in = audio
         self.audio = SilentState(0.0, -1)
-        self.audio_knobs = False        # upstream patterns: sound turns their knobs, as upstream's audio edition
+        self.audio_knobs = False        # patterns that take it: sound turns their knobs, as upstream's audio edition
         self.fps, self.bright, self.duration = fps, bright, duration
         self.k = [Knob() for _ in range(NKNOBS)]
         self.t = 0.0
@@ -120,7 +121,7 @@ class Runtime:
         self.t_repeat = [None] * 4      # previous/next held: when they next repeat
         self.t_banner = -10.0
         self.index = start % len(demos)
-        self.shelves = list(dict.fromkeys(getattr(d, "group", "play") for d in demos))
+        self.shelves = list(dict.fromkeys(d.group for d in demos))
         self.shelf_pos = {g: next(i for i, d in enumerate(demos) if d.group == g) for g in self.shelves}
         self.demo = self._instance(self.index)
 
@@ -221,9 +222,9 @@ class Runtime:
             self._step_shelf(d)
         elif k == 3:
             self.bright = min(1.0, max(0.02, self.bright * (1.08 ** d)))
-        elif k == 2 and self.demo_classes[self.index].group in AUDIO_KNOB_SHELVES:
+        elif k == 2 and self.demo_classes[self.index].audio_knobs_ok:
             self.audio_knobs = d > 0
-            log(f"menu: audio drives upstream knobs {'on' if self.audio_knobs else 'off'}")
+            log(f"menu: audio drives pattern knobs {'on' if self.audio_knobs else 'off'}")
 
     def _button(self, b, down):
         if not down:
@@ -300,7 +301,7 @@ class Runtime:
             rgb[118:122, 4:124] = 0.15
             rgb[118:122, 4:4 + int(120 * self.bright)] = (1, .8, .3)
             draw.text(rgb, "k0 demo  k1 shelf", 64, 104, (.5, .5, .5), center=True)
-            if g in AUDIO_KNOB_SHELVES and self.audio.live:
+            if self.demo_classes[self.index].audio_knobs_ok and self.audio.live:
                 draw.text(rgb, f"k2 audio knobs {'ON' if self.audio_knobs else 'off'}",
                           64, 96, (.45, .7, .9) if self.audio_knobs else (.4, .4, .4), center=True)
         elif self.t - self.t_banner < 1.5:

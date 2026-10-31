@@ -9,8 +9,9 @@ shim and the portable cores of upstream's main branch, which the community build
 against. The JavaScript-only ones run under node, in upstream's own harness, sandboxed
 with no network (jsrun.mjs, node_argv()).
 
+    ./community.py pull              # the latest from the wall: sync, then check what's new or changed
     ./community.py sync              # the wall's public patterns, headers and scripts; upstream's cores and harness
-    ./community.py build             # compile what's new, in parallel (the controller does this on start)
+    ./community.py build            # compile what's new, in parallel (the controller does this on start)
     ./community.py check             # on a PC: run each through a scripted player -> src/checks.json
     ./community.py sheet /tmp/cs     # contact sheets of the check's frames, to judge the canvas by eye
     ./community.py strip /tmp/cs --only ID   # one pattern's versions over time, to judge a port
@@ -31,7 +32,8 @@ crediting its original and CC BY-SA 4.0 too; community_review.json is ours.
 
 Our own patterns for the wall are in originals/: each a script for Pattern Lab and a header
 written as its twin (the device runs the header), CC BY-SA 4.0. They're built as the wall's are,
-as written and at 128 x 128, and lead both community shelves. `twin` checks the pair still agree.
+as written and at 128 x 128; the box shows them at 128 x 128 on the Patternflood shelf. `twin`
+checks the pair still agree.
 """
 import argparse
 import fcntl
@@ -153,6 +155,36 @@ def sync():
     shutil.rmtree(SRC, ignore_errors=True)
     new.rename(SRC)
     print(f"{len(patterns)} patterns with headers, {len(js_only)} JavaScript only; upstream at {sha[:8]} -> {SRC}")
+
+
+def _fingerprints(src=SRC):
+    """{id: (title, hash of its header or script)}, as last synced."""
+    if not (src / "index.json").exists():
+        return {}
+    idx, _ = load_index(src)
+    return {e["id"]: (e["title"], _sha((src / kind / f"{e['id']}.{kind}").read_text(errors="replace")))
+            for kind, key in (("h", "patterns"), ("js", "js_only")) for e in idx[key]}
+
+
+def pull(jobs=None):
+    """The latest from the wall: sync, say what came, changed and went, and check the new and changed."""
+    before = _fingerprints()
+    sync()
+    after = _fingerprints()
+    new = [i for i in after if i not in before]
+    changed = [i for i in after if i in before and after[i][1] != before[i][1]]
+    gone = [i for i in before if i not in after]
+    for what, ids, fp in (("new", new, after), ("changed", changed, after), ("gone", gone, before)):
+        if ids:
+            print(f"{len(ids)} {what}: " + ", ".join(f"{fp[i][0]} ({i})" for i in ids))
+    if not (new or changed or gone):
+        print("nothing new on the wall")
+    if new or changed:
+        check(jobs, new + changed)
+    if new:
+        print("The new ones are on Community 1:1 as published, and on Community as published until reviewed "
+              f"({REVIEW.name}); one lying on its side needs TURN.")
+    print("To send them to the box: ../../pi-controller/update_pi.py")
 
 
 def fixup(text):
@@ -713,13 +745,15 @@ def twin(out, only=None):
 def main():
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0],
                                 formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
-    p.add_argument("cmd", choices=["sync", "build", "check", "sheet", "strip", "twin"])
+    p.add_argument("cmd", choices=["pull", "sync", "build", "check", "sheet", "strip", "twin"])
     p.add_argument("out", nargs="?", type=Path, help="sheet: a directory for the PNGs")
     p.add_argument("--only", default="", help="check, sheet, strip: these patterns only, by id or id prefix, "
                                               "comma-separated; twin: these originals, by name")
     p.add_argument("-j", "--jobs", type=int, default=None)
     args = p.parse_args()
-    if args.cmd == "sync":
+    if args.cmd == "pull":
+        pull(args.jobs)
+    elif args.cmd == "sync":
         sync()
     elif args.cmd == "build":
         build(args.jobs)

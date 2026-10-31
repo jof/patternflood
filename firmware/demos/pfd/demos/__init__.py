@@ -85,47 +85,18 @@ from .dial import Dial
 from .cable import Cable
 
 from .. import community, upstream
+from ..runtime import SHELF_NAMES
 
-OURS = [Classic, Etch, Squash, Cycles, Sand, Harmono, Rewind, Reaction, Rotor, Echo, Rocket, Vault, Mandala,
+PLAY = [Classic, Etch, Squash, Cycles, Sand, Harmono, Rewind, Reaction, Rotor, Echo, Rocket, Vault, Mandala,
         Droplet, Terrain, Glitch, Kaleido, Pool, Resort]
+# Our own patterns in Patternflow's manner (pfd/demos/original.py): on the Patternflood shelf, after the play demos
+ORIGINALS = [BitTunnel, Obra, Riso, Strange, PixelSort, Moon, Smoke, Sea, Caustics, Galaxy, Valley, OpArt, Bonfire,
+             Mandel, Lava, Tesla, Window, Life, Jelly, Aurora, Warp, Snow, Helix, Fireworks, Gears, Pendulums, Spiro,
+             Orrery, Flock, Koi, Shore, Grove, Cumulus, Radar, Zen, Plankton, Neon, Clock, Truchet, Isobands, Glass,
+             Chroma, Guilloche, Weave, Quasi, Cyclic, Wallpaper, Droste, HexPulse, Ribbons, Moire, Copper, Streams,
+             Girih, Marbling, Dial]
 AUDIO = [Milk, MilkTunnel, MilkFlame, MilkMirror, MilkEcho, Superscope, Pulse, Spectrum, Scope, Waterfall, Prism, Rain, Spores, Lissajous, NightDrive, Tempo]
-OURS = OURS + AUDIO + [Cable]
-# Our own patterns on the Patternflow shelf, each placed after the preset of SeungHun's it riffs on
-ORIGINALS = [(BitTunnel, "pf 0521"), (Obra, "pf 0522"), (Riso, "pf 0528"), (Strange, "pf Lissajous Weave"), (PixelSort, "pf 0519-2"),
-             (Moon, "pf Poincaré Sphere"), (Smoke, "pf Vector Field Flow"),
-             (Sea, "pf Midsummer Sea"),
-             (Caustics, "pf 0530"), (Galaxy, "pf Chromatic Vortex"),
-             (Valley, "pf 0624"), (OpArt, "pf Warped Wave"),
-             (Bonfire, "pf Firefly Hollow"),
-             (Mandel, "pf Retro Digital Tapestry"), (Lava, "pf 0520"),
-             (Tesla, "pf MagVortex"), (Window, "pf 0609"),
-             (Life, "pf TileWaves"), (Jelly, "pf 0529"),
-             (Aurora, "pf 0602"), (Warp, "pf 0510"),
-             (Snow, "pf 0515-3"), (Helix, "pf 0512"),
-             (Fireworks, "pf a big hit"), (Gears, "pf Origin"),
-             (Pendulums, "pf Wave Saw"), (Spiro, "pf Lissajous Weave"),
-             (Orrery, "pf 0513"), (Flock, "pf Vector Field Flow"),
-             (Koi, "pf 0614-2"), (Shore, "pf Midsummer Sea"),
-             (Grove, "pf 0601"), (Cumulus, "pf 0517"),
-             (Radar, "pf 0614"), (Zen, "pf 0619"),
-             (Plankton, "pf 0526"), (Neon, "pf 0622"),
-             (Clock, "pf 0515-4"),
-             (Truchet, "pf 0514"), (Isobands, "pf 0531"),
-             (Glass, "pf 0601"), (Chroma, "pf Retro Digital Tapestry"),
-             (Guilloche, "pf Poincaré Sphere"), (Weave, "pf 0511"),
-             (Quasi, "pf 0515-4"), (Cyclic, "pf TileWaves"), (Wallpaper, "pf 0619"),
-             (Droste, "pf Chromatic Vortex"), (HexPulse, "pf 0528"), (Ribbons, "pf Wave Saw"),
-             (Moire, "pf 0515"), (Copper, "pf 0511"), (Streams, "pf Vector Field Flow"),
-             (Girih, "pf 0514"), (Marbling, "pf 0520"), (Dial, "pf 0614")]
+OURS = PLAY + ORIGINALS + AUDIO + [Cable]
 
-
-def _shelf(presets):
-    out = list(presets)
-    for cls, after in ORIGINALS:
-        names = [d.name for d in out]
-        out.insert(names.index(after) + 1 if after in names else len(out), cls)
-    return out
-
-
-# upstream Patternflow's presets, after ours, with our originals among them; then the community's patterns
-ALL = OURS + _shelf(upstream.demos()) + community.demos()
+# Upstream Patternflow's presets (SeungHun's), ours and the community's, sorted onto the shelves in menu order
+ALL = sorted(upstream.demos() + OURS + community.demos(), key=lambda d: list(SHELF_NAMES).index(d.group))

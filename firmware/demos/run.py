@@ -17,8 +17,8 @@ Audio (what this machine is playing, by default; previews take --audio file:PATH
 
 The box's buttons, left to right: previous, select (the menu), next, sleep. The bench has
 none, so its terminal stands in: , previous, Enter select, . next, s sleep. In the menu k0
-picks the demo, k1 the shelf, k3 sets brightness, k2 lets the music turn the upstream
-patterns' knobs.
+picks the demo, k1 the shelf, k3 sets brightness, k2 lets the music turn the
+patterns' knobs (SeungHun's, the community's and our originals).
 """
 import argparse
 import glob
@@ -70,7 +70,7 @@ def main():
                         "preview:FILE.gif (default: $PF_OUT, or auto)")
     p.add_argument("--demo", default="0", help="start demo, by name or index")
     p.add_argument("--only", default="",
-                   help="limit the demos: shelves, comma-separated (play,audio,cable,patternflow,community,community-1to1), or 'upstream' for "
+                   help="limit the demos: shelves, comma-separated (patternflow,community-1to1,community,patternflood,audio,cable), or 'upstream' for "
                         "SeungHun's presets alone (default: all)")
     p.add_argument("--fps", type=float, default=None, help="default 60, or 20 for previews")
     p.add_argument("--audio", default=None,

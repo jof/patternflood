@@ -8,8 +8,8 @@ Interactive demos for the 2×2 (128 × 128), written once and run in either plac
 There are 140: 92 of ours, plus all 48 of upstream Patternflow's patterns, run
 natively ([below](#upstream-patternflow-presets)). That's the 34 firmware presets and
 our ports of the 14 that upstream only had as web sources. Fifty-six of ours are
-[Patternflow-style originals](#our-originals-on-the-patternflow-shelf), shelved among SeungHun's.
-On top of those, the [community's patterns](#community-patterns) have a shelf of their own:
+[Patternflow-style originals](#our-originals), on the Patternflood shelf with our play demos.
+On top of those, the [community's patterns](#community-patterns) have shelves of their own:
 all 288 public patterns on community.patternflow.work as of 2026-10-27. The 211 with a firmware
 header are compiled, and the 77 that are JavaScript only run in upstream's own harness under
 node. One of those has a bug of its own and is left off, so 287 are on the shelf.
@@ -33,7 +33,7 @@ path they're on: the Pi 5 port is a change of flags.
 ./run.py --demo etch --knobs auto --out preview:/tmp/etch.gif --seconds 8
 ./run.py --list
 ./run.py --only upstream                   # just SeungHun's presets (native code: the Pi Zero's choice)
-./run.py --only play,audio,cable           # just these shelves
+./run.py --only patternflood,audio,cable   # just these shelves
 ```
 
 Needs `numpy` and `pyserial` (bench only). Text (demo names, labels) needs
@@ -51,23 +51,25 @@ in stands in: `,` previous, Enter select, `.` next, `s` sleep. The demos sit on 
 
 | Shelf | What's on it |
 |---|---|
-| **Play** | our interactive demos: the knob toys and games |
-| **Audio** | visualizers, and some of the Play demos played by the music |
+| **Patternflow** | SeungHun's 48 patterns, upstream's own, at 128 × 128 ([below](#upstream-patternflow-presets)) |
+| **Community 1:1** | the community wall's patterns as published, at their own canvas, centred, most liked first ([below](#community-patterns); only once synced) |
+| **Community** | the same patterns, each at its best: at 128 × 128 where that's better |
+| **Patternflood** | ours, unique to this repo: the knob toys and games, then our [originals](#our-originals) in Patternflow's manner, then [Solo Jazz](#our-own-patterns-for-the-wall) |
+| **Audio** | visualizers, and some of our demos played by the music |
 | **Interdimensional Cable** | a TV surfing very weird channels from other dimensions ([below](#interdimensional-cable)) |
-| **Patternflow** | upstream's 48 patterns |
-| **Community** | the community wall's patterns, most liked first, each at its best: at 128 × 128 where that's better ([below](#community-patterns); only once synced) |
-| **Community 1:1** | the same patterns as published, at their own canvas, centred |
 
 In the menu:
 - **Previous and next**, or **k1**, move between shelves, back to wherever you were on each.
 - **k0** steps along the shelf. Demos switch live behind the overlay and keep their state.
   Spin it to skip ahead (`rt.accel`), which is how to cross the Community shelf.
 - **k3** sets brightness (0.3 at start).
-- **k2,** on the Patternflow and Community shelves only, turns *audio knobs* on or off (below).
+- **k2,** on a pattern that takes it (SeungHun's, the community's and our originals), turns *audio knobs* on
+  or off (below).
 - **A click on any knob** closes the menu, or it closes after 6 s with no input.
 
-A demo's shelf is its class's `group`: `play` (the default), `audio`, `cable`, `patternflow`, `community` or
-`community-1to1`.
+A demo's shelf is its class's `group`: `patternflow`, `community-1to1`, `community`, `patternflood` (the
+default), `audio` or `cable`. The menu order is `SHELF_NAMES`'s, in `pfd/runtime.py`, and the box starts on
+the first demo of the first shelf.
 
 The power cap is the same as `knob_renderer.py`'s and still uncalibrated: 1.2 A
 a panel and 4 A in total, from estimated duty.
@@ -269,7 +271,7 @@ And AVS:
 |---|---|---|
 | **Superscope** | point shapes made of the music, after AVS superscopes: spectrum ring, a tunnel of waveform rings launched on each beat, a torus knot breathing with the bass, a sphere pushed out by the spectrum; the shape changes each phrase | k0 shape, k1 hue, k2 trails, k3 spin |
 
-Some of our Play demos, played by the music (`pfd/demos/played.py`). They keep their own knobs, so
+Some of our play demos, played by the music (`pfd/demos/played.py`). They keep their own knobs, so
 you can still steer, and the music does what a hand would:
 
 | Demo | From | What the music does |
@@ -454,11 +456,12 @@ into `upstream_host/web_ports/preset_*.h`. `build.py` adds them to the library.
 The community's patterns on patternflow.work have a shelf of their own: [Community
 patterns](#community-patterns).
 
-### Our originals on the Patternflow shelf
+### Our originals
 
 Thirty-eight patterns of ours, in Patternflow's manner: each runs by itself, and the four knobs turn
 its qualities, not a game. They're in our own style, which is print-shop and demoscene,
-and each sits on the shelf right after the preset of SeungHun's it riffs on.
+and each riffs on one of SeungHun's presets (*After*). They're on the Patternflood shelf, after
+the play demos, so the Patternflow shelf is SeungHun's alone.
 
 | Demo | After | What it is | Knobs (turn; click) |
 |---|---|---|---|
@@ -502,7 +505,7 @@ and each sits on the shelf right after the preset of SeungHun's it riffs on.
 | **Strange** | pf Lissajous Weave | A Clifford attractor drawn as the glowing density of 30 000 points, coloured by which way each point jumped. A form change fades out, jumps, and fades in, because gliding between forms passes through dull periodic orbits. | k0–k3 bend its a, b, c, d. Click: k0 next form, k1 colours, k2 freeze the drift, k3 long glow. |
 
 Left alone, each moves on by itself: a new form, shape or scene every 14–40 s. The menu's
-*audio knobs* switch (k2 on this shelf) works for them too. With it on, the music's mid,
+*audio knobs* switch (k2) works for them too. With it on, the music's mid,
 level, bass and treble envelopes add to what the knobs set (the same four upstream's audio
 edition reads). Each beat pulses them, each 8-bar phrase brings the next form, shape, picture,
 world or scene (a gust in Smoke, lightning at Sea), in Bit Tunnel each bar steps the bit mask,
@@ -553,6 +556,7 @@ SeungHun's presets do, one small shared library each. The rest run under node, i
 Lab's own harness ([below](#the-javascript-only-patterns)).
 
 ```sh
+./upstream_host/community.py pull     # the latest from the wall: sync, list what's new, changed or gone, check those
 ./upstream_host/community.py sync     # the wall: headers, scripts, titles, authors, likes; upstream main's cores and harness
 ./upstream_host/community.py check    # each through a scripted player: C++ under AddressSanitizer, JS sandboxed (11 s on the bench PC)
 ./upstream_host/community.py build    # compile what's new (run.py does this itself, 6 s on the bench PC for all)
@@ -562,8 +566,20 @@ Lab's own harness ([below](#the-javascript-only-patterns)).
 ./run.py --only community
 ```
 
-`sync` needs node 22.6 or later, to strip the harness's TypeScript; the bench PC has 24. Re-run `sync`
-and `check` to pick up new patterns, then `../pi-controller/update_pi.py` to send them to the
+`sync` needs node 22.6 or later, to strip the harness's TypeScript; the bench PC has 24.
+
+**Pulling the latest** is two commands, on the bench PC:
+
+```sh
+./upstream_host/community.py pull     # 84 s on 2026-10-30, 7 new
+../pi-controller/update_pi.py
+```
+
+`pull` names each new, changed and gone pattern and checks the new and changed ones. A new one
+needs nothing by hand for Community 1:1: it runs as published, with only the mechanical fixups
+below. Two things are by eye, and both can wait: whether it lies on its side (`TURN`), and what
+Community shows of it (the [review](#two-versions-as-published-and-128--128); unreviewed, it's as
+published there too). `update_pi.py` sends the synced sources to the
 box. It compiles only what's new or changed, over ssh, before the restart. All of them from
 scratch (211 as published and 185 at 128 × 128) take 138 s on the Pi 5.
 
@@ -727,9 +743,10 @@ line-for-line twin rather than left to the Lab's AI conversion. Both are CC BY-S
   side. The script declares `@matrix 64x128`, the stock panel stood upright, which is what the
   wall expects. The header's `FRAME_W`/`FRAME_H` say the same, and `community.py` raises them to
   128 as it does for the wall's headers.
-- **On the box** they lead both shelves: at 128 × 128 on Community, as written (centred) on
-  Community 1:1. There they keep their own time: the menu's audio knobs leave them alone. They
-  need a `sync`, for upstream main's cores.
+- **On the box** they're on the Patternflood shelf, at 128 × 128, after our originals, since
+  they're ours rather than the wall's. There they keep their own time: the menu's audio knobs
+  leave them alone. Once one is on the wall, a `pull` brings it to the community shelves too.
+  They need a `sync`, for upstream main's cores.
 - **Hooks** beyond upstream's API, which the firmware never calls. `community.py` exports each one
   a header defines (`HOOKS`), and `pfd/community.py` (`Original`) uses them:
   - `void knobLights(float out[4][3])`, 0..1 RGB per knob, exported as `pf_lights`: the knobs' lights.
@@ -766,7 +783,7 @@ played like an instrument (for VJing).
 | k2 Zoom | ½× (the whole paper) to 3×, as painted in the middle | mirror: off, mirror, kaleidoscope | white, teal, purple for the mirror; brighter further from 1× |
 | k3 Spin | either way, up to a turn every two bars; still in the middle, where it eases upright | paper: night (the start) or cream | the paper's colour, pulsing as it spins |
 
-- As shared and on the Community shelves it keeps its own time and hears nothing, and nothing in
+- As shared and on the Patternflood shelf it keeps its own time and hears nothing, and nothing in
   it pulses to a beat: in 6 s at full Jive, the frame-to-frame change has no periodicity at all
   (its autocorrelation falls away smoothly, with no peak at the pace's beat or anywhere else). (On a stock
   device, upstream's audio edition can still turn its knobs; they ease, so it drifts rather than
@@ -853,9 +870,9 @@ direct cable, or a gigabit switch port on the same LAN.
 
 ## Adding a demo
 
-Subclass `pfd.runtime.Demo` in `pfd/demos/`, and add it to `ALL` in `pfd/demos/__init__.py`.
-For the Patternflow shelf, subclass `Original` (`pfd/demos/original.py`) instead, and add it to
-`ORIGINALS` with the preset it should follow.
+Subclass `pfd.runtime.Demo` in `pfd/demos/`, and add it to `PLAY` (or `AUDIO`, with `group = "audio"`)
+in `pfd/demos/__init__.py`. For a pattern in Patternflow's manner, subclass `Original`
+(`pfd/demos/original.py`) instead, and add it to `ORIGINALS`.
 The interface is in `pfd/runtime.py`'s docstring. `render()` returns float RGB in perceptual
 units; the runtime applies gamma, brightness and the current cap. Check it with a preview
 before it goes near the panels:

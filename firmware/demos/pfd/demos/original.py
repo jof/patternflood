@@ -1,8 +1,8 @@
-"""Base for our own patterns on the Patternflow shelf.
+"""Base for our own patterns in Patternflow's manner, on the Patternflood shelf.
 
-They sit among SeungHun's presets and follow the shelf's rules: four knobs, each
-turning one quality of a pattern that runs by itself. The menu's "audio knobs"
-switch (k2 on that shelf) works for them too. With it on, `self.sound` holds
+They follow the rules of SeungHun's presets: four knobs, each turning one quality
+of a pattern that runs by itself. The menu's "audio knobs" switch (k2) works for
+them too. With it on, `self.sound` holds
 four envelopes (mid, level, bass, treble, as upstream's audio edition reads
 them) and `self.beat` the beat's pulse, and each pattern adds them to what its
 knobs set. `self.on_bar` and `self.on_phrase` are true for the frame a bar or an
@@ -18,7 +18,7 @@ ATTACK_S, RELEASE_S = 0.04, 0.35
 
 
 class Original(Demo):
-    group = "patternflow"
+    audio_knobs_ok = True
 
     def __init__(self, rt):
         super().__init__(rt)

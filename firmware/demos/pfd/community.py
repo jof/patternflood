@@ -7,9 +7,9 @@ header are compiled, each into its own library, and run as an upstream preset ru
 its own canvas, centred (turned upright if community.py's TURN says it lies on its side),
 and most also at 128 x 128: the same code given the bigger square, or our port of it. Two
 shelves: COMMUNITY shows each at its best, as community_review.json chose, and COMMUNITY
-1:1 shows them all as published. Most liked first, after our own patterns for the wall
-(upstream_host/originals/), which lead both shelves. With nothing synced, the shelf isn't
-there. Node runs only sandboxed, with no network (see jsrun.mjs); where that can't be
+1:1 shows them all as published, with only the mechanical fixups. Most liked first. Our own
+patterns for the wall (upstream_host/originals/) go on the PATTERNFLOOD shelf instead, at
+128 x 128. With nothing synced, the shelves aren't there. Node runs only sandboxed, with no network (see jsrun.mjs); where that can't be
 arranged, the shelf holds just the compiled ones.
 """
 import ctypes
@@ -309,18 +309,17 @@ class Original(Upstream):
 
 
 def _originals(cm):
-    """Our own patterns for the wall (upstream_host/originals/) -> (best, as published, audio): leading the
-    COMMUNITY shelf at 128 x 128 and COMMUNITY 1:1 as written (centred), both keeping their own time; and, for
-    a header with hostAudio(), a copy on the AUDIO shelf playing to the music."""
+    """Our own patterns for the wall (upstream_host/originals/) -> (ours, audio): on the PATTERNFLOOD shelf
+    at 128 x 128, keeping their own time; and, for a header with hostAudio(), a copy on the AUDIO shelf
+    playing to the music. (As written, for the wall, they're for `community.py twin`.)"""
     try:
         built = cm.originals(log=log)
     except Exception as e:
         log(f"community: originals: {e!r}")
-        return [], [], []
-    shelves = {"community": [], "community-1to1": [], "audio": []}
+        return [], []
+    shelves = {"patternflood": [], "audio": []}
     for e, paths in built:
-        for shelf, name, about in (("community", "big", " At 128 x 128, in its own time."),
-                                   ("community-1to1", "native", " In its own time."),
+        for shelf, name, about in (("patternflood", "big", " At 128 x 128, in its own time."),
                                    ("audio", "audio", " Playing to the music: the beat tracker's tempo and "
                                     "beats, a drop is a break, loudness adds jive. k0 half, straight or double "
                                     "time; click k0 to tap the tempo.")):
@@ -338,13 +337,13 @@ def _originals(cm):
                 type(f"PFO_{e['id']}_{name}", (Original,), {"lib": lib, "index": 0, "name": e["title"],
                                                              "group": shelf, "blurb": blurb,
                                                              "listens": name == "audio"}))
-    return shelves["community"], shelves["community-1to1"], shelves["audio"]
+    return shelves["patternflood"], shelves["audio"]
 
 
 def demos():
     """The community's patterns, twice: the COMMUNITY shelf (each at its best: its 128 x 128 version
-    where the review chose one, else as published) and COMMUNITY 1:1 (all as published). [] if none
-    have been synced."""
+    where the review chose one, else as published) and COMMUNITY 1:1 (all as published); then our
+    originals for the wall. [] if none have been synced."""
     cm = _builder()
     if not (cm.SRC / "index.json").exists():
         return []
@@ -381,7 +380,7 @@ def demos():
     log(f"community: {len(built)} compiled and {len(scripts)} JavaScript patterns, {n_big} shown at 128 x 128")
     out.sort(key=lambda o: -o[0]["likes"])
     chosen = cm.review()
-    best, as_published, listening = _originals(cm)
+    best, as_published = [], []
     for e, versions in out:
         by = f" by @{e['author']}" if e["author"] else ""
         port = f", ported by @{e['ported_by']}" if e.get("ported_by") else ""
@@ -396,4 +395,4 @@ def demos():
             attrs["blurb"] = f"Community pattern{by}{port}.{js}{size}{knobs}"
             (best if shelf == "community" else as_published).append(
                 type(f"PFC_{e['id']}_{name}", (JSPattern if "host" in attrs else Upstream,), attrs))
-    return best + as_published + listening
+    return as_published + best + sum(_originals(cm), [])
