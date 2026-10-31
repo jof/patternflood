@@ -7,10 +7,11 @@ header are compiled, each into its own library, and run as an upstream preset ru
 its own canvas, centred (turned upright if community.py's TURN says it lies on its side),
 and most also at 128 x 128: the same code given the bigger square, or our port of it. Two
 shelves: COMMUNITY shows each at its best, as community_review.json chose, and COMMUNITY
-1:1 shows them all as published, with only the mechanical fixups. Most liked first. Our own
-patterns for the wall (upstream_host/originals/) go on the PATTERNFLOOD shelf instead, at
-128 x 128. With nothing synced, the shelves aren't there. Node runs only sandboxed, with no network (see jsrun.mjs); where that can't be
-arranged, the shelf holds just the compiled ones.
+1:1 shows them all as published, with only the mechanical fixups. COMMUNITY is most liked
+first, and COMMUNITY 1:1 newest first, so what a pull brings leads it. Our own patterns for
+the wall (upstream_host/originals/) go on the PATTERNFLOOD shelf instead, at 128 x 128. With
+nothing synced, the shelves aren't there. Node runs only sandboxed, with no network (see
+jsrun.mjs); where that can't be arranged, the shelves hold just the compiled ones.
 """
 import ctypes
 import importlib.util
@@ -393,6 +394,8 @@ def demos():
             size = (" Enlarged for this panel." if chosen.get(e["id"]) == "port" else " At 128 x 128.") \
                 if name == "big" else ""
             attrs["blurb"] = f"Community pattern{by}{port}.{js}{size}{knobs}"
-            (best if shelf == "community" else as_published).append(
-                type(f"PFC_{e['id']}_{name}", (JSPattern if "host" in attrs else Upstream,), attrs))
+            cls = type(f"PFC_{e['id']}_{name}", (JSPattern if "host" in attrs else Upstream,), attrs)
+            best.append(cls) if shelf == "community" else as_published.append((e.get("created") or "", cls))
+    # COMMUNITY 1:1 newest first, so a pull's arrivals lead it (same day: most liked first, as sorted above)
+    as_published = [cls for _, cls in sorted(as_published, key=lambda p: p[0], reverse=True)]
     return as_published + best + sum(_originals(cm), [])

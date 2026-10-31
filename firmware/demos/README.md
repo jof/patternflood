@@ -52,8 +52,8 @@ in stands in: `,` previous, Enter select, `.` next, `s` sleep. The demos sit on 
 | Shelf | What's on it |
 |---|---|
 | **Patternflow** | SeungHun's 48 patterns, upstream's own, at 128 × 128 ([below](#upstream-patternflow-presets)) |
-| **Community 1:1** | the community wall's patterns as published, at their own canvas, centred, most liked first ([below](#community-patterns); only once synced) |
-| **Community** | the same patterns, each at its best: at 128 × 128 where that's better |
+| **Community 1:1** | the community wall's patterns as published, at their own canvas, centred, newest first, so a `pull`'s arrivals lead it ([below](#community-patterns); only once synced) |
+| **Community** | the same patterns, most liked first, each at its best: at 128 × 128 where that's better |
 | **Patternflood** | ours, unique to this repo: the knob toys and games, then our [originals](#our-originals) in Patternflow's manner, then [Solo Jazz](#our-own-patterns-for-the-wall) |
 | **Audio** | visualizers, and some of our demos played by the music |
 | **Interdimensional Cable** | a TV surfing very weird channels from other dimensions ([below](#interdimensional-cable)) |
@@ -617,7 +617,7 @@ How the compiled ones differ from the presets:
   shelf. All 211 pass at their own canvas. (One, *Day and Night dreamy beach*, overflows a
   global at 128 × 128, which is a reason not to fill the square.) The verdicts are keyed by each
   header's hash, so a header that changed since is trusted until the next check.
-- **Menu blurb:** author, porter if any, and knob labels. Shelf order is most liked first.
+- **Menu blurb:** author, porter if any, and knob labels. Community is most liked first; Community 1:1 newest first (by the date posted, then likes).
 
 ### Two versions: as published, and 128 × 128
 
