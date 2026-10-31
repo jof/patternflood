@@ -19,6 +19,10 @@ The box's buttons, left to right: previous, select (the menu), next, sleep. The 
 none, so its terminal stands in: , previous, Enter select, . next, s sleep. In the menu k0
 picks the demo, k1 the shelf, k3 sets brightness, k2 lets the music turn the
 patterns' knobs (SeungHun's, the community's and our originals).
+
+On the box (or with --state FILE) it starts where it was left, after a restart or a power
+cut: the demo, each shelf's place, the brightness and each demo's knobs. --demo and --bright
+then only say where a fresh one starts; --state none starts afresh and keeps nothing.
 """
 import argparse
 import glob
@@ -33,6 +37,7 @@ from pfd.demos import ALL                   # noqa: E402
 from pfd.audio import audio_source          # noqa: E402
 from pfd.io import button_source, frame_sink, knob_source  # noqa: E402
 from pfd.runtime import Runtime             # noqa: E402
+from pfd import session                     # noqa: E402
 from pfd.upstream import Upstream           # noqa: E402
 
 
@@ -79,6 +84,9 @@ def main():
                    help="seconds to hold audio back so beats land when heard (default 0.15 for Bluetooth output, else 0)")
     p.add_argument("--bright", type=float, default=None, help="0..1, default 0.3 (1.0 for previews)")
     p.add_argument("--seconds", type=float, default=None, help="stop after this long (previews default to 8)")
+    p.add_argument("--state", default=None,
+                   help="FILE to keep where it was left (demo, shelves, brightness, knobs) | none "
+                        "(default: $PF_STATE, else session.json in systemd's StateDirectory, else none; none for previews)")
     p.add_argument("--list", action="store_true", help="list the demos and exit")
     args = p.parse_args()
 
@@ -94,6 +102,8 @@ def main():
     fps = args.fps or (20.0 if preview else 60.0)
     bright = args.bright if args.bright is not None else (1.0 if preview else 0.3)
     seconds = args.seconds if args.seconds is not None else (8.0 if preview else None)
+    state = args.state or (None if preview else session.default_path())
+    state = None if state == "none" else state
 
     def on_term(*_):
         raise KeyboardInterrupt         # systemd stop: blank the display on the way out
@@ -105,7 +115,7 @@ def main():
     spec = args.audio or ("none" if preview else "pulse")
     audio = audio_source(spec, delay=args.audio_delay, preview=preview)
     Runtime(demos, knobs, out, fps=fps, bright=bright, start=start, duration=seconds, audio=audio,
-            buttons=buttons).run()
+            buttons=buttons, state=state).run()
 
 
 if __name__ == "__main__":

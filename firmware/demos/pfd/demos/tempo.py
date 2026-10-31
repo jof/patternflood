@@ -20,6 +20,7 @@ class Tempo(Demo):
     name = "Tempo"
     group = "audio"
     flare = False                 # a diagnostic display: no flare
+    remembers = False             # its input is taps on the live beat tracker: not for replaying
     blurb = "The beat tracker, shown. k1 click taps tempo, k3 click marks the one, k2 A/V delay, k0 shifts the phrase grid."
 
     def __init__(self, rt):

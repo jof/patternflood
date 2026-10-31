@@ -22,12 +22,14 @@ import select
 import signal
 import subprocess
 import time
+from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 
 from .draw import N
 from .io import log
+from . import session
 from .runtime import Demo
 from .upstream import BUILD, Upstream, knobs_blurb, open_lib
 
@@ -184,7 +186,13 @@ class JSPattern(Upstream):
         self.waiting = False            # a frame of ours is in flight
         self.elapsed = 0.0              # time since our last request: the next one's dt
         self.frames, self.t_shown, self.rate_logged = 0, 0.0, False     # for the one-off frame-rate log
+        self.replaying = deque()        # saved input still to send (pfd.session), a frame of it per request
         self._load()
+
+    def replay(self, records):
+        """node draws in its own time, so the saved input goes with the next requests instead. Runs of
+        turns go as one: live, node gets whatever piled up while it drew, so that's no different."""
+        self.replaying.extend(session.merge_turns(records))
 
     def _load(self):
         self.generation = self.host.generation
@@ -224,6 +232,8 @@ class JSPattern(Upstream):
             self.waiting = False
             if got is not LOST and not self._show(*got):
                 return
+        if self.replaying and not any(self.deltas) and not any(self.pressed):
+            session.apply(self, self.replaying.popleft(), [False] * 4)
         req = {"op": "frame", "key": self.key, "dt": self.elapsed, "d": list(self.deltas), "p": list(self.pressed),
                "h": [int(self.rt.held(k)) for k in range(4)]}
         try:
@@ -282,7 +292,7 @@ class Original(Upstream):
 
     def press(self, k):
         if self.feeds and k == 0:
-            if self.rt.audio_in is not None:
+            if self.rt.audio_in is not None and not self.rt.replaying:
                 self.rt.audio_in.tap()          # the tracker takes three taps or more, and holds them 8 s
             self.t_tap = self.t_touch[0] = self.rt.t
             return

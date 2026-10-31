@@ -598,6 +598,8 @@ journalctl -u patternflood -f   # "knobs: 4 found", "buttons: 4 found", then fra
 
 Settings (start demo, brightness, which shelves) are in
 `/etc/default/patternflood`. Edit, then `sudo systemctl restart patternflood`.
+The box comes back where it was left, knobs and all; the start demo and brightness
+there are for a fresh box, or after deleting `/var/lib/patternflood/session.json`.
 
 **Switching it off at the wall is safe** once it's running: the journal is in
 RAM, writes are rare, and it was tested by forced reboots. Avoid it during an

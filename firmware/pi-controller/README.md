@@ -42,6 +42,7 @@ Pi Zero W, the first controller, runs the armhf image with a USB gigabit adapter
 | Code | `/opt/patternflood/demos` (`run.py`, `pfd/`, the upstream presets' build files and source tree) and `/opt/patternflood/colorlight` (`knob_renderer`, `r75_frame`, `seesaw`), as in the repo |
 | Service | `patternflood.service` runs `demos/run.py --knobs i2c:1 --out udp:192.168.75.39 --fps 60 --audio none` as user `patternflood` (group i2c), CPU governor `performance`, restarts forever. On its first start after g++ lands it compiles upstream's presets (a few minutes on a Zero W, behind splash step 5) |
 | Settings | `/etc/default/patternflood`: which demos (`PF_ONLY`), start demo, fps, brightness, knob and frame specs. Edit it, then `sudo systemctl restart patternflood` |
+| Where it was left | `/var/lib/patternflood/session.json`: the demo, shelves, brightness and knobs, saved 2 s after a change; the renderer starts there rather than on `PF_DEMO`/`PF_BRIGHT`. Delete it to start afresh |
 | Speed on the Zero W | SeungHun's presets (`PF_ONLY=upstream`) run at about 12 fps with the knobs polled; our numpy demos at 2–7. Sending (69 UDP packets a frame through the USB adapter) and the knob thread are the fixed costs. The Pi 5 is the real fix |
 | Boot splash | `pf-splash` moves the card's progress bar on (below); needs `arm-linux-gnueabihf-gcc` (Zero W) or `aarch64-linux-gnu-gcc` (Pi 5) on the provisioning host |
 

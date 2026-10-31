@@ -12,11 +12,13 @@
 PF_ONLY=
 # Demo to start on, by name or index within PF_ONLY's list
 # (see: python3 /opt/patternflood/demos/run.py --only "$PF_ONLY" --list).
+# Only for a fresh box: after that it starts where it was left (demo, shelves, brightness, knobs),
+# kept in /var/lib/patternflood/session.json. Delete that file to start over here.
 PF_DEMO=0
 # Frame rate to aim for. The Pi 5 holds 60 on all but the heaviest demos (Helix, Moon: high 50s);
 # a Pi Zero W falls well short of 30.
 PF_FPS=60
-# Starting brightness, 0..1 (k3 changes it in the menu).
+# Starting brightness, 0..1, for a fresh box as PF_DEMO (k3 changes it in the menu, and that's kept).
 PF_BRIGHT=0.3
 # Knobs: i2c[:BUS] (the 4991 chain on the header), or none.
 PF_KNOBS=i2c:1
