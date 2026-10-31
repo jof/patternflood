@@ -29,7 +29,9 @@ connectors. The free end goes to the Pi's 40-pin header.
                   ...          buttons: §4
 ```
 
-- **Cable:** a STEMMA QT / Qwiic to female-socket cable (Adafruit 4397).
+- **Cable:** a STEMMA QT / Qwiic to female-socket cable (Adafruit 4397), extended
+  to about 300 mm. The 4397 is 150 mm, and the run from the top-right encoder,
+  up through the shelf and around the tray to the header, is about 270 mm.
 - **⚠ 3.3 V only.** Each 4991 pulls SDA and SCL up to its own supply. On 5 V
   it would put 5 V on GPIO2/3, which are not 5 V-tolerant.
 - **Addresses:** 0x37, 0x38, 0x39 and 0x3A (k0–k3), set by the solder jumpers
