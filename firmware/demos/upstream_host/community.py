@@ -184,7 +184,7 @@ def pull(jobs=None):
     if new:
         print("The new ones are on Community 1:1 as published, and on Community as published until reviewed "
               f"({REVIEW.name}); one lying on its side needs TURN.")
-    print("To send them to the box: ../../pi-controller/update_pi.py")
+    print("To send them to the box: " + os.path.relpath(HERE.parent.parent / "pi-controller" / "update_pi.py"))
 
 
 def fixup(text):
