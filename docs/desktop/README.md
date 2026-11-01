@@ -48,6 +48,7 @@ How it got this way. Useful if you want to change the design.
 | [`driver-colorlight.md`](driver-colorlight.md) | Why a Colorlight and a Pi; the power budget and cap; the measured 5A-75B; the electronics tray |
 | [`enclosure-lasercut.md`](enclosure-lasercut.md) | The finger-joint box: laminations, encoder bores, panel mounting, the back cover, material choice; measured panel data (§11) |
 | [`onshape-workflow.md`](onshape-workflow.md) | The Onshape model: FeatureScript, variables, proxies, exporting the cut files and art |
+| [`ideas.md`](ideas.md) | Ideas for Rev 3 and later: mic and audio jacks, a camera, sensors, haptics, OSC, USB-C power, lock slots |
 
 ## History
 
