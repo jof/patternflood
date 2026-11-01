@@ -28,3 +28,6 @@ PF_BUTTONS=gpio
 PF_OUT=udp:192.168.75.39
 # Audio for the visualizers: none, alsa[:DEVICE] or pulse[:SOURCE]. The box has no microphone yet.
 PF_AUDIO=none
+# The web remote: the panel live, the knobs, the buttons and every shelf, from a browser on the
+# same network (http://patternflood.local/). [HOST]:PORT, or none. It has no login.
+PF_WEB=:80

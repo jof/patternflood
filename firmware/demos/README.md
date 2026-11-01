@@ -18,7 +18,7 @@ node. One of those has a bug of its own and is left off, so 287 are on the shelf
 |---|---|---|---|
 | **Bench** | FeatherS3 knob bridge on the PC's USB (`serial:`) | UDP straight to the card on the PC's Ethernet (`auto`, `udp`); or through another host on the card's link (`pipe:HOST`) | a PC |
 | **Production** | 4991s on the Pi 5's I²C (`i2c:1`) | the Pi's own Ethernet (`udp:`) | Pi 5 |
-| **No hardware** | a random or scripted player (`auto`, `script:`) | an animated GIF (`preview:`) | anywhere |
+| **No hardware** | a random or scripted player (`auto`, `script:`), or a browser (`--web`) | an animated GIF (`preview:`), or a browser (`--out none --web`) | anywhere |
 
 The pipe host is a dumb pipe. `pipe:HOST` sends `pfd/r75_pipe.py`'s source on the ssh
 command line, so nothing is installed there. The pipe then turns
@@ -34,6 +34,7 @@ path they're on: the Pi 5 port is a change of flags.
 ./run.py --list
 ./run.py --only upstream                   # just SeungHun's presets (native code: the Pi Zero's choice)
 ./run.py --only patternflood,audio,cable   # just these shelves
+./run.py --web :8080 --out none --knobs none   # no hardware: http://localhost:8080/ is the box
 ```
 
 Needs `numpy` and `pyserial` (bench only). Text (demo names, labels) needs
@@ -88,6 +89,38 @@ shuffle each start) and Tempo (taps on the live beat tracker).
 
 The power cap is the same as `knob_renderer.py`'s and still uncalibrated: 1.2 A
 a panel and 4 A in total, from estimated duty.
+
+## Web remote
+
+<img src="../../docs/desktop/img/build/web-remote.jpg" width="100%" alt="The web remote: the box drawn in birch, with the panel live, the knobs lit in the pattern's colours, and the shelves beside it">
+
+**http://patternflood.local/**, from a phone or a computer on the same network, is the box in a
+browser: the panel live (30 frames a second, each LED drawn round, as on the P2s), the four knobs lit
+as the pattern lights them, the four buttons, and every shelf with a picture of each demo. A tap on a
+picture puts that demo on. There's a search across all of them (by name, or an author's handle),
+brightness, the audio-knobs switch, a random pick from the list, full screen and a picture to save.
+
+- **A knob:** drag round it to turn it, a detent every 15°, as the 4991's 24 a turn. Tap it to click,
+  hold it to push (and drag while held to push-and-turn). A mouse wheel turns it; so do the arrow keys
+  when it has focus, with Space to push.
+- **The buttons:** as on the box, holding previous or next repeats. On a keyboard, as the bench's
+  terminal: `,` previous, Enter select, `.` next, `s` sleep.
+
+It is `pfd/web.py` and `pfd/web_static/`: a standard-library HTTP server on threads of its own, so the
+box needs nothing more installed. The page's input goes into a queue that the frame loop drains each
+frame, through the same path as the knobs and buttons, so it's kept in the session like theirs. While
+a page watches, the loop hands over each frame it shows (as the eye sees it, before the panel's gamma
+and brightness), and each page's thread sends the newest one, gzipped, dropping what it missed: a slow
+phone never holds up the panel. The Pi 5 holds 60 fps with two pages watching. A stream takes from
+30 KiB/s (Moon) to 1 MB/s (Riso's dither, which hardly compresses). The page stops it when it's hidden.
+
+`--web [HOST]:PORT` turns it on (`PF_WEB` on the box, `:80`; `none` turns it off). It has **no login**:
+anyone who can reach it can play.
+
+**The pictures** fill in as the box plays: a demo that's been on for 4 s, with no menu or banner over
+it, leaves one in `/var/cache/patternflood/thumbs` (`~/.cache/patternflood/thumbs` on the bench), once
+a run. `tools/thumbs.py` makes the lot at once, off-screen (about 6 s for all 729 on ash), to copy to
+the box; its docstring has the command.
 
 ## Knobs
 

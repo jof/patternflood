@@ -35,6 +35,9 @@ Rev 2.7 is the current one.
 
 A second, wall-sized project is at the concept stage ([below](#the-wall-project)).
 
+On the box's network, **http://patternflood.local/** is a [web remote](firmware/demos/README.md#web-remote):
+the panel live, the knobs and buttons, and every shelf of patterns, from a phone.
+
 ## Build one
 
 **[`docs/desktop/BUILD.md`](docs/desktop/BUILD.md)** is the build guide: the

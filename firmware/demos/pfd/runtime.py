@@ -117,8 +117,9 @@ class Knob:
 
 class Runtime:
     def __init__(self, demos, knobs, out, fps=60.0, bright=0.3, start=0, duration=None, audio=None, buttons=None,
-                 state=None):
+                 state=None, web=None):
         self.demo_classes = demos
+        self.web = web                  # pfd.web: the browser's remote, or None
         self.instances = {}
         self.knobs_in, self.buttons_in, self.out = knobs, buttons, out
         self.audio_in = audio
@@ -132,6 +133,9 @@ class Runtime:
         self.asleep = False
         self.t_repeat = [None] * 4      # previous/next held: when they next repeat
         self.t_banner = -10.0
+        self.t_on = 0.0                 # when the demo that's on came on (or the box woke)
+        self.raw_lights = _DARK_F
+        self.web_stats = {"fps": 0.0, "amps": 0.0, "cap": 1.0}
         self.index = start % len(demos)
         self.shelves = list(dict.fromkeys(d.group for d in demos))
         self.shelf_pos = {g: next(i for i, d in enumerate(demos) if d.group == g) for g in self.shelves}
@@ -167,7 +171,7 @@ class Runtime:
             records = self.inputs.get(session.key(cls)) if cls.remembers else None
             if records:
                 self._replay(demo, records)
-        self.t_banner = self.t
+        self.t_banner = self.t_on = self.t
         self._changed()
         return self.instances[i]
 
@@ -366,8 +370,61 @@ class Runtime:
 
     def _wake(self):
         self.asleep = False
-        self.t_banner = self.t                      # say what's on
+        self.t_banner = self.t_on = self.t          # say what's on
         log("awake")
+
+    def _web_command(self, c):
+        """A command from the web remote (pfd.web), on the frame loop's thread."""
+        op = c["op"]
+        if op == "turn":
+            self._event(("turn", c["k"], c["d"]))
+        elif op in ("down", "up"):
+            self._event((op, c["k"]))
+        elif op in ("bdown", "bup"):
+            self._event((op, c["b"]))
+        elif op == "goto":
+            if self.asleep:
+                self._wake()
+            if c["i"] != self.index:
+                self.index = c["i"]
+                self.shelf_pos[self.demo_classes[self.index].group] = self.index
+                self.demo = self._instance(self.index)
+            if self.menu:
+                self.t_menu_input = self.t
+        elif op == "bright":
+            self.bright = min(1.0, max(0.02, float(c["v"])))
+            self._changed()
+        elif op == "audio_knobs":
+            self.audio_knobs = bool(c.get("on"))
+            self._changed()
+        elif op == "sleep" and not self.asleep:
+            self.menu = False
+            self.asleep = True
+            log("sleep (web)")
+        elif op == "wake" and self.asleep:
+            self._wake()
+
+    def _web_state(self):
+        cls = self.demo_classes[self.index]
+        a = self.audio
+        return {"i": self.index, "menu": self.menu, "asleep": self.asleep, "bright": round(self.bright, 3),
+                "audio_knobs": self.audio_knobs, "audio_ok": bool(cls.audio_knobs_ok), "audio_live": bool(a.live),
+                "bpm": round(float(getattr(a, "bpm", 0) or 0)) if a.live else None,
+                "held": [kn.down for kn in self.k], "thumb_rev": self.web.thumb_rev, **self.web_stats}
+
+    def _web_publish(self, rgb):
+        """rgb: the frame, 0..1, as the eye sees it, or None for a dark one (asleep)."""
+        web = self.web
+        now = time.monotonic()
+        thumb = (rgb is not None and not self.menu and self.index not in web.thumbed
+                 and self.t - self.t_on >= THUMB_AFTER_S and self.t - self.t_banner >= 1.6)
+        if not (thumb or web.wants(now)):
+            return
+        u8 = _BLACK if rgb is None else (rgb * 255 + 0.5).astype(np.uint8)
+        if thumb:
+            web.maybe_thumb(self.index, u8)
+        if web.wants(now):
+            web.publish(now, u8, _DARK_F if rgb is None else self.raw_lights, self._web_state())
 
     def _check_timers(self):
         for b in (BTN_PREV, BTN_NEXT):
@@ -419,6 +476,7 @@ class Runtime:
             ls = [(1, 1, 1), (0, 0, 0), (0, 0, 0), (1, .8 * b + .1, .3 * b)]
         else:
             ls = self.demo.lights()
+        self.raw_lights = ls[:NKNOBS]
         scale = LIGHT_MAX * max(LIGHT_FLOOR, self.bright)     # same curve as the panel's gamma table
         return [tuple(int(scale * min(1.0, max(0.0, c)) ** GAMMA + 0.5) for c in rgb) for rgb in ls[:NKNOBS]]
 
@@ -438,6 +496,7 @@ class Runtime:
         self.t0 = time.monotonic()
         self.last_lights = None
         frames, t_stat, amps, scale = 0, 0.0, 0.0, 1.0
+        web_frames, t_web = 0, 0.0
         table, table_bright = None, None
         period = dt = 1.0 / self.fps
         t_alive = None
@@ -452,6 +511,9 @@ class Runtime:
                 if self.buttons_in:
                     for ev in self.buttons_in.poll(self.t):
                         self._event(ev)
+                if self.web:
+                    for c in self.web.poll(t_frame):
+                        self._web_command(c)
                 self._check_timers()
                 if self.saver is not None:
                     self._maybe_save()
@@ -464,6 +526,8 @@ class Runtime:
                     if self.last_lights != _DARK:
                         self.knobs_in.set_lights(_DARK)
                         self.last_lights = _DARK
+                    if self.web:
+                        self._web_publish(None)
                     dt = self._pace(realtime, t_frame, period)
                     continue
                 self.demo.step(dt)
@@ -479,6 +543,8 @@ class Runtime:
                 if table_bright != self.bright:
                     table, table_bright = _gamma_table(self.bright), self.bright
                 np.clip(rgb, 0, 1, out=rgb)
+                if self.web:
+                    self._web_publish(rgb)
                 rgb *= GAMMA_STEPS - 1
                 rgb += 0.5
                 frame, amps, scale = capped_u8(table[rgb.astype(np.uint16)])
@@ -490,6 +556,11 @@ class Runtime:
                     self.last_lights = lights
 
                 frames += 1
+                web_frames += 1
+                if self.t - t_web >= 1:
+                    self.web_stats = {"fps": round(web_frames / (self.t - t_web), 1), "amps": round(float(amps), 2),
+                                      "cap": round(float(scale), 2)}
+                    web_frames, t_web = 0, self.t
                 if self.t - t_stat >= 5 and realtime:
                     log(f"{frames / (self.t - t_stat):5.1f} fps  est {amps:4.2f} A  cap x{scale:.2f}  "
                         f"{self.demo.name}  bright {self.bright:.2f}  {self.out.stats()}")
@@ -509,11 +580,15 @@ class Runtime:
             self.out.close()
             if self.audio_in:
                 self.audio_in.close()
+            if self.web:
+                self.web.close()
             log("stopped; display blanked")
 
 
 _BLACK = np.zeros((128, 128, 3), np.uint8)
 _DARK = [(0, 0, 0)] * NKNOBS
+_DARK_F = [(0.0, 0.0, 0.0)] * NKNOBS
+THUMB_AFTER_S = 4.0     # on this long, past its banner and with no menu, a demo leaves its picture for the web page
 
 
 def _wrap(s, width_px):
