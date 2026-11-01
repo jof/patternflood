@@ -19,7 +19,7 @@ gather them into one enclosure revision.
 
 ## Software
 
-- **A web UI** (being worked on).
+- **A web UI:** built, as the [web remote](../../firmware/demos/README.md#web-remote) at http://patternflood.local/.
 - **OSC endpoints** for remote control.
 - **Dream demo:** ask the audience to describe their dream demo, then run speech
   to text into a coding harness and show the result on the display.
