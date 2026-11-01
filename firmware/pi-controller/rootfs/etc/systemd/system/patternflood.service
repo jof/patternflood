@@ -28,7 +28,7 @@ CacheDirectory=patternflood
 StateDirectory=patternflood
 # Settings: the defaults here, overridden by /etc/default/patternflood (edit it, then
 # `sudo systemctl restart patternflood`).
-Environment=PF_ONLY= PF_DEMO=0 PF_FPS=60 PF_BRIGHT=0.3 PF_KNOBS=i2c:1 PF_BUTTONS=gpio PF_OUT=udp:192.168.75.39 PF_AUDIO=none
+Environment=PF_ONLY= PF_DEMO=0 PF_FPS=60 PF_BRIGHT=0.3 PF_KNOBS=i2c:1 PF_BUTTONS=gpio PF_OUT=udp:192.168.75.39 PF_AUDIO=none PF_WEB=:80
 EnvironmentFile=-/etc/default/patternflood
 # Boot splash step 5: the renderer is starting (importing numpy takes a while).
 # In the background: its three sends take half a second, and the first frame is further off than that.
@@ -41,7 +41,9 @@ ExecStartPre=/usr/bin/python3 -c "import numpy"
 # Zero W, behind splash step 5), into a directory the renderer owns.
 ExecStartPre=+/bin/chown -R patternflood:patternflood /opt/patternflood/demos/upstream_host/build
 ExecStart=/usr/bin/python3 -u /opt/patternflood/demos/run.py --knobs ${PF_KNOBS} --buttons ${PF_BUTTONS} --out ${PF_OUT} \
-    --only ${PF_ONLY} --demo ${PF_DEMO} --fps ${PF_FPS} --bright ${PF_BRIGHT} --audio ${PF_AUDIO}
+    --only ${PF_ONLY} --demo ${PF_DEMO} --fps ${PF_FPS} --bright ${PF_BRIGHT} --audio ${PF_AUDIO} --web ${PF_WEB}
+# The web remote (PF_WEB) listens on port 80, http://patternflood.local/, as this unprivileged user.
+AmbientCapabilities=CAP_NET_BIND_SERVICE
 # Back to the card's spinner while stopped or restarting, rather than a dark box.
 ExecStopPost=-+/usr/local/sbin/pf-splash -t 5 --show 5
 Nice=-5

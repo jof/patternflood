@@ -24,6 +24,7 @@ Frame sinks take uint8 (128, 128, 3) frames, post-gamma, as receiver75 shows the
     udp[:IP]           straight to the card (Pi, or any host on its link)
     pipe:HOST[:IP]     over ssh to a host on the card's link, which just forwards UDP
     preview:FILE.gif   an animated GIF, for checking a demo without the panels
+    none               nowhere, in real time (with --web, the browser is the only screen)
 """
 import base64
 import json
@@ -586,6 +587,20 @@ class PreviewOut:
         log(f"preview: wrote {len(ims)} frames to {self.path}")
 
 
+class NullOut:
+    """Frames go nowhere, at the real frame rate: for running with only the web remote to watch."""
+    realtime = True
+
+    def show(self, frame, lights=None):
+        pass
+
+    def stats(self):
+        return ""
+
+    def close(self):
+        pass
+
+
 def card_on_link(ip="192.168.75.39", timeout=1.0):
     """Is the card on one of this host's own Ethernet links? Nudge it with a datagram to the
     discard port (receiver75 ignores it) and see whether ARP resolves its address."""
@@ -622,6 +637,8 @@ def frame_sink(spec, preview_fps=20):
     if kind == "pipe":
         host, _, ip = arg.partition(":")
         return PipeOut(host, ip or "192.168.75.39")
+    if kind == "none":
+        return NullOut()
     if kind == "preview":
         return PreviewOut(arg or "preview.gif", fps=preview_fps)
     raise SystemExit(f"unknown output {spec!r}")
