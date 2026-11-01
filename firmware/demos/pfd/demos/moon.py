@@ -1,7 +1,8 @@
 """Moon: a world turning in the dark, lit through its phases, printed in inks.
 
-Eight worlds: a cratered moon; an Earth with drifting clouds and its cities lit
-on the night side; Mars, with its ice caps, Olympus Mons and the Tharsis
+Eight worlds: a cratered moon; the Earth in colour, a blue marble from NASA's
+maps (Blue Marble Next Generation by day, Black Marble's city lights by night,
+both public domain; tools/earth_maps.py), with the sun's glint on its seas; Mars, with its ice caps, Olympus Mons and the Tharsis
 volcanoes, and the long rift of Valles Marineris; a banded giant with rings;
 Europa, its ice scored with cracks; a molten world whose crust splits into
 glowing seams; a tipped-over ice giant with thin rings and a little moon that
@@ -20,8 +21,10 @@ stars stay fixed to the world, so going round brings the night side into view
 and wheels the sky past. Back in Drift, the view eases home.
 """
 import math
+from pathlib import Path
 
 import numpy as np
+from PIL import Image
 
 from .. import ink
 from ..draw import N, X, Y
@@ -30,7 +33,7 @@ from .original import Original
 # name, inks, screen, radius in pixels, tilt in the picture, lean towards us
 WORLDS = [
     ("moon", "silver", "bayer8", 45, 0.25, 0.15),
-    ("earth", "ice", "blue", 45, 0.25, 0.25),
+    ("earth", "photo", "blue", 45, 0.25, 0.25),
     ("mars", "dusk", "dots", 43, 0.2, 0.2),
     ("giant", "ember", "hatch", 27, -0.35, 0.28),
     ("europa", "koi", "bayer4", 44, 0.1, 0.1),
@@ -45,6 +48,37 @@ MOONLET_ORBIT, MOONLET_R = 2.45, 0.14
 HOLD_AXIS = np.array([math.sin(0.5), math.cos(0.5), 0.0])     # Hold turns you round this (view frame)
 PRECESS = 0.3, 0.2              # the axis's precession: its rate against the spin, and its cone (radians)
 STAR_F = 110.0                  # the sky's focal length in pixels: about 60 degrees across
+GAMMA = 2.2                     # Earth's photo colours are lit in linear light
+SUNLIT = np.array([1.0, 0.97, 0.92], np.float32)
+CITY = np.array([1.0, 0.6, 0.22], np.float32)
+AIR = np.array([0.12, 0.28, 1.0], np.float32)
+_EARTH = None
+
+
+def _earth_map():
+    """Earth as NASA photographed it (pfd/demos/earth, made by tools/earth_maps.py): (256, 512, 5),
+    linear rgb, water, and the lights at night."""
+    global _EARTH
+    if _EARTH is None:
+        here = Path(__file__).parent / "earth"
+        day = np.asarray(Image.open(here / "day.png").convert("RGB"), np.float32) / 255
+        night = np.asarray(Image.open(here / "night.png"), np.float32) / 255
+        water = np.clip((day[..., 2] - day[..., 0] - 0.04) / 0.08, 0, 1)
+        _EARTH = np.dstack([day ** GAMMA, water, night ** 1.5]).astype(np.float32)
+    return _EARTH
+
+
+def _sample(tex, lon, lat):
+    """Bilinear lookup in an equirectangular map, wrapping round in longitude."""
+    h, w = tex.shape[:2]
+    u = (lon / (2 * math.pi) + 0.5) * w - 0.5
+    v = np.clip((0.5 - lat / math.pi) * h - 0.5, 0, h - 1.001)
+    u0, v0 = np.floor(u), np.floor(v)
+    fu, fv = (u - u0)[:, None], (v - v0)[:, None]
+    u0, v0 = u0.astype(int) % w, v0.astype(int)
+    u1 = (u0 + 1) % w
+    return ((tex[v0, u0] * (1 - fu) + tex[v0, u1] * fu) * (1 - fv)
+            + (tex[v0 + 1, u0] * (1 - fu) + tex[v0 + 1, u1] * fu) * fv)
 
 
 def _pal(name):
@@ -187,7 +221,8 @@ class Moon(Original):
     def _choose(self, w):
         self.world = w
         _, pal, scr = WORLDS[w][:3]
-        self.pal_i, self.screen_i = _pal(pal), ink.SCREENS.index(scr)
+        self.pal_i = None if pal == "photo" else _pal(pal)     # None: in colour, not inks
+        self.screen_i = ink.SCREENS.index(scr)
         self.auto_phase = True
         self._screen()
 
@@ -209,8 +244,9 @@ class Moon(Original):
         elif k == 2:
             self.screen_i = (self.screen_i + (1 if d > 0 else -1)) % len(ink.SCREENS)
             self._screen()
-        elif k == 3:
-            self.pal_i = (self.pal_i + (1 if d > 0 else -1)) % len(ink.PALETTES)
+        elif k == 3:                        # Earth's colours come round between the last inks and the first
+            ways = ([None] if WORLDS[self.world][1] == "photo" else []) + list(range(len(ink.PALETTES)))
+            self.pal_i = ways[(ways.index(self.pal_i) + (1 if d > 0 else -1)) % len(ways)]
 
     def release(self, k, click):
         if not click:
@@ -263,6 +299,8 @@ class Moon(Original):
         disc = r2 < 1
         n = np.stack([sx[disc], sy[disc], np.sqrt(1 - r2[disc])], -1)
         q = n @ m                                       # view -> the world's own frame
+        if world == "earth":
+            return self._earth_render(tone, disc, n, q, light, sx, sy, r2)
         lit = getattr(self, "_" + world.replace(" ", "_"))(n, q, light, m)
         if world in ("giant", "ice giant"):
             band = self._ring_band if world == "giant" else self._thin_rings
@@ -273,8 +311,8 @@ class Moon(Original):
             lit *= 1 - 0.9 * self._moonlet_shadow(n, light, moonlet)
         tone[disc] = lit
 
-        if world in ("earth", "pluto"):
-            self._haze(tone, sx, sy, r2, light, 0.03 if world == "earth" else 0.05)
+        if world == "pluto":
+            self._haze(tone, sx, sy, r2, light, 0.05)
         if moonlet is not None and moonlet[2] < 0:
             self._draw_moonlet(tone, sx, sy, r2, light, moonlet)
         if world == "giant":
@@ -306,28 +344,36 @@ class Moon(Original):
         alb = 0.82 - 0.32 * np.clip(_noise(q, self.wave_dirs[:4], self.wave_f[:4] * 1.4, self.wave_ph[:4]) * 1.5 - 0.2, 0, 1)
         return np.clip(nv @ light, 0, 1) * alb + 0.025
 
-    def _earth(self, n, q, light, m):
-        lat = q[:, 1]
-        hgt = _noise(q, self.wave_dirs, self.wave_f, self.wave_ph)
-        land = hgt > -0.05
-        alb = np.where(land, 0.55 + 0.3 * np.clip(hgt, 0, 1), 0.24)
-        ice = np.abs(lat) > 0.86
-        alb = np.where(ice, 0.95, alb)
-        cq = q @ _rot(self.t * 0.05, 0, 0)              # clouds drift on their own
-        cloud = np.clip(_noise(cq * 1.7, self.wave_dirs[2:], self.wave_f[2:], self.wave_ph[2:] + 2) * 1.6 - 0.5, 0, 1)
-        alb = alb * (1 - cloud) + 0.95 * cloud
+    def _earth_render(self, tone, disc, n, q, light, sx, sy, r2):
+        """The blue marble, in colour: or, if k3 has chosen inks, its brightness through them."""
+        img = np.repeat(tone[..., None] ** GAMMA, 3, 2)
+        img[disc] = self._earth(n, q, light)
+        self._haze(img, sx, sy, r2, light, 0.035, AIR * 0.5)
+        img = np.clip(img, 0, 1) ** (1 / GAMMA)
+        if self.pal_i is not None:
+            return ink.dither(img @ np.float32([0.3, 0.55, 0.15]) * 1.15, ink.PALETTES[self.pal_i][1], self.thresh, self.scale)
+        if self.scale > 1:
+            img = img[::2, ::2].repeat(2, 0).repeat(2, 1)
+        return img
+
+    def _earth(self, n, q, light):
+        """Linear rgb for the disc: the day map lit by the sun, the sun's glint on the water, blue air
+        at the rim and the cities' lights where it's night."""
+        lat = np.arcsin(np.clip(q[:, 1], -1, 1))
+        lon = np.arctan2(q[:, 0], q[:, 2])
+        tex = _sample(_earth_map(), lon, lat)
+        day, water, city = tex[:, :3], tex[:, 3], tex[:, 4]
         ndl = n @ light
+        sun = np.clip((ndl + 0.04) / 1.04, 0, 1)
+        out = day * 1.35 * (sun[:, None] * SUNLIT)
         refl = 2 * ndl[:, None] * n - light
-        glint = np.where(land | (cloud > 0.3), 0, np.clip(refl[:, 2], 0, 1) ** 30)
-        lit = np.clip(ndl, 0, 1) * alb + 0.8 * glint + 0.02
-        lit += 0.35 * (1 - n[:, 2]) ** 3 * np.clip(ndl + 0.3, 0, 1)        # the atmosphere's rim
-        # cities: near the coasts, out where it's night, dimmed by cloud
-        towns = _noise(q, self.wave_dirs, self.wave_f * 7.1, self.wave_ph * 3.1)
-        coast = np.clip(1 - (hgt + 0.05) / 0.35, 0, 1)
-        city = land & ~ice & (towns > 1.15 - 0.45 * coast)
-        night = np.clip(-ndl * 5, 0, 1)
-        lit += np.where(city, 0.55 * night * (1 - cloud), 0)
-        return lit
+        glint = np.clip(refl[:, 2], 0, 1) ** 150 * water * (ndl > 0)
+        out += glint[:, None] * SUNLIT * 1.2
+        rim = (1 - n[:, 2]) ** 2.5 * np.clip(ndl + 0.25, 0, 1)
+        out = out * (1 - 0.4 * rim)[:, None] + rim[:, None] * AIR * 0.45
+        night = np.clip(0.1 - ndl * 6, 0, 1)
+        out += (city * night * 0.8)[:, None] * CITY
+        return out
 
     def _mars(self, n, q, light, m):
         lat = q[:, 1]
@@ -425,14 +471,19 @@ class Moon(Original):
         return _bend(q, _radial_grad(q, self.crater, lambda d: self._crater_slope(d / r) / r * dep))
 
     # air, rings and moons
-    def _haze(self, tone, sx, sy, r2, light, thick):
-        """A thin atmosphere past the limb, bright where the sun is, and all round when it's behind."""
+    def _haze(self, tone, sx, sy, r2, light, thick, colour=None):
+        """A thin atmosphere past the limb, bright where the sun is, and all round when it's behind.
+        In tone, or added in this colour to an rgb image."""
         r = np.sqrt(r2)
         rim = (r >= 1) & (r < 1 + 4 * thick)
         rr = r[rim]
         toward = (sx[rim] * light[0] + sy[rim] * light[1]) / rr
         ill = np.clip(toward + 0.3, 0, 1) + 0.9 * max(0.0, -float(light[2])) ** 2
-        tone[rim] = np.maximum(tone[rim], 0.55 * np.exp(-(rr - 1) / thick) * ill)
+        glow = 0.55 * np.exp(-(rr - 1) / thick) * ill
+        if colour is None:
+            tone[rim] = np.maximum(tone[rim], glow)
+        else:
+            tone[rim] += glow[:, None] * colour
 
     def _ring_band(self, r):
         """The giant's ring opacity by radius (in planet radii): banded, with a dark gap."""
@@ -499,7 +550,7 @@ class Moon(Original):
         tone.flat[idx] = lit[clear]
 
     def lights(self):
-        inks = ink.PALETTES[self.pal_i][1]
+        inks = [AIR] if self.pal_i is None else ink.PALETTES[self.pal_i][1]
         k1 = self.glow(1, 0.08, 0.6) if self.hold else self.glow(1, 0.55, 0.2 + 0.4 * min(1.0, abs(self.rate) / 1.0))
         return [self.glow(0, self.world / len(WORLDS), 0.3 + 0.4 * (1 + math.cos(self.phase)) / 2), k1,
                 self.glow(2, self.screen_i / len(ink.SCREENS)), tuple(float(c) for c in inks[-1])]
