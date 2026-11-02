@@ -6,7 +6,7 @@ import(path : "onshape/std/decalUtils.fs", version : "3070.0");
 // into, in this document. The PSU proxy merges it in (Detailed on), so the
 // enclosure studio shows the real part rather than an envelope. Re-pin the
 // version if that studio ever changes.
-LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "0de8eecf24220a61c227bf36");
+LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "584aa9b6d4abc8df8ef8fa0e");
 
 // The etched art, as images for decals on the outer faces (tools/art.py
 // renders them, tools/decals.py uploads them and rewrites this block).
@@ -1054,6 +1054,54 @@ const BTN_LIP_FLAT = 12.88;      // mm, from the lip's one flat across to its ro
 const BTN_CLEAR = 0.2;           // mm, on the dia and on the flat: the lip sweep (test piece 11) fit best at 0.2, 2026-10-25
 const BTN_NUT_ROOM = 11.0;       // mm, doubler cut back this far from each button centre: the nut and fingers
 const BTN_PITCH = 24.0;          // mm, centre to centre: 6.5 between heads
+
+// Audio (rev 3, layout A): a coin exciter that plays the bezel, a mic jack and
+// a line-out jack on the right wall. Box frame, mm: x across (+ right, seen
+// from the front), y up, z = 0 at the bezel's outer face, negative inward.
+// Placed by the fit check against v2.x (2026-11-02): every part clears every
+// body in the model by 3.4 mm or more.
+//
+// The SPEAKER is a Dayton DAEX19CT-4 exciter (5 W, 4 ohm), glued to the back
+// of the OUTER bezel sheet in the bay right of the PSU, so the birch itself
+// is the speaker. The glued inner sheet would make that patch too stiff, so
+// it is pocketed (AUD_POCKET), as at each knob, leaving the outer sheet free
+// to move. The exciter sits off the pocket's centre on purpose: a centred
+// driver excites the patch's symmetric modes and sounds hollow. It is in
+// front of everything else in the bay (13 deep; the PSU's terminals face the
+// back cover and its wires run 25+ behind the bezel front) and 4.6 from the
+// inlet's body. Its size is from Dayton's listing, not a part in hand: VERIFY.
+const AUD_EXC_X = 88.0;          // mm, centre
+const AUD_EXC_Y = -173.0;        // mm, centre: the middle of the control band
+const AUD_EXC_D = 33.0;          // mm, VERIFY on the part
+const AUD_EXC_H = 13.0;          // mm, off the outer sheet's back, VERIFY
+const AUD_POCKET = [60.0, -208.0, 130.0, -138.0];   // mm, x0 y0 x1 y1: inner sheet removed, 5.4 clear of the PSU
+//
+// The MIC JACK is a Neutrik NCJ6FI-S combo (XLR + 1/4"), rear-mounted: its
+// flange against the doubler's inside face, its nose through a 23.8 hole in
+// wall + doubler (6.36 of the 7 it takes), two M3 from outside through its
+// flange's diagonal holes, 20 (z) x 23 (y) apart (Neutrik drawing 3102ST1728).
+// Flange 30 tall (y) x 27 deep (z), its PUSH latch at the top. On the right
+// wall about 15 cm above the desk, behind the lower-right panel: the cable
+// drops down the side, clear of the display. Lower on that wall the inlet is
+// in the way, and it can't rise far enough under the stiffener shelf.
+const AUD_MIC_Y = -70.0;         // mm, centre
+const AUD_MIC_Z = -33.0;         // mm, centre: the flange sits on the doubler, 1 mm from its rear end
+const AUD_MIC_HOLE = 23.8;       // mm, Neutrik's minimum
+const AUD_MIC_SCREW = 3.2;       // mm, the flange's holes
+const AUD_MIC_SCREW_DY = 11.5;   // mm, each screw from the centre: +y at +z, -y at -z
+const AUD_MIC_SCREW_DZ = 10.0;   // mm
+//
+// The LINE OUT is a Neutrik NMJ6HCD2, a stereo 1/4" with break contacts: its
+// sleeve contact opens when a plug goes in, which switches the speaker amp
+// off. It takes < 4.7 of panel, so it clamps the outer wall alone (nut and
+// washer outside) and the doubler is notched round its body (18.2 x 19.7,
+// 23.5 deep; Neutrik ST-NMJ6HCD2), open to the doubler's rear edge so no thin
+// strip is left. On the right wall about 12 cm up, behind the lower brace,
+// lugs down.
+const AUD_LO_Y = -105.0;         // mm, centre
+const AUD_LO_Z = -36.0;          // mm, centre: the body clears panel screw 15 by 5.7
+const AUD_LO_HOLE = 11.4;        // mm, Neutrik's cutout
+const AUD_LO_NOTCH = [-118.0, -95.0, -25.0];        // mm, the doubler notch: y0 y1 and its front edge in z
 
 // French cleat holes through the back cover and its doubler (rev 2.3), for
 // an optional cleat strip on the outside: wood screws driven from inside,
@@ -2480,6 +2528,49 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                 "targets"       : wallStack("wallR"),
                 "operationType" : BooleanOperationType.SUBTRACTION });
 
+        // ── audio jacks, right wall (rev 3; see AUD_*) ──────────────────
+        // The mic jack: its hole and two flange screws through wall and
+        // doubler. The line out: its hole through the wall alone, and the
+        // doubler notched round its body, open to the doubler's rear edge.
+        {
+            const mm = millimeter;
+            var micTools = [];
+            const jackHole = function(hid is Id, y, z, dia, depth) returns Query
+                {
+                    fCylinder(context, hid, {
+                            "topCenter"    : vector(right + over,         y * mm, z * mm),
+                            "bottomCenter" : vector(right - depth - over, y * mm, z * mm),
+                            "radius"       : dia / 2 * mm - kerf / 2 });
+                    return qCreatedBy(hid, EntityType.BODY);
+                };
+            micTools = append(micTools, jackHole(id + "audMic", AUD_MIC_Y, AUD_MIC_Z, AUD_MIC_HOLE, tw));
+            for (var s = 0; s < 2; s += 1)
+            {
+                const sgn = 2 * s - 1;
+                micTools = append(micTools, jackHole(id + ("audMicScrew" ~ s),
+                        AUD_MIC_Y + sgn * AUD_MIC_SCREW_DY, AUD_MIC_Z + sgn * AUD_MIC_SCREW_DZ, AUD_MIC_SCREW, tw));
+            }
+            opBoolean(context, id + "audMicCut", {
+                    "tools"         : qUnion(micTools),
+                    "targets"       : wallStack("wallR"),
+                    "operationType" : BooleanOperationType.SUBTRACTION });
+
+            opBoolean(context, id + "audLoCut", {
+                    "tools"         : jackHole(id + "audLo", AUD_LO_Y, AUD_LO_Z, AUD_LO_HOLE, t),
+                    "targets"       : qCreatedBy(id + "wallR", EntityType.BODY),
+                    "operationType" : BooleanOperationType.SUBTRACTION });
+            if (nw > 1)
+            {
+                fCuboid(context, id + "audLoNotch", {
+                        "corner1" : vector(right - tw - over, AUD_LO_NOTCH[0] * mm, dz1 - over),
+                        "corner2" : vector(right - t + over,  AUD_LO_NOTCH[1] * mm, AUD_LO_NOTCH[2] * mm) });
+                opBoolean(context, id + "audLoNotchCut", {
+                        "tools"         : qCreatedBy(id + "audLoNotch", EntityType.BODY),
+                        "targets"       : qUnion(dbl.wallR),
+                        "operationType" : BooleanOperationType.SUBTRACTION });
+            }
+        }
+
         // ── electronics tray ────────────────────────────────────────────
         // Two sheets, screwed to the back of the three-sheet middle brace by
         // four M3 into its captive nuts, on spacer rings. The boards mount on
@@ -2877,6 +2968,16 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                     "tools"         : qUnion(pockets),
                     "targets"       : qSubtraction(qUnion(plates), outerPlate),
                     "operationType" : BooleanOperationType.SUBTRACTION });
+
+            // the exciter's patch (rev 3, AUD_POCKET): every sheet behind the
+            // outer one cut away, so the outer sheet alone is the speaker
+            fCuboid(context, id + "audPocket", {
+                    "corner1" : vector(AUD_POCKET[0] * millimeter, AUD_POCKET[1] * millimeter, zBezB - over),
+                    "corner2" : vector(AUD_POCKET[2] * millimeter, AUD_POCKET[3] * millimeter, zOut0) });
+            opBoolean(context, id + "audPocketCut", {
+                    "tools"         : qCreatedBy(id + "audPocket", EntityType.BODY),
+                    "targets"       : qSubtraction(qUnion(plates), outerPlate),
+                    "operationType" : BooleanOperationType.SUBTRACTION });
         }
 
         // ── Part identity ──────────────────────────────────────────────
@@ -3206,6 +3307,59 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
                          HW_WASHER_OD * mm, 3.2 * mm, "Washer M3 — IEC " ~ (us + 1));
                 hwNut(context, id + ("hwIecNut" ~ (us + 1)), vector(xin - HW_WASHER_T * mm, definition.iecY, uz), iecIn,
                       nutAF, 2.4 * mm, m3, "Nut M3 — IEC " ~ (us + 1));
+            }
+
+            // audio (rev 3, AUD_*): envelopes from the makers' drawings, in place
+            {
+                const xIn = right - tw;                 // the doubler's inside face
+                const my = AUD_MIC_Y * mm;
+                const mz = AUD_MIC_Z * mm;
+                const ly = AUD_LO_Y * mm;
+                const lz = AUD_LO_Z * mm;
+                const along = function(cid is Id, x0, x1, y, z, r) returns Query
+                    {
+                        fCylinder(context, cid, { "topCenter" : vector(x1, y, z), "bottomCenter" : vector(x0, y, z), "radius" : r });
+                        return qCreatedBy(cid, EntityType.BODY);
+                    };
+
+                // the exciter, on the outer sheet's back in its pocket
+                fCylinder(context, id + "hwExc", {
+                        "topCenter"    : vector(AUD_EXC_X * mm, AUD_EXC_Y * mm, zOut0),
+                        "bottomCenter" : vector(AUD_EXC_X * mm, AUD_EXC_Y * mm, zOut0 - AUD_EXC_H * mm),
+                        "radius"       : AUD_EXC_D / 2 * mm });
+                hwLook(context, qCreatedBy(id + "hwExc", EntityType.BODY),
+                       "Exciter — Dayton DAEX19CT-4 (envelope, VERIFY)", [0.15, 0.15, 0.17]);
+
+                // the mic jack: nose through the wall, flange on the doubler,
+                // body and solder cups inside (24 + 4.5 behind the flange)
+                fCuboid(context, id + "hwMic" + "flange", { "corner1" : vector(xIn - 2.5 * mm, my - 15 * mm, mz - 13.5 * mm),
+                                                   "corner2" : vector(xIn, my + 15 * mm, mz + 13.5 * mm) });
+                const micParts = [qCreatedBy(id + "hwMic" + "flange", EntityType.BODY),
+                                  along(id + "hwMic" + "nose", xIn, right + 0.6 * mm, my, mz, 23.4 / 2 * mm),
+                                  along(id + "hwMic" + "body", xIn - 24 * mm, xIn - 2.5 * mm, my, mz, 23.4 / 2 * mm),
+                                  along(id + "hwMic" + "cups", xIn - 28.5 * mm, xIn - 24 * mm, my, mz, 9 * mm)];
+                opBoolean(context, id + "hwMic" + "join", { "tools" : qUnion(micParts), "operationType" : BooleanOperationType.UNION });
+                hwLook(context, qCreatedBy(id + "hwMic", EntityType.BODY),
+                       "Mic jack — Neutrik NCJ6FI-S, XLR + 1/4\" (envelope)", HW_PLASTIC);
+                for (var s = 0; s < 2; s += 1)
+                {
+                    const sgn = 2 * s - 1;
+                    hwScrew(context, id + ("hwMicScrew" ~ (s + 1)),
+                            vector(right, my + sgn * AUD_MIC_SCREW_DY * mm, mz + sgn * AUD_MIC_SCREW_DZ * mm), vector(-1, 0, 0),
+                            10 * mm, m3, 5.5 * mm, 2 * mm, "Screw M3 x 10 — mic jack " ~ (s + 1));
+                }
+
+                // the line out: body against the wall's inside face, in the
+                // doubler's notch, lugs down; bushing and nut outside
+                fCuboid(context, id + "hwLo" + "body", { "corner1" : vector(right - t - 23.53 * mm, ly - 11.5 * mm, lz - 9.1 * mm),
+                                                "corner2" : vector(right - t, ly + 8.14 * mm, lz + 9.1 * mm) });
+                const loParts = [qCreatedBy(id + "hwLo" + "body", EntityType.BODY),
+                                 along(id + "hwLo" + "bush", right - t, right + 5.79 * mm, ly, lz, 9.5 / 2 * mm)];
+                opBoolean(context, id + "hwLo" + "join", { "tools" : qUnion(loParts), "operationType" : BooleanOperationType.UNION });
+                hwLook(context, qCreatedBy(id + "hwLo", EntityType.BODY),
+                       "Line out — Neutrik NMJ6HCD2, switched stereo 1/4\" (envelope)", HW_PLASTIC);
+                hwNut(context, id + "hwLoNut", vector(right + 1.2 * mm, ly, lz), vector(1, 0, 0), 11 * mm, 2.5 * mm,
+                      9.5 * mm, "Nut — line out jack (3/8\"-32)");
             }
 
             // the push buttons, lip's flat toward the front as cut

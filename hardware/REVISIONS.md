@@ -427,3 +427,45 @@ Rev 2.6 plus a fourth push button. Only the top wall and the top doubler changed
 - Only the back cover's art and `sheet-2-score.svg` (with its previews) changed.
   The cut paths, `sheet-2-cut.svg` and the other parts' art are byte-identical.
   Decal re-uploaded, and every decal attaches.
+
+## Rev 3 audio, layout A (2026-11-02, in progress)
+
+Git branch **`worktree-rev3-audio`**. Onshape branch workspace **"Rev 3 audio —
+layout A"** (`2066b64683ceb1c09ae0230c`), made from the version **"v2.x"**
+(`e903f527f91fb07c071a146d`), so the main workspace still holds Rev 2.7 as built.
+Designed, not built, not cut.
+
+Sound for the box: audio in for a microphone on a stand that invites people to pick
+it up and speak (Paik's *Participation TV*), audio out, and a small internal
+speaker that a plugged-in line out switches off. Mono, so the box keeps its size.
+Constants `AUD_*` in `enclosure.fs`.
+
+| Part | Where | Cut |
+|---|---|---|
+| **Exciter**, Dayton DAEX19CT-4 (5 W, 4 Ω), glued to the back of the outer bezel sheet: the birch is the speaker | the control band right of the PSU, centre (88, −173), off the patch's centre on purpose | **inner bezel pocketed 70 × 70** (x 60–130, y −208 to −138), so the outer sheet alone moves |
+| **Mic jack**, Neutrik NCJ6FI-S (XLR + 1/4"), rear-mounted | right wall, ~15 cm above the desk (y −70, z −33), behind the lower-right panel | Ø23.8 + two Ø3.2 on the diagonal (20 × 23), through wall and doubler |
+| **Line out**, Neutrik NMJ6HCD2 (stereo 1/4", break contacts) | right wall, ~12 cm up (y −105, z −36), behind the lower brace, lugs down | Ø11.4 through the wall; the doubler notched round its body, open to its rear edge |
+
+**Fit, checked in Onshape** on the branch (`tools/audio_fit.py`): the exciter is
+4.6 mm from the inlet, the mic jack 3.4 mm from the lower brace and 6.8 mm from the
+lower-right panel's frame and ribbon keep-out, the line out 5.7 mm from panel
+screw 15. Nothing else within 10 mm. Envelopes for all three (and the mic jack's
+screws, the line out's nut) are in the hardware model.
+
+**Layouts not taken:** the mic jack low on the right wall needs the inlet raised,
+and under the stiffener shelf it can rise only ~26 mm, which leaves the jack < 1 mm
+at each end. Moving the inlet up behind the lower brace frees the low wall for both
+jacks, but puts it 1 mm from the tray and 2 mm from the Colorlight, with mains
+through the electronics bay.
+
+**Cut files:** only `bezel-inner.dxf`, `wall-right-iec.dxf` and
+`wall-right-doubler-iec.dxf` changed; every other part exports byte-identical.
+
+**Before cutting:**
+- The exciter's size (33 × 13) is from Dayton's listing: check it on the part.
+- `art.py`, `nest_sheets.py` and `decals.py` haven't been re-run: the right wall's
+  etch doesn't know about the new holes yet. The outer bezel is unchanged, so it
+  could carry an etched grille over the exciter if wanted.
+- The electronics (HiFiBerry DAC2 ADC Pro on I²S, a TPA2016 amp with its shutdown
+  driven by the line out's sleeve contact through a MOSFET, GPIO24 to read it) are
+  untested: bench them on the Rev 2.7 box first.
