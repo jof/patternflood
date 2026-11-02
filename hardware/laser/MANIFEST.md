@@ -26,27 +26,27 @@ do not edit by hand; change the model and re-run.
 | `bezel-inner.dxf` | 1 | 286.6 × 366.6 | Bezel inner |
 | `back-cover.dxf` | 1 | 286.0 × 366.0 | Back cover |
 | `back-cover-doubler.dxf` | 1 | 285.6 × 309.6 | Back cover doubler |
+| `wall-left.dxf` | 1 | 80.7 × 373.0 | Wall left |
+| `wall-right-iec.dxf` | 1 | 80.7 × 373.0 | Wall right (IEC) |
 | `electronics-tray-front-sheet.dxf` | 1 | 279.3 × 94.0 | Electronics tray, front sheet |
 | `electronics-tray-rear-sheet-board-nuts.dxf` | 1 | 279.3 × 94.0 | Electronics tray, rear sheet (board nuts) |
+| `wall-bottom.dxf` | 1 | 293.0 × 80.7 | Wall bottom |
+| `wall-top.dxf` | 1 | 293.0 × 80.7 | Wall top |
 | `panel-brace-middle.dxf` | 2 | 293.0 × 80.2 | Panel brace middle; Panel brace middle, rear sheet |
 | `panel-brace-middle-middle-sheet-tray-nuts.dxf` | 1 | 293.0 × 80.2 | Panel brace middle, middle sheet (tray nuts) |
-| `wall-left.dxf` | 1 | 60.7 × 373.0 | Wall left |
-| `wall-right-iec.dxf` | 1 | 60.7 × 373.0 | Wall right (IEC) |
-| `wall-bottom.dxf` | 1 | 293.0 × 60.7 | Wall bottom |
-| `wall-top.dxf` | 1 | 293.0 × 60.7 | Wall top |
-| `wall-left-doubler.dxf` | 1 | 41.1 × 365.6 | Wall left doubler |
-| `wall-right-doubler-iec.dxf` | 1 | 41.1 × 365.6 | Wall right doubler (IEC) |
-| `stiffener-shelf.dxf` | 1 | 293.0 × 44.8 | Stiffener shelf |
+| `wall-left-doubler.dxf` | 1 | 61.1 × 365.6 | Wall left doubler |
+| `wall-right-doubler-iec.dxf` | 1 | 61.1 × 365.6 | Wall right doubler (IEC) |
+| `stiffener-shelf.dxf` | 1 | 293.0 × 64.8 | Stiffener shelf |
+| `wall-bottom-doubler-psu.dxf` | 1 | 279.3 × 61.1 | Wall bottom doubler (PSU) |
+| `wall-top-doubler.dxf` | 1 | 279.3 × 61.1 | Wall top doubler |
 | `panel-brace-upper.dxf` | 1 | 293.0 × 40.2 | Panel brace upper |
 | `panel-brace-lower.dxf` | 1 | 293.0 × 40.2 | Panel brace lower |
-| `wall-bottom-doubler-psu.dxf` | 1 | 279.3 × 41.1 | Wall bottom doubler (PSU) |
-| `wall-top-doubler.dxf` | 1 | 279.3 × 41.1 | Wall top doubler |
+| `knob-rib-1.dxf` | 1 | 64.0 × 85.7 | Knob rib 1 |
+| `knob-rib-2.dxf` | 1 | 64.0 × 85.7 | Knob rib 2 |
 | `rail-c-tenoned.dxf` | 2 | 293.0 × 18.2 | Rail C lower (tenoned); Rail C upper (tenoned) |
 | `rail-a-screw-clearance.dxf` | 2 | 286.6 × 18.0 | Rail A lower (screw clearance); Rail A upper (screw clearance) |
 | `rail-b-lower-hex-pocket.dxf` | 1 | 286.6 × 18.0 | Rail B lower (hex pocket) |
 | `rail-b-upper-hex-pocket.dxf` | 1 | 286.6 × 18.0 | Rail B upper (hex pocket) |
-| `knob-rib-1.dxf` | 1 | 44.0 × 85.7 | Knob rib 1 |
-| `knob-rib-2.dxf` | 1 | 44.0 × 85.7 | Knob rib 2 |
 | `spacer-ring-tray-to-brace.dxf` | 4 | 8.0 × 8.0 | Spacer ring — tray to brace |
 | `spacer-ring-colorlight.dxf` | 4 | 7.0 × 7.0 | Spacer ring — Colorlight 1; Spacer ring — Colorlight 2; Spacer ring — Colorlight 3; Spacer ring — Colorlight 4 |
 | `spacer-ring-pi-m2.5.dxf` | 4 | 7.0 × 7.0 | Spacer ring — Pi 1; Spacer ring — Pi 2; Spacer ring — Pi 3; Spacer ring — Pi 4 |

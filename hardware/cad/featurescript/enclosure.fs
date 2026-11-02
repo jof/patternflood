@@ -6,7 +6,7 @@ import(path : "onshape/std/decalUtils.fs", version : "3070.0");
 // into, in this document. The PSU proxy merges it in (Detailed on), so the
 // enclosure studio shows the real part rather than an envelope. Re-pin the
 // version if that studio ever changes.
-LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "584aa9b6d4abc8df8ef8fa0e");
+LRS50::import(path : "e474d54d0ff1822f6f0a417d", version : "484aacd6d3fc699b1741c478");
 
 // The etched art, as images for decals on the outer faces (tools/art.py
 // renders them, tools/decals.py uploads them and rewrites this block).
@@ -126,6 +126,20 @@ const PI_PARTS = [[64.0, 1.5, 87.5, 54.5, 16.0, "Pi 5 USB + Ethernet (envelope)"
                   [6.0, -1.5, 48.0, 7.5, 3.6,  "Pi 5 USB-C + 2 x micro HDMI (envelope)"],
                   [7.0, 50.0, 58.0, 55.0, 8.5,  "Pi 5 GPIO header"],
                   [3.0, 4.0, 61.0, 52.0, 14.0,  "Pi 5 Active Cooler (envelope, VERIFY)"]];
+
+// Rev 3 audio: a HiFiBerry DAC2 ADC Pro, a standard 65 x 56.5 HAT, stacked
+// on the Pi's header over the Active Cooler, as Raspberry Pi says to: on a
+// 16 mm GPIO extender and 17 mm standoffs. Its 40-pin header passes through,
+// so the knobs' and buttons' Dupont plugs move from the Pi's header to the
+// top of the HAT's. Its tallest parts are right-angle RCA jacks (~13 mm,
+// unused: the jacks in the wall take its J4 balanced input and J5 output
+// headers). The box is 20 mm deeper for it (#psuRailClear 11.64 -> 31.64).
+// [x0, y0, x1, y1, from, to (mm above the Pi's component face), name], Pi
+// frame. ENVELOPES from HiFiBerry's listing and Raspberry Pi's advice: VERIFY.
+const HAT_PARTS = [[7.0, 50.0, 58.0, 55.0, 8.5, 17.0, "GPIO extender, 16 mm (envelope)"],
+                   [0.0, 0.0, 65.0, 56.5, 17.0, 18.6, "HiFiBerry DAC2 ADC Pro — PCB (envelope, VERIFY)"],
+                   [0.0, 0.0, 65.0, 56.5, 18.6, 31.6, "HiFiBerry DAC2 ADC Pro — parts (envelope, VERIFY)"],
+                   [6.0, 48.5, 59.0, 56.5, 31.6, 36.0, "Dupont plugs on the HAT's header (envelope)"]];
 
 // Where the boards sit. All of them mount on the ELECTRONICS TRAY, a plate
 // that screws to the back of the (doubled) middle panel brace, component side
@@ -983,6 +997,11 @@ export const bayObstructions = defineFeature(function(context is Context, id is 
             const q = PI_PARTS[j];
             piPart(id + ("piPart" ~ j), [q[0], q[1], q[2], q[3]], pComp, q[4] * mm, q[5]);
         }
+        for (var j = 0; j < size(HAT_PARTS); j += 1)
+        {
+            const q = HAT_PARTS[j];
+            piPart(id + ("hatPart" ~ j), [q[0], q[1], q[2], q[3]], pComp - q[4] * mm, (q[5] - q[4]) * mm, q[6]);
+        }
     });
 
 // ────────────────────────────────────────────────────────────────────────
@@ -1094,14 +1113,14 @@ const AUD_MIC_SCREW_DZ = 10.0;   // mm
 // The LINE OUT is a Neutrik NMJ6HCD2, a stereo 1/4" with break contacts: its
 // sleeve contact opens when a plug goes in, which switches the speaker amp
 // off. It takes < 4.7 of panel, so it clamps the outer wall alone (nut and
-// washer outside) and the doubler is notched round its body (18.2 x 19.7,
-// 23.5 deep; Neutrik ST-NMJ6HCD2), open to the doubler's rear edge so no thin
-// strip is left. On the right wall about 12 cm up, behind the lower brace,
-// lugs down.
+// washer outside) and the doubler has a window round its body (18.2 x 19.7,
+// 23.5 deep; Neutrik ST-NMJ6HCD2), 20 mm of doubler behind it in the deeper
+// rev 3 box. On the right wall about 12 cm up, behind the lower brace, lugs
+// down.
 const AUD_LO_Y = -105.0;         // mm, centre
 const AUD_LO_Z = -36.0;          // mm, centre: the body clears panel screw 15 by 5.7
 const AUD_LO_HOLE = 11.4;        // mm, Neutrik's cutout
-const AUD_LO_NOTCH = [-118.0, -95.0, -25.0];        // mm, the doubler notch: y0 y1 and its front edge in z
+const AUD_LO_WINDOW = [-118.0, -95.0, -47.0, -25.0]; // mm, the doubler's window: y0 y1 z0 z1
 
 // French cleat holes through the back cover and its doubler (rev 2.3), for
 // an optional cleat strip on the outside: wood screws driven from inside,
@@ -2245,7 +2264,11 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             [clToBox(definition.clX, definition.clY, CL_JST_BIG[0], CL_JST_BIG[1]),
              clToBox(definition.clX, definition.clY, CL_JST_BIG[2], CL_JST_BIG[3])],
             [clToBox(definition.clX, definition.clY, CL_JTAG[0], CL_JTAG[1]),
-             clToBox(definition.clX, definition.clY, CL_JTAG[2], CL_JTAG[3])]];
+             clToBox(definition.clX, definition.clY, CL_JTAG[2], CL_JTAG[3])],
+            // rev 3: the audio HAT stacked on the Pi (HAT_PARTS), whose
+            // header plugs reach the doubler's face in the 20 mm deeper box
+            [piToBox(definition.piX, definition.piY, HAT_PARTS[1][0], HAT_PARTS[1][1]),
+             piToBox(definition.piX, definition.piY, HAT_PARTS[1][2], HAT_PARTS[1][3])]];
         var reliefs = [];
         for (var rw = 0; rw < size(reliefBoxes); rw += 1)
         {
@@ -2530,8 +2553,8 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
 
         // ── audio jacks, right wall (rev 3; see AUD_*) ──────────────────
         // The mic jack: its hole and two flange screws through wall and
-        // doubler. The line out: its hole through the wall alone, and the
-        // doubler notched round its body, open to the doubler's rear edge.
+        // doubler. The line out: its hole through the wall alone, and a
+        // window in the doubler round its body.
         {
             const mm = millimeter;
             var micTools = [];
@@ -2562,8 +2585,8 @@ export const enclosureShell = defineFeature(function(context is Context, id is I
             if (nw > 1)
             {
                 fCuboid(context, id + "audLoNotch", {
-                        "corner1" : vector(right - tw - over, AUD_LO_NOTCH[0] * mm, dz1 - over),
-                        "corner2" : vector(right - t + over,  AUD_LO_NOTCH[1] * mm, AUD_LO_NOTCH[2] * mm) });
+                        "corner1" : vector(right - tw - over, AUD_LO_WINDOW[0] * mm, AUD_LO_WINDOW[2] * mm),
+                        "corner2" : vector(right - t + over,  AUD_LO_WINDOW[1] * mm, AUD_LO_WINDOW[3] * mm) });
                 opBoolean(context, id + "audLoNotchCut", {
                         "tools"         : qCreatedBy(id + "audLoNotch", EntityType.BODY),
                         "targets"       : qUnion(dbl.wallR),

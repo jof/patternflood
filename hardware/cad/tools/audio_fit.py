@@ -4,10 +4,11 @@
     hardware/cad/tools/audio_fit.py w/<workspace id>     (or v/<version id>)
 
 Read-only: one FeatureScript eval over REST (onshape_http.py, like push.py).
-For the exciter, the mic jack and its screws, and the line out and its nut, it
+For the exciter, the mic jack and its screws, the line out and its nut, and
+the HiFiBerry HAT stacked on the Pi (extender, board, parts, Dupont plugs), it
 lists every body within 10 mm and the distance to it, leaving out the wall each
 mounts in and the bezel the exciter is glued to. Then it checks the cuts are
-there: the inner bezel open at the exciter, the doubler notched at the line out
+there: the inner bezel open at the exciter, the doubler windowed at the line out
 and holed at the mic jack. Anything under 0.05 mm is flagged as a clash.
 """
 import json, sys
@@ -21,9 +22,11 @@ FS = r'''
 function(context is Context, queries)
 {
     const mm = millimeter;
-    const audio = ["Exciter.*", "Mic jack.*", "Line out.*", "Nut — line out.*", "Screw M3 x 10 — mic jack.*"];
-    // what each one is meant to touch: the wall it mounts in, the bezel it is glued to
-    const ok = ["Wall right.*", "Bezel.*"];
+    const audio = ["Exciter.*", "Mic jack.*", "Line out.*", "Nut — line out.*", "Screw M3 x 10 — mic jack.*",
+                   "HiFiBerry.*", "GPIO extender.*", "Dupont plugs.*"];
+    // what each one is meant to touch: the wall it mounts in, the bezel it is glued to,
+    // the Pi header the HAT stack plugs onto
+    const ok = ["Wall right.*", "Bezel.*", "Pi 5 GPIO header"];
     var all = evaluateQuery(context, qBodyType(qEverything(EntityType.BODY), BodyType.SOLID));
     var names = [];
     for (var b in all)
@@ -56,7 +59,7 @@ function(context is Context, queries)
     var inner = undefined;
     for (var i = 0; i < size(all); i += 1) { if (names[i] == "Bezel inner") { inner = all[i]; } }
     const dIn = evDistance(context, { "side0" : inner, "side1" : p }).distance / mm;
-    // the doubler notch behind the line out, and the mic hole through the doubler
+    // the doubler window behind the line out, and the mic hole through the doubler
     var dbl = undefined;
     for (var i = 0; i < size(all); i += 1) { if (match(names[i], "Wall right doubler.*").hasMatch) { dbl = all[i]; } }
     const dNotch = evDistance(context, { "side0" : dbl, "side1" : vector(141.7, -105, -36) * mm }).distance / mm;
@@ -88,5 +91,5 @@ for nm, lo, hi, near in out:
     if not near:
         print("    nothing within 10 mm")
 print(f"pocket: inner bezel is {dIn:.2f} mm from a point in its band at the exciter (> 0 means cut away)")
-print(f"line-out notch: doubler is {dNotch:.2f} mm from the jack's axis inside it (> 0 means notched)")
+print(f"line-out window: doubler is {dNotch:.2f} mm from the jack's axis inside it (> 0 means cut)")
 print(f"mic hole: doubler is {dMic:.2f} mm from the jack's axis inside it (~11.9 means the hole is there)")

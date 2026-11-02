@@ -433,7 +433,7 @@ Rev 2.6 plus a fourth push button. Only the top wall and the top doubler changed
 Git branch **`worktree-rev3-audio`**. Onshape branch workspace **"Rev 3 audio —
 layout A"** (`2066b64683ceb1c09ae0230c`), made from the version **"v2.x"**
 (`e903f527f91fb07c071a146d`), so the main workspace still holds Rev 2.7 as built.
-Designed, not built, not cut.
+Designed, not built, not cut. **The box is 20 mm deeper: 80.72 (was 60.72).**
 
 Sound for the box: audio in for a microphone on a stand that invites people to pick
 it up and speak (Paik's *Participation TV*), audio out, and a small internal
@@ -444,13 +444,28 @@ Constants `AUD_*` in `enclosure.fs`.
 |---|---|---|
 | **Exciter**, Dayton DAEX19CT-4 (5 W, 4 Ω), glued to the back of the outer bezel sheet: the birch is the speaker | the control band right of the PSU, centre (88, −173), off the patch's centre on purpose | **inner bezel pocketed 70 × 70** (x 60–130, y −208 to −138), so the outer sheet alone moves |
 | **Mic jack**, Neutrik NCJ6FI-S (XLR + 1/4"), rear-mounted | right wall, ~15 cm above the desk (y −70, z −33), behind the lower-right panel | Ø23.8 + two Ø3.2 on the diagonal (20 × 23), through wall and doubler |
-| **Line out**, Neutrik NMJ6HCD2 (stereo 1/4", break contacts) | right wall, ~12 cm up (y −105, z −36), behind the lower brace, lugs down | Ø11.4 through the wall; the doubler notched round its body, open to its rear edge |
+| **Line out**, Neutrik NMJ6HCD2 (stereo 1/4", break contacts) | right wall, ~12 cm up (y −105, z −36), behind the lower brace, lugs down | Ø11.4 through the wall; a window in the doubler round its body |
+| **Audio HAT**, HiFiBerry DAC2 ADC Pro (65 × 56.5), stacked on the Pi's header over the Active Cooler: a 16 mm GPIO extender and 17 mm standoffs, as Raspberry Pi advises. Its header passes through, so the knobs' and buttons' Dupont plugs move to the top of it | on the Pi (`HAT_PARTS`) | a window in the back cover's doubler over it |
 
-**Fit, checked in Onshape** on the branch (`tools/audio_fit.py`): the exciter is
-4.6 mm from the inlet, the mic jack 3.4 mm from the lower brace and 6.8 mm from the
-lower-right panel's frame and ribbon keep-out, the line out 5.7 mm from panel
-screw 15. Nothing else within 10 mm. Envelopes for all three (and the mic jack's
-screws, the line out's nut) are in the hardware model.
+**Deeper, for the HAT.** No HAT-sized board fits in the 60.72 box where it
+should: stacked on the Pi it hits the back cover, on the tray it is 0.2 mm from
+the tray screws, behind the upper-left panel it hits a 5 V plug or the rails.
+The stack reaches ~36 mm above the Pi's component face (extender, HAT, its RCA
+jacks at ~13 mm, Dupont plugs on top), so **`#psuRailClear` 11.64 → 31.64** in the
+branch's Variable Studio. Everything set from the back moves 20 mm back with the
+rails and the cover: the side doublers' ends, the shelf's web, the button row
+(z −42.6), the inlet (10 mm, still centred in the wall), the vents. The panels,
+tray, boards, PSU, knobs, exciter and jacks stay put.
+
+**Fit, checked in Onshape** on the branch (`tools/audio_fit.py`), 80.72 deep: the
+HAT's Dupont plugs 3.2 mm from the back cover (2.0 from the edge of the doubler's
+window), its parts 4.8 from the doubler, its board 1.0 from the Pi's USB envelope
+and 3.0 above the cooler; the exciter has nothing within 10 mm; the mic jack is
+3.4 mm from the lower brace and 6.8 mm from the lower-right panel's frame and
+ribbon keep-out; the line out 5.7 mm from panel screw 15. (The extender overlaps
+the Active Cooler's box envelope by 2 mm, as the Pi's own header already does:
+the envelope is rough; the real cooler clears the header.) Envelopes for all of
+it are in the model.
 
 **Layouts not taken:** the mic jack low on the right wall needs the inlet raised,
 and under the stiffener shelf it can rise only ~26 mm, which leaves the jack < 1 mm
@@ -458,14 +473,21 @@ at each end. Moving the inlet up behind the lower brace frees the low wall for b
 jacks, but puts it 1 mm from the tray and 2 mm from the Colorlight, with mains
 through the electronics bay.
 
-**Cut files:** only `bezel-inner.dxf`, `wall-right-iec.dxf` and
-`wall-right-doubler-iec.dxf` changed; every other part exports byte-identical.
+**Cut files:** the pocket changes `bezel-inner.dxf`; the depth changes all four
+walls and their doublers (60.7 → 80.7 wide), the shelf, both knob ribs (+20) and
+the back cover's doubler (its new window). The outer bezel, the braces, the
+rails, the back cover and the tray export byte-identical. The sheets are not
+re-nested: the walls are wider, so they may need another sheet.
 
 **Before cutting:**
 - The exciter's size (33 × 13) is from Dayton's listing: check it on the part.
+- The HAT stack's heights are estimates (extender, standoffs, RCA jacks): check
+  them on the parts. Leaving the RCA jacks off the HAT would give 13 mm back.
+- The knob chain shares the HAT's I²C bus (its codecs at 0x4a and 0x4d, clear of
+  the knobs' 0x37–0x3A); HiFiBerry warns about pull-ups there.
 - `art.py`, `nest_sheets.py` and `decals.py` haven't been re-run: the right wall's
   etch doesn't know about the new holes yet. The outer bezel is unchanged, so it
   could carry an etched grille over the exciter if wanted.
-- The electronics (HiFiBerry DAC2 ADC Pro on I²S, a TPA2016 amp with its shutdown
+- The electronics (the HAT on I²S, a TPA2016 amp with its shutdown
   driven by the line out's sleeve contact through a MOSFET, GPIO24 to read it) are
   untested: bench them on the Rev 2.7 box first.
