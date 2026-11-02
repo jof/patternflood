@@ -51,7 +51,7 @@ class Mandel(Inked):
             z = self.manual if self.manual is not None else math.log(self.zoom())
             self.manual = max(math.log(1e-13), min(math.log(2.0), z - d * 0.08))
         elif k == 1:
-            self.flow = max(-1.0, min(1.0, self.flow + d * 0.02))
+            self.knob(1, "flow", d, -1.0, 1.0, "bi")
         else:
             self.turn_ink(k, d)
 

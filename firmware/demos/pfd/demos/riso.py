@@ -46,13 +46,13 @@ class Riso(Original):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.pitch = max(3.0, min(16.0, self.pitch * 1.06 ** d))
+            self.knob(0, "pitch", d, 3.0, 16.0, "log")
         elif k == 1:
-            self.turn_rate = max(-0.6, min(0.6, self.turn_rate + d * 0.01))
+            self.knob(1, "turn_rate", d, -0.6, 0.6, "bi")
         elif k == 2:
-            self.misreg = max(0.0, min(8.0, self.misreg + d * 0.25))
+            self.knob(2, "misreg", d, 0.0, 8.0)
         elif k == 3:
-            self.ink_i = (self.ink_i + (1 if d > 0 else -1)) % len(INKS)
+            self.ink_i = self.along(3, self.ink_i, d, len(INKS))
 
     def release(self, k, click):
         if not click:
@@ -129,4 +129,4 @@ class Riso(Original):
     def lights(self):
         inks = INKS[self.ink_i][1]
         return [self.glow(0, self.src / 3), self.glow(1, 0.55), self.glow(2, 0.9),
-                tuple(float(c) * 0.7 for c in inks[0])]
+                self.blink(3, tuple(float(c) * 0.7 for c in inks[0]))]

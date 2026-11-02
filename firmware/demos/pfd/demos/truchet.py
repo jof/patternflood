@@ -44,7 +44,7 @@ class Truchet(Chromatic):
         elif k == 1:
             self.rate = max(0.0, min(8.0, self.rate * 1.12 ** d if self.rate else 0.2))
         elif k == 2:
-            self.width = max(0.05, min(0.35, self.width + d * 0.01))
+            self.knob(2, "width", d, 0.05, 0.35)
         else:
             self.turn_hue(k, d)
 

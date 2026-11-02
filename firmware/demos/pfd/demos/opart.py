@@ -9,8 +9,8 @@ grey where the edges fall between pixels:
     rings     two sets of rings whose crossings make a third pattern
     twist     a sunburst whose rays twist with the radius
 
-Its knobs are smooth (pfd.knobs): spacing and warp glide and stop at their ends, and the
-pictures and inks stop at the first and last and dissolve from one to the next.
+Its knobs are smooth (pfd.knobs), and its pictures, like the screens and inks, stop at the
+first and last and dissolve from one to the next.
 """
 import math
 

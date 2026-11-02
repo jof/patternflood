@@ -46,9 +46,9 @@ class Zen(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.speed = max(0.2, min(4.0, self.speed * 1.08 ** d))
+            self.knob(0, "speed", d, 0.2, 4.0, "log")
         elif k == 1:
-            self.spacing = max(3.5, min(10.0, self.spacing + d * 0.25))
+            self.knob(1, "spacing", d, 3.5, 10.0, "log")
         else:
             self.turn_ink(k, d)
 

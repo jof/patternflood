@@ -42,9 +42,9 @@ class Galaxy(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.twist = max(0.0, min(6.0, self.twist + d * 0.1))
+            self.knob(0, "twist", d, 0.0, 6.0)
         elif k == 1:
-            self.tilt = max(0.0, min(1.45, self.tilt + d * 0.04))
+            self.knob(1, "tilt", d, 0.0, 1.45)
         else:
             self.turn_ink(k, d)
 

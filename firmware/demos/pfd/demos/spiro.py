@@ -38,7 +38,7 @@ class Spiro(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.speed = max(0.1, min(5.0, self.speed * 1.08 ** d))
+            self.knob(0, "speed", d, 0.1, 5.0, "log")
         elif k == 1:
             self.wheel = max(12, min(RING - 8, self.wheel + (1 if d > 0 else -1)))
         else:

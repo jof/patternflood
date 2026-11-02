@@ -49,11 +49,11 @@ class Girih(Chromatic):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.size = max(20.0, min(90.0, self.size * 1.05 ** d))
+            self.knob(0, "size", d, 20.0, 90.0, "log")
         elif k == 1:
             self.go_to(self.star + (1 if d > 0 else -1))
         elif k == 2:
-            self.sharp = max(0.0, min(1.0, self.sharp + d * 0.02))
+            self.knob(2, "sharp", d, 0.0, 1.0)
         else:
             self.turn_hue(k, d)
 

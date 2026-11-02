@@ -43,12 +43,12 @@ class PixelSort(Original):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.thr = max(0.02, min(0.98, self.thr + d * 0.02))
+            self.knob(0, "thr", d, 0.02, 0.98)
             self.sweep = False
         elif k == 1:
             self.dir = (self.dir + (1 if d > 0 else -1)) % 4
         elif k == 2:
-            self.speed = max(-4.0, min(4.0, self.speed + d * 0.1))
+            self.knob(2, "speed", d, -4.0, 4.0, "bi")
         elif k == 3:
             self.hue = (self.hue + d / 36) % 1.0
 

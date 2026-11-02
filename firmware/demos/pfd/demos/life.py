@@ -64,9 +64,9 @@ class Life(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.rate = max(1.0, min(60.0, self.rate * 1.1 ** d))
+            self.knob(0, "rate", d, 1.0, 60.0, "log")
         elif k == 1:
-            self.ghost = max(0.0, min(0.97, self.ghost + d * 0.02))
+            self.knob(1, "ghost", d, 0.0, 0.97)
         else:
             self.turn_ink(k, d)
 

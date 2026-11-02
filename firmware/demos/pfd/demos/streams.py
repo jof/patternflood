@@ -46,11 +46,11 @@ class Streams(Chromatic):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.speed = max(0.1, min(4.0, self.speed * 1.08 ** d))
+            self.knob(0, "speed", d, 0.1, 4.0, "log")
         elif k == 1:
-            self.scale = max(0.4, min(3.0, self.scale * 1.05 ** d))
+            self.knob(1, "scale", d, 0.4, 3.0, "log")
         elif k == 2:
-            self.trail = max(0.1, min(4.0, self.trail * 1.08 ** d))
+            self.knob(2, "trail", d, 0.1, 4.0, "log")
         else:
             self.turn_hue(k, d)
 

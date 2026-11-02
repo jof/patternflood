@@ -10,6 +10,9 @@ knobs set. `self.on_bar` and `self.on_phrase` are true for the frame a bar or an
 
 Knobs made with `self.dial(...)` and `self.choice(...)` (pfd.knobs: smooth values that stop at
 their ends, and lists that dissolve from one item to the next) are moved on by `hear(dt)`.
+`self.knob(k, "speed", d, lo, hi, curve)` in turn() makes a plain attribute such a Dial: the
+first turn starts it from the attribute's value, and hear() keeps the attribute where the Dial
+has glided to (taking up any value the demo gives the attribute itself, a click's say).
 """
 import math
 
@@ -30,11 +33,43 @@ class Original(Demo):
         self.on_beat = self.on_bar = self.on_phrase = False
         self.t_touch = [-10.0] * 4
         self.knobs = []
+        self.dials = {}             # attribute name -> Dial, for knob()
+        self._wrote = {}            # what hear() last gave each of those attributes
+        self._by_knob = {}          # knob -> its Dial, for glow()'s blink at the ends
+        self._t_end = [-10.0] * 4   # when each knob was last turned against the end of a list (along)
 
     def dial(self, k, lo, hi, value, curve="lin", **kw):
         """A pfd.knobs.Dial on knob k, moved on by hear()."""
         self.knobs.append(knobs.Dial(self.rt, k, lo, hi, value, curve, **kw))
         return self.knobs[-1]
+
+    def knob(self, k, name, d, lo, hi, curve="lin", **kw):
+        """Turn attribute `name` d detents as a Dial on knob k over lo..hi (see pfd.knobs)."""
+        dl = self.dials.get(name)
+        if dl is None:
+            v = getattr(self, name)
+            dl = self.dials[name] = knobs.Dial(self.rt, k, lo, hi, v, curve, **kw)
+            self.knobs.append(dl)
+            self._wrote[name] = v
+        self._by_knob[k] = dl
+        return dl.turn(d)
+
+    def along(self, k, i, d, n):
+        """List index i one along on knob k (d's sign), stopping at the first and last rather than
+        coming round; turned against an end, the knob's light blinks (glow, blink)."""
+        j = i + (1 if d > 0 else -1)
+        if 0 <= j < n:
+            return j
+        self._t_end[k] = self.rt.t
+        return i
+
+    def blink(self, k, rgb):
+        """A knob light, white while it blinks for an end (along, or its Dial's)."""
+        dl = self._by_knob.get(k)
+        a = self.rt.t - self._t_end[k]
+        if (dl is not None and dl.stopped) or (a < knobs.STOP_S and int(a / 0.075) % 2 == 0):
+            return (1.0, 1.0, 1.0)
+        return rgb
 
     def choice(self, n, index=0):
         """A pfd.knobs.Choice over n items, moved on by hear()."""
@@ -50,8 +85,14 @@ class Original(Demo):
 
     def hear(self, dt):
         """Call from step(): moves the envelopes, which fall to zero when not listening, and the knobs."""
+        for name, dl in self.dials.items():
+            if getattr(self, name) != self._wrote[name]:        # the demo set it: start from there
+                dl.set(getattr(self, name), glide=False)
         for kn in self.knobs:
             kn.step(dt)
+        for name, dl in self.dials.items():
+            self._wrote[name] = dl.v
+            setattr(self, name, self._wrote[name])
         a = self.rt.audio
         on = self.listening
         targets = (a.mid, a.level, a.bass, a.treble) if on else (0.0,) * 4
@@ -67,7 +108,7 @@ class Original(Demo):
         if knob is not None and knob.stopped:
             return (1.0, 1.0, 1.0)
         a = max(0.0, 1 - (self.rt.t - self.t_touch[k]) / 0.6)
-        return tuple(min(1.0, (level + 0.5 * a) * c) for c in hsv1(hue, 0.8))
+        return self.blink(k, tuple(min(1.0, (level + 0.5 * a) * c) for c in hsv1(hue, 0.8)))
 
 
 class Inked(Original):
@@ -78,7 +119,7 @@ class Inked(Original):
     last rather than coming round, and each change dissolves into the next. Set `screen_i` and
     `pal_i` through `set_screen(i)` and `set_inks(i)` so the dissolve follows."""
     palette, screen_kind, pitch = "silver", "bayer8", 3.0
-    smooth = False
+    smooth = True
 
     def __init__(self, rt):
         super().__init__(rt)

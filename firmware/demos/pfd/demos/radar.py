@@ -50,9 +50,9 @@ class Radar(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.rate = max(0.3, min(6.0, self.rate * 1.08 ** d))
+            self.knob(0, "rate", d, 0.3, 6.0, "log")
         elif k == 1:
-            self.zoom = max(0.5, min(2.5, self.zoom * 1.05 ** d))
+            self.knob(1, "zoom", d, 0.5, 2.5, "log")
         else:
             self.turn_ink(k, d)
 

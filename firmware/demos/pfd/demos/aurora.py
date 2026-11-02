@@ -40,9 +40,9 @@ class Aurora(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.activity = max(0.2, min(3.0, self.activity * 1.07 ** d))
+            self.knob(0, "activity", d, 0.2, 3.0, "log")
         elif k == 1:
-            self.height = max(0.4, min(2.0, self.height * 1.05 ** d))
+            self.knob(1, "height", d, 0.4, 2.0, "log")
         else:
             self.turn_ink(k, d)
 

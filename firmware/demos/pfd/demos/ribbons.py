@@ -31,11 +31,11 @@ class Ribbons(Chromatic):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.width = max(2.0, min(12.0, self.width + d * 0.2))
+            self.knob(0, "width", d, 2.0, 12.0, "log")
         elif k == 1:
-            self.amp = max(0.0, min(3.0, self.amp + d * 0.08))
+            self.knob(1, "amp", d, 0.0, 3.0)
         elif k == 2:
-            self.length = max(0.3, min(3.0, self.length * 1.05 ** d))
+            self.knob(2, "length", d, 0.3, 3.0, "log")
         else:
             self.turn_hue(k, d)
 

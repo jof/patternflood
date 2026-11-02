@@ -105,9 +105,9 @@ class Neon(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.glow_amt = max(0.2, min(2.0, self.glow_amt + d * 0.05))
+            self.knob(0, "glow_amt", d, 0.2, 2.0)
         elif k == 1:
-            self.sign = (self.sign + (1 if d > 0 else -1)) % len(self.signs)
+            self.sign = self.along(1, self.sign, d, len(self.signs))
             self._paths()
         elif k == 3:
             self.turn_ink(k, d)

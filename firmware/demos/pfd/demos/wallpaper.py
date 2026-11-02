@@ -50,11 +50,11 @@ class Wallpaper(Chromatic):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.size = max(10.0, min(60.0, self.size * 1.05 ** d))
+            self.knob(0, "size", d, 10.0, 60.0, "log")
         elif k == 1:
-            self.group = (self.group + (1 if d > 0 else -1)) % len(GROUPS)
+            self.group = self.along(1, self.group, d, len(GROUPS))
         elif k == 2:
-            self.speed = max(0.0, min(4.0, self.speed + d * 0.1))
+            self.knob(2, "speed", d, 0.0, 4.0)
         else:
             self.turn_hue(k, d)
 

@@ -69,14 +69,14 @@ class Sea(Original):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.swell = max(0.1, min(3.0, self.swell * 1.07 ** d))
+            self.knob(0, "swell", d, 0.1, 3.0, "log")
         elif k == 1:
-            self.moon_az = max(-0.7, min(0.7, self.moon_az + d * 0.03))
+            self.knob(1, "moon_az", d, -0.7, 0.7)
         elif k == 2:
-            self.screen_i = (self.screen_i + (1 if d > 0 else -1)) % len(ink.SCREENS)
+            self.screen_i = self.along(2, self.screen_i, d, len(ink.SCREENS))
             self._screen()
         elif k == 3:
-            self.pal_i = (self.pal_i + (1 if d > 0 else -1)) % len(ink.PALETTES)
+            self.pal_i = self.along(3, self.pal_i, d, len(ink.PALETTES))
 
     def release(self, k, click):
         if not click:
@@ -169,4 +169,4 @@ class Sea(Original):
     def lights(self):
         inks = ink.PALETTES[self.pal_i][1]
         return [self.glow(0, 0.55, 0.2 + 0.2 * self.swell), self.glow(1, 0.15),
-                self.glow(2, self.screen_i / len(ink.SCREENS)), tuple(float(c) for c in inks[-1])]
+                self.glow(2, self.screen_i / len(ink.SCREENS)), self.blink(3, tuple(float(c) for c in inks[-1]))]

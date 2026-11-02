@@ -40,9 +40,9 @@ class Window(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.rain = max(0.0, min(3.0, self.rain + d * 0.1))
+            self.knob(0, "rain", d, 0.0, 3.0)
         elif k == 1:
-            self.focus = max(0.4, min(2.0, self.focus * 1.05 ** d))
+            self.knob(1, "focus", d, 0.4, 2.0, "log")
         else:
             self.turn_ink(k, d)
 

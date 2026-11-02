@@ -29,9 +29,9 @@ class Isobands(Chromatic):
         if k == 0:
             self.bands = max(3, min(28, self.bands + (1 if d > 0 else -1)))
         elif k == 1:
-            self.warp = max(0.0, min(3.0, self.warp + d * 0.08))
+            self.knob(1, "warp", d, 0.0, 3.0)
         elif k == 2:
-            self.speed = max(0.0, min(4.0, self.speed + d * 0.1))
+            self.knob(2, "speed", d, 0.0, 4.0)
         else:
             self.turn_hue(k, d)
 

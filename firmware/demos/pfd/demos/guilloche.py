@@ -42,11 +42,11 @@ class Guilloche(Chromatic):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.lobes = max(0.5, min(2.0, self.lobes + d * 0.05))
+            self.knob(0, "lobes", d, 0.5, 2.0)
         elif k == 1:
-            self.lines = max(0.4, min(2.5, self.lines + d * 0.05))
+            self.knob(1, "lines", d, 0.4, 2.5)
         elif k == 2:
-            self.amp = max(0.2, min(1.8, self.amp + d * 0.05))
+            self.knob(2, "amp", d, 0.2, 1.8)
         else:
             self.turn_hue(k, d)
 

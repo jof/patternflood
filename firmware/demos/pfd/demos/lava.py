@@ -37,7 +37,7 @@ class Lava(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.heat = max(0.2, min(3.0, self.heat * 1.07 ** d))
+            self.knob(0, "heat", d, 0.2, 3.0, "log")
         elif k == 1:
             self.wax = max(2, min(MAX_BLOBS, self.wax + (1 if d > 0 else -1)))
         else:

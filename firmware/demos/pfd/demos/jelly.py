@@ -44,9 +44,9 @@ class Jelly(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.rate = max(0.15, min(2.0, self.rate * 1.07 ** d))
+            self.knob(0, "rate", d, 0.15, 2.0, "log")
         elif k == 1:
-            self.current = max(-20.0, min(20.0, self.current + d))
+            self.knob(1, "current", d, -20.0, 20.0)
         else:
             self.turn_ink(k, d)
 

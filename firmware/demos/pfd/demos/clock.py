@@ -39,7 +39,7 @@ class Clock(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.face = (self.face + (1 if d > 0 else -1)) % len(FACES)
+            self.face = self.along(0, self.face, d, len(FACES))
         elif k == 1:
             self.sweep = d > 0
         else:

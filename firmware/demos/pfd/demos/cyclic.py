@@ -53,12 +53,12 @@ class Cyclic(Chromatic):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.rate = max(1.0, min(60.0, self.rate * 1.1 ** d))
+            self.knob(0, "rate", d, 1.0, 60.0, "log")
         elif k == 1:
             self.states = max(3, min(24, self.states + (1 if d > 0 else -1)))
             self.g %= self.states
         elif k == 2:
-            self.hood = (self.hood + (1 if d > 0 else -1)) % len(NEIGHBOURHOODS)
+            self.hood = self.along(2, self.hood, d, len(NEIGHBOURHOODS))
         else:
             self.turn_hue(k, d)
 

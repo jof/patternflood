@@ -28,11 +28,11 @@ class Quasi(Chromatic):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.scale = max(0.08, min(1.0, self.scale * 1.05 ** d))
+            self.knob(0, "scale", d, 0.08, 1.0, "log")
         elif k == 1:
             self.order = max(3, min(13, self.order + (1 if d > 0 else -1)))
         elif k == 2:
-            self.speed = max(-4.0, min(4.0, self.speed + d * 0.1))
+            self.knob(2, "speed", d, -4.0, 4.0, "bi")
         else:
             self.turn_hue(k, d)
 

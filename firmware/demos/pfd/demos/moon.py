@@ -242,11 +242,11 @@ class Moon(Original):
                 if abs(self.rate) < 0.008:
                     self.rate = 0.0
         elif k == 2:
-            self.screen_i = (self.screen_i + (1 if d > 0 else -1)) % len(ink.SCREENS)
+            self.screen_i = self.along(2, self.screen_i, d, len(ink.SCREENS))
             self._screen()
-        elif k == 3:                        # Earth's colours come round between the last inks and the first
+        elif k == 3:                        # Earth's own colours come first, before the inks; it stops at both ends
             ways = ([None] if WORLDS[self.world][1] == "photo" else []) + list(range(len(ink.PALETTES)))
-            self.pal_i = ways[(ways.index(self.pal_i) + (1 if d > 0 else -1)) % len(ways)]
+            self.pal_i = ways[self.along(3, ways.index(self.pal_i), d, len(ways))]
 
     def release(self, k, click):
         if not click:
@@ -553,4 +553,4 @@ class Moon(Original):
         inks = [AIR] if self.pal_i is None else ink.PALETTES[self.pal_i][1]
         k1 = self.glow(1, 0.08, 0.6) if self.hold else self.glow(1, 0.55, 0.2 + 0.4 * min(1.0, abs(self.rate) / 1.0))
         return [self.glow(0, self.world / len(WORLDS), 0.3 + 0.4 * (1 + math.cos(self.phase)) / 2), k1,
-                self.glow(2, self.screen_i / len(ink.SCREENS)), tuple(float(c) for c in inks[-1])]
+                self.glow(2, self.screen_i / len(ink.SCREENS)), self.blink(3, tuple(float(c) for c in inks[-1]))]

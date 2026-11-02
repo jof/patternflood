@@ -70,11 +70,11 @@ class Marbling(Chromatic):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.size = max(0.4, min(2.5, self.size * 1.06 ** d))
+            self.knob(0, "size", d, 0.4, 2.5, "log")
         elif k == 1:
-            self.rate = max(0.1, min(5.0, self.rate * 1.1 ** d))
+            self.knob(1, "rate", d, 0.1, 5.0, "log")
         elif k == 2:
-            self.spacing = max(6.0, min(40.0, self.spacing + d))
+            self.knob(2, "spacing", d, 6.0, 40.0, "log")
         else:
             self.turn_hue(k, d)
 

@@ -37,17 +37,16 @@ class BitTunnel(Original):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.speed = max(-4.0, min(6.0, self.speed + d * 0.15))
+            self.knob(0, "speed", d, -4.0, 6.0, "bi")
         elif k == 1:
-            self.roll_rate = max(-1.5, min(1.5, self.roll_rate + d * 0.05))
+            self.knob(1, "roll_rate", d, -1.5, 1.5, "bi")
         elif k == 2:                                    # through each op's masks, then the next op
-            self.mask += 1 if d > 0 else -1
-            if self.mask > 5:
-                self.mask, self.op = 1, (self.op + 1) % len(OPS)
-            elif self.mask < 1:
-                self.mask, self.op = 5, (self.op - 1) % len(OPS)
+            # one long list, stopping at its ends: op 0's masks 1..5, then op 1's, ...
+            j = self.along(2, self.op * 5 + self.mask - 1, d, 5 * len(OPS))
+            self.op, self.mask = divmod(j, 5)
+            self.mask += 1
         elif k == 3:
-            self.pal_i = (self.pal_i + (1 if d > 0 else -1)) % len(ink.PALETTES)
+            self.pal_i = self.along(3, self.pal_i, d, len(ink.PALETTES))
 
     def release(self, k, click):
         if not click:
@@ -133,4 +132,4 @@ class BitTunnel(Original):
     def lights(self):
         inks = ink.PALETTES[self.pal_i][1]
         return [self.glow(0, 0.3 if self.go else 0.0), self.glow(1, (self.shape / len(SHAPES)) % 1),
-                self.glow(2, self.op / len(OPS)), tuple(float(c) for c in inks[-1])]
+                self.glow(2, self.op / len(OPS)), self.blink(3, tuple(float(c) for c in inks[-1]))]

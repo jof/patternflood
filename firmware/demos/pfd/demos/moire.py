@@ -30,11 +30,11 @@ class Moire(Chromatic):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.pitch = max(4.0, min(14.0, self.pitch + d * 0.2))
+            self.knob(0, "pitch", d, 4.0, 14.0, "log")
         elif k == 1:
-            self.speed = max(-3.0, min(3.0, self.speed + d * 0.1))
+            self.knob(1, "speed", d, -3.0, 3.0, "bi")
         elif k == 2:
-            self.kind = (self.kind + (1 if d > 0 else -1)) % len(KINDS)
+            self.kind = self.along(2, self.kind, d, len(KINDS))
         else:
             self.turn_hue(k, d)
 

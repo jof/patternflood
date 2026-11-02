@@ -42,9 +42,9 @@ class Caustics(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.chop = max(0.2, min(1.6, self.chop * 1.07 ** d))
+            self.knob(0, "chop", d, 0.2, 1.6, "log")
         elif k == 1:
-            self.depth = max(0.12, min(1.4, self.depth * 1.05 ** d))
+            self.knob(1, "depth", d, 0.12, 1.4, "log")
         else:
             self.turn_ink(k, d)
 

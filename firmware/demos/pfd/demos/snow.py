@@ -70,9 +70,9 @@ class Snow(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.fall = max(0.1, min(3.0, self.fall * 1.07 ** d))
+            self.knob(0, "fall", d, 0.1, 3.0, "log")
         elif k == 1:
-            self.wind = max(-20.0, min(20.0, self.wind + d))
+            self.knob(1, "wind", d, -20.0, 20.0)
         else:
             self.turn_ink(k, d)
 

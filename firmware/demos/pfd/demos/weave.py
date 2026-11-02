@@ -47,9 +47,9 @@ class Weave(Chromatic):
         if k == 0:
             self.size = max(3, min(14, self.size + (1 if d > 0 else -1)))
         elif k == 1:
-            self.structure = (self.structure + (1 if d > 0 else -1)) % len(STRUCTURES)
+            self.structure = self.along(1, self.structure, d, len(STRUCTURES))
         elif k == 2:
-            self.ripple = max(0.0, min(3.0, self.ripple + d * 0.1))
+            self.knob(2, "ripple", d, 0.0, 3.0)
         else:
             self.turn_hue(k, d)
 

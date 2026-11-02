@@ -36,9 +36,9 @@ class Helix(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.rate = max(-3.0, min(3.0, self.rate + d * 0.1))
+            self.knob(0, "rate", d, -3.0, 3.0, "bi")
         elif k == 1:
-            self.tilt = max(-1.0, min(1.0, self.tilt + d * 0.04))
+            self.knob(1, "tilt", d, -1.0, 1.0)
         else:
             self.turn_ink(k, d)
 

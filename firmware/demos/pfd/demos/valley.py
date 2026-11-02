@@ -82,10 +82,10 @@ class Valley(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.turn_rate = max(-0.8, min(0.8, self.turn_rate + d * 0.05))
+            self.knob(0, "turn_rate", d, -0.8, 0.8, "bi")
             self.auto = False
         elif k == 1:
-            self.alt = max(0.12, min(1.0, self.alt + d * 0.02))
+            self.knob(1, "alt", d, 0.12, 1.0)
         else:
             self.turn_ink(k, d)
 

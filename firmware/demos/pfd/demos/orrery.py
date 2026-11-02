@@ -38,9 +38,9 @@ class Orrery(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.speed = max(0.05, min(8.0, self.speed * 1.1 ** d))
+            self.knob(0, "speed", d, 0.05, 8.0, "log")
         elif k == 1:
-            self.tilt = max(0.0, min(1.5, self.tilt + d * 0.03))
+            self.knob(1, "tilt", d, 0.0, 1.5)
         else:
             self.turn_ink(k, d)
 

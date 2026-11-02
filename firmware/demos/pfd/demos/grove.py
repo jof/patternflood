@@ -54,7 +54,7 @@ class Grove(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.wind = max(0.0, min(4.0, self.wind + d * 0.15))
+            self.knob(0, "wind", d, 0.0, 4.0)
         elif k == 1:
             self.year = (self.year + d * YEAR / 16) % YEAR
         else:

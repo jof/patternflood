@@ -35,9 +35,9 @@ class Copper(Chromatic):
         if k == 0:
             self.bars = max(2, min(14, self.bars + (1 if d > 0 else -1)))
         elif k == 1:
-            self.speed = max(0.0, min(4.0, self.speed + d * 0.1))
+            self.knob(1, "speed", d, 0.0, 4.0)
         elif k == 2:
-            self.scroll = max(0.0, min(4.0, self.scroll + d * 0.1))
+            self.knob(2, "scroll", d, 0.0, 4.0)
         else:
             self.turn_hue(k, d)
 

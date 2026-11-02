@@ -44,9 +44,9 @@ class Warp(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.throttle = max(0.0, min(8.0, self.throttle + d * 0.2))
+            self.knob(0, "throttle", d, 0.0, 8.0)
         elif k == 1:
-            self.steer = max(-1.0, min(1.0, self.steer + d * 0.04))
+            self.knob(1, "steer", d, -1.0, 1.0)
         else:
             self.turn_ink(k, d)
 

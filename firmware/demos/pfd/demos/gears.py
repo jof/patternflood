@@ -61,7 +61,7 @@ class Gears(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.speed = max(0.0, min(3.0, self.speed + d * 0.05))
+            self.knob(0, "speed", d, 0.0, 3.0)
         elif k == 1:
             self.seed += 1 if d > 0 else -1
             self.layout()

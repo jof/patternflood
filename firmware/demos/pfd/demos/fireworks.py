@@ -48,9 +48,9 @@ class Fireworks(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.rate = max(0.2, min(4.0, self.rate * 1.1 ** d))
+            self.knob(0, "rate", d, 0.2, 4.0, "log")
         elif k == 1:
-            self.size = max(0.4, min(1.8, self.size * 1.05 ** d))
+            self.knob(1, "size", d, 0.4, 1.8, "log")
         else:
             self.turn_ink(k, d)
 

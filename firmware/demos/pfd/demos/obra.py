@@ -143,10 +143,10 @@ class Obra(Original):
         elif k == 1:
             self.morph_to += d / 6
         elif k == 2:
-            self.screen_i = (self.screen_i + (1 if d > 0 else -1)) % len(ink.SCREENS)
+            self.screen_i = self.along(2, self.screen_i, d, len(ink.SCREENS))
             self._screen()
         elif k == 3:
-            self.pal_i = (self.pal_i + (1 if d > 0 else -1)) % len(ink.PALETTES)
+            self.pal_i = self.along(3, self.pal_i, d, len(ink.PALETTES))
 
     def release(self, k, click):
         if not click:
@@ -249,4 +249,4 @@ class Obra(Original):
         inks = ink.PALETTES[self.pal_i][1]
         top = tuple(float(c) for c in inks[-1])
         return [self.glow(0, hue), self.glow(1, (self.morph / len(SHAPES)) % 1),
-                self.glow(2, self.screen_i / len(ink.SCREENS)), top]
+                self.glow(2, self.screen_i / len(ink.SCREENS)), self.blink(3, top)]

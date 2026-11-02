@@ -53,9 +53,9 @@ class Flock(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.cohesion = max(0.2, min(3.0, self.cohesion * 1.07 ** d))
+            self.knob(0, "cohesion", d, 0.2, 3.0, "log")
         elif k == 1:
-            self.hunger = max(0.0, min(3.0, self.hunger + d * 0.1))
+            self.knob(1, "hunger", d, 0.0, 3.0)
         else:
             self.turn_ink(k, d)
 

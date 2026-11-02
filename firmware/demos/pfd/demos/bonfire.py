@@ -48,9 +48,9 @@ class Bonfire(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.size = max(0.3, min(1.8, self.size + d * 0.05))
+            self.knob(0, "size", d, 0.3, 1.8)
         elif k == 1:
-            self.wind = max(-1.5, min(1.5, self.wind + d * 0.06))
+            self.knob(1, "wind", d, -1.5, 1.5)
         else:
             self.turn_ink(k, d)
 

@@ -39,9 +39,9 @@ class Dial(Chromatic):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.speed = max(0.0, min(4.0, self.speed + d * 0.1))
+            self.knob(0, "speed", d, 0.0, 4.0)
         elif k == 1:
-            self.seg_mul = max(0.5, min(3.0, self.seg_mul + d * 0.1))
+            self.knob(1, "seg_mul", d, 0.5, 3.0)
         elif k == 2:
             self.rings = max(3, min(RINGS, self.rings + (1 if d > 0 else -1)))
         else:

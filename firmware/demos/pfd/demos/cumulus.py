@@ -34,9 +34,9 @@ class Cumulus(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.wind = max(0.0, min(4.0, self.wind + d * 0.1))
+            self.knob(0, "wind", d, 0.0, 4.0)
         elif k == 1:
-            self.cover = max(0.15, min(0.85, self.cover + d * 0.02))
+            self.knob(1, "cover", d, 0.15, 0.85)
         else:
             self.turn_ink(k, d)
 

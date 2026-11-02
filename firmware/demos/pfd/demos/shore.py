@@ -41,9 +41,9 @@ class Shore(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.swell = max(0.2, min(2.5, self.swell * 1.07 ** d))
+            self.knob(0, "swell", d, 0.2, 2.5, "log")
         elif k == 1:
-            self.tide = max(-15.0, min(15.0, self.tide + d * 0.5))
+            self.knob(1, "tide", d, -15.0, 15.0)
         else:
             self.turn_ink(k, d)
 

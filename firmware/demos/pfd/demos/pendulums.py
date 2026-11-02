@@ -35,9 +35,9 @@ class Pendulums(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.speed = max(0.0, min(4.0, self.speed + d * 0.1))
+            self.knob(0, "speed", d, 0.0, 4.0)
         elif k == 1:
-            self.view = max(0.1, min(1.4, self.view + d * 0.03))
+            self.knob(1, "view", d, 0.1, 1.4)
         else:
             self.turn_ink(k, d)
 

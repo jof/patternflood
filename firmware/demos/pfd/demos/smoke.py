@@ -66,14 +66,14 @@ class Smoke(Original):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.turb = max(0.0, min(3.0, self.turb + d * 0.1))
+            self.knob(0, "turb", d, 0.0, 3.0)
         elif k == 1:
             self.src_x = max(10.0, min(118.0, self.src_x + self.rt.accel(1, d) * 1.5))
         elif k == 2:
-            self.screen_i = (self.screen_i + (1 if d > 0 else -1)) % len(ink.SCREENS)
+            self.screen_i = self.along(2, self.screen_i, d, len(ink.SCREENS))
             self._screen()
         elif k == 3:
-            self.pal_i = (self.pal_i + (1 if d > 0 else -1)) % len(ink.PALETTES)
+            self.pal_i = self.along(3, self.pal_i, d, len(ink.PALETTES))
 
     def release(self, k, click):
         if not click:
@@ -141,4 +141,4 @@ class Smoke(Original):
     def lights(self):
         inks = ink.PALETTES[self.pal_i][1]
         return [self.glow(0, 0.6, 0.2 + 0.2 * self.turb), self.glow(1, 0.08),
-                self.glow(2, self.screen_i / len(ink.SCREENS)), tuple(float(c) for c in inks[-1])]
+                self.glow(2, self.screen_i / len(ink.SCREENS)), self.blink(3, tuple(float(c) for c in inks[-1]))]

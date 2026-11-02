@@ -34,11 +34,11 @@ class Droste(Chromatic):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.speed = max(-4.0, min(4.0, self.speed + d * 0.1))
+            self.knob(0, "speed", d, -4.0, 4.0, "bi")
         elif k == 1:
             self.arms = max(1, min(12, self.arms + (1 if d > 0 else -1)))
         elif k == 2:
-            self.twist = max(-3.0, min(3.0, self.twist + d * 0.1))
+            self.knob(2, "twist", d, -3.0, 3.0, "bi")
         else:
             self.turn_hue(k, d)
 

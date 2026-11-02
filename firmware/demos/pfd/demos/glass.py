@@ -41,9 +41,9 @@ class Glass(Chromatic):
             self.count = max(6, min(70, self.count + (2 if d > 0 else -2)))
             self.new_window()
         elif k == 1:
-            self.drift = max(0.0, min(5.0, self.drift + d * 0.15))
+            self.knob(1, "drift", d, 0.0, 5.0)
         elif k == 2:
-            self.lead = max(0.4, min(4.0, self.lead + d * 0.1))
+            self.knob(2, "lead", d, 0.4, 4.0)
         else:
             self.turn_hue(k, d)
 

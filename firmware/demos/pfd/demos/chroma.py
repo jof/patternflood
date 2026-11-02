@@ -29,9 +29,9 @@ class Chroma(Chromatic):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.wavelength = max(3.0, min(24.0, self.wavelength * 1.05 ** d))
+            self.knob(0, "wavelength", d, 3.0, 24.0, "log")
         elif k == 1:
-            self.drift = max(0.0, min(4.0, self.drift + d * 0.1))
+            self.knob(1, "drift", d, 0.0, 4.0)
         elif k == 2:
             self.sources = max(2, min(7, self.sources + (1 if d > 0 else -1)))
         else:

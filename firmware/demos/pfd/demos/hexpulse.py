@@ -35,11 +35,11 @@ class HexPulse(Chromatic):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.size = max(3.0, min(16.0, self.size + d * 0.25))
+            self.knob(0, "size", d, 3.0, 16.0, "log")
         elif k == 1:
-            self.speed = max(0.0, min(4.0, self.speed + d * 0.1))
+            self.knob(1, "speed", d, 0.0, 4.0)
         elif k == 2:
-            self.field_i = (self.field_i + (1 if d > 0 else -1)) % len(FIELDS)
+            self.field_i = self.along(2, self.field_i, d, len(FIELDS))
         else:
             self.turn_hue(k, d)
 

@@ -52,7 +52,7 @@ class Koi(Inked):
     def turn(self, k, d):
         self.touch(k)
         if k == 0:
-            self.speed = max(0.2, min(3.0, self.speed * 1.07 ** d))
+            self.knob(0, "speed", d, 0.2, 3.0, "log")
         elif k == 1:
             pass
         else:
