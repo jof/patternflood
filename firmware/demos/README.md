@@ -523,7 +523,7 @@ the play demos, so the Patternflow shelf is SeungHun's alone.
 | **Caustics** | pf 0530 | Sunlight through moving water, netting a pool floor. Light through each point of the surface lands where the slope throws it, splatted over the four nearest floor pixels; the focused places blaze. The tile grout wobbles by the same refraction, and pebbles (click k0, or every kick) send rings out. | k0 chop; k1 depth (focus); k2 screen; k3 inks. Click: k0 a pebble, k1 tiles, k2 chunky. |
 | **Galaxy** | pf Chromatic Vortex | A spiral galaxy whose arms are a density wave: 40 000 stars ride slightly out-of-round orbits whose shapes twist with radius, so they crowd into arms that persist while the stars flow through them. Dust lanes trail the arms; tilted in 3D. | k0 arm twist; k1 tilt; k2 screen; k3 inks. Click: k0 arm count (2–4), k1 a bar, k2 chunky. |
 | **Valley** | pf 0624 | Low flight over a tiling ridged-fractal range, Comanche style (each column a ray across the heightmap). Sun-shaded slopes, snow on the peaks, lakes that mirror the sky, haze; the plane banks into its turns and steers clear of high ground. Dawn, night (moon and wheeling stars) or dusk. | k0 steers; k1 altitude; k2 screen; k3 inks. Click: k0 autopilot, k1 time of day, k2 chunky, k3 new land. |
-| **Op Art** | pf Warped Wave | Hard black and white, after Bridget Riley: wavy lines whose spacing breathes, a checkerboard crowding into a drifting fold, a grid under a roaming lens, two crossing ring sets, a twisting sunburst. | k0 line spacing; k1 warp; k2 picture; k3 inks. Click: k0 invert, k1 hold still, k2 screen, k3 chunky. |
+| **Op Art** | pf Warped Wave | Hard black and white, after Bridget Riley: wavy lines whose spacing breathes, a checkerboard crowding into a drifting fold, a grid under a roaming lens, two crossing ring sets, a twisting sunburst. | k0 line spacing; k1 warp; k2 picture; k3 inks (all smooth: they glide, stop at the ends and dissolve). Click: k0 invert, k1 hold still, k2 screen, k3 chunky. |
 | **Bonfire** | pf Firefly Hollow | Flames over crossed logs: a teardrop of heat eaten by fractal noise that streams upward faster than the flame, so tongues lick and break off; wind leans the tips. Sparks rise and waver; the ground catches the glow. | k0 fire size; k1 wind; k2 screen; k3 inks. Click: k0 stoke, k1 calm, k2 chunky. |
 | **Mandel** | pf Retro Digital Tapestry | An endless dive into the Mandelbrot set: a million times in on one of six deep places, then out and on to the next. Points iterate only until they escape (or are caught in a cycle), with a smooth count whose bands flow inward. | k0 zoom (takes over for 20 s); k1 colour flow; k2 screen; k3 inks. Click: k0 next place, k1 turn the view, k2 chunky. |
 | **Lava** | pf 0520 | A lava lamp: wax blobs warm over the bulb, rise, cool at the cap and sink, stretching as they move and merging as metaballs (compact ones, so they only touch when close) over a pool on the bottom. | k0 heat; k1 how much wax; k2 screen; k3 inks. Click: k0 shake, k2 chunky. |
@@ -566,6 +566,15 @@ whose line sets come in one at a time as the tone rises; and the ink palettes) a
 `pfd/demos/original.py` (the shelf, the audio envelopes and the bar and phrase events; and
 `Inked`, which gives a pattern the k2 screen and k3 inks knobs, the chunky toggle and
 `print(tone)`).
+
+Smooth knobs (`pfd/knobs.py`), being tried one demo at a time, Op Art first. A `Dial` keeps the
+knob's place along its range and gives the value on a curve: even (`lin`), equal ratios per detent
+(`log`, for rates and sizes) or signed and finer near zero (`bi`, for speeds that reverse, which
+stop on zero going through). The value glides 80 ms behind the detents, so nothing jumps; a slow
+turn crosses the range in a turn and a half, a fast spin in less; at either end it stops and its
+light blinks white. A `Choice` is a list (pictures, screens, inks) that stops at its first and
+last instead of coming round, and dissolves pixel by pixel into the next in 0.35 s. `Inked` takes
+them for k2 and k3 with `smooth = True`.
 
 #### In full colour
 
