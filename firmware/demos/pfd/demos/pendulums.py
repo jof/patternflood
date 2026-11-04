@@ -6,7 +6,10 @@ next 52, and so on. Released together they make a travelling snake, then two
 interleaved lines, three, a scatter, and at the end of the cycle they all line
 up again. We look down the row a little from above and in perspective, so the
 pattern reads as waves running away from us. The balls are shaded spheres
-that pass in front of and behind one another properly.
+that pass in front of and behind one another properly, lit by a lamp in the
+room up and to the left: each ball sees it from its own side, the ones nearer
+it are brighter, its glint sits where the lamp would really show in the ball,
+and a ball that comes between another and the lamp shades it.
 """
 import math
 
@@ -20,6 +23,9 @@ CYCLE = 60.0                    # seconds for the whole dance to come round
 BASE = 51                       # swings per cycle for the first pendulum
 AMP = 0.45                      # swing, radians
 BAR = 40.0                      # the bar's height above the balls' rest
+BALL = 3.4                      # the balls' radius
+LAMP = (-34.0, -62.0, 16.0)     # a bulb in the room: left of the row, above the bar, a little way down it
+REACH = 78.0                    # the lamp's light is as given this far from it, and falls off as 1/d^2
 
 
 class Pendulums(Inked):
@@ -84,12 +90,24 @@ class Pendulums(Inked):
         xi, yi = np.rint(bx_).astype(int), np.rint(by_).astype(int)
         ok = (xi >= 0) & (xi < N) & (yi >= 0) & (yi < N)
         tone[yi[ok], xi[ok]] = 0.4
-        # the balls: shaded spheres, nearest wins
-        light = np.array([-0.4, -0.7, -0.6], np.float32)
-        light /= np.linalg.norm(light)
+        # the balls: shaded spheres, nearest wins, lit by the lamp. Everything below is in the
+        # camera's frame, the eye at the origin looking along +z (screen x right, y down)
+        def to_eye(x, y, zz):
+            return np.stack([x, y * cv - zz * sv + 34, y * sv + zz * cv + 70], -1)
         cx, cy, cz, f = project(bx, by, z)
+        centre = to_eye(bx, by, z)                                  # (COUNT, 3)
+        lamp = to_eye(*(np.float64(c) for c in LAMP))
+        # which balls can shade which: j can only reach i's surface if the line from i's centre to
+        # the lamp passes within two radii (and a little) of j's centre, on the way
+        dl = lamp - centre
+        dl /= np.linalg.norm(dl, axis=-1, keepdims=True)
+        oc = centre[None, :] - centre[:, None]                      # [i, j]: from i to j
+        along = (oc * dl[:, None]).sum(-1)
+        miss = np.sqrt(np.maximum((oc * oc).sum(-1) - along ** 2, 0))
+        casts = (along > -2 * BALL) & (miss < 2.3 * BALL)       # neighbours overlap: the row is tighter than the balls
+        np.fill_diagonal(casts, False)
         for i in np.argsort(-cz):
-            r = 3.4 * f[i]
+            r = BALL * f[i]
             x0, x1 = max(0, int(cx[i] - r - 1)), min(N, int(cx[i] + r) + 2)
             y0, y1 = max(0, int(cy[i] - r - 1)), min(N, int(cy[i] + r) + 2)
             if x0 >= x1 or y0 >= y1:
@@ -101,9 +119,31 @@ class Pendulums(Inked):
             w = np.sqrt(np.clip(q, 0, 1))
             dz = cz[i] - w * r
             front = inside & (dz < depth[y0:y1, x0:x1])
-            shade = np.clip(u * light[0] + v * light[1] - w * light[2], 0, 1)
+            if not front.any():
+                continue
+            nrm = np.stack([u, v, -w], -1)                          # the surface's normal, facing us
+            pt = centre[i] + BALL * nrm                             # the surface point
+            to_l = lamp - pt
+            dist = np.linalg.norm(to_l, axis=-1)
+            l = to_l / dist[..., None]
+            diffuse = np.clip((nrm * l).sum(-1), 0, 1)
+            eye = -pt / np.linalg.norm(pt, axis=-1, keepdims=True)
+            half = l + eye
+            half /= np.linalg.norm(half, axis=-1, keepdims=True)
+            glint = np.clip((nrm * half).sum(-1), 0, 1) ** 60
+            fall = np.minimum((REACH / dist) ** 2, 2.0)
+            # the other balls' shadows: how near does the ray to the lamp pass each one? A soft
+            # edge, as the bulb isn't a point
+            lit = np.ones_like(dist)
+            for j in np.flatnonzero(casts[i]):
+                oc = centre[j] - pt
+                along = (oc * l).sum(-1)
+                miss = np.sqrt(np.maximum((oc * oc).sum(-1) - along ** 2, 0))
+                shade = np.clip((miss - 0.7 * BALL) / (0.6 * BALL), 0, 1)
+                lit = np.minimum(lit, np.where((along > 0) & (along < dist), shade, 1))
+            light = fall * lit
             hue = 0.45 + 0.4 * (i % 3) / 2                       # three ball tones, so the lines read
-            val = hue * (0.25 + 0.7 * shade) + 0.4 * shade ** 14
+            val = hue * (0.14 + 0.85 * diffuse * light) + 0.5 * glint * light
             tone[y0:y1, x0:x1] = np.where(front, val, tone[y0:y1, x0:x1])
             depth[y0:y1, x0:x1] = np.where(front, dz, depth[y0:y1, x0:x1])
         return self.print(np.clip(tone, 0, 1))
