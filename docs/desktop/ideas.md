@@ -30,3 +30,7 @@ gather them into one enclosure revision.
   cap matters here (see [`driver-colorlight.md`](driver-colorlight.md)).
 - **AirTag slot** in the enclosure.
 - **Kensington lock slot.**
+
+## Mechanical
+- Stiffen the mouting for the top-most and bottom-most panel mounting rails. In 2.x, these are single-layer 3mm wood, and with all the wires behind everything, it kinda bulges the panel out.
+- Each panel should have a scored identifier with like a name, so that it's clear to the assembler where to place it. For example, the two bottom panels should be labeled so that the user does lay it up backwards.
